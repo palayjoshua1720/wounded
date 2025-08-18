@@ -138,3 +138,7 @@ frontend/.cache/
 .pnp.*
 
 .DS_Store
+
+# Backend
+
+backend/.env
