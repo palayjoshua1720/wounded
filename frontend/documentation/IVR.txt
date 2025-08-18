@@ -1,0 +1,112 @@
+🧾 Insurance Verification Request (IVR) Handling Module
+(Updated with Manufacturer-Specific Form Logic)
+
+✅ Module Purpose
+To ensure that clinics can only place orders for patients who are verified as eligible for insurance-covered grafts or devices. The system helps track eligibility status, enforce order restrictions, and manage manufacturer-specific IVR form workflows.
+
+🔐 User Roles
+Role
+Access & Actions
+Admin/Staff
+Submit IVR requests, upload results, assign status
+Clinic Users
+View IVR status of their patients only (read-only)
+System
+Enforces ordering eligibility logic
+Manufacturer
+Not system users; receive forms externally and send back responses
+
+
+📋 Manufacturer-Specific IVR Forms
+🔹 Real-World Scenario
+Each manufacturer requires their own unique IVR form format (PDF, Word, web link). These forms contain slightly different required fields or document layouts.
+🔹 System Handling
+Backend Mapping Table:
+The system maintains a mapping between:
+Brand → Manufacturer → IVR Form Template
+Brand Name
+Manufacturer
+IVR Form Format
+IVR Template Link
+DermaGraftX
+Manufacturer A
+PDF
+/ivr-forms/form-a.pdf
+HealGraft Pro
+Manufacturer B
+External Link
+https://bmanu.com/ivr-request
+VitaSkin Mesh
+Manufacturer C
+DOCX
+/ivr-forms/form-c.docx
+
+Admin selects the brand → system shows the correct form to download or open.
+
+🔁 IVR Submission Workflow
+Step 1: Staff Submits IVR
+Opens the patient IVR form
+Selects the brand name
+System displays/downloads the correct IVR template
+Admin fills out and submits the form manually via email or portal to the correct manufacturer
+Step 2: Wait for Manufacturer Response
+Manufacturer replies by email with the patient’s eligibility status
+Step 3: Upload & Record Result
+Admin uploads PDF or email result into the system
+Enters:
+IVR Status: Eligible / Not Eligible / Pending
+Date Verified
+Expiration Date (optional)
+Step 4: Attach Result to Patient
+Patient IVR record is saved and locked for that clinic and brand
+Status shown in system for ordering verification
+
+🔒 Order Eligibility Logic (System-Enforced)
+Condition
+Ordering Status
+No IVR submitted
+❌ Blocked
+IVR submitted but pending
+⚠️ Blocked
+IVR marked Not Eligible
+❌ Blocked
+IVR marked Eligible
+✅ Order allowed
+IVR expired
+❌ Blocked or flagged for renewal
+
+
+🔔 System Alerts
+Trigger
+Alert Type
+IVR not verified after 48h
+Admin reminder
+IVR marked Eligible
+Clinic notified – patient can now be ordered
+IVR marked Not Eligible
+Clinic notified – explain reason
+IVR nearing expiration (if expiry is tracked)
+Clinic & Admin reminder
+
+
+📊 Reporting & Audit Trail
+Reports should allow filtering by:
+Patient Name
+Clinic
+IVR Status
+Date of Verification
+Brand/Manufacturer
+Expiration Date
+Response turnaround time
+Audit Log: All actions (form submitted, result uploaded, status changed) must include:
+User name
+Timestamp
+Notes or uploaded file
+
+🧠 Developer Implementation Notes
+Build an IVR Form Mapping Table (Brand → Form Template → Format/URL)
+Create an IVR Entry Form for Admins to log status, upload response files
+Tie each IVR entry to: Patient + Clinic + Brand + Manufacturer
+Use IVR status as a condition for enabling the "Submit Order" button on the ordering form
+All uploaded files should be securely stored and accessible only by Admins and the owning clinic
+

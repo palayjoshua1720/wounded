@@ -1,0 +1,155 @@
+🏥 Clinic Module – Complete Functional Overview & Developer Logic
+
+✅ Module Purpose
+The Clinic Module enables authorized clinics/agencies to:
+Place graft and device orders
+View the status of their orders and deliveries
+Submit graft usage logs after application
+Monitor invoice and payment records
+Access reports per patient, date, brand, and graft size
+Ensure eligibility compliance before ordering (insurance IVR)
+
+🔐 User Access Control
+Role
+Access
+Clinic User
+Can access only their own clinic’s data (orders, patients, usage, invoices, reports)
+Admin
+Can view all clinics’ data, override orders, and manage statuses
+Manufacturer
+Invisible to clinics; orders routed internally
+
+
+🧩 Integrated Modules
+The Clinic Module integrates with:
+✅ Ordering Module
+✅ Serial Tracking
+✅ Graft Usage Log
+✅ IVR (Insurance Verification Request)
+✅ Invoice & Payment Tracking
+✅ Notifications & Reminders
+
+📋 Core Features & Workflows
+
+1. 📦 Place Graft Orders
+Clinics can submit an order through the portal. Orders are routed internally to the correct manufacturer (based on brand).
+Order Form Fields:
+Patient Name
+Date of Service
+Select Graft Brand (dropdown; no manufacturer shown)
+Add Graft Sizes + Quantity
+Optional Notes
+Rules:
+The patient must be marked as eligible based on IVR submission before allowing order submission.
+Brands are mapped to manufacturers in the backend only.
+Backend Logic:
+System sends the order to the right manufacturer based on brand selection.
+Email or API submission may include smart links for manufacturers to update status (e.g., Acknowledge, Ship, Deliver).
+
+2. 🔍 View & Track Orders
+Clinics can view their full order history, including:
+Field
+Description
+Order ID
+Unique reference
+Patient
+Who it was intended for
+Brand
+Selected during ordering
+Sizes & Quantities
+2x2 (4), 4x4 (2), etc.
+Status
+Submitted → Acknowledged → Shipped → Delivered
+Serial Numbers
+Shown after delivery
+Eligibility Verified
+Yes/No
+Notes
+Additional order notes
+
+
+3. 📝 Upload Graft Usage Logs
+Once grafts are delivered and assigned serials, clinics log how each graft was used.
+Log Fields:
+Serial Number (from delivered items)
+Actual Patient Name
+Date of Service
+Wound Site (e.g., Left Heel)
+Clinician Name
+Notes (e.g., reused, partial use)
+Logic:
+One serial can be logged multiple times (e.g., reused)
+Actual patient can differ from “intended” patient in the order
+A patient can have multiple wounds and usage logs
+
+4. 💳 Invoices & Payment Tracking
+Clinics can view invoices associated with their delivered grafts.
+Fields Visible to Clinics:
+Invoice Number
+Date
+Associated Serials
+Invoice Amount
+Payment Status (Paid, Unpaid, Partial)
+Balance Due
+Payment Date (if paid)
+Logic:
+One invoice can include multiple serials
+Serial payment status may be matched via Google Sheet or uploaded receipt
+Clinics cannot modify invoice data; view-only
+
+5. 📊 Reports & Summaries
+Clinics can generate reports from filters like:
+Filter Options
+Patient Name
+Date Range
+Graft Brand
+Graft Size
+Invoice Status
+Serial Status (Used/Unused)
+
+Example Reports:
+Total grafts used by Patient X in May
+All unpaid invoices from June
+All delivered but unused serials
+Grafts used across multiple wounds for Patient Y
+
+6. 🔔 Notifications
+The system sends clinic users email and/or in-system alerts for:
+Order status updates
+Serial numbers available after delivery
+Reminder to log usage after delivery
+New invoice uploaded
+Overdue unpaid invoices
+Rejected IVR results
+
+⚙️ Logic Summary & Key Conditions
+Scenario
+System Behavior
+Patient not eligible (IVR)
+Block order submission
+Clinic selects brand
+System auto-selects correct manufacturer (hidden from clinic)
+Serial not logged after 7 days
+Send usage log reminder
+Graft reused
+Allow multiple logs on one serial
+Serial used for a different patient
+Usage log overrides intended patient
+Patient has multiple wounds
+Each wound/site is tracked individually per serial
+Invoices paid partially
+Allow mapping of partial serials paid
+Invoice uploaded manually
+System extracts serials & amount using OCR
+Clinics try to edit invoice data
+Denied – view-only
+
+
+🧠 Developer Notes
+Create dynamic order form that shows/hides based on IVR eligibility
+Serial tracking per order line item (based on size & quantity)
+Graft usage logs must support one-to-many relation (1 serial: multiple wounds/patients)
+Clinic access must filter all data by their clinic ID
+Use dropdowns for standard inputs: brand, size, wound site
+All invoices should be auto-linked to serials for accurate payment tracking
+

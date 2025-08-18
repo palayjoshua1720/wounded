@@ -1,0 +1,202 @@
+🛒 Ordering & Inventory Module – Complete Overview & Developer Logic
+
+✅ MODULE PURPOSE
+This module enables Admin/Sales users to place, manage, and track orders for wound care grafts and medical devices across multiple clinics and clinicians. It integrates order submission, manufacturer communication, inventory reconciliation, serial number tracking, and usage logging to ensure accuracy and traceability from order to patient application.
+
+🎯 KEY OBJECTIVES
+Submit accurate graft/device orders based on insurance eligibility (IVR).
+Allow selection of brands, products, sizes, and quantities through dropdowns.
+Conceal manufacturer identity from clinics.
+Manage inventory with detailed serial number tracking.
+Automate serial number, expiry date and graft size extraction from manufacturer delivery files to reduce errors.
+Track graft usage and billing reconciliation.
+Provide real-time notifications and reporting.
+
+🔁 WORKFLOW STEPS & DEVELOPER LOGIC
+
+STEP 1: Create a New Order
+Performed by: Admin/Sales
+Fields:
+Ordering Clinic (Dropdown, multi-clinic)
+Ordering Clinician (Filtered by selected clinic)
+Intended Patient Name (Optional)
+Date of Order (Auto-filled)
+Notes (Internal)
+Logic:
+Restrict clinic dropdown to clinics accessible by user.
+Link clinician dropdown dynamically after clinic selection.
+Save order header info with unique Order ID.
+
+STEP 2: Select Brand & Add Products
+Performed by: Admin/Sales
+Fields:
+Brand Name (Dropdown) → maps internally to manufacturer (hidden)
+Product Type (Dropdown: Graft/Device)
+Graft Size (Dropdown by brand)
+Quantity (Dropdown 1-20 or manual override)
+Device Type (Text/Dropdown if applicable)
+Logic:
+Allow multiple product lines per order.
+Validate quantity within available limits.
+Prepare expected inventory schema per item (brand/size/qty).
+IMPORTANT NOTES – ORDERING MODULE
+🔹 Step 2 – Additional Fields & Logic:
+ASP (Average Sales Price) per unit should be displayed for each product.
+MUE (Medically Unlikely Edits) limit:
+Each product will have a different MUE (maximum number of units allowed per day per patient).
+A list of MUE values per product will be provided.
+If the selected quantity exceeds the MUE, the order should not proceed.
+The system should suggest an alternative product or allowable quantity to protect the clinic from potential insurance denial or non-payment.
+🔹 Biolab Direct Delivery:
+WoundMed can directly deliver Biolab products (no need to go through the manufacturer).
+
+
+
+STEP 3: Submit Order to Manufacturer
+System Actions:
+Generate manufacturer-specific email/order form.
+Embed action buttons: Acknowledge, Mark Shipped (with tracking #), Mark Delivered.
+Track timestamps on manufacturer status updates.
+Allow manual override of status if manufacturer responds outside system.
+
+STEP 4: Inventory Delivery & Serial Logging (Updated)
+Trigger: Upon manufacturer marking order as “Delivered”.
+Fields:
+Product Type (Dropdown)
+Size (Dropdown)
+Quantity Delivered (Auto from uploaded file or manual override)
+Serial Numbers:
+Primary: Manufacturer uploads serial delivery file (PDF, CSV, Excel).
+Extraction: System runs OCR/parser to extract serial numbers, expiry dates & graft sizes.
+Review: Admin/Sales reviews and edits extracted serials.
+Fallback: Manual entry/paste if no file provided.
+Logic:
+Validate that delivered quantity matches serial count.
+If mismatch, raise alert and flag for manual reconciliation.
+Link serials to brand, clinic, clinician, and order ID.
+Log upload and extraction audit trail.
+
+STEP 5: Inventory Ledger Management
+System generates ledger rows for each serial number:
+Serial No
+Product
+Brand
+Size
+Order ID
+Clinic
+Status
+Used
+Invoice Status
+G001
+Graft
+DermaX
+2x2
+ORD123
+ClinicA
+Delivered
+No
+Not Paid
+
+
+Logic:
+Track inventory status flags: Expected, Delivered, Used, Partially Used, Reassigned, Unused, Expired.
+Ledger is source of truth for billing and usage.
+
+STEP 6: Graft Usage Logging
+Performed by: Clinics or Admin
+Fields:
+Serial No (Dropdown/search)
+Patient
+Date of Service (DOS)
+Wound Site
+Clinician
+Notes
+Logic:
+Allow multiple usage entries per serial.
+Link usage log to inventory ledger and invoice tracking.
+Allow upload of bulk usage logs (PDF/CSV).
+
+📦 INVENTORY STATUS FLAGS
+Flag
+Description
+Expected
+From initial order
+Delivered
+Confirmed by manufacturer and logged
+Used
+Marked as used via usage log
+Partially Used
+Serial used across multiple wounds
+Reassigned
+Used for patient other than intended
+Unused
+No usage record yet
+Expired
+(Optional, for time alerts)
+
+
+🔔 NOTIFICATIONS & ALERTS
+Trigger
+Action
+Order submitted
+Notify Admin/Sales
+Manufacturer updates status
+Update status with timestamp
+Serial missing 48h post-delivery
+Alert Admin for follow-up
+Usage log uploaded
+Update inventory and billing
+IVR not submitted
+Block clinic from ordering
+
+
+📊 REPORTING
+Orders by clinic/clinician/date range
+Grafts ordered vs. used vs. unused
+Inventory counts per clinic/brand/size
+Usage logs by patient, wound, date
+Invoice status per serial
+Top used graft sizes per clinic/patient
+
+🔐 ACCESS CONTROL
+Role
+Capabilities
+Admin/Sales
+Full access to all order, delivery, inventory, usage
+Clinics
+View own orders, enter usage logs, view reports
+Clinicians
+View assigned serials and patient usage
+Manufacturers
+No login; update order status via secure email links
+
+
+🔗 SYSTEM INTEGRATIONS
+IVR Eligibility Check: Must be eligible before order submission.
+Usage Log → Inventory Ledger → Invoice Tracker (seamless flow).
+Notifications system for all key events.
+Clinic Dashboard for real-time monitoring.
+
+
+📌 Developer Note – Manufacturer & Biolab Order Handling + IVR Eligibility
+Orders should be automatically routed to a specific manufacturer based on the product brand selected in the order form.
+The client will provide a list of product brands and their corresponding manufacturers for mapping.
+Once the brand is selected, the system will generate and send the order to the appropriate manufacturer’s email address.
+The email will contain status buttons (e.g., “Acknowledge,” “Mark as Shipped,” “Mark as Delivered”):
+The manufacturer must click the appropriate button to update the order status.
+These clicks will trigger backend updates and record timestamps.
+🟡 Special Handling – Biolab Products:
+Wound Med directly delivers Biolab products, as they purchase these in advance and keep them on hand.
+The system must:
+Identify Biolab products within the order.
+Bypass manufacturer routing for these items.
+Record delivery updates internally (no external status buttons needed).
+
+🔒 IVR Eligibility Enforcement:
+Before allowing an order to proceed, the system must check if the patient is marked as "Eligible" via the IVR module.
+If the patient is not yet eligible, the order should be blocked, and the system should display a message:
+"Order cannot proceed. Patient is not yet insurance-eligible."
+Only insurance-approved patients can move forward with ordering grafts or devices.
+
+—------------------------------------------------------------------------
+ITEMS NEEDED: https://docs.google.com/spreadsheets/d/14_TmZIlp-npvJdIGL91562K_RY8B1X-wFVCRB1ks4Qo/edit?usp=sharing

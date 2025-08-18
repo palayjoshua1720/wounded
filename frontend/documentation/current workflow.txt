@@ -1,0 +1,103 @@
+ADMIN/SALES
+
+ACCOUNT AUTHENTICATION
+Can login and logout
+Can recover password
+    
+USER MANAGEMENT (Clinician)
+Can view list of users 
+Can create user accounts
+Can update user details
+Can archive user
+Can remove user
+Can activate/deactivate user accounts
+
+ORDER MANAGEMENT
+Can create new orders for clinics
+Can select clinic, clinician, patient, brand, product, size, and quantity
+Can view, update, and track all orders
+Can override order status (e.g., mark as shipped/delivered manually)
+Can view order history and details
+
+INVENTORY & SERIAL TRACKING
+Can view inventory ledger (all clinics, all products)
+Can upload manufacturer delivery files (PDF/CSV/Excel) for serial extraction
+Can review, edit, and confirm extracted serials, expiry dates, and sizes
+Can manually reconcile inventory if mismatches occur
+Can manage inventory status (Expected, Delivered, Used, etc.)
+    
+RETURN INVENTORY MANAGEMENT
+Can upload return documents (photos, labels)
+Can auto-extract and confirm returned serials, expiry, and size
+    
+GRAFT USAGE LOGGING
+Can view and edit usage logs for all clinics
+Can upload bulk usage logs (PDF/CSV)
+Can link usage logs to inventory and invoices
+    
+INVOICE & PAYMENT TRACKING
+Can upload invoice PDFs for OCR extraction
+Can review and correct extracted invoice data
+Can link invoices to orders and serials
+Can sync and update payment status via Google Sheet or manual upload
+Can view and filter invoices by clinic, status, date, etc.
+    
+IVR (INSURANCE VERIFICATION) MANAGEMENT
+Can submit IVR requests for patients/brands
+Can upload and record IVR results
+Can update IVR status (Eligible, Not Eligible, Pending)
+Can view and manage IVR records for all clinics
+    
+NOTIFICATIONS & ALERTS
+Receives notifications for key events (order submitted, invoice paid, serial missing, etc.)
+Can view notification history
+    
+REPORTING
+Can generate and view reports (orders, inventory, usage, invoices, IVR status, etc.)
+Can filter and export report data
+
+PROFILE MANAGEMENT
+Can view and update profile details
+Can update login credentials
+CLINIC USER
+
+ACCOUNT AUTHENTICATION
+Can login and logout
+Can recover password
+    
+ORDER MANAGEMENT
+Can create new orders for their clinic (if patient is IVR eligible)
+Can select patient, brand, product, size, and quantity
+Can view and track their own orders and statuses
+Can view assigned serial numbers after delivery
+    
+GRAFT USAGE LOGGING
+Can log usage for delivered serials (patient, date, wound site, clinician, notes)
+Can upload bulk usage logs (if enabled)
+Can view and filter their own usage logs
+    
+INVOICE & PAYMENT TRACKING
+Can view invoices associated with their clinic
+Can view invoice details, payment status, and linked serials
+Cannot edit invoice data
+    
+IVR (INSURANCE VERIFICATION) STATUS
+Can view IVR status for their patients (read-only)
+Can see if patient is eligible for ordering
+
+NOTIFICATIONS & ALERTS
+Receives notifications for order status updates, serial delivery, usage log reminders, new invoices, etc.
+    
+REPORTING
+Can generate and view reports for their clinic (orders, usage, invoices, etc.)
+Can filter and export report data
+    
+PROFILE MANAGEMENT
+Can view and update profile details
+Can update login credentials
+
+ MANUFACTURER (NO LOGIN)
+
+ORDER STATUS UPDATES
+Receives order emails with secure action links (Acknowledge, Mark Shipped, Mark Delivered)
+Can update order status via email link (no system login)

@@ -1,0 +1,115 @@
+📄 Invoice Upload & Payment Tracking – Workflow & Overview
+
+✅ MODULE PURPOSE (Overview)
+This module allows staff to upload invoice PDFs received from a 3rd-party biller and track which invoices—and their corresponding graft serial numbers—have been paid. The system should minimize manual work by intelligently extracting invoice data, grouping multi-page invoices, and updating payment statuses based on synced data from a Google Sheet or uploaded receipts.
+
+📌 KEY FEATURES
+Upload invoice PDFs (with mixed 1-page and multi-page invoices)
+Automatically extract invoice numbers, graft serial numbers, item details, and total amount using OCR
+Group multi-page invoices by invoice number
+Track payment status of invoices and graft serials
+Update payment status via:
+Google Sheet sync (preferred)
+Manual receipt upload (optional)
+Allow staff to review and correct extracted data
+Link invoices to order records and track graft usage by serial
+
+🔁 STEP-BY-STEP WORKFLOW
+
+1. Upload PDF Invoices
+Staff uploads a PDF file from the 3rd-party biller.
+PDF may contain:
+One-page invoices
+Multi-page invoices (same invoice number across pages)
+A mix of both in the same file
+
+2. Page Splitting & Invoice Grouping
+System splits the uploaded PDF into individual pages.
+OCR scans each page for the invoice number.
+Pages with the same invoice number are grouped into a single invoice record.
+Example:
+Page 1 = Invoice #1001 ➜ single invoice
+Pages 2–3 = Invoice #1002 ➜ grouped invoice
+Pages 4–5 = Invoice #1003 ➜ grouped invoice
+
+3. OCR Data Extraction
+From each grouped invoice, system extracts:
+Invoice number
+Invoice date
+Buyer/clinic/agency name
+Product list:
+Graft name
+Size
+Serial numbers (if present)
+Unit prices
+Total invoice amount (sum if spread across multiple pages)
+🔧 Manual review screen allows staff to correct any OCR errors before saving.
+
+4. Link to Orders (Optional)
+Staff can optionally link the invoice to an existing order based on:
+Buyer name
+Serial number
+Order ID
+If the invoice includes serials already tracked in the system, system auto-suggests matching orders.
+
+5. Payment Status Tracking
+🅰️ Preferred Method – Google Sheet Sync
+3rd party biller maintains a shared Google Sheet of invoice statuses with columns like:
+Invoice Number
+Payment Status (Paid, Unpaid, Partial)
+Payment Date
+The system automatically checks the sheet (daily/weekly) to match invoice numbers and update statuses.
+🅱️ Optional Method – Manual Receipt Upload
+If no sheet is available, staff can upload a receipt or confirmation file.
+Staff manually marks the invoice as Paid, Unpaid, or Partially Paid.
+
+6. Serial Number-Level Tracking
+System checks the serial numbers listed in each invoice.
+When the invoice is marked as Paid:
+Only serial numbers listed in that invoice are marked Paid.
+Serial numbers not included remain Unpaid.
+Partial payments must be matched to the correct serials if possible (via biller or admin).
+
+7. Data Visibility & Notifications
+Admin/sales rep receives notifications (in-system + email) when:
+New invoice uploaded
+Invoice marked as paid
+Can view:
+List of all invoices by status
+Filter by buyer, date, payment status
+Drill-down into invoice details and linked serials
+
+📊 REPORTING MODULE (Optional Add-on)
+Generate reports for:
+Paid vs unpaid invoices
+Paid vs unpaid graft serials
+Invoice totals by agency, date range, or product
+Grafts used with no invoice linked (usage but not billed)
+Invoices with no usage log yet
+
+🔐 ACCESS CONTROL
+Role
+Permissions
+Admin/Sales
+Full access to upload, view, edit, and link invoices
+Buyer/Agency
+View only invoices associated with their account (optional)
+Biller
+Optional access to upload or sync payment data (if needed)
+
+
+⚠️ Edge Case Handling
+Case
+Handling
+Multi-page invoice with same invoice number
+Pages grouped into one invoice
+Mixed invoices in one PDF
+System handles each invoice based on invoice number
+No serial numbers on invoice
+Staff links serials manually
+Partial payment
+Match serials manually or via biller sheet
+Graft reused for multiple patients/wounds
+Handled by usage log module, not invoice module
+
+

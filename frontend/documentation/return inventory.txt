@@ -1,0 +1,18 @@
+🔁 Return Inventory System (Admin-Only, with Auto Extraction)
+🎯 Objective:
+Allow admin to upload return documents (photos or labels), and the system automatically extracts the serial number, expiry date, and size of the returned grafts for tracking and reporting.
+
+✅ Features & Flow
+1. Admin Return Entry Panel
+Fields/Functions:
+Select Product (Dropdown)
+Select or auto-detect Manufacturer (linked to product)
+Upload:
+📄 Return Label (PDF/Image)
+🖼 Photos of Returned Grafts (must contain serial, size, and expiry)
+System auto-extracts:
+Serial Number
+Expiry Date
+Size (e.g., 2cm x 2cm)
+Admin only confirms/corrects results if needed — no manual typing.
+
