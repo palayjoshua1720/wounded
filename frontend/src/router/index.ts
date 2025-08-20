@@ -1,12 +1,8 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import AppLayout from '@/components/layout/AppLayout.vue'
-import HomeView from '@/views/HomeView.vue'
-import AboutView from '@/views/AboutView.vue'
 import LoginView from '@/views/LoginView.vue'
 import NotFoundView from '@/views/NotFoundView.vue'
-import HomeIcon from '@/components/icons/HomeIcon.vue'
-import AboutIcon from '@/components/icons/AboutIcon.vue'
 import ForgotPasswordView from '@/views/ForgotPasswordView.vue'
 import AdminDashboardView from '@/views/AdminDashboardView.vue'
 import ClinicDashboardView from '@/views/ClinicDashboardView.vue'
@@ -19,10 +15,11 @@ import ReportCenterView from '@/views/ReportCenterView.vue'
 import ReturnManagementView from '@/views/ReturnManagementView.vue'
 import UsageLoggingView from '@/views/UsageLoggingView.vue'
 import UserManagementView from '@/views/UserManagementView.vue'
+import ClinicManagementView from '@/views/ClinicManagementView.vue'
 import ProfileView from '@/views/ProfileView.vue'
 import ChangeAccountView from '@/views/ChangeAccountView.vue'
 import SettingsView from '@/views/SettingsView.vue'
-import { ClipboardDocumentCheckIcon, Squares2X2Icon, BuildingLibraryIcon, ClipboardDocumentListIcon, ShieldCheckIcon, BellIcon, ShoppingCartIcon, ChartBarIcon, ArrowPathIcon, UsersIcon, CalculatorIcon, CubeIcon } from '@heroicons/vue/24/outline'
+import { ClipboardDocumentCheckIcon, Squares2X2Icon, BuildingLibraryIcon, ClipboardDocumentListIcon, ShieldCheckIcon, BellIcon, ShoppingCartIcon, ChartBarIcon, ArrowPathIcon, CalculatorIcon, CubeIcon, UsersIcon } from '@heroicons/vue/24/outline'
 
 // Types
 interface NavigationItem {
@@ -44,26 +41,6 @@ const routes: RouteRecordRaw[] = [
 		component: AppLayout,
 		meta: { requiresAuth: true },
 		children: [
-		{
-			path: '',
-			name: 'home',
-			component: HomeView,
-			meta: {
-			requiresAuth: true,
-				title: 'Home',
-				icon: HomeIcon
-			}
-		},
-		{
-			path: 'about',
-			name: 'about',
-			component: AboutView,
-			meta: {
-			requiresAuth: true,
-				title: 'About',
-				icon: AboutIcon
-			}
-		},
 		{
 			path: 'admin-dashboard',
 			name: 'admin-dashboard',
@@ -91,6 +68,16 @@ const routes: RouteRecordRaw[] = [
 			meta: {
 			requiresAuth: true,
 				title: 'User Management',
+				icon: UsersIcon
+			}
+		},
+		{
+			path: 'clinic',
+			name: 'clinic',
+			component: ClinicManagementView,
+			meta: {
+			requiresAuth: true,
+				title: 'Clinic Management',
 				icon: UsersIcon
 			}
 		},
@@ -257,28 +244,38 @@ const router = createRouter({
 
 // Navigation Helper
 export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] => {
+	const authStore = useAuthStore()
 	const layoutRoute = routes.find(route => route.path === '/')
 	if (!layoutRoute?.children) return []
 
-	const role = Number(localStorage.getItem('mock-role') || 0)
+	const role = authStore.user?.user_role ?? 0
 
 	const routeRoles: Record<string, number[]> = {
 		'admin-dashboard': [0, 1],
 		'clinic-dashboard': [0, 1, 2],
+		'clinic': [0, 1, 2],
 		'inventory': [0, 1],
-		'invoices': [0, 1, 2],
-		'ivr': [0, 1, 2],
-		'notifications': [0, 1, 2],
-		'orders': [0, 1, 2],
-		'reports': [0, 1, 2],
+		'invoices': [0, 1],
+		'ivr': [0, 1],
+		'notifications': [0, 1],
+		'orders': [0, 1],
+		'reports': [0, 1],
 		'returns': [0, 1],
-		'usage': [0, 1, 2],
+		'usage': [0, 1],
 		'users': [0, 1],
 		'smart-selector': [0, 1, 2, 3, 4, 5, 6],
 	}
 
 	return layoutRoute.children
 	.filter(route => {
+		if (role === 0) {
+			return true
+		}
+
+		if (role === 2) {
+			return ['clinic-dashboard', 'clinic'].includes(route.name as string)
+		}
+
 		const allowedRoles = routeRoles[route.name as string]
       	return allowedRoles?.includes(role) ?? false
 	})

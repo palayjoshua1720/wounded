@@ -26,6 +26,9 @@ class AuthController extends Controller
             ], 401);
         }
 
+        $user->last_logged_in = now();
+        $user->save();
+
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([

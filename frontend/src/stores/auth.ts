@@ -35,8 +35,6 @@ export const useAuthStore = defineStore('auth', () => {
 	const token = ref<string | null>(localStorage.getItem('token'))
 	const loading = ref(false)
 	const error = ref<string | null>(null)
-	const userTemp = ref<string | null>(null)
-	const tokenTemp = ref<string | null>(null)
 
 	// Getters
 	const isAuthenticated = computed(() => !!token.value)

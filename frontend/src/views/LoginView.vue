@@ -141,9 +141,9 @@
                         </div>
 
                         <!-- 2FA Form -->
-                        <form v-if="continue2FA" @submit.prevent="handleSecurity" class="space-y-4 bg-white dark:bg-gray-800 rounded-lg relative">
+                        <form v-if="continue2FA" @submit.prevent="handleSecurity" class="space-y-4 bg-white dark:bg-gray-900 rounded-lg relative">
                             <label for="tfa" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                Enter 2FA PIN
+                                Enter your Two-Factor Authentication Pin
                             </label>
                             <div class="flex space-x-3 justify-center mb-4">
                                 <input
