@@ -63,7 +63,9 @@
                             <div>
                                 <label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email Address</label>
                                 <div class="relative">
-                                    <svg class="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 z-10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M12 14c-4.418 0-8 1.79-8 4v2h16v-2c0-2.21-3.582-4-8-4z" /></svg>
+                                    <svg class="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 z-10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M12 14c-4.418 0-8 1.79-8 4v2h16v-2c0-2.21-3.582-4-8-4z" />
+                                    </svg>
                                     <input
                                     id="email"
                                     name="email"
@@ -118,30 +120,54 @@
                         :disabled="loading"
                         class="group relative w-full flex justify-center items-center py-3 px-4 border border-transparent text-sm font-medium rounded text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                         >
-                            Sign In
+                            {{ loading ? 'Signing In...' : 'Sign In'}}
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 ml-2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 9V5.25A2.25 2.25 0 0 1 10.5 3h6a2.25 2.25 0 0 1 2.25 2.25v13.5A2.25 2.25 0 0 1 16.5 21h-6a2.25 2.25 0 0 1-2.25-2.25V15M12 9l3 3m0 0-3 3m3-3H2.25"></path>
                             </svg>
                         </button>
                     </form>
-                    <form v-if="continue2FA" @submit.prevent="handleSecurity" class="space-y-4">
-                        <label for="tfa" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Enter 2FA PIN</label>
-                        <input
-                            id="tfa"
-                            v-model="tfaInput"
-                            maxlength="4"
-                            inputmode="numeric"
-                            class="block w-full px-3 py-3 border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-white bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="4-digit PIN"
-                            autocomplete="one-time-code"
-                        />
-                        <button
+                    <div class="relative w-full mx-auto">
+                        <!-- Loader overlay -->
+                        <div v-if="loading2FA" class="absolute inset-0 flex items-center justify-center bg-white/70 dark:bg-gray-900/70 z-10 rounded-lg">
+                            <span class="relative flex items-center justify-center h-16 w-16">
+                                <svg class="absolute animate-ping-slow h-16 w-16 text-blue-400 dark:text-blue-700 opacity-30" viewBox="0 0 64 64" fill="none" >
+                                    <circle cx="32" cy="32" r="28" stroke="currentColor" stroke-width="4" />
+                                </svg>
+                                <svg class="relative h-12 w-12 text-blue-600 dark:text-blue-400" viewBox="0 0 64 64" fill="none">
+                                    <rect x="27" y="12" width="10" height="40" rx="3" fill="currentColor" />
+                                    <rect x="12" y="27" width="40" height="10" rx="3" fill="currentColor" />
+                                </svg>
+                            </span>
+                        </div>
+
+                        <!-- 2FA Form -->
+                        <form v-if="continue2FA" @submit.prevent="handleSecurity" class="space-y-4 bg-white dark:bg-gray-800 rounded-lg relative">
+                            <label for="tfa" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Enter 2FA PIN
+                            </label>
+                            <div class="flex space-x-3 justify-center mb-4">
+                                <input
+                                v-for="(d, i) in 4"
+                                :key="i"
+                                :ref="el => { const input = el as HTMLInputElement; if (input && input.tagName === 'INPUT') setPinRefs[i].value = input }"
+                                v-model="pinBoxes[i]"
+                                type="text"
+                                maxlength="1"
+                                inputmode="numeric"
+                                pattern="\d"
+                                class="w-12 h-12 text-center border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                                @input="e => onPinBoxInput(i, 'set', e as InputEvent)"
+                                @keydown="e => onPinBoxKeydown(i, 'set', e)"
+                                />
+                            </div>
+                            <button
                             type="submit"
                             class="w-full py-3 px-4 bg-blue-600 text-white rounded font-medium hover:bg-blue-700 transition-colors"
-                        >
-                            Verify
-                        </button>
-                    </form>
+                            >
+                                {{ loading2FA ? 'Verifying...' : 'Verify'}}
+                            </button>
+                        </form>
+                    </div>
                     <div v-if="hasSavedAccounts" class="my-6 flex flex-col items-center">
                         <button @click="goToSwitchAccount" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded font-medium transition-colors">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-2">
@@ -182,24 +208,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useLogin } from '@/composables/auth/useLogin'
 import { useRouter } from 'vue-router'
 import { EyeIcon, EyeSlashIcon } from '@heroicons/vue/24/outline'
 
-const { email, password, loading, error, tfaInput, handleLogin, proceedLogin, continue2FA, handleSecurity } = useLogin()
+const { email, password, loading, loading2FA, pinBoxes, handleLogin, proceedLogin, continue2FA, handleSecurity } = useLogin()
 const showPassword = ref(false)
 const router = useRouter()
-
-// Add logic to check for saved accounts
 const hasSavedAccounts = ref(false)
-
-onMounted(() => {
-    proceedLogin.value = true
-    continue2FA.value = false
-    const accs = localStorage.getItem('accounts')
-    hasSavedAccounts.value = !!accs && JSON.parse(accs).length > 0
-})
+const setPinRefs = [ref<HTMLInputElement>(), ref<HTMLInputElement>(), ref<HTMLInputElement>(), ref<HTMLInputElement>()]
+const newPinBoxes = ref<string[]>(['', '', '', ''])
+const changePinRefs = [ref<HTMLInputElement>(), ref<HTMLInputElement>(), ref<HTMLInputElement>(), ref<HTMLInputElement>()]
 
 function goToForgotPassword() {
     router.push({ name: 'forgot-password' })
@@ -208,6 +228,65 @@ function goToForgotPassword() {
 function goToSwitchAccount() {
     router.push({ name: 'change-account' })
 }
+
+function onPinBoxInput(i: number, mode: 'set' | 'change', e: InputEvent) {
+    const arr = mode === 'set' ? pinBoxes.value : newPinBoxes.value
+    const refs = mode === 'set' ? setPinRefs : changePinRefs
+    const input = e.target as HTMLInputElement
+    let val = input.value.replace(/[^\d]/g, '')
+
+    // Handle paste or fast typing
+    if (e.inputType === 'insertFromPaste' || val.length > 1) {
+        const pasted = (e.data || val).replace(/[^\d]/g, '')
+        for (let j = 0; j < 4; j++) {
+            arr[j] = pasted[j] || ''
+        }
+        refs[Math.min(pasted.length, 4) - 1]?.value?.focus()
+        return
+    }
+
+    arr[i] = val
+    if (val && i < 3) {
+        refs[i + 1].value?.focus()
+    }
+}
+
+function onPinBoxKeydown(i: number, mode: 'set' | 'change', e: KeyboardEvent) {
+    const arr = mode === 'set' ? pinBoxes.value : newPinBoxes.value
+    const refs = mode === 'set' ? setPinRefs : changePinRefs
+
+    if (e.key === 'Backspace') {
+        if (arr[i]) {
+            arr[i] = ''
+        } else if (i > 0) {
+            refs[i - 1].value?.focus()
+            arr[i - 1] = ''
+            e.preventDefault()
+        }
+    } else if (e.key === 'Delete') {
+        if (arr[i]) {
+            arr[i] = ''
+        } else if (i < 3) {
+            refs[i + 1].value?.focus()
+            e.preventDefault()
+        }
+    } else if (e.key >= '0' && e.key <= '9' && arr[i] && i < 3) {
+        refs[i + 1].value?.focus()
+    } else if (e.key === 'ArrowLeft' && i > 0) {
+        refs[i - 1].value?.focus()
+        e.preventDefault()
+    } else if (e.key === 'ArrowRight' && i < 3) {
+        refs[i + 1].value?.focus()
+        e.preventDefault()
+    }
+}
+
+onMounted(() => {
+    proceedLogin.value = true
+    continue2FA.value = false
+    const accs = localStorage.getItem('accounts')
+    hasSavedAccounts.value = !!accs && JSON.parse(accs).length > 0
+})
 </script> 
 
 <style scoped>

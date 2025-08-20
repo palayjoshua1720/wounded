@@ -39,214 +39,214 @@ interface RouteMeta {
 
 // Route Configuration
 const routes: RouteRecordRaw[] = [
-  {
-    path: '/',
-    component: AppLayout,
-    meta: { requiresAuth: true },
-    children: [
-      {
-        path: '',
-        name: 'home',
-        component: HomeView,
-        meta: {
-          requiresAuth: true,
-          title: 'Home',
-          icon: HomeIcon
-        }
-      },
-      {
-        path: 'about',
-        name: 'about',
-        component: AboutView,
-        meta: {
-          requiresAuth: true,
-          title: 'About',
-          icon: AboutIcon
-        }
-      },
-      {
-        path: 'admin-dashboard',
-        name: 'admin-dashboard',
-        component: AdminDashboardView,
-        meta: {
-          requiresAuth: true,
-          title: 'Dashboard',
-          icon: Squares2X2Icon
-        }
-      },
-      {
-        path: 'clinic-dashboard',
-        name: 'clinic-dashboard',
-        component: ClinicDashboardView,
-        meta: {
-          requiresAuth: true,
-          title: 'Clinic Dashboard',
-          icon: BuildingLibraryIcon
-        }
-      },
-      {
-        path: 'users',
-        name: 'users',
-        component: UserManagementView,
-        meta: {
-          requiresAuth: true,
-          title: 'User Management',
-          icon: UsersIcon
-        }
-      },
-      {
-        path: 'orders',
-        name: 'orders',
-        component: OrderManagementView,
-        meta: {
-          requiresAuth: true,
-          title: 'Order Management',
-          icon: ShoppingCartIcon
-        }
-      },
-      {
-        path: 'usage',
-        name: 'usage',
-        component: UsageLoggingView,
-        meta: {
-          requiresAuth: true,
-          title: 'Graft Usage',
-          icon: ClipboardDocumentCheckIcon
-        }
-      },
-      {
-        path: 'invoices',
-        name: 'invoices',
-        component: InvoiceManagementView,
-        meta: {
-          requiresAuth: true,
-          title: 'Invoices & Payments',
-          icon: ClipboardDocumentListIcon
-        }
-      },
-      {
-        path: 'ivr',
-        name: 'ivr',
-        component: IVRManagementView,
-        meta: {
-          requiresAuth: true,
-          title: 'IVR Management',
-          icon: ShieldCheckIcon
-        }
-      },
-      {
-        path: 'inventory',
-        name: 'inventory',
-        component: InventoryManagementView,
-        meta: {
-          requiresAuth: true,
-          title: 'Inventory & Serials',
-          icon: CubeIcon
-        }
-      },
-      {
-        path: 'notifications',
-        name: 'notifications',
-        component: NotificationCenterView,
-        meta: {
-          requiresAuth: true,
-          title: 'Notifications',
-          icon: BellIcon
-        }
-      },
-      {
-        path: 'returns',
-        name: 'returns',
-        component: ReturnManagementView,
-        meta: {
-          requiresAuth: true,
-          title: 'Return Management',
-          icon: ArrowPathIcon
-        }
-      },
-      {
-        path: 'profile',
-        name: 'profile',
-        component: ProfileView,
-        meta: {
-          requiresAuth: true,
-          title: 'Profile',
-          icon: UsersIcon
-        }
-      },
-      {
-        path: 'smart-selector',
-        name: 'smart-selector',
-        component: () => import('@/views/SmartGraftSelectorView.vue'),
-        meta: {
-          requiresAuth: true,
-          title: 'Smart Size Calculator',
-          icon: CalculatorIcon // You may need to import this icon at the top
-        }
-      },
-      {
-        path: 'reports',
-        name: 'reports',
-        component: ReportCenterView,
-        meta: {
-          requiresAuth: true,
-          title: 'Reports',
-          icon: ChartBarIcon
-        }
-      },
-    ]
-  },
-  {
-    path: '/settings',
-    name: 'settings',
-    component: SettingsView,
-    meta: {
-      requiresAuth: true,
-      title: 'Settings'
-    }
-  },
-  {
-    path: '/change-account',
-    name: 'change-account',
-    component: ChangeAccountView,
-    meta: {
-      requiresAuth: false,
-      title: 'Change Account'
-    }
-  },
-  {
-    path: '/login',
-    name: 'login',
-    component: LoginView,
-    meta: {
-      requiresAuth: false,
-      title: 'Login'
-    }
-  },
-  {
-    path: '/forgot-password',
-    name: 'forgot-password',
-    component: ForgotPasswordView,
-    meta: {
-      requiresAuth: false,
-      title: 'Forgot Password'
-    }
-  },
-  {
-    path: '/500',
-    name: 'server-error',
-    component: () => import('@/views/ServerErrorView.vue'),
-    meta: { requiresAuth: false }
-  },
-  {
-    path: '/:pathMatch(.*)*',
-    name: 'not-found',
-    component: NotFoundView,
-    meta: {
-      requiresAuth: false,
-      title: 'Not Found'
-    }
-  }
+	{
+		path: '/',
+		component: AppLayout,
+		meta: { requiresAuth: true },
+		children: [
+		{
+			path: '',
+			name: 'home',
+			component: HomeView,
+			meta: {
+			requiresAuth: true,
+				title: 'Home',
+				icon: HomeIcon
+			}
+		},
+		{
+			path: 'about',
+			name: 'about',
+			component: AboutView,
+			meta: {
+			requiresAuth: true,
+				title: 'About',
+				icon: AboutIcon
+			}
+		},
+		{
+			path: 'admin-dashboard',
+			name: 'admin-dashboard',
+			component: AdminDashboardView,
+			meta: {
+			requiresAuth: true,
+				title: 'Dashboard',
+				icon: Squares2X2Icon
+			}
+		},
+		{
+			path: 'clinic-dashboard',
+			name: 'clinic-dashboard',
+			component: ClinicDashboardView,
+			meta: {
+			requiresAuth: true,
+				title: 'Clinic Dashboard',
+				icon: BuildingLibraryIcon
+			}
+		},
+		{
+			path: 'users',
+			name: 'users',
+			component: UserManagementView,
+			meta: {
+			requiresAuth: true,
+				title: 'User Management',
+				icon: UsersIcon
+			}
+		},
+		{
+			path: 'orders',
+			name: 'orders',
+			component: OrderManagementView,
+			meta: {
+			requiresAuth: true,
+				title: 'Order Management',
+				icon: ShoppingCartIcon
+			}
+		},
+		{
+			path: 'usage',
+			name: 'usage',
+			component: UsageLoggingView,
+			meta: {
+			requiresAuth: true,
+				title: 'Graft Usage',
+				icon: ClipboardDocumentCheckIcon
+			}
+		},
+		{
+			path: 'invoices',
+			name: 'invoices',
+			component: InvoiceManagementView,
+			meta: {
+			requiresAuth: true,
+				title: 'Invoices & Payments',
+				icon: ClipboardDocumentListIcon
+			}
+		},
+		{
+			path: 'ivr',
+			name: 'ivr',
+			component: IVRManagementView,
+			meta: {
+			requiresAuth: true,
+				title: 'IVR Management',
+				icon: ShieldCheckIcon
+			}
+		},
+		{
+			path: 'inventory',
+			name: 'inventory',
+			component: InventoryManagementView,
+			meta: {
+			requiresAuth: true,
+				title: 'Inventory & Serials',
+				icon: CubeIcon
+			}
+		},
+		{
+			path: 'notifications',
+			name: 'notifications',
+			component: NotificationCenterView,
+			meta: {
+			requiresAuth: true,
+				title: 'Notifications',
+				icon: BellIcon
+			}
+		},
+		{
+			path: 'returns',
+			name: 'returns',
+			component: ReturnManagementView,
+			meta: {
+			requiresAuth: true,
+				title: 'Return Management',
+				icon: ArrowPathIcon
+			}
+		},
+		{
+			path: 'profile',
+			name: 'profile',
+			component: ProfileView,
+			meta: {
+			requiresAuth: true,
+				title: 'Profile',
+				icon: UsersIcon
+			}
+		},
+		{
+			path: 'smart-selector',
+			name: 'smart-selector',
+			component: () => import('@/views/SmartGraftSelectorView.vue'),
+			meta: {
+			requiresAuth: true,
+				title: 'Smart Size Calculator',
+				icon: CalculatorIcon // You may need to import this icon at the top
+			}
+		},
+		{
+			path: 'reports',
+			name: 'reports',
+			component: ReportCenterView,
+			meta: {
+			requiresAuth: true,
+				title: 'Reports',
+				icon: ChartBarIcon
+			}
+		},
+		]
+	},
+	{
+		path: '/settings',
+		name: 'settings',
+		component: SettingsView,
+		meta: {
+			requiresAuth: true,
+			title: 'Settings'
+		}
+	},
+	{
+		path: '/change-account',
+		name: 'change-account',
+		component: ChangeAccountView,
+		meta: {
+			requiresAuth: false,
+			title: 'Change Account'
+		}
+	},
+	{
+		path: '/login',
+		name: 'login',
+		component: LoginView,
+		meta: {
+			requiresAuth: false,
+			title: 'Login'
+		}
+	},
+	{
+		path: '/forgot-password',
+		name: 'forgot-password',
+		component: ForgotPasswordView,
+		meta: {
+			requiresAuth: false,
+			title: 'Forgot Password'
+		}
+	},
+	{
+		path: '/500',
+		name: 'server-error',
+		component: () => import('@/views/ServerErrorView.vue'),
+		meta: { requiresAuth: false }
+	},
+	{
+		path: '/:pathMatch(.*)*',
+		name: 'not-found',
+		component: NotFoundView,
+		meta: {
+			requiresAuth: false,
+			title: 'Not Found'
+		}
+	}
 ]
 
 // Router Instance
@@ -257,131 +257,118 @@ const router = createRouter({
 
 // Navigation Helper
 export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] => {
-  const layoutRoute = routes.find(route => route.path === '/')
-  if (!layoutRoute?.children) return []
-  const role = localStorage.getItem('mock-role')
-  return layoutRoute.children
-    .filter(route => {
-      if (route.name === 'admin-dashboard') {
-        return role === 'admin' || role === 'sales'
-      }
-      if (route.name === 'clinic-dashboard') {
-        return role === 'admin' || role === 'clinic' || role === 'sales'
-      }
-      if (route.name === 'inventory') {
-        return role === 'admin' || role === 'sales'
-      }
-      if (route.name === 'invoices') {
-        return role === 'admin' || role === 'clinic' || role === 'sales'
-      }
-      if (route.name === 'ivr') {
-        return role === 'admin' || role === 'clinic' || role === 'sales'
-      }
-      if (route.name === 'notifications') {
-        return role === 'admin' || role === 'clinic' || role === 'sales'
-      }
-      if (route.name === 'orders') {
-        return role === 'admin' || role === 'clinic' || role === 'sales'
-      }
-      if (route.name === 'reports') {
-        return role === 'admin' || role === 'clinic' || role === 'sales'
-      }
-      if (route.name === 'returns') {
-        return role === 'admin' || role === 'sales'
-      }
-      if (route.name === 'usage') {
-        return role === 'admin' || role === 'clinic' || role === 'sales'
-      }
-      if (route.name === 'users') {
-        return role === 'admin' || role === 'sales'
-      }
-      if (route.name === 'smart-selector') {
-        return true // Show for all roles
-      }
-      return false
-    })
-    .map(route => {
-      const meta = route.meta as RouteMeta
-      let title = meta?.title || String(route.name)
-      
-      // Role-based title adjustments
-      if (role === 'clinic') {
-        if (route.name === 'orders') {
-          title = 'My Orders'
-        } else if (route.name === 'usage') {
-          title = 'Usage Logging'
-        } else if (route.name === 'invoices') {
-          title = 'Invoices'
-        } else if (route.name === 'ivr') {
-          title = 'IVR Status'
-        } else if (route.name === 'reports') {
-          title = 'Reports'
-        }
-      }
-      
-      return {
-        name: title,
-        to: `/${route.path}`,
-        icon: meta?.icon
-      }
+	const layoutRoute = routes.find(route => route.path === '/')
+	if (!layoutRoute?.children) return []
+
+	const role = Number(localStorage.getItem('mock-role') || 0)
+
+	const routeRoles: Record<string, number[]> = {
+		'admin-dashboard': [0, 1],
+		'clinic-dashboard': [0, 1, 2],
+		'inventory': [0, 1],
+		'invoices': [0, 1, 2],
+		'ivr': [0, 1, 2],
+		'notifications': [0, 1, 2],
+		'orders': [0, 1, 2],
+		'reports': [0, 1, 2],
+		'returns': [0, 1],
+		'usage': [0, 1, 2],
+		'users': [0, 1],
+		'smart-selector': [0, 1, 2, 3, 4, 5, 6],
+	}
+
+	return layoutRoute.children
+	.filter(route => {
+		const allowedRoles = routeRoles[route.name as string]
+      	return allowedRoles?.includes(role) ?? false
+	})
+	.map(route => {
+		const meta = route.meta as RouteMeta
+		let title = meta?.title || String(route.name)
+
+		// Role-based title adjustments
+		if (role === 2) {
+			switch (route.name) {
+			case 'orders':
+				title = 'My Orders'
+				break
+			case 'usage':
+				title = 'Usage Logging'
+				break
+			case 'invoices':
+				title = 'Invoices'
+				break
+			case 'ivr':
+				title = 'IVR Status'
+				break
+			case 'reports':
+				title = 'Reports'
+				break
+			}
+		}
+
+		return {
+			name: title,
+			to: `/${route.path}`,
+			icon: meta?.icon
+		}
     })
 }
 
 // Navigation Guards
 router.beforeEach(async (to, from, next) => {
-  const authStore = useAuthStore()
-  const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
+	const authStore = useAuthStore()
+	const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
 
-  // Check if route requires authentication
-  if (requiresAuth) {
-    // Check if user is authenticated
-    const isAuthenticated = await authStore.checkAuth()
-    if (!isAuthenticated) {
-      next({ name: 'login', query: { redirect: to.fullPath } })
-      return
-    }
-    // Role-based access
-    const role = authStore.user?.role || localStorage.getItem('mock-role')
-    if (to.name === 'admin-dashboard' && role !== 'admin' && role !== 'sales') {
-      // Only admin and sales can access admin-dashboard
-      next({ name: 'clinic-dashboard' })
-      return
-    }
-    if (to.name === 'clinic-dashboard' && role !== 'admin' && role !== 'clinic' && role !== 'sales') {
-      // Only admin, clinic, and sales can access clinic-dashboard
-      next({ name: 'admin-dashboard' })
-      return
-    }
-    if (to.name === 'notifications' && role !== 'admin' && role !== 'clinic' && role !== 'sales') {
-      // Only admin, clinic, and sales can access notifications
-      next({ name: 'admin-dashboard' })
-      return
-    }
-    if (to.name === 'orders' && role !== 'admin' && role !== 'clinic' && role !== 'sales') {
-      // Only admin, clinic, and sales can access orders
-      next({ name: 'admin-dashboard' })
-      return
-    }
-    if (to.name === 'reports' && role !== 'admin' && role !== 'clinic' && role !== 'sales') {
-      // Only admin, clinic, and sales can access reports
-      next({ name: 'admin-dashboard' })
-      return
-    }
-  }
+	const Admin = 0;
+	const OfficeStaff = 1;
+	const Clinics = 2;
+	const Clinician = 3;
+	const Manufacturer = 4;
+	const Biller = 5;
 
-  // If user is authenticated and trying to access login page
-  if (to.name === 'login' && authStore.isAuthenticated) {
-    const role = authStore.user?.role || localStorage.getItem('mock-role')
-    if (role === 'clinic') {
-      next({ name: 'clinic-dashboard' })
-    } else {
-      // admin and sales users go to admin dashboard
-      next({ name: 'admin-dashboard' })
-    }
-    return
-  }
+	// Check if route requires authentication
+	if (requiresAuth) {
+		const isAuthenticated = await authStore.checkAuth()
+		if (!isAuthenticated) {
+			next({ name: 'login', query: { redirect: to.fullPath } })
+			return
+		}
 
-  next()
+		// Ensure role is numeric
+		const role = authStore.user?.user_role ?? parseInt(localStorage.getItem('user_role') || '-1')
+
+		// Admin Dashboard access → Admin + OfficeStaff
+		if (to.name === 'admin-dashboard' && role !== Admin && role !== OfficeStaff) {
+			next({ name: 'clinic-dashboard' })
+			return
+		}
+
+		// Clinic Dashboard access → Admin + OfficeStaff + Clinics
+		if (to.name === 'clinic-dashboard' && role !== Admin && role !== OfficeStaff && role !== Clinics) {
+			next({ name: 'admin-dashboard' })
+			return
+		}
+
+		// Notifications / Orders / Reports → Admin + OfficeStaff + Clinics
+		if (['notifications', 'orders', 'reports'].includes(to.name?.toString() || '') && role !== Admin && role !== OfficeStaff && role !== Clinics) {
+			next({ name: 'admin-dashboard' })
+			return
+		}
+		}
+
+		// If authenticated and going to login page
+		if (to.name === 'login' && authStore.isAuthenticated) {
+		const role = authStore.user?.user_role ?? parseInt(localStorage.getItem('user_role') || '-1')
+		if (role === Clinics) {
+			next({ name: 'clinic-dashboard' })
+		} else {
+			next({ name: 'admin-dashboard' })
+		}
+		return
+	}
+
+	next()
 })
 
 export default router 

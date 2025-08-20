@@ -132,7 +132,7 @@ Key environment variables in `.env`:
    ```
 
 3. **Cache Issues**
-   - Clear application cache:
+   - Clear application cache:cd 
    ```bash
    php artisan cache:clear
    php artisan config:clear

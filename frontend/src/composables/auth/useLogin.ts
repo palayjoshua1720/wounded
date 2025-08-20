@@ -15,27 +15,31 @@
  */
 
 import { ref } from 'vue'
-import { watchEffect } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { toast } from 'vue3-toastify'
+import axios from 'axios'
 import 'vue3-toastify/dist/index.css'
+import api from '@/services/api'
 
 // Global loader state for logout
 export const logoutLoading = ref(false)
 
 export function useLogin() {
 	const router = useRouter()
-	const route = useRoute()
 	const authStore = useAuthStore()
 
 	const email = ref('')
 	const password = ref('')
-	const tfaInput = ref('')
 	const loading = ref(false)
 	const error = ref('')
-	const proceedLogin = ref(false)
+	const proceedLogin = ref(true)
 	const continue2FA = ref(false)
+	const loading2FA = ref(false)
+	const pinBoxes = ref(['', '', '', '']);
+
+	const tempToken = ref('')
+	const tempUser = ref<any>(null)
 
 	const handleLogin = async () => {
 		
@@ -43,59 +47,41 @@ export function useLogin() {
 			loading.value = true
 			error.value = ''
 
-			// Validate input
 			if (!email.value || !password.value) {
 				throw new Error('Please enter both email and password')
 			}
 
-			// Static credentials
-			let role = ''
-			if (email.value === 'admin@medicalinv.com' && password.value === 'password') {
-				role = 'admin'
-			} else if (email.value === 'clinic@healthcare.com' && password.value === 'password') {
-				role = 'clinic'
-			} else if (email.value === 'sales@medicalinv.com' && password.value === 'password') {
-				role = 'sales'
-			} else {
-				throw new Error('Invalid email or password')
-			}
-
-			if (localStorage.getItem('2fa-enabled') === 'true') {
-				continue2FA.value = true
-				proceedLogin.value = false
-				loading.value = false
-				return
-			}
-
-			// Mock user with role
-			const mockUser = {
-				id: 1,
+			const response = await api.post('/auth/login', {
 				email: email.value,
-				name: email.value.split('@')[0],
-				role
-			}
+				password: password.value
+			})
 
-			// Set mock user in store
-			authStore.user = mockUser
-			authStore.token = 'mock-token'
-			localStorage.setItem('token', 'mock-token')
-			localStorage.setItem('mock-email', email.value)
-			localStorage.setItem('mock-role', role)
+			const { user, token } = response.data
 
-			// Add a short delay so the loader is visible
 			await new Promise(resolve => setTimeout(resolve, 400));
 
-			// Redirect based on role
-			if (role === 'admin' || role === 'sales') {
-				await router.push('/admin-dashboard')
-			} else if (role === 'clinic') {
-				await router.push('/clinic-dashboard')
+			if (user.tfa_enabled) {
+				tempUser.value = user
+				tempToken.value = token
+				
+				continue2FA.value = true
+				proceedLogin.value = false
 			} else {
-				await router.push('/')
+				saveData(user, token)
+				continue2FA.value = false
+				proceedLogin.value = true
+				redirectBasedOnRole(user.user_role)
 			}
 		
-		} catch (err) {
-			toast.error('Login failed: ' + (err instanceof Error ? err.message : 'An error occurred'))
+		} catch (err: unknown) {
+			if (axios.isAxiosError(err) && err.response?.data) {
+				const message = (err.response.data as { message?: string }).message
+				toast.error('Login failed: ' + (message || 'An error occurred'))
+			} else if (err instanceof Error) {
+				toast.error('Login failed: ' + err.message)
+			} else {
+				toast.error('Login failed: An unknown error occurred')
+			}
 		} finally {
 			loading.value = false
 		}
@@ -113,28 +99,62 @@ export function useLogin() {
 			logoutLoading.value = false
 	}
 
-	const handleSecurity = async () => {
-		try {
-			proceedLogin.value = false
-			continue2FA.value = true
-			error.value = ''
-			const pin = tfaInput.value.trim()
-			const savedPin = localStorage.getItem('2fa-pin')
-			if (!pin || pin !== savedPin) {
-				toast.error('Invalid 2FA code. Please try again.')
-				return
-			}
-			const role = localStorage.getItem('mock-role')
-			if (role === 'admin' || role === 'sales') {
-				await router.push('/admin-dashboard')
-			} else if (role === 'clinic') {
-				await router.push('/clinic-dashboard')
-			} else {
-				await router.push('/')
-			}
-		} catch (err) {
-			error.value = err instanceof Error ? err.message : 'An error occurred during 2FA verification'
+	async function handleSecurity() {
+		loading2FA.value = true
+		const pin = pinBoxes.value.join('');
+    	console.log('PIN:', pin, pin.length, pinBoxes.value);
+		
+		if (pin.length !== 4 || !/^\d{4}$/.test(pin)) {
+			toast.error('Please enter your 4-digit 2FA PIN.');
+			loading2FA.value = false;
+			return;
 		}
+
+		try {
+			await api.post('/auth/validation/validate-tfauth', {
+				pinBoxes: pin,
+				email: tempUser.value?.email,
+			});
+
+			// Clear inputs
+			pinBoxes.value = ['', '', '', ''];
+
+			if (tempUser.value && tempToken.value) {
+				saveData(tempUser.value, tempToken.value);
+				tempUser.value = null;
+				tempToken.value = '';
+			}
+
+			redirectBasedOnRole(authStore.user?.user_role || 0);
+		} catch (err: unknown) {
+			if (axios.isAxiosError(err) && err.response?.data) {
+				const message = (err.response.data as { message?: string }).message
+				toast.error('Login failed: ' + (message || 'An error occurred'))
+			} else if (err instanceof Error) {
+				toast.error('Login failed: ' + err.message)
+			} else {
+				toast.error('Login failed: An unknown error occurred')
+			}
+		} finally {
+			continue2FA.value = true;
+			loading2FA.value = false
+		}
+	}
+
+	function redirectBasedOnRole(role: number) {
+		if (role === 0 || role === 1) {
+			router.push('/admin-dashboard')
+		} else if (role === 2) {
+			router.push('/clinic-dashboard')
+		} else {
+			router.push('/')
+		}
+	}
+
+	function saveData(user: any, token: string) {
+		authStore.user = user
+		authStore.token = token
+		localStorage.setItem('token', token)
 	}
 
 	return {
@@ -147,6 +167,7 @@ export function useLogin() {
 		proceedLogin,
 		continue2FA,
 		handleSecurity,
-		tfaInput,
+		pinBoxes,
+		loading2FA
 	}
 } 

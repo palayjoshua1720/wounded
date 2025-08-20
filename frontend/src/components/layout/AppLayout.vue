@@ -45,7 +45,7 @@
             <!-- Add your header content here -->
           </div>
           <!-- User Profile Section -->
-          <div class="ml-auto flex items-center md:ml-6 space-x-4">
+          <div class="ml-auto mr-4 flex items-center md:ml-6 space-x-4">
             <!-- Notification Icon -->
             <div class="relative">
               <button
@@ -180,7 +180,7 @@
               >
                 <!-- User Info -->
                 <div class="px-4 py-2 text-sm text-gray-700 dark:text-gray-200">
-                  <p class="font-medium truncate" :title="currentUser?.name">{{ currentUser?.name }}</p>
+                  <p class="font-medium truncate" :title="currentUser?.name">{{ currentUser?.first_name + ' ' + currentUser?.middle_name +  ' ' + currentUser?.last_name }}</p>
                   <p class="text-gray-500 dark:text-gray-400 truncate" :title="currentUser?.email">{{ currentUser?.email }}</p>
                 </div>
                 <div class="border-t border-gray-100 dark:border-gray-700"></div>

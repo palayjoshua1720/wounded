@@ -19,8 +19,10 @@ export function useUser() {
   const authStore = useAuthStore()
 
   const userInitials = computed(() => {
-    const name = authStore.currentUser?.name || ''
-    return name
+    const firstname = authStore.currentUser?.first_name || ''
+    const lastname = authStore.currentUser?.last_name || ''
+    const fullname = firstname + ' ' + lastname || ''
+    return fullname
       .split(' ')
       .map(word => word[0])
       .join('')

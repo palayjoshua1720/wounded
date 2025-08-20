@@ -69,17 +69,16 @@
 							<div class="h-24 w-24 rounded-full bg-indigo-600 flex items-center justify-center text-white text-3xl font-bold mb-3">
 								{{ userInitials }}
 							</div>
-							<h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">{{ currentUser?.name }}</h2>
+							<h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">{{ currentUser?.first_name + ' ' + currentUser?.last_name }}</h2>
 							<p class="text-gray-500 dark:text-gray-400">{{ currentUser?.email }}</p>
 							<span
+								v-if="currentUser"
 								:class="[
-								'inline-flex items-center px-3 py-1 rounded-full text-sm font-medium mt-2',
-								role === 'admin' ? 'bg-purple-100 text-purple-800' :
-								role === 'clinic' ? 'bg-blue-100 text-blue-800' :
-								'bg-green-100 text-green-800'
+									'inline-flex items-center px-3 py-1 rounded-full text-sm font-medium mt-2',
+									roleLabels[currentUser.user_role as number]?.classes || 'bg-gray-100 text-gray-800'
 								]"
 							>
-								{{ role?.toUpperCase() || 'USER' }}
+								{{ roleLabels[currentUser.user_role as number]?.label || 'User' }}
 							</span>
 						</div>
 						<!-- Account Statistics -->
@@ -101,7 +100,7 @@
 							</div>
 						</div>
 						<!-- Role-Specific Information -->
-						<div v-if="role === 'admin'" class="bg-white dark:bg-gray-800 rounded-2xl shadow p-6 mb-4">
+						<div v-if="currentUser?.user_role === 0" class="bg-white dark:bg-gray-800 rounded-2xl shadow p-6 mb-4">
 							<h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Administrator Information</h3>
 							<ul class="text-sm text-gray-600 dark:text-gray-400 space-y-1">
 								<li>• Full system administration</li>
@@ -110,7 +109,7 @@
 								<li>• Data analytics</li>
 							</ul>
 						</div>
-						<div v-else-if="role === 'clinic'" class="bg-white dark:bg-gray-800 rounded-2xl shadow p-6 mb-8">
+						<div v-else-if="currentUser?.user_role === 2" class="bg-white dark:bg-gray-800 rounded-2xl shadow p-6 mb-8">
 							<h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Clinic Information</h3>
 							<div class="text-sm text-gray-600 dark:text-gray-400 space-y-2">
 								<div><strong>Clinic Name:</strong> Medical Center ABC</div>
@@ -119,7 +118,7 @@
 								<div><strong>Contact:</strong> (555) 123-4567</div>
 							</div>
 						</div>
-						<div v-else-if="role === 'sales'" class="bg-white dark:bg-gray-800 rounded-2xl shadow p-6 mb-8">
+						<div v-else-if="currentUser?.user_role === 1" class="bg-white dark:bg-gray-800 rounded-2xl shadow p-6 mb-8">
 							<h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Sales Information</h3>
 							<div class="text-sm text-gray-600 dark:text-gray-400 space-y-2">
 								<div><strong>Sales Region:</strong> North America</div>
@@ -250,6 +249,9 @@
 										<span class="text-green-700 dark:text-green-300 font-medium">2FA is enabled with a PIN.</span>
 										<button @click="showChangePin = !showChangePin" class="text-blue-600 hover:underline dark:text-blue-400">Change PIN</button>
 									</div>
+									<div class="flex items-center justify-between my-4">
+										<span class="text-green-700 text-sm">You will be required to enter your configured PIN every time you log in.</span>
+									</div>
 									<form v-if="showChangePin" @submit.prevent="handleChangePin" class="flex flex-col space-y-4 max-w-xs">
 										<div class="flex space-x-3 justify-center">
 											<input
@@ -276,9 +278,6 @@
 										<div v-if="pinError" class="text-red-600 text-sm text-center">{{ pinError }}</div>
 										<button type="submit" class="w-full px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-semibold">Change PIN</button>
 									</form>
-									<div class="flex items-center justify-between mt-4">
-										<span class="text-green-700 text-sm">You will be required to enter your configured PIN every time you log in.</span>
-									</div>
 								</div>
 							</div>
 						</div>
@@ -396,6 +395,8 @@ import { useUser } from '@/composables/auth/useUser'
 import { useRouter } from 'vue-router'
 import { useThemeStore } from '@/stores/theme'
 import { toast } from 'vue3-toastify'
+import axios from 'axios'
+import api from '@/services/api'
 import 'vue3-toastify/dist/index.css'
 
 const section = ref<'preferences' | 'personal' | 'security'>('personal')
@@ -409,7 +410,6 @@ const sectionTitle = computed(() => {
 const authStore = useAuthStore()
 const { userInitials } = useUser()
 const currentUser = computed(() => authStore.currentUser)
-const role = computed(() => currentUser.value?.role)
 const isUpdating = ref(false)
 const profileForm = ref({
 	name: currentUser.value?.name || '',
@@ -417,6 +417,14 @@ const profileForm = ref({
 	phone: '',
 	department: ''
 })
+const roleLabels: Record<number, { label: string; classes: string }> = {
+	0: { label: 'Admin',        classes: 'bg-purple-100 text-purple-800' },
+	1: { label: 'Office Staff', classes: 'bg-yellow-100 text-yellow-800' },
+	2: { label: 'Clinic',       classes: 'bg-blue-100 text-blue-800' },
+	3: { label: 'Clinician',    classes: 'bg-green-100 text-green-800' },
+	4: { label: 'Manufacturer', classes: 'bg-pink-100 text-pink-800' },
+	5: { label: 'Billier',      classes: 'bg-red-100 text-red-800' },
+}
 
 function updateProfile() {
 	isUpdating.value = true
@@ -442,7 +450,7 @@ const changePinRefs = [ref<HTMLInputElement>(), ref<HTMLInputElement>(), ref<HTM
 const showChangePin = ref(false)
 
 watch(twoFAEnabled, (val) => {
-	requestDisable2FA(val)
+    requestDisable2FA(val)
 })
 
 const showDisable2FAModal = ref(false)
@@ -460,18 +468,33 @@ function requestDisable2FA(val: boolean) {
     }
 }
 
-function confirmDisable2FA() {
-    twoFAEnabled.value = false
-    localStorage.removeItem('2fa-enabled')
-	localStorage.removeItem('2fa-pin')
-    pinSet.value = false
-    pinBoxes.value = ['', '', '', '']
-    pinError.value = ''
-    showChangePin.value = false
-    newPinBoxes.value = ['', '', '', '']
-    showDisable2FAModal.value = false
-    pending2FAValue.value = null
-	toast.warn('Two-Factor Authentication has been disabled. Your account is now less secure.')
+async function confirmDisable2FA() {
+    try {
+        await api.post('/auth/profile/security/disable-tfauth')
+
+        // Clear frontend state
+        twoFAEnabled.value = false
+        pinSet.value = false
+        pinBoxes.value = ['', '', '', '']
+        newPinBoxes.value = ['', '', '', '']
+        pinError.value = ''
+        showChangePin.value = false
+        showDisable2FAModal.value = false
+        pending2FAValue.value = null
+
+        // Remove any localStorage if used
+        localStorage.removeItem('2fa-enabled')
+        localStorage.removeItem('2fa-pin')
+
+        toast.warn('Two-Factor Authentication has been disabled. Your account is now less secure.')
+    } catch (err: unknown) {
+        console.error('Failed to disable 2FA', err)
+        toast.error('Failed to disable 2FA. Please try again.')
+        // revert checkbox back
+        twoFAEnabled.value = true
+        showDisable2FAModal.value = false
+        pending2FAValue.value = null
+    }
 }
 
 function cancelDisable2FA() {
@@ -532,29 +555,53 @@ function onPinBoxKeydown(i: number, mode: 'set' | 'change', e: KeyboardEvent) {
     }
 }
 
-function handleSetPin() {
-	pinError.value = ''
-	const pin = pinBoxes.value.join('')
-	if (!/^\d{4}$/.test(pin)) {
-		pinError.value = 'PIN must be exactly 4 digits.'
-		return
-	}
-	localStorage.setItem('2fa-pin', pin)
-	pinSet.value = true
-	pinBoxes.value = ['', '', '', '']
-	toast.success('Two-Factor Authentication is now enabled.')
+async function handleSetPin() {
+    pinError.value = ''
+    const pin = pinBoxes.value.join('')
+
+    if (!/^\d{4}$/.test(pin)) {
+        pinError.value = 'PIN must be exactly 4 digits.'
+        return
+    }
+
+    try {
+        const response = await api.post('/auth/profile/security/enable-tfa', { pin })
+        pinSet.value = true
+        twoFAEnabled.value = true
+        pinBoxes.value = ['', '', '', '']
+        toast.success(response.data.message)
+    } catch (err: unknown) {
+        if (axios.isAxiosError(err) && err.response?.data?.message) {
+            pinError.value = err.response.data.message
+        } else if (err instanceof Error) {
+            pinError.value = err.message
+        } else {
+            pinError.value = 'An unknown error occurred'
+        }
+    }
 }
-function handleChangePin() {
-	pinError.value = ''
-	const pin = newPinBoxes.value.join('')
-	if (!/^\d{4}$/.test(pin)) {
-		pinError.value = 'PIN must be exactly 4 digits.'
-		return
-	}
-	localStorage.setItem('2fa-pin', pin)
-	showChangePin.value = false
-	newPinBoxes.value = ['', '', '', '']
-	toast.success('Your PIN has been successfully changed.')
+
+async function handleChangePin() {
+    pinError.value = ''
+    const pin = newPinBoxes.value.join('')
+
+    if (!/^\d{4}$/.test(pin)) {
+        pinError.value = 'PIN must be exactly 4 digits.'
+        return
+    }
+
+    try {
+        await api.post('/auth/profile/security/update-tfauth', { pin })
+
+        // Update frontend state and localStorage
+        localStorage.setItem('2fa-pin', pin)
+        showChangePin.value = false
+        newPinBoxes.value = ['', '', '', '']
+        toast.success('Your PIN has been successfully changed.')
+    } catch (err: unknown) {
+        console.error('Failed to update 2FA PIN', err)
+        toast.error('Failed to change PIN. Please try again.')
+    }
 }
 
 // One Time Email logic
@@ -665,5 +712,16 @@ function goBack() {
 
 onMounted(() => {
   showGenerateBUCodes.value = false
+})
+
+onMounted(async () => {
+    try {
+        const response = await api.get('/auth/me')
+        const userData = response.data
+        twoFAEnabled.value = userData.tfa_enabled === 1
+        pinSet.value = userData.tfa_enabled === 1
+    } catch (err: unknown) {
+        console.error('Failed to fetch user profile', err)
+    }
 })
 </script> 
