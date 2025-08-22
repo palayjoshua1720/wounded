@@ -15,11 +15,13 @@ import ReportCenterView from '@/views/ReportCenterView.vue'
 import ReturnManagementView from '@/views/ReturnManagementView.vue'
 import UsageLoggingView from '@/views/UsageLoggingView.vue'
 import UserManagementView from '@/views/UserManagementView.vue'
+import ClinicianManagementView from '@/views/ClinicianManagementView.vue'
 import ClinicManagementView from '@/views/ClinicManagementView.vue'
 import ProfileView from '@/views/ProfileView.vue'
 import ChangeAccountView from '@/views/ChangeAccountView.vue'
 import SettingsView from '@/views/SettingsView.vue'
-import { ClipboardDocumentCheckIcon, Squares2X2Icon, BuildingLibraryIcon, ClipboardDocumentListIcon, ShieldCheckIcon, BellIcon, ShoppingCartIcon, ChartBarIcon, ArrowPathIcon, CalculatorIcon, CubeIcon, UsersIcon } from '@heroicons/vue/24/outline'
+import { ClipboardDocumentCheckIcon, Squares2X2Icon, SquaresPlusIcon, BuildingLibraryIcon, ClipboardDocumentListIcon, ShieldCheckIcon, BellIcon, ShoppingCartIcon, ChartBarIcon, ArrowPathIcon, CalculatorIcon, CubeIcon, UsersIcon } from '@heroicons/vue/24/outline'
+import { pageLoader } from '@/composables/ui/usePageLoader'
 
 // Types
 interface NavigationItem {
@@ -58,7 +60,7 @@ const routes: RouteRecordRaw[] = [
 			meta: {
 			requiresAuth: true,
 				title: 'Clinic Dashboard',
-				icon: BuildingLibraryIcon
+				icon: SquaresPlusIcon
 			}
 		},
 		{
@@ -72,12 +74,22 @@ const routes: RouteRecordRaw[] = [
 			}
 		},
 		{
-			path: 'clinic',
-			name: 'clinic',
+			path: 'user-clinic',
+			name: 'user-clinic',
 			component: ClinicManagementView,
 			meta: {
 			requiresAuth: true,
 				title: 'Clinic Management',
+				icon: BuildingLibraryIcon
+			}
+		},
+		{
+			path: 'user-clinicians',
+			name: 'user-clinicians',
+			component: ClinicianManagementView,
+			meta: {
+			requiresAuth: true,
+				title: 'Clinicians Management',
 				icon: UsersIcon
 			}
 		},
@@ -238,8 +250,8 @@ const routes: RouteRecordRaw[] = [
 
 // Router Instance
 const router = createRouter({
-  history: createWebHistory(process.env.VUE_APP_BASE_URL),
-  routes
+	history: createWebHistory(process.env.VUE_APP_BASE_URL),
+	routes
 })
 
 // Navigation Helper
@@ -273,7 +285,7 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 		}
 
 		if (role === 2) {
-			return ['clinic-dashboard', 'clinic'].includes(route.name as string)
+			return ['clinic-dashboard', 'user-clinicians', 'user-clinic'].includes(route.name as string)
 		}
 
 		const allowedRoles = routeRoles[route.name as string]
@@ -314,6 +326,7 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 
 // Navigation Guards
 router.beforeEach(async (to, from, next) => {
+	pageLoader.value = true
 	const authStore = useAuthStore()
 	const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
 
@@ -366,6 +379,10 @@ router.beforeEach(async (to, from, next) => {
 	}
 
 	next()
+})
+
+router.afterEach(() => {
+  	pageLoader.value = false
 })
 
 export default router 

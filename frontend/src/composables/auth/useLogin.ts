@@ -18,12 +18,10 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { toast } from 'vue3-toastify'
-import axios from 'axios'
 import 'vue3-toastify/dist/index.css'
+import axios from 'axios'
 import api from '@/services/api'
-
-// Global loader state for logout
-export const logoutLoading = ref(false)
+import { pageLoader } from '@/composables/ui/usePageLoader'
 
 export function useLogin() {
 	const router = useRouter()
@@ -89,14 +87,13 @@ export function useLogin() {
 
 	const handleLogout = async () => {
 		try {
-			logoutLoading.value = true
+			pageLoader.value = true
 			await authStore.logout()
-			// Add a short delay so the loader is visible
 			await new Promise(resolve => setTimeout(resolve, 200));
 		} catch (error) {
 			console.error('Logout failed:', error)
 		}
-			logoutLoading.value = false
+			pageLoader.value = false
 	}
 
 	async function handleSecurity() {

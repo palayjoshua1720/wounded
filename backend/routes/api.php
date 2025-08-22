@@ -27,5 +27,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/auth/profile/security/update-tfauth', [AuthController::class, 'update_tfauth']);
 
     // Clinics
-    Route::get('/management/users/clinics', [ClinicController::class, 'getAllUsers']);
+    Route::get('/management/users/clinician', [ClinicController::class, 'getAllClinicians']);
+    Route::get('/management/users/clinics', [ClinicController::class, 'getAllClinic']);
+    Route::post('/management/users/add/clinician', [ClinicController::class, 'addClinician']);
 });

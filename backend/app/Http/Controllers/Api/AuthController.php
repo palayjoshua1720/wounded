@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -18,9 +19,35 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
+        $ip = $request->server('HTTP_X_FORWARDED_FOR') ?? $request->server('REMOTE_ADDR');
+
         $user = User::where('email', $request->email)->first();
 
-        if (! $user || ! Hash::check($request->password, $user->password)) {
+        if (! $user) {
+            DB::table('woundmed_audit_logs')->insert([
+                'user_id'   => null,
+                'attempted_identifier' => $request->email,
+                'ip_address'=> $ip,
+                'action'    => 'login_failed',
+                'entity_id' => null,
+                'entity'    => 'woundmed_users',
+                'timestamp' => now(),
+            ]);
+            return response()->json([
+                'message' => 'User not found',
+            ], 401);
+        }
+
+        if (! Hash::check($request->password, $user->password)) {
+            DB::table('woundmed_audit_logs')->insert([
+                'user_id'   => $user->id,
+                'attempted_identifier' => $request->email,
+                'ip_address'=> $ip,
+                'action'    => 'login_failed',
+                'entity_id' => $user?->id,
+                'entity'    => 'woundmed_users',
+                'timestamp' => now(),
+            ]);
             return response()->json([
                 'message' => 'The provided credentials are incorrect.',
             ], 401);
@@ -30,6 +57,15 @@ class AuthController extends Controller
         $user->save();
 
         $token = $user->createToken('auth_token')->plainTextToken;
+        DB::table('woundmed_audit_logs')->insert([
+            'user_id'   => $user->id,
+            'attempted_identifier' => null,
+            'ip_address'=> $ip,
+            'action'    => 'logged_in',
+            'entity_id' => $user->id,
+            'entity'    => 'woundmed_users',
+            'timestamp' => now(),
+        ]);
 
         return response()->json([
             'user' => $user,
@@ -125,6 +161,7 @@ class AuthController extends Controller
         ]);
 
         $user = User::where('email', $request->email)->first();
+        $ip = $request->server('HTTP_X_FORWARDED_FOR') ?? $request->server('REMOTE_ADDR');
 
         if (!$user) {
             return response()->json([
@@ -139,10 +176,29 @@ class AuthController extends Controller
         }
 
         if ($user->tfa_secret !== $request->pinBoxes) {
+            DB::table('woundmed_audit_logs')->insert([
+                'user_id'   => $user->id,
+                'attempted_identifier' => $request->email,
+                'ip_address'=> $ip,
+                'action'    => 'Invalid 2FA code',
+                'entity_id' => $user?->id,
+                'entity'    => 'woundmed_users',
+                'timestamp' => now(),
+            ]);
             return response()->json([
                 'message' => 'Invalid 2FA code.'
             ], 401);
         }
+
+        DB::table('woundmed_audit_logs')->insert([
+            'user_id'   => $user->id,
+            'attempted_identifier' => $request->email,
+            'ip_address'=> $ip,
+            'action'    => '2FA verification successful, logged_in',
+            'entity_id' => $user?->id,
+            'entity'    => 'woundmed_users',
+            'timestamp' => now(),
+        ]);
 
         # Passed 2FA
         return response()->json([
@@ -160,6 +216,18 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
+        $ip = $request->server('HTTP_X_FORWARDED_FOR') ?? $request->server('REMOTE_ADDR');
+        $user = $request->user();
+
+        DB::table('woundmed_audit_logs')->insert([
+            'user_id'   => $user->id,
+            'ip_address'=> $ip,
+            'action'    => 'logged_out',
+            'entity_id' => $user->id,
+            'entity'    => 'woundmed_users',
+            'timestamp' => now(),
+        ]);
+
         $request->user()->currentAccessToken()->delete();
 
         return response()->json(['message' => 'Logged out successfully.']);

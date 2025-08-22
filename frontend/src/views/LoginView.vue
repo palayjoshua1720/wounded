@@ -6,10 +6,10 @@
                 <div>
                     <div class="flex items-center mb-8">
                         <div class="bg-white/20 rounded p-3 mr-3">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8 text-white"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0A9 9 0 11 3 12a9 9 0 0118 0z" /></svg>
+                            <SquareActivity :stroke-width="1.5" class="w-8 h-8 text-white" />
                         </div>
                         <div>
-                            <div class="text-xl font-bold">Proweaver Test</div>
+                            <div class="text-xl font-bold">WOUNDMED INC.</div>
                             <div class="text-sm opacity-80">Medical Ordering & Inventory</div>
                         </div>
                     </div>
@@ -19,24 +19,27 @@
                         </div>
                     </div>
                     <ul class="space-y-4 mb-10">
-                        <li class="flex items-center text-base"><svg class="w-5 h-5 text-green-300 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg> Real-time inventory tracking</li>
-                        <li class="flex items-center text-base"><svg class="w-5 h-5 text-green-300 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg> Automated ordering workflows</li>
-                        <li class="flex items-center text-base"><svg class="w-5 h-5 text-green-300 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg> Compliance & audit trails</li>
+                        <li class="flex items-center text-base">
+                            <Check class="w-5 h-5 text-green-300 mr-2" />
+                            Real-time inventory tracking
+                        </li>
+                        <li class="flex items-center text-base">
+                            <Check class="w-5 h-5 text-green-300 mr-2" />
+                            Automated ordering workflows
+                        </li>
+                        <li class="flex items-center text-base">
+                            <Check class="w-5 h-5 text-green-300 mr-2" />
+                            Compliance & audit trails
+                        </li>
                     </ul>
                 </div>
                 <div class="flex items-center space-x-6 text-xs opacity-80">
                     <div class="flex items-center space-x-1">
-                    <!-- Heroicons ShieldCheckIcon -->
-                        <svg class="w-6 h-6 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
-                        </svg>
+                        <ShieldCheck class="w-6 h-6 text-green-500" />
                         <span>HIPAA Compliant</span>
                     </div>
                     <div class="flex items-center space-x-1">
-                    <!-- Heroicons ShieldCheckIcon -->
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 text-green-500" >
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043A3.745 3.745 0 0 1 12 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 0 1-3.296-1.043 3.745 3.745 0 0 1-1.043-3.296A3.745 3.745 0 0 1 3 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 0 1 1.043-3.296 3.746 3.746 0 0 1 3.296-1.043A3.746 3.746 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 0 1 3.296 1.043 3.746 3.746 0 0 1 1.043 3.296A3.745 3.745 0 0 1 21 12Z" />
-                        </svg>
+                        <BadgeCheck class="w-6 h-6 text-green-500" />
                         <span>FDA Validated</span>
                     </div>
                 </div>
@@ -63,9 +66,7 @@
                             <div>
                                 <label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email Address</label>
                                 <div class="relative">
-                                    <svg class="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 z-10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M12 14c-4.418 0-8 1.79-8 4v2h16v-2c0-2.21-3.582-4-8-4z" />
-                                    </svg>
+                                    <Mail class="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 z-10" />
                                     <input
                                     id="email"
                                     name="email"
@@ -80,7 +81,7 @@
                             <div>
                                 <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Password</label>
                                 <div class="relative">
-                                    <svg class="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 z-10" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V7.5A4.5 4.5 0 0 0 7.5 7.5v3m9 0H7.5m9 0a2.25 2.25 0 0 1 2.25 2.25v4.5A2.25 2.25 0 0 1 16.5 19.5h-9A2.25 2.25 0 0 1 5.25 17.25v-4.5A2.25 2.25 0 0 1 7.5 10.5"/></svg>
+                                    <Lock class="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 z-10" />
                                     <input
                                     id="password"
                                     name="password"
@@ -96,8 +97,8 @@
                                     @click="showPassword = !showPassword"
                                     tabindex="-1"
                                     >
-                                        <EyeIcon v-if="showPassword" class="w-5 h-5" />
-                                        <EyeSlashIcon v-else class="w-5 h-5" />
+                                        <Eye v-if="showPassword" class="w-5 h-5" />
+                                        <EyeOff v-else class="w-5 h-5" />
                                     </button>
                                 </div>
                             </div>
@@ -121,9 +122,7 @@
                         class="group relative w-full flex justify-center items-center py-3 px-4 border border-transparent text-sm font-medium rounded text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                         >
                             {{ loading ? 'Signing In...' : 'Sign In'}}
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 ml-2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 9V5.25A2.25 2.25 0 0 1 10.5 3h6a2.25 2.25 0 0 1 2.25 2.25v13.5A2.25 2.25 0 0 1 16.5 21h-6a2.25 2.25 0 0 1-2.25-2.25V15M12 9l3 3m0 0-3 3m3-3H2.25"></path>
-                            </svg>
+                            <LogIn class="w-5 h-5 ml-2" />
                         </button>
                     </form>
                     <div class="relative w-full mx-auto">
@@ -186,17 +185,20 @@
                     </div>
                     <div class="space-y-3">
                         <div class="flex items-start p-4 bg-green-50 dark:bg-green-900/20 rounded border border-green-200 dark:border-green-700">
-                            <svg class="w-7 h-7 text-green-500 mr-3 mt-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4"/></svg>
+                            <CircleCheck class="w-8 h-8 text-green-500 mr-3 mt-1" />
                             <div>
-                                <div class="font-medium text-green-900 dark:text-green-300">Secure Access</div>
+                                <div class="font-medium text-green-900 dark:text-green-300">
+                                    Secure Access
+                                </div>
                                 <div class="text-xs text-green-900 dark:text-green-200 opacity-80">This system is protected with enterprise-grade security and complies with HIPAA, SOX, and FDA regulations.</div>
                             </div>
                         </div>
                         <div class="flex items-start p-4 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-700">
-                            <!-- Heroicons LockClosedIcon for Two-Factor Authentication -->
-                            <svg class="w-6 h-6 text-blue-500 mr-3 mt-1" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V7.5A4.5 4.5 0 0 0 7.5 7.5v3m9 0H7.5m9 0a2.25 2.25 0 0 1 2.25 2.25v4.5A2.25 2.25 0 0 1 16.5 19.5h-9A2.25 2.25 0 0 1 5.25 17.25v-4.5A2.25 2.25 0 0 1 7.5 10.5"/></svg>
+                            <KeySquare class="w-6 h-6 text-blue-500 mr-3 mt-1" />
                             <div>
-                                <div class="font-medium text-blue-900 dark:text-blue-300">Two-Factor Authentication</div>
+                                <div class="font-medium text-blue-900 dark:text-blue-300">
+                                    Two-Factor Authentication
+                                </div>
                                 <div class="text-xs text-blue-900 dark:text-blue-200 opacity-80">Enhanced security with 2FA is available for all medical staff accounts.</div>
                             </div>
                         </div>
@@ -211,7 +213,19 @@
 import { ref, onMounted } from 'vue'
 import { useLogin } from '@/composables/auth/useLogin'
 import { useRouter } from 'vue-router'
-import { EyeIcon, EyeSlashIcon } from '@heroicons/vue/24/outline'
+import {
+    Eye,
+    EyeOff,
+    Mail,
+    Lock,
+    SquareActivity,
+    Check,
+    ShieldCheck,
+    BadgeCheck,
+    LogIn,
+    CircleCheck,
+    KeySquare
+} from 'lucide-vue-next';
 
 const { email, password, loading, loading2FA, pinBoxes, handleLogin, proceedLogin, continue2FA, handleSecurity } = useLogin()
 const showPassword = ref(false)
