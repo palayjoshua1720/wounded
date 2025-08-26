@@ -28,9 +28,12 @@ class AuthController extends Controller
                 'user_id'   => null,
                 'attempted_identifier' => $request->email,
                 'ip_address'=> $ip,
-                'action'    => 'login_failed',
+                'action_type'    => 'login',
+                'action_message' => 'login failed',
                 'entity_id' => null,
                 'entity'    => 'woundmed_users',
+                'entity_type' => 'authentication',
+                'status'    => 1,
                 'timestamp' => now(),
             ]);
             return response()->json([
@@ -43,9 +46,12 @@ class AuthController extends Controller
                 'user_id'   => $user->id,
                 'attempted_identifier' => $request->email,
                 'ip_address'=> $ip,
-                'action'    => 'login_failed',
+                'action_type'    => 'login',
+                'action_message' => 'login failed',
                 'entity_id' => $user?->id,
                 'entity'    => 'woundmed_users',
+                'entity_type' => 'authentication',
+                'status'    => 1,
                 'timestamp' => now(),
             ]);
             return response()->json([
@@ -61,9 +67,12 @@ class AuthController extends Controller
             'user_id'   => $user->id,
             'attempted_identifier' => null,
             'ip_address'=> $ip,
-            'action'    => 'logged_in',
+            'action_type'    => 'login',
+            'action_message' => 'login success',
             'entity_id' => $user->id,
             'entity'    => 'woundmed_users',
+            'entity_type' => 'authentication',
+            'status'    => 0,
             'timestamp' => now(),
         ]);
 
@@ -180,9 +189,12 @@ class AuthController extends Controller
                 'user_id'   => $user->id,
                 'attempted_identifier' => $request->email,
                 'ip_address'=> $ip,
-                'action'    => 'Invalid 2FA code',
+                'action_type'    => 'login',
+                'action_message' => 'Invalid 2FA code',
                 'entity_id' => $user?->id,
                 'entity'    => 'woundmed_users',
+                'entity_type' => 'authentication',
+                'status'    => 1,
                 'timestamp' => now(),
             ]);
             return response()->json([
@@ -194,9 +206,12 @@ class AuthController extends Controller
             'user_id'   => $user->id,
             'attempted_identifier' => $request->email,
             'ip_address'=> $ip,
-            'action'    => '2FA verification successful, logged_in',
+            'action_type'    => 'login',
+            'action_message' => '2FA verification successful',
             'entity_id' => $user?->id,
             'entity'    => 'woundmed_users',
+            'entity_type' => 'authentication',
+            'status'    => 0,
             'timestamp' => now(),
         ]);
 
@@ -222,9 +237,12 @@ class AuthController extends Controller
         DB::table('woundmed_audit_logs')->insert([
             'user_id'   => $user->id,
             'ip_address'=> $ip,
-            'action'    => 'logged_out',
+            'action_type'    => 'logout',
+            'action_message' => 'logout',
             'entity_id' => $user->id,
             'entity'    => 'woundmed_users',
+            'entity_type' => 'authentication',
+            'status'    => 0,
             'timestamp' => now(),
         ]);
 

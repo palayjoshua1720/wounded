@@ -4,8 +4,19 @@
 		<div class="flex items-center justify-between">
 			<div>
 				<h1 class="text-2xl font-bold text-gray-900 dark:text-white">Clinic Management</h1>
-				<p class="text-gray-600 dark:text-gray-400">Manage clinician accounts, roles, and access permissions</p>
+				<p class="text-gray-600 dark:text-gray-400">View and update clinic information with ease.</p>
 			</div>
+
+			<button
+				@click="
+					selectedUser = null; 
+					showCreateForm = true
+				"
+				class="flex items-center px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+			>
+				<HousePlus class="w-4 h-4 mr-2" />
+				Add Clinic
+			</button>
 		</div>
 
 		<!-- Filters -->
@@ -48,8 +59,34 @@
 			</div>
 		</div>
 
-		<!-- Users Table -->
-		<div class="bg-white dark:bg-gray-800 rounded shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+		<!-- Tabs for switching views -->
+		<!-- <div class="flex space-x-2 mb-4">
+			<button
+				:class="[
+				'px-4 py-2 rounded-t-lg font-medium focus:outline-none',
+				activeTab === 'table'
+					? 'bg-blue-600 text-white'
+					: 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+				]"
+				@click="activeTab = 'table'"
+			>
+				Table
+			</button>
+			<button
+				:class="[
+				'px-4 py-2 rounded-t-lg font-medium focus:outline-none',
+				activeTab === 'card'
+					? 'bg-blue-600 text-white'
+					: 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+				]"
+				@click="activeTab = 'card'"
+			>
+				Card
+			</button>
+		</div> -->
+
+		<!-- Table View -->
+		<!-- <div class="bg-white dark:bg-gray-800 rounded shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
 			<div class="overflow-x-auto">
 				<table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
 					<thead class="bg-gray-50 dark:bg-gray-700">
@@ -139,13 +176,101 @@
 					</tbody>
 				</table>
 			</div>
+		</div> -->
+
+		<!-- Card View -->
+		<ContentLoader v-if="tableLoader"/>
+		<div v-if="filteredUsers && filteredUsers.length > 0" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+			<div
+				v-for="user in filteredUsers"
+				:key="user.id"
+				class="border border-gray-200 dark:border-gray-700 rounded-lg p-6 bg-white dark:bg-gray-800 hover:shadow-md transition-shadow"
+			>
+				<div class="flex items-start justify-between mb-4">
+					<div>
+						<div class="flex items-center gap-3">
+							<!-- Icon -->
+							<div class="p-2 bg-green-100 rounded-lg">
+								<Hospital class="w-5 h-5 text-green-600" />
+							</div>
+
+							<!-- Text & Status in column -->
+							<div class="flex flex-col">
+								<h3 class="font-semibold text-gray-900 dark:text-white">
+								{{ user.name }}
+								</h3>
+								<span
+								:class="[
+									'inline-flex px-2 py-1 text-xs rounded-full w-fit',
+									user.isActive === 1
+									? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
+									: 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
+								]"
+								>
+								{{ userStatus[user.isActive]?.label || 'Unknown' }}
+								</span>
+							</div>
+						</div>
+
+					</div>
+					<div class="flex items-center space-x-2">
+						<button @click="selectedUser = user" class="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300">
+							<Eye class="w-5 h-4" />
+						</button>
+						<button @click="editUser(user)" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
+							<SquarePen class="w-4 h-4" />
+						</button>
+						<button @click="handleToggleStatus(user.id)" :class="user.isActive ? 'text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300' : 'text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300'" :title="user.isActive ? 'Activate' : 'Deactivate'">
+							<component :is="user.isActive ? CircleCheck : CircleX" class="w-4 h-4" />
+						</button>
+						<button @click="handleDeleteUser(user.id)" class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300">
+							<Trash2 class="w-4 h-4" />
+						</button>
+					</div>
+				</div>
+				<div class="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+					<div class="flex items-center gap-2">
+						<MapPin class="w-4 h-4" />
+						<span>{{ user.address }}</span>
+					</div>
+					<div class="flex items-center gap-2">
+						<Mail class="w-4 h-4" />
+						<span>{{ user.email }}</span>
+					</div>
+					<div class="flex items-center gap-2">
+						<Phone class="w-4 h-4" />
+						<span>{{ user.phone || 'N/A' }}</span>
+					</div>
+					<div class="flex items-center gap-2">
+						<CalendarPlus class="w-4 h-4" />
+						<span>{{ formatDate(user.createdAt) }}</span>
+					</div>
+					<div v-if="user.clinicId" class="flex items-center gap-2">
+						<IdCardLanyard class="w-4 h-4" />
+						<span>{{ user.clinicId }}</span>
+					</div>
+					<div v-if="user.clinicPubId" class="flex items-center gap-2">
+						<IdCard class="w-4 h-4" />
+						<span>{{ user.clinicPubId }}</span>
+					</div>
+					<hr>
+					<div class="flex items-center gap-2">
+						<strong>Contact Person:</strong>
+						<span>{{ user.contactPerson }}</span>
+					</div>
+				</div>
+			</div>
 		</div>
 
-		<template v-if="tableLoader">
-			<ContentLoader v-if="tableLoader"/>
-		</template>
-		<template v-else>
-			<Pagination :pagination="pagination" @update:page="getAllClinics" />
+		<div v-else-if="filteredUsers && filteredUsers.length === 0 && !tableLoader" class="">
+			<div class="flex flex-col items-center justify-center gap-2 text-center">
+				<Hospital class="w-10 h-10 mb-1 text-gray-700" />
+				<span class="text-gray-600 dark:text-gray-300">No clinics found.</span>
+			</div>
+		</div>
+
+		<template v-if="!tableLoader">
+			<Pagination v-if="filteredUsers && filteredUsers.length > 0" :pagination="pagination" @update:page="getAllClinics" />
 		</template>
 
 		<!-- User Details Modal -->
@@ -203,7 +328,7 @@
 		</BaseModal>
 
 		<!-- Create/Edit User Form Modal -->
-		<BaseModal v-model="showFormModal" :title="showCreateForm ? 'Create New User' : 'Edit User'">
+		<BaseModal v-model="showFormModal" :title="showCreateForm ? 'Add new Clinic' : 'Edit Clinic'">
 			<form @submit.prevent="handleSubmitForm" class="space-y-4">
 				<div class="grid grid-cols-2 gap-4">
 					<div>
@@ -293,7 +418,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import BaseModal from '@/components/common/BaseModal.vue'
-import TableLoader from '@/components/ui/TableLoader.vue'
+// import TableLoader from '@/components/ui/TableLoader.vue'
 import Pagination from '@/components/ui/Pagination.vue'
 import ContentLoader from '@/components/ui/ContentLoader.vue'
 import {
@@ -304,6 +429,14 @@ import {
     CircleCheck,
     CircleX,
     Trash2,
+	Hospital,
+	MapPin,
+	Phone,
+	Mail,
+	CalendarPlus,
+	IdCard,
+	IdCardLanyard,
+	HousePlus
 } from 'lucide-vue-next';
 import api from '@/services/api'
 
@@ -313,10 +446,14 @@ interface User {
 	name: string
 	contactPerson: string
 	clinicId?: string
+	clinicPubId?: string
 	isActive: number
 	phone: string
 	createdAt: string
+	address: string
 }
+
+// const activeTab = ref<'table' | 'card'>('table')
 
 // Pagination
 const pagination = ref({
@@ -347,8 +484,10 @@ const formData = ref({
 	contactPerson: '' as User['contactPerson'],
 	isActive: true,
 	clinicId: '',
+	clinicPubId: '',
 	password: '',
-	phone: ''
+	phone: '',
+	address: ''
 })
 
 function handleToggleStatus(userId: string) {
@@ -372,8 +511,10 @@ function editUser(user: User) {
 		contactPerson: user.contactPerson,
         isActive: user.isActive === 1,
 		clinicId: user.clinicId || '',
+		clinicPubId: user.clinicPubId || '',
 		password: '',
-        phone: user.phone
+        phone: user.phone,
+		address: user.address
 	}
 	showEditForm.value = true
 }
@@ -389,7 +530,8 @@ function handleSubmitForm() {
 			isActive: formData.value.isActive ? 1 : 0,
 			clinicId: formData.value.clinicId || undefined,
 			phone: formData.value.phone,
-			createdAt: new Date().toISOString()
+			createdAt: new Date().toISOString(),
+			address: formData.value.address
 		}
 		users.value.unshift(newUser)
 	} else if (showEditForm.value && selectedUser.value) {
@@ -420,8 +562,10 @@ function closeForm() {
 		contactPerson: '',
 		isActive: true,
 		clinicId: '',
+		clinicPubId: '',
 		password: '',
-        phone: ''
+        phone: '',
+		address: ''
 	}
 }
 
@@ -431,8 +575,8 @@ const filteredUsers = computed(() => {
 							user.email.toLowerCase().includes(searchTerm.value.toLowerCase())
 		const matchesRole = roleFilter.value === 'all' || user.contactPerson === roleFilter.value
 		const matchesStatus = statusFilter.value === 'all' || 
-							(statusFilter.value === 'active' && user.isActive) ||
-							(statusFilter.value === 'inactive' && !user.isActive)
+							(statusFilter.value === 'active' && !user.isActive) ||
+							(statusFilter.value === 'inactive' && user.isActive)
 		return matchesSearch && matchesRole && matchesStatus
 	})
 })

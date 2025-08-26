@@ -6,6 +6,7 @@
 				<h1 class="text-2xl font-bold text-gray-900 dark:text-white">Clinician Management</h1>
 				<p class="text-gray-600 dark:text-gray-400">Manage clinician accounts, roles, and access permissions</p>
 			</div>
+
 			<button
 				@click="
 					selectedUser = null; 
@@ -14,7 +15,7 @@
 				class="flex items-center px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
 			>
 				<UserPlus class="w-4 h-4 mr-2" />
-				Create User
+				Add Clinician
 			</button>
 		</div>
 
@@ -90,64 +91,74 @@
 							<tr
 							v-for="user in filteredUsers"
 							:key="user.id"
-							class="hover:bg-gray-50 dark:hover:bg-gray-700"
+							class="hover:bg-gray-50 dark:hover:bg-gray-700 "
 							>
-								<td class="px-6 py-2 whitespace-nowrap">
-									<div>
-										<div class="text-sm font-medium text-gray-900 dark:text-white">{{ user.name }}</div>
-										<div class="text-sm text-gray-500 dark:text-gray-400">{{ user.email }}</div>
+								<td class="px-6 py-3 whitespace-nowrap">
+									<div class="flex items-center">
+										<div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+											<userProfile class="w-5 h-5 text-green-600" />
+										</div>
+										<div class="ml-4">
+											<div class="text-sm text-gray-900 dark:text-white">{{ user.name }}</div>
+											<div class="text-sm text-gray-500 dark:text-gray-400">{{ user.email }}</div>
+										</div>
 									</div>
 								</td>
-								<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-									{{ user.phone ? user.phone : 'N/A' }}
+								<td class="px-6 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+									<div class="flex items-center gap-2">
+										<Phone class="w-4 h-4" />
+										<span>{{ user.phone ? user.phone : 'N/A' }}</span>
+									</div>
 								</td>
-								<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+								<td class="px-6 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
 									{{ user.createdAt ? formatDate(user.createdAt) : 'N/A' }}
 								</td>
-								<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+								<td class="px-6 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
 									{{ user.lastLogin ? formatDate(user.lastLogin) : 'N/A' }}
 								</td>
-								<td class="px-6 py-4 whitespace-nowrap">
-									<span
-										v-if="userStatus[user.isActive]"
-										:class="['inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium', userStatus[user.isActive].classes]"
+								<td class="px-6 py-3 whitespace-nowrap">
+									<button
+										@click="handleToggleStatus(user.id)"
+										:class="['flex items-center gap-2 px-2.5 py-0.5 rounded-full text-xs font-medium transition-colors', userStatus[user.isActive].classes]"
+										:title="user.isActive ? 'Activate' : 'Deactivate'"
 									>
-										{{ userStatus[user.isActive].label }}
-									</span>
+										<component :is="user.isActive ? UserX : UserCheck" class="w-4 h-4" />
+										<span v-if="userStatus[user.isActive]">
+											{{ userStatus[user.isActive].label }}
+										</span>
+									</button>
 								</td>
-								<td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+								<td class="px-6 py-3 whitespace-nowrap text-sm font-medium space-x-2">
 									<button
 									@click="selectedUser = user"
 									class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
 									title="View Details"
 									>
-										<Eye class="w-5 h-5" />
+										<Eye class="w-5 h-4" />
 									</button>
 									<button
 									@click="editUser(user)"
 									class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"
 									title="Edit User"
 									>
-										<SquarePen class="w-5 h-5" />
-									</button>
-									<button
-									@click="handleToggleStatus(user.id)"
-									:class="user.isActive ? 'text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300' : 'text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300'"
-									:title="user.isActive ? 'Activate' : 'Deactivate'"
-									>
-										<component :is="user.isActive ? CircleCheck : CircleX" class="w-5 h-5" />
+										<SquarePen class="w-4 h-4" />
 									</button>
 									<button
 									@click="handleDeleteUser(user.id)"
 									class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
 									title="Delete User"
 									>
-										<Trash2 class="w-5 h-5" />
+										<Trash2 class="w-4 h-4" />
 									</button>
 								</td>
 							</tr>
 							<tr v-if="filteredUsers.length === 0 && !tableLoader">
-								<td colspan="7" class="text-center text-gray-400 py-6">No clinicians found.</td>
+								<td colspan="7" class="text-center text-gray-400 py-6">
+									<div class="flex flex-col items-center justify-center gap-2">
+										<Users class="w-10 h-10 mb-1" />
+										<span>No clinicians found.</span>
+									</div>
+								</td>
 							</tr>
 						</template>
 					</tbody>
@@ -155,10 +166,7 @@
 			</div>
 		</div>
 
-		<template v-if="tableLoader">
-			<ContentLoader v-if="tableLoader"/>
-		</template>
-		<template v-else>
+		<template v-if="!tableLoader">
 			<Pagination :pagination="pagination" @update:page="getAllClinicians" />
 		</template>
 
@@ -217,12 +225,11 @@
 		</BaseModal>
 
 		<!-- Create/Edit User Form Modal -->
-		<BaseModal v-model="showFormModal" :title="showCreateForm ? 'Create New User' : 'Edit User'">
+		<BaseModal v-model="showFormModal" :title="showCreateForm ? 'Add new Clinician' : 'Edit Clinic'">
 			<form @submit.prevent="handleSubmitForm" class="space-y-4">
 				<div class="grid grid-cols-3 gap-4">
 					<div>
-						<label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Firstname<span class="text-red-500">*</span>
-						</label>
+						<label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Firstname<span class="text-red-500">*</span></label>
 						<input
 						v-model="formData.first_name"
 						type="text"
@@ -231,18 +238,15 @@
 						/>
 					</div>
 					<div>
-						<label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Middlename<span class="text-red-500">*</span>
-						</label>
+						<label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Middlename</label>
 						<input
 						v-model="formData.middle_name"
 						type="text"
-						required
 						class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
 						/>
 					</div>
 					<div>
-						<label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Lastname<span class="text-red-500">*</span>
-						</label>
+						<label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Lastname<span class="text-red-500">*</span></label>
 						<input
 						v-model="formData.last_name"
 						type="text"
@@ -267,7 +271,6 @@
 						<input
 						v-model="formData.phone"
 						type="text"
-						required
 						class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
 						/>
 					</div>
@@ -342,21 +345,25 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
-import BaseModal from '@/components/common/BaseModal.vue'
-import Pagination from '@/components/ui/Pagination.vue'
-import TableLoader from '@/components/ui/TableLoader.vue'
-import ContentLoader from '@/components/ui/ContentLoader.vue'
+import axios from 'axios'
+import BaseModal from '../components/common/BaseModal.vue'
+import Pagination from '../components/ui/Pagination.vue'
+import TableLoader from '../components/ui/TableLoader.vue'
+import ContentLoader from '../components/ui/ContentLoader.vue'
 import {
     UserPlus,
 	Funnel,
     Search,
     Eye,
     SquarePen,
-    CircleCheck,
-    CircleX,
+    Users,
     Trash2,
+	Phone,
+	User as userProfile,
+	UserCheck,
+	UserX
 } from 'lucide-vue-next'
-import api from '@/services/api'
+import api from '../services/api'
 import { toast } from 'vue3-toastify'
 import 'vue3-toastify/dist/index.css'
 
@@ -464,7 +471,8 @@ async function handleSubmitForm() {
 					}
 				}
 			)
-			toast.success(data.message || 'An error occurred')
+
+			toast.success(data.message || 'Clinician added successfully!')
 			await getAllClinicians()
 		} else if (showEditForm.value && selectedUser.value) {
 			const response = await fetch(`/management/users/${selectedUser.value.id}`, {
@@ -485,10 +493,23 @@ async function handleSubmitForm() {
 				}
 			}
 		}
-	} catch (err) {
-		console.error("Submit failed", err)
-	} finally {
 		closeForm()
+	} catch (err: unknown) {
+		if (axios.isAxiosError(err)) {
+			const status = err.response?.status
+			const data = err.response?.data
+
+			if (status === 422 && data?.errors) {
+				const messages = Object.values(data.errors).flat()
+				toast.error("Error: " + messages.join("\n"))
+			} else {
+				toast.error(data?.message || `Request failed with status code ${status}`)
+			}
+		} else if (err instanceof Error) {
+			toast.error("Error: " + err.message)
+		} else {
+			toast.error("Something went wrong")
+		}
 	}
 }
 
@@ -515,8 +536,8 @@ const filteredUsers = computed(() => {
 							user.email.toLowerCase().includes(searchTerm.value.toLowerCase())
 		const matchesRole = roleFilter.value === 'all' || user.role === roleFilter.value
 		const matchesStatus = statusFilter.value === 'all' || 
-							(statusFilter.value === 'active' && user.isActive) ||
-							(statusFilter.value === 'inactive' && !user.isActive)
+							(statusFilter.value === 'active' && !user.isActive) ||
+							(statusFilter.value === 'inactive' && user.isActive)
 		return matchesSearch && matchesRole && matchesStatus
 	})
 })

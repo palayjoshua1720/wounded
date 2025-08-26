@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class ClinicController extends Controller
 {
@@ -57,6 +58,8 @@ class ClinicController extends Controller
         $formattedClinics = $clinics->map(function ($clinic) {
             return [
                 'id'            => (string) $clinic->clinic_id,
+                'clinicId'      => (string) $clinic->clinic_code,
+                'clinicPubId'   => (string) $clinic->clinic_public_id,
                 'name'          => $clinic->clinic_name,
                 'email'         => $clinic->email,
                 'contactPerson' => $clinic->contact_person ?? null,
@@ -90,49 +93,111 @@ class ClinicController extends Controller
             'Clinician' => 3,
         ];
 
-        $validated = $request->validate([
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'email' => 'required|email|unique:woundmed_users,email',
-            'role' => 'required|string',
-            'isActive' => 'boolean',
-            'clinicId' => 'nullable|integer',
-            'manufacturerId' => 'nullable|integer',
-            'phone' => 'nullable|string',
-        ]);
+        try {
+            $validated = $request->validate([
+                'first_name' => 'required|string|max:255',
+                'last_name' => 'required|string|max:255',
+                'email' => 'required|email|unique:woundmed_users,email',
+                'role' => 'required|string',
+                'isActive' => 'boolean',
+                'clinicId' => 'nullable|integer',
+                'manufacturerId' => 'nullable|integer',
+                'phone' => 'nullable|string|max:20',
+            ]);
 
-        $validated['role'] = $roleMap[$validated['role']] ?? $validated['role'];
-        $user = User::create([
-            'clinic_id' => $validated['clinicId'] ?? null,
-            'manufacturer_id' => $validated['manufacturerId'] ?? null,
-            'first_name' => $validated['first_name'],
-            'middle_name' => $validated['middle_name'] ?? null,
-            'last_name' => $validated['last_name'],
-            'email' => $validated['email'],
-            'password' => bcrypt($tempPassword),
-            'force_password_change' => true,
-            'user_role' => $validated['role'],
-            'user_status' => $validated['isActive'] ?? 0,
-            'phone' => $validated['phone'] ?? null,
-        ]);
+            $validated['role'] = $roleMap[$validated['role']] ?? $validated['role'];
+            $newClinician = User::create([
+                'clinic_id' => $validated['clinicId'] ?? null,
+                'manufacturer_id' => $validated['manufacturerId'] ?? null,
+                'first_name' => $validated['first_name'],
+                'middle_name' => $validated['middle_name'] ?? null,
+                'last_name' => $validated['last_name'],
+                'email' => $validated['email'],
+                'password' => bcrypt($tempPassword),
+                'force_password_change' => true,
+                'user_role' => $validated['role'],
+                'user_status' => $validated['isActive'] ?? 0,
+                'phone' => $validated['phone'] ?? null,
+            ]);
 
-        if($user){
+            if($newClinician){
+                DB::table('woundmed_audit_logs')->insert([
+                    'user_id'   => auth()->id(),
+                    'ip_address'=> $ip,
+                    'action_type'    => 'add_clincian',
+                    'action_message' => 'Successful Adding Clinician',
+                    'entity_id' => $newClinician->id,
+                    'entity'    => 'woundmed_users',
+                    'entity_type' => 'clinician',
+                    'status'    => 0,
+                    'timestamp' => now(),
+                ]);
+
+                return response()->json([
+                    'message' => 'Clinician Added Successfully'
+                ]);
+            } else {
+                DB::table('woundmed_audit_logs')->insert([
+                    'user_id'   => auth()->id(),
+                    'ip_address'=> $ip,
+                    'attempted_identifier' => $validated['email'],
+                    'action_type'    => 'add_clincian',
+                    'action_message' => 'Failed Adding Clinician',
+                    'entity_id' => $newClinician->id,
+                    'entity'    => 'woundmed_users',
+                    'entity_type' => 'clinician',
+                    'status'    => 1,
+                    'timestamp' => now(),
+                ]);
+                return response()->json([
+                    'message' => 'Error on adding Clinician'
+                ], 401);
+            }
+        } catch (ValidationException $e) {
             DB::table('woundmed_audit_logs')->insert([
-                'user_id'   => $user->id,
+                'user_id'   => auth()->id(),
                 'ip_address'=> $ip,
-                'action'    => 'logged_out',
-                'entity_id' => $user->id,
+                'attempted_identifier' => $request['email'],
+                'action_type'    => 'add_clincian',
+                'action_message' => 'Failed Adding Clinician, Email already taken',
+                'entity_id' => null,
                 'entity'    => 'woundmed_users',
+                'entity_type' => 'clinician',
+                'status'    => 1,
                 'timestamp' => now(),
             ]);
-
             return response()->json([
-                'message' => 'Clinician Added Successfully'
-            ]);
-        } else {
-            return response()->json([
-                'message' => 'Erro on adding Clinician'
-            ], 401);
+                'message' => 'Error on adding Clinician',
+                'errors'  => $e->errors()
+            ], 422);
         }
+    }
+
+    public function getAllActivity(Request $request)
+    {
+        $query = DB::table('woundmed_audit_logs')
+            ->select(
+                'audit_log_id',
+                'user_id',
+                'attempted_identifier',
+                'ip_address',
+                'action_type',
+                'action_message',
+                'entity_id',
+                'entity',
+                'entity_type',
+                'status',
+                'timestamp'
+            )
+            ->whereIn('entity_type', ['clinician', 'authentication'])
+            ->orderBy('timestamp', 'desc')
+            ->limit(10);
+
+        $logs = $query->get();
+
+        return response()->json([
+            'message' => 'Clinician activity fetched successfully',
+            'data' => $logs
+        ]);
     }
 }

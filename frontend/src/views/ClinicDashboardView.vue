@@ -43,7 +43,6 @@
 					<span class="text-sm text-gray-500 dark:text-gray-400">{{ stat.change }}</span>
 				</div>
 			</div>
-
 		</div>
 
 		<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -70,7 +69,9 @@
 								'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400']">
 								{{ order.status }}
 							</span>
-							<p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ order.date }}</p>
+							<p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+								{{ order.date ? formatDate(order.date) : 'N/A' }}
+							</p>
 						</div>
 					</div>
 				</div>
@@ -80,7 +81,7 @@
 			<div class="bg-white dark:bg-gray-800 p-6 rounded shadow-sm border border-gray-200 dark:border-gray-700">
 				<h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Usage Log Reminders</h3>
 				<div class="space-y-4">
-					<div v-for="reminder in usageReminders" :key="reminder.serial" class="flex items-start space-x-3">
+					<div v-for="reminder in usageReminders" :key="reminder.serial" class="flex items-center space-x-3">
 						<div class="flex-shrink-0">
 							<component v-if="reminder.daysAgo === 0" :is="CircleCheck" class="w-5 h-5 text-green-500" />
 							<component v-else-if="reminder.daysAgo > 0 && reminder.daysAgo <= 2" :is="Clock" class="w-5 h-5 text-yellow-500" />
@@ -96,6 +97,61 @@
 								<span v-else>Delivered {{ reminder.daysAgo }} days ago - pending usage log</span>
 							</p>
 						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Recent Activity -->
+			<div class="bg-white dark:bg-gray-800 p-6 rounded shadow-sm border border-gray-200 dark:border-gray-700">
+				<h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Recent Activity</h3>
+				<div >
+					<div v-if="recentActivity.length > 0" class="space-y-4">
+						<div
+							v-for="log in recentActivity"
+							:key="log.audit_log_id"
+							class="flex items-center justify-between p-2 rounded-lg bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700"
+						>
+							<div class="flex items-center space-x-3">
+								<component
+									:is="log.status === 0 ? CircleCheck : TriangleAlert"
+									:class="[
+									'w-5 h-5 mt-1',
+									log.status === 0 ? 'text-green-500' : 'text-red-500'
+									]"
+								/>
+
+								<div>
+									<p class="text-sm font-medium text-gray-900 dark:text-white">
+									{{ log.action_type }} - {{ log.action_message }}
+									</p>
+									<p class="text-sm text-gray-600 dark:text-gray-400">
+									{{ log.entity_type }} (IP: {{ log.ip_address }})
+									</p>
+									<p class="text-xs text-gray-600 dark:text-gray-400">
+									{{ timeAgo(log.timestamp) }}
+									</p>
+								</div>
+							</div>
+
+							<div class="text-right">
+							<span
+								class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full"
+								:class="log.status === 0 
+								? 'bg-green-100 text-green-700 dark:bg-green-800 dark:text-green-200' 
+								: 'bg-red-100 text-red-700 dark:bg-red-800 dark:text-red-200'"
+							>
+								{{ log.status === 0 ? 'Success' : 'Failed' }}
+							</span>
+							<p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+								{{ formatDate(log.timestamp) }}
+							</p>
+							</div>
+						</div>
+					</div>
+
+					<div v-else class="flex flex-col items-center justify-center gap-2 py-6">
+						<Users class="w-10 h-10 mb-1" />
+						<span>No recent activity found.</span>
 					</div>
 				</div>
 			</div>
@@ -118,8 +174,23 @@ import {
 import { useNotification } from '@/composables/ui/useNotification';
 import api from '@/services/api'
 
+interface AuditLog {
+	audit_log_id: number
+	user_id: number | null
+	attempted_identifier: string | null
+	ip_address: string | null
+	action_type: string
+	action_message: string
+	entity_id: number | null
+	entity: string
+	entity_type: string
+	status: number
+	timestamp: string
+}
+
 const clinicCount = ref(0)
 const clinicianCount = ref(0)
+const recentActivity = ref<AuditLog[]>([])
 const statsLoader = ref(false);
 
 const { notify } = useNotification();
@@ -208,20 +279,53 @@ const usageReminders = [
 	},
 ]
 
+const formatDate = (dateStr: string) => {
+	const date = new Date(dateStr)
+	return date.toLocaleDateString('en-US', {
+		year: 'numeric',
+		month: 'long',
+		day: 'numeric'
+	})
+}
+
+function timeAgo(timestamp: string | number | Date): string {
+	const now = Date.now();
+	const date = new Date(timestamp).getTime();
+
+	const diff = Math.floor((now - date) / 1000);
+
+	if (diff < 60) return `${diff} sec${diff !== 1 ? "s" : ""} ago`;
+	if (diff < 3600) {
+		const mins = Math.floor(diff / 60);
+		return `${mins} min${mins !== 1 ? "s" : ""} ago`;
+	}
+	if (diff < 86400) {
+		const hours = Math.floor(diff / 3600);
+		return `${hours} hr${hours !== 1 ? "s" : ""} ago`;
+	}
+	const days = Math.floor(diff / 86400);
+	return `${days} day${days !== 1 ? "s" : ""} ago`;
+}
+
+
 onMounted(async () => {
 	statsLoader.value = true;
 	try {
-		const [clinicsRes, cliniciansRes] = await Promise.all([
+		const [clinicsRes, cliniciansRes, recentActivities] = await Promise.all([
 			api.get('/management/users/clinics', {
 				headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` }
 			}),
 			api.get('/management/users/clinician', {
+				headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` }
+			}),
+			api.get('/utility/activity/clinician', {
 				headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` }
 			})
 		])
 
 		clinicCount.value = clinicsRes.data.meta.total
 		clinicianCount.value = cliniciansRes.data.meta.total
+		recentActivity.value = recentActivities.data.data
 
 	} catch (error) {
 		console.error('Error fetching stats:', error)

@@ -8,6 +8,30 @@
 
 ---
 
+## [Joshua] - 2025-08-26
+
+### Modified
+- **Clinic Dashboard**
+  - Added Recent Activity section and made it functional
+
+- **Clinic Management**
+  - Updated UI
+  - Removed pagination loader
+  - Updated DB schema
+
+- **Clinician Management**
+  - Updated UI
+  - Removed pagination loader
+  - Added create user (clinician) functionality
+
+### Added
+- **Recent Activity Functionality**
+  - Implemented `woundmed_audit_logs` integration
+  - Displayed action type, action message, entity type, IP address, and timestamp
+  - Added relative time format (e.g., "2 mins ago")
+
+---
+
 ## [Joshua] - 2025-08-22
 
 ### Added
