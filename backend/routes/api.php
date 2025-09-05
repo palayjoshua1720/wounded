@@ -26,9 +26,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/auth/profile/security/disable-tfauth', [AuthController::class, 'disable_tfauth']);
     Route::post('/auth/profile/security/update-tfauth', [AuthController::class, 'update_tfauth']);
 
-    // Clinics
+    // Clinicians
     Route::get('/management/users/clinician', [ClinicController::class, 'getAllClinicians']);
-    Route::get('/management/users/clinics', [ClinicController::class, 'getAllClinic']);
     Route::post('/management/users/add/clinician', [ClinicController::class, 'addClinician']);
     Route::get('/utility/activity/clinician', [ClinicController::class, 'getAllActivity']);
+
+    // Clinics
+    Route::get('/management/users/clinics', [ClinicController::class, 'getAllClinic']);
+    Route::post('/management/facilities/clinics', [ClinicController::class, 'addClinic']);
 });

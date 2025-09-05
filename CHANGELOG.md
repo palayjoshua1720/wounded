@@ -8,6 +8,39 @@
 
 ---
 
+## [Joshua] - 2025-09-05
+
+### Modified
+- **Global UI**
+  - Updated color scheme to match live website
+  - Updated BaseModal global component UI
+
+- **Clinic Management**
+  - Updated Clinic details view UI
+  - Updated Add Clinic form UI
+  - Updated Update Clinic details UI
+  - Changed data display from table to card layout
+  - Updated header and filter UI
+
+- **Clinic Management**
+  - Refreshed login screen UI
+  - Added Clinic list component
+
+### Added
+- **Database & Backend**
+  - Added pivot table for Clinics ↔ Assigned Clinicians
+  - Added blockchain-style hashing for audit logs
+  - Created new migrations for clinics and relationships
+
+- **Functionality**
+  - Added clinic creation functionality
+  - Integrated updated audit log tracking
+
+- **Functionality**
+  - Added website logo and favicon (main-logo.webp, fav.webp)
+
+---
+
 ## [Joshua] - 2025-08-26
 
 ### Modified

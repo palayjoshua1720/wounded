@@ -5,16 +5,25 @@
   >
     <div class="flex flex-col h-full">
       <!-- Logo Section -->
-      <div class="flex items-center justify-center h-16 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-primary-bg to-primary-bg/80 dark:from-primary-dark-bg dark:to-primary-dark-bg/80">
-        <div class="flex items-center justify-center space-x-2 px-2 w-full">
-          <div class="h-8 w-8 flex items-center justify-center flex-shrink-0">
-            <img src="@/assets/sample-logo.png" alt="Logo" class="h-5 w-5" />
+      <div class="flex items-center justify-center h-16 border-b border-gray-200 dark:border-gray-700 
+            bg-gradient-to-r from-primary-bg to-primary-bg/80 dark:from-primary-dark-bg dark:to-primary-dark-bg/80">
+        <div class="flex items-center justify-center space-x-4 px-4 w-full">
+          <!-- Logo -->
+          <div class="h-16 w-16 flex items-center justify-center flex-shrink-0">
+            <img src="@/assets/main-logo.webp" alt="Logo" class="h-18 w-18 object-contain" />
           </div>
-          <h1 class="text-base sm:text-lg lg:text-xl font-bold bg-gradient-to-r from-primary-text to-primary-text/80 dark:from-primary-dark-text dark:to-primary-dark-text/80 bg-clip-text text-transparent break-words text-center">
+
+          <!-- Title -->
+          <h1
+            class="font-bold 
+                  bg-gradient-to-r from-primary-text to-primary-text/80 
+                  dark:from-primary-dark-text dark:to-primary-dark-text/80 
+                  bg-clip-text text-transparent break-words text-center">
             {{ appTitle }}
           </h1>
         </div>
       </div>
+
 
       <!-- Navigation Section -->
       <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">

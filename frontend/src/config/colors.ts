@@ -21,102 +21,102 @@ type ColorScheme = {
 };
 
 export const colors: ColorScheme = {
-  primary: {
-    light: {
-      DEFAULT: '#4338CA', // indigo-700
-      hover: '#3730A3',   // indigo-800
-      active: '#312E81',  // indigo-900
-      bg: '#EEF2FF',      // indigo-50
-      text: '#4338CA',    // indigo-700
-    },
-    dark: {
-      DEFAULT: '#6366F1', // indigo-500
-      hover: '#818CF8',   // indigo-400
-      active: '#A5B4FC',  // indigo-300
-      bg: '#1E293B',      // slate-800
-      text: '#E0E7FF',    // indigo-100
-    }
-  },
-  secondary: {
-    light: {
-      DEFAULT: '#4B5563', // gray-600
-      hover: '#374151',   // gray-700
-      active: '#1F2937',  // gray-800
-      bg: '#F3F4F6',      // gray-100
-      text: '#4B5563',    // gray-600
-    },
-    dark: {
-      DEFAULT: '#9CA3AF', // gray-400
-      hover: '#D1D5DB',   // gray-300
-      active: '#E5E7EB',  // gray-200
-      bg: '#1F2937',      // gray-800
-      text: '#F3F4F6',    // gray-100
-    }
-  },
-  success: {
-    light: {
-      DEFAULT: '#16A34A', // green-600
-      hover: '#15803D',   // green-700
-      active: '#166534',  // green-800
-      bg: '#F0FDF4',      // green-50
-      text: '#16A34A',    // green-600
-    },
-    dark: {
-      DEFAULT: '#22C55E', // green-500
-      hover: '#4ADE80',   // green-400
-      active: '#86EFAC',  // green-300
-      bg: '#166534',      // green-900
-      text: '#DCFCE7',    // green-100
-    }
-  },
-  danger: {
-    light: {
-      DEFAULT: '#DC2626', // red-600
-      hover: '#B91C1C',   // red-700
-      active: '#991B1B',  // red-800
-      bg: '#FEF2F2',      // red-50
-      text: '#DC2626',    // red-600
-    },
-    dark: {
-      DEFAULT: '#EF4444', // red-500
-      hover: '#F87171',   // red-400
-      active: '#FCA5A5',  // red-300
-      bg: '#7F1D1D',      // red-900
-      text: '#FEE2E2',    // red-100
-    }
-  },
-  warning: {
-    light: {
-      DEFAULT: '#CA8A04', // yellow-600
-      hover: '#A16207',   // yellow-700
-      active: '#854D0E',  // yellow-800
-      bg: '#FEFCE8',      // yellow-50
-      text: '#CA8A04',    // yellow-600
-    },
-    dark: {
-      DEFAULT: '#EAB308', // yellow-500
-      hover: '#FACC15',   // yellow-400
-      active: '#FDE047',  // yellow-300
-      bg: '#713F12',      // yellow-900
-      text: '#FEF9C3',    // yellow-100
-    }
-  },
-  info: {
-    light: {
-      DEFAULT: '#2563EB', // blue-600
-      hover: '#1D4ED8',   // blue-700
-      active: '#1E40AF',  // blue-800
-      bg: '#EFF6FF',      // blue-50
-      text: '#2563EB',    // blue-600
-    },
-    dark: {
-      DEFAULT: '#3B82F6', // blue-500
-      hover: '#60A5FA',   // blue-400
-      active: '#93C5FD',  // blue-300
-      bg: '#1E3A8A',      // blue-900
-      text: '#DBEAFE',    // blue-100
-    }
-  }
+	primary: {
+		light: {
+			DEFAULT: '#d70202', // strong red
+			hover: '#b00101',   // darker red
+			active: '#8a0000',  // deepest red
+			bg: '#FEE2E2',      // red-100 like background
+			text: '#d70202',    // main red
+		},
+		dark: {
+			DEFAULT: '#d70202',
+			hover: '#ef4444',   // lighter hover red
+			active: '#f87171',  // even lighter active red
+			bg: '#1E293B',      // neutral dark bg
+			text: '#FCA5A5',    // light red text
+		}
+	},
+	secondary: {
+		light: {
+			DEFAULT: '#0001ff', // strong blue
+			hover: '#0001cc',   // darker blue
+			active: '#000199',  // deepest blue
+			bg: '#E0E7FF',      // blue-100 like background
+			text: '#0001ff',    // main blue
+		},
+		dark: {
+			DEFAULT: '#0001ff',
+			hover: '#4F46E5',   // indigo-like hover
+			active: '#818CF8',  // lighter active blue
+			bg: '#1E293B',      // neutral dark bg
+			text: '#A5B4FC',    // light blue text
+		}
+	},
+	success: {
+		light: {
+			DEFAULT: '#16A34A', // green-600
+			hover: '#15803D',   // green-700
+			active: '#166534',  // green-800
+			bg: '#F0FDF4',      // green-50
+			text: '#16A34A',    // green-600
+		},
+		dark: {
+			DEFAULT: '#22C55E', // green-500
+			hover: '#4ADE80',   // green-400
+			active: '#86EFAC',  // green-300
+			bg: '#166534',      // green-900
+			text: '#DCFCE7',    // green-100
+		}
+	},
+	danger: {
+		light: {
+			DEFAULT: '#DC2626', // red-600
+			hover: '#B91C1C',   // red-700
+			active: '#991B1B',  // red-800
+			bg: '#FEF2F2',      // red-50
+			text: '#DC2626',    // red-600
+		},
+		dark: {
+			DEFAULT: '#EF4444', // red-500
+			hover: '#F87171',   // red-400
+			active: '#FCA5A5',  // red-300
+			bg: '#7F1D1D',      // red-900
+			text: '#FEE2E2',    // red-100
+		}
+	},
+	warning: {
+		light: {
+			DEFAULT: '#CA8A04', // yellow-600
+			hover: '#A16207',   // yellow-700
+			active: '#854D0E',  // yellow-800
+			bg: '#FEFCE8',      // yellow-50
+			text: '#CA8A04',    // yellow-600
+		},
+		dark: {
+			DEFAULT: '#EAB308', // yellow-500
+			hover: '#FACC15',   // yellow-400
+			active: '#FDE047',  // yellow-300
+			bg: '#713F12',      // yellow-900
+			text: '#FEF9C3',    // yellow-100
+		}
+	},
+	info: {
+		light: {
+			DEFAULT: '#2563EB', // blue-600
+			hover: '#1D4ED8',   // blue-700
+			active: '#1E40AF',  // blue-800
+			bg: '#EFF6FF',      // blue-50
+			text: '#2563EB',    // blue-600
+		},
+		dark: {
+			DEFAULT: '#3B82F6', // blue-500
+			hover: '#60A5FA',   // blue-400
+			active: '#93C5FD',  // blue-300
+			bg: '#1E3A8A',      // blue-900
+			text: '#DBEAFE',    // blue-100
+		}
+	}
 };
 
 // Helper function to convert hex to RGB values

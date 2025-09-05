@@ -5,42 +5,58 @@
             <div class="hidden md:flex flex-col justify-between p-10 w-1/2 bg-gradient-to-br from-blue-700 to-green-600 text-white relative">
                 <div>
                     <div class="flex items-center mb-8">
-                        <div class="bg-white/20 rounded p-3 mr-3">
-                            <SquareActivity :stroke-width="1.5" class="w-8 h-8 text-white" />
+                        <div className="bg-white rounded p-3 mr-3 flex items-center justify-center">
+                            <img
+                            src="/main-logo.webp" 
+                            alt="Main Logo" 
+                            className="w-20 h-20 object-contain" 
+                            />
                         </div>
                         <div>
                             <div class="text-xl font-bold">WOUNDMED INC.</div>
                             <div class="text-sm opacity-80">Medical Ordering & Inventory</div>
                         </div>
                     </div>
-                    <div class="mb-10">
-                        <div class="text-2xl font-light leading-tight">Streamline Your Medical<br />
-                            <span class="font-bold">Graft & Device Operations</span>
+                    <div class="mb-8">
+                        <div class="text-2xl leading-tight font-bold">Streamline Your Medical Graft & Device Operations<br />
                         </div>
                     </div>
-                    <ul class="space-y-4 mb-10">
-                        <li class="flex items-center text-base">
-                            <Check class="w-5 h-5 text-green-300 mr-2" />
+                    <div class="mb-10">
+                        <div class="text-lg font-light leading-tight">HIPPA-compliant inventory management for healthcare providers<br />
+                        </div>
+                    </div>
+                    <ul class="space-y-6">
+                        <li class="flex items-center text-lg">
+                            <CircleCheckBig class="w-5 h-5 text-green-300 mr-2" />
                             Real-time inventory tracking
                         </li>
-                        <li class="flex items-center text-base">
-                            <Check class="w-5 h-5 text-green-300 mr-2" />
+                        <li class="flex items-center text-lg">
+                            <CircleCheckBig class="w-5 h-5 text-green-300 mr-2" />
                             Automated ordering workflows
                         </li>
-                        <li class="flex items-center text-base">
-                            <Check class="w-5 h-5 text-green-300 mr-2" />
+                        <li class="flex items-center text-lg">
+                            <CircleCheckBig class="w-5 h-5 text-green-300 mr-2" />
                             Compliance & audit trails
+                        </li>
+                        <li class="flex items-center text-lg">
+                            <CircleCheckBig class="w-5 h-5 text-green-300 mr-2" />
+                            Secure patient data protection
+                        </li>
+                        <li class="flex items-center text-lg">
+                            <CircleCheckBig class="w-5 h-5 text-green-300 mr-2" />
+                            Role-based-access control
                         </li>
                     </ul>
                 </div>
-                <div class="flex items-center space-x-6 text-xs opacity-80">
-                    <div class="flex items-center space-x-1">
-                        <ShieldCheck class="w-6 h-6 text-green-500" />
-                        <span>HIPAA Compliant</span>
+                <div className="flex items-center space-x-3 border-l-4 border-blue-500 bg-white p-4 rounded shadow-sm text-sm">
+                    <div className="flex-shrink-0 text-blue-500">
+                        <ShieldCheck className="w-6 h-6" />
                     </div>
-                    <div class="flex items-center space-x-1">
-                        <BadgeCheck class="w-6 h-6 text-green-500" />
-                        <span>FDA Validated</span>
+                    <div>
+                        <p className="font-semibold text-gray-800">HIPAA Compliant</p>
+                        <p className="text-gray-600">
+                            All data is encrypted and managed in compliance with healthcare regulations
+                        </p>
                     </div>
                 </div>
             </div>
@@ -184,16 +200,16 @@
                         </div>
                     </div>
                     <div class="space-y-3">
-                        <div class="flex items-start p-4 bg-green-50 dark:bg-green-900/20 rounded border border-green-200 dark:border-green-700">
-                            <CircleCheck class="w-8 h-8 text-green-500 mr-3 mt-1" />
+                        <div class="flex items-center p-4 bg-green-50 dark:bg-green-900/20 rounded border border-green-200 dark:border-green-700">
+                            <CircleCheck class="w-12 h-12 text-green-500 mr-3 mt-1" />
                             <div>
                                 <div class="font-medium text-green-900 dark:text-green-300">
                                     Secure Access
                                 </div>
-                                <div class="text-xs text-green-900 dark:text-green-200 opacity-80">This system is protected with enterprise-grade security and complies with HIPAA, SOX, and FDA regulations.</div>
+                                <div class="text-xs text-green-900 dark:text-green-200 opacity-80">This system is protected with enterprise-grade security and complies with HIPAA requirements to ensure the confidentiality and security of patient and medical information.</div>
                             </div>
                         </div>
-                        <div class="flex items-start p-4 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-700">
+                        <div class="flex items-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-700">
                             <KeySquare class="w-6 h-6 text-blue-500 mr-3 mt-1" />
                             <div>
                                 <div class="font-medium text-blue-900 dark:text-blue-300">
@@ -218,10 +234,8 @@ import {
     EyeOff,
     Mail,
     Lock,
-    SquareActivity,
-    Check,
     ShieldCheck,
-    BadgeCheck,
+    CircleCheckBig,
     LogIn,
     CircleCheck,
     KeySquare

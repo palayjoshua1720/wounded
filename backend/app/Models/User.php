@@ -57,4 +57,14 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function clinics()
+    {
+        return $this->belongsToMany(
+            Clinic::class,
+            'woundmed_clinic_clinician',
+            'clinic_id',
+            'clinician_id',
+        );
+    }
 }
