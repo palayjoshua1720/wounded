@@ -1,15 +1,18 @@
 <template>
 	<div class="space-y-6">
-		<!-- Test Notification Button -->
-		<button @click="testNotification" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-		Test Notification
-		</button>
+		<!-- Welcome Banner -->
+		<div class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-4 rounded-2xl shadow-md flex items-center justify-between">
+			<div class="flex items-center space-x-4">
+				<div class="w-20 h-20 rounded-full overflow-hidden shadow-md flex items-center justify-center bg-indigo-700">
+					<span class="text-lg font-bold text-white">
+							{{ userInitials }}
+					</span>
+				</div>
 
-		<!-- Header -->
-		<div class="flex items-center justify-between">
-			<div>
-				<h1 class="text-2xl font-bold text-gray-900 dark:text-white">Clinic Dashboard</h1>
-				<p class="text-gray-600 dark:text-gray-400">Overview of your clinic's activity</p>
+				<div>
+					<h2 class="text-xl font-bold">Welcome back, {{ currentUser?.first_name + ' ' + ' ' + currentUser?.last_name }}</h2>
+					<p class="text-sm opacity-90">Here's a quick overview of the system today.</p>
+				</div>
 			</div>
 		</div>
 
@@ -173,6 +176,13 @@ import {
 } from 'lucide-vue-next';
 import { useNotification } from '@/composables/ui/useNotification';
 import api from '@/services/api'
+import { useUser } from '@/composables/auth/useUser'
+import { useAuthStore } from '@/stores/auth'
+
+const authStore = useAuthStore()
+const { userInitials } = useUser()
+
+const currentUser = computed(() => authStore.currentUser)
 
 interface AuditLog {
 	audit_log_id: number

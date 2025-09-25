@@ -110,3 +110,26 @@
   - Implemented working login functionality
   - Added 2FA validation logic
   - Updated UI to support 2FA flow
+
+---
+
+## [Mary] - 2025-09-12
+
+### Added
+- **Manufacturer Management**
+  - Added manufacturer management
+  - View manufacturer lists UI and Functionality
+  - Add new manufacturer information UI and Functionality
+  - Activate/Deactivate manufacturer UI and Functionality
+  - Archive manufacturer UI and Functionality
+  - Delete manufacturer UI and Functionality
+  - View manufacturer details UI and Functionality
+
+### Modified
+- **All Dashboard**
+  - Updated dashboard UI
+
+### Updated
+- **Manufacturer Management**
+  - Updated `woundmed_manufacturers` table
+  - Updated sidebar tabs
