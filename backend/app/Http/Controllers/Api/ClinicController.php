@@ -12,6 +12,7 @@ use Illuminate\Validation\ValidationException;
 
 class ClinicController extends Controller
 {
+    
     public function getAllActivity(Request $request)
     {
         $query = DB::table('woundmed_audit_logs')
@@ -227,7 +228,8 @@ class ClinicController extends Controller
         $perPage = $request->query('per_page', 9);
 
         $clinics = DB::table('woundmed_clinics')
-            ->where('clinic_status', 0)
+            // ->where('clinic_status', 0)
+            ->whereNull('deleted_at')
             ->paginate($perPage);
 
         $formattedClinics = $clinics->map(function ($clinic) {
@@ -315,6 +317,74 @@ class ClinicController extends Controller
         return response()->json([
             'message' => 'Clinic created successfully',
             'data' => $clinic,
+        ]);
+    }
+
+    public function updateClinic(Request $request, $clinicId)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:woundmed_users,email,' . $clinicId . ',clinic_id',
+            'contactPerson' => 'required|string',
+            'publicId' => 'nullable|string|max:20',
+            'isActive' => 'boolean',
+            'phone' => 'nullable|string|max:20',
+            'address' => 'nullable|string|max:20',
+            'assigned_clinicians_id' => 'nullable|array',
+            'assigned_clinicians_id.*' => 'integer|exists:woundmed_users,id',
+        ]);
+
+        $clinic = Clinic::findOrFail($clinicId);
+
+        $clinic->update([
+            'clinic_name' => $validated['name'],
+            'email' => $validated['email'],
+            'clinic_public_id' => $validated['publicId'],
+            'contact_person' => $validated['contactPerson'],
+            'phone' => $validated['phone'],
+            'address' => $validated['address'],
+            'clinic_status' => $request->boolean('isActive'),
+        ]);
+
+        if (!empty($validated['assigned_clinicians_id'])) {
+            $clinic->clinicians()->sync($validated['assigned_clinicians_id']);
+        }
+
+        return response()->json([
+            'message' => 'Clinic updated successfully',
+            'data' => $clinic,
+        ]);
+    }
+
+    public function updateClinicStatus(Request $request, $clinicId)
+    {
+        $clinic = Clinic::findOrFail($clinicId);
+
+        if ($clinic->clinic_status == 0) {
+            $clinic->clinic_status = 1;
+        } elseif ($clinic->clinic_status == 1) {
+            $clinic->clinic_status = 0;
+        }
+
+        $clinic->save();
+
+        return response()->json([
+            'success' => true,
+            'status' => $clinic->clinic_status,
+            'isActive' => $clinic->clinic_status == 0,
+            'label'   => $clinic->clinic_status == 0 ? 'Active' : ($clinic->clinic_status == 1 ? 'Inactive' : 'Archived'),
+        ]);
+
+    }
+
+    public function deleteClinic(Request $request, $clinicId)
+    {
+        $clinic = Clinic::findOrFail($clinicId);
+        $clinic->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Clinic deleted successfully',
         ]);
     }
 

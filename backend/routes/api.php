@@ -34,4 +34,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // Clinics
     Route::get('/management/users/clinics', [ClinicController::class, 'getAllClinic']);
     Route::post('/management/facilities/clinics', [ClinicController::class, 'addClinic']);
+    Route::put('/management/facilities/clinics/{clinicId}/update', [ClinicController::class, 'updateClinic']);
+    Route::put('/management/facilities/clinics/{clinicId}/updatestatus', [ClinicController::class, 'updateClinicStatus']);
+    Route::put('/management/facilities/clinics/{clinicId}/deleteclinic', [ClinicController::class, 'deleteClinic']);
+
 });

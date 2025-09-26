@@ -20,42 +20,45 @@
 		</div>
 
 		<!-- Filters -->
-		<div class="flex flex-col sm:flex-row gap-4 bg-white dark:bg-gray-800 p-4 rounded shadow-sm border border-gray-200 dark:border-gray-700">
-			<div class="flex-1">
-				<div class="relative">
-					<Search class="absolute left-3 top-3 h-5 w-5 text-gray-400 dark:text-gray-500" />
-					<input
-						v-model="searchTerm"
-						type="text"
-						placeholder="Search Clinicians..."
-						class="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-					/>
+		<div class="bg-white px-6 py-4 border-b border-gray-200 dark:border-gray-600 mb-2 shadow-sm">
+			<div class="flex items-center justify-between">
+				<h2 class="text-xl font-semibold text-gray-900 dark:text-white">Clinician Management</h2>
+				<div class="flex items-center space-x-4">
+					<div class="relative">
+						<Search class="absolute left-3 top-3 h-5 w-5 text-gray-400 dark:text-gray-500" />
+						<input
+							v-model="searchTerm"
+							type="text"
+							placeholder="Search Clinicians..."
+							class="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+						/>
+					</div>
+					<div class="flex items-center space-x-2">
+						<Funnel class="w-4 h-4 text-gray-500 dark:text-gray-400" />
+						<select
+						v-model="statusFilter"
+						class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+						>
+							<option value="all">All Status</option>
+							<option value="active">Active</option>
+							<option value="inactive">Inactive</option>
+						</select>
+					</div>
+					<div class="flex items-center space-x-2">
+						<label for="per-page" class="text-sm text-gray-700 dark:text-gray-300">Rows:</label>
+						<select
+							id="per-page"
+							v-model="itemsPerPage"
+							class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded 
+								focus:ring-2 focus:ring-green-500 focus:border-transparent 
+								bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+						>
+							<option value="10">10</option>
+							<option value="25">25</option>
+							<option value="50">50</option>
+						</select>
+					</div>
 				</div>
-			</div>
-			<div class="flex items-center space-x-2">
-				<Funnel class="w-4 h-4 text-gray-500 dark:text-gray-400" />
-				<select
-				v-model="statusFilter"
-				class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-				>
-					<option value="all">All Status</option>
-					<option value="active">Active</option>
-					<option value="inactive">Inactive</option>
-				</select>
-			</div>
-			<div class="flex items-center space-x-2">
-				<label for="per-page" class="text-sm text-gray-700 dark:text-gray-300">Rows:</label>
-				<select
-					id="per-page"
-					v-model="itemsPerPage"
-					class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded 
-						focus:ring-2 focus:ring-green-500 focus:border-transparent 
-						bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-				>
-					<option value="10">10</option>
-					<option value="25">25</option>
-					<option value="50">50</option>
-				</select>
 			</div>
 		</div>
 
@@ -225,7 +228,7 @@
 		</BaseModal>
 
 		<!-- Create/Edit User Form Modal -->
-		<BaseModal v-model="showFormModal" :title="showCreateForm ? 'Add new Clinician' : 'Edit Clinic'">
+		<BaseModal v-model="showFormModal" :title="showCreateForm ? 'Add new Clinician' : 'Edit Clinician'">
 			<form @submit.prevent="handleSubmitForm" class="space-y-4">
 				<div class="grid grid-cols-3 gap-4">
 					<div>

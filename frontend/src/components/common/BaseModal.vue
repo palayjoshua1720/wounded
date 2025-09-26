@@ -28,8 +28,11 @@ const props = defineProps({
 		default: 'max-w-4xl w-full'
 	}
 })
-const emit = defineEmits(['update:modelValue'])
-const close = () => emit('update:modelValue', false)
+const emit = defineEmits(['update:modelValue', 'close-form'])
+const close = () => {
+    emit('close-form')
+    emit('update:modelValue', false)
+}
 const widthClass = computed(() => props.width)
 </script>
 

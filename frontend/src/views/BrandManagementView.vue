@@ -3,8 +3,8 @@
 		<!-- Header -->
 		<div class="flex items-center justify-between">
 			<div>
-				<h1 class="text-2xl font-bold text-gray-900 dark:text-white">Clinic Management</h1>
-				<p class="text-gray-600 dark:text-gray-400">View and update clinic information with ease.</p>
+				<h1 class="text-2xl font-bold text-gray-900 dark:text-white">Brand Management</h1>
+				<p class="text-gray-600 dark:text-gray-400">View and update brand information with ease.</p>
 			</div>
 
 			<button
@@ -15,21 +15,21 @@
 				class="flex items-center px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
 			>
 				<HousePlus class="w-4 h-4 mr-2" />
-				Add Clinic
+				Add Brand
 			</button>
 		</div>
 
 		<!-- Filters -->
 		<div class="bg-white px-6 py-4 border-b border-gray-200 dark:border-gray-600 mb-2 shadow-sm">
 			<div class="flex items-center justify-between">
-				<h2 class="text-xl font-semibold text-gray-900 dark:text-white">Clinic Management</h2>
+				<h2 class="text-xl font-semibold text-gray-900 dark:text-white">Brand Management</h2>
 				<div class="flex items-center space-x-4">
 					<div class="relative">
 						<Search class="absolute left-3 top-3 h-4 w-4 text-gray-400 dark:text-gray-500" />
 						<input
 							v-model="searchTerm"
 							type="text"
-							placeholder="Search Clinics..."
+							placeholder="Search Brands..."
 							class="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
 						/>
 					</div>

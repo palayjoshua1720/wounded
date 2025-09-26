@@ -20,7 +20,13 @@ import ClinicManagementView from '@/views/ClinicManagementView.vue'
 import ProfileView from '@/views/ProfileView.vue'
 import ChangeAccountView from '@/views/ChangeAccountView.vue'
 import SettingsView from '@/views/SettingsView.vue'
+import BrandManagementView from '@/views/BrandManagementView.vue'
+import ManufacturerManagementView from '@/views/ManufacturerManagementView.vue'
 import { ClipboardDocumentCheckIcon, Squares2X2Icon, SquaresPlusIcon, BuildingLibraryIcon, ClipboardDocumentListIcon, ShieldCheckIcon, BellIcon, ShoppingCartIcon, ChartBarIcon, ArrowPathIcon, CalculatorIcon, CubeIcon, UsersIcon } from '@heroicons/vue/24/outline'
+import {
+    Box,
+	Factory
+} from 'lucide-vue-next'
 import { pageLoader } from '@/composables/ui/usePageLoader'
 
 // Types
@@ -79,7 +85,7 @@ const routes: RouteRecordRaw[] = [
 			component: ClinicManagementView,
 			meta: {
 			requiresAuth: true,
-				title: 'Clinic Management',
+				title: 'Clinic',
 				icon: BuildingLibraryIcon
 			}
 		},
@@ -89,7 +95,7 @@ const routes: RouteRecordRaw[] = [
 			component: ClinicianManagementView,
 			meta: {
 			requiresAuth: true,
-				title: 'Clinicians Management',
+				title: 'Clinicians',
 				icon: UsersIcon
 			}
 		},
@@ -101,6 +107,26 @@ const routes: RouteRecordRaw[] = [
 			requiresAuth: true,
 				title: 'Order Management',
 				icon: ShoppingCartIcon
+			}
+		},
+		{
+			path: 'brands',
+			name: 'brands',
+			component: BrandManagementView,
+			meta: {
+			requiresAuth: true,
+				title: 'Brands',
+				icon: Box
+			}
+		},
+		{
+			path: 'manufacturers',
+			name: 'manufacturers',
+			component: ManufacturerManagementView,
+			meta: {
+			requiresAuth: true,
+				title: 'Manufacturers',
+				icon: Factory
 			}
 		},
 		{

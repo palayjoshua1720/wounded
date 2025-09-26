@@ -7,12 +7,16 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Clinic extends Model
 {
+    use SoftDeletes;
     protected $table = 'woundmed_clinics';
-    protected $primaryKey = 'id';
+    protected $primaryKey = 'clinic_id';
     public $timestamps = true;
+
+    protected $dates = ['deleted_at'];
 
     protected $fillable = [
         'clinic_name',
