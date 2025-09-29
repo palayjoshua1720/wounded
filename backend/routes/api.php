@@ -4,7 +4,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\SampleController;
 use App\Http\Controllers\Api\AuthController;
-use App\Http\Controllers\Api\ClinicController ;
+use App\Http\Controllers\Api\ClinicController;
+use App\Http\Controllers\Api\ManufacturerController;
 
 // System Info
 Route::get('/version', function (Request $request) {
@@ -34,8 +35,17 @@ Route::middleware('auth:sanctum')->group(function () {
     // Clinics
     Route::get('/management/users/clinics', [ClinicController::class, 'getAllClinic']);
     Route::post('/management/facilities/clinics', [ClinicController::class, 'addClinic']);
+
+    // Manufacturer
+    Route::get('/management/manufacturers', [ManufacturerController::class, 'getAllManufacturers']);
+    Route::post('/management/manufacturers', [ManufacturerController::class, 'addManufacturer']);
+    Route::get('/management/manufacturers/{id}/archive', [ManufacturerController::class, 'archiveManufacturer']);
+    Route::get('/management/manufacturers/{id}/toggle', [ManufacturerController::class, 'toggleManufacturerStatus']);
+    Route::delete('/management/manufacturers/{id}', [ManufacturerController::class, 'deleteManufacturer']);
+    Route::post('/management/manufacturers/{id}', [ManufacturerController::class, 'updateManufacturer']);
+
+    // Route::get('/manufacturers/{id}/ivr-form', [ManufacturerController::class, 'downloadForm']);
     Route::put('/management/facilities/clinics/{clinicId}/update', [ClinicController::class, 'updateClinic']);
     Route::put('/management/facilities/clinics/{clinicId}/updatestatus', [ClinicController::class, 'updateClinicStatus']);
     Route::put('/management/facilities/clinics/{clinicId}/deleteclinic', [ClinicController::class, 'deleteClinic']);
-
 });

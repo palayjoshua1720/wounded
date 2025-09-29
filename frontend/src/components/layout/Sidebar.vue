@@ -19,7 +19,8 @@
                   bg-gradient-to-r from-primary-text to-primary-text/80 
                   dark:from-primary-dark-text dark:to-primary-dark-text/80 
                   bg-clip-text text-transparent break-words text-center">
-            {{ appTitle }}
+            <!-- {{ appTitle }} -->
+              WOUNDMED INC.
           </h1>
         </div>
       </div>

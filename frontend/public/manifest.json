@@ -39,7 +39,12 @@
       "short_name": "Home",
       "description": "Go to home page",
       "url": "/",
-      "icons": [{ "src": "/icons/favicon-96x96.png", "sizes": "96x96" }]
+      "icons": [
+        {
+          "src": "/icons/favicon-96x96.png",
+          "sizes": "96x96"
+        }
+      ]
     }
   ],
   "screenshots": [
@@ -51,8 +56,11 @@
       "label": "Home page of Vue Template"
     }
   ],
-  "categories": ["productivity", "utilities"],
+  "categories": [
+    "productivity",
+    "utilities"
+  ],
   "lang": "en-US",
   "dir": "ltr",
   "prefer_related_applications": false
-} 
+}
