@@ -20,6 +20,7 @@ import ClinicManagementView from '@/views/ClinicManagementView.vue'
 import ManufacturerManagementView from '@/views/ManufacturerManagementView.vue'
 import ProfileView from '@/views/ProfileView.vue'
 import ChangeAccountView from '@/views/ChangeAccountView.vue'
+import ResetPasswordView from '@/views/ResetPasswordView.vue'
 import SettingsView from '@/views/SettingsView.vue'
 import { ClipboardDocumentCheckIcon, Squares2X2Icon, SquaresPlusIcon, BuildingLibraryIcon, ClipboardDocumentListIcon, ShieldCheckIcon, BellIcon, ShoppingCartIcon, ChartBarIcon, ArrowPathIcon, CalculatorIcon, CubeIcon, UsersIcon } from '@heroicons/vue/24/outline'
 import { pageLoader } from '@/composables/ui/usePageLoader'
@@ -242,6 +243,12 @@ const routes: RouteRecordRaw[] = [
 			requiresAuth: false,
 			title: 'Forgot Password'
 		}
+	},
+	{
+		path: '/reset-password',
+		name: 'reset-password',
+		component: ResetPasswordView,
+		meta: { requiresAuth: false }
 	},
 	{
 		path: '/500',
