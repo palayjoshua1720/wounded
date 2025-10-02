@@ -711,10 +711,23 @@ async function handleSubmitForm() {
 
     closeForm()
     getAllManufacturers(1)
-  } catch (error) {
-    console.error(error.response?.data || error)
-    toast.error('Something went wrong!')
-  }
+  } catch (error: unknown) {
+		if (axios.isAxiosError(error)) {
+			const status = error.response?.status
+			const data = error.response?.data
+
+			if (status === 422 && data?.errors) {
+				const messages = Object.values(data.errors).flat()
+				toast.error("Error: " + messages.join("\n"))
+			} else {
+				toast.error(data?.message || `Request failed with status code ${status}`)
+			}
+		} else if (error instanceof Error) {
+			toast.error("Error: " + error.message)
+		} else {
+			toast.error("Something went wrong")
+		}
+	}
 }
 
 // archive manufacturer

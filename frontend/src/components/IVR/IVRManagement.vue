@@ -1,25 +1,6 @@
 <template>
   <div class="space-y-6">
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-      <div class="flex items-center justify-between mb-6">
-        <div class="flex items-center space-x-3">
-          <div class="p-2 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
-            <ShieldCheckIcon class="w-6 h-6 text-blue-600 dark:text-blue-400" />
-          </div>
-          <div>
-            <h2 class="text-xl font-semibold text-gray-900 dark:text-white">IVR Management</h2>
-            <p class="text-gray-600 dark:text-gray-400">Manage insurance verification requests</p>
-          </div>
-        </div>
-        
-        <button
-          @click="showForm = !showForm"
-          class="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          <PlusIcon class="w-4 h-4" />
-          <span>New IVR Request</span>
-        </button>
-      </div>
 
       <div v-if="showForm" class="border border-gray-200 dark:border-gray-600 rounded-lg p-6 mb-6">
         <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Submit New IVR Request</h3>
@@ -110,25 +91,6 @@
             </button>
           </div>
         </form>
-      </div>
-
-      <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
-        <h3 class="text-lg font-medium text-gray-900 dark:text-white">IVR Requests</h3>
-        <div class="flex items-center space-x-4">
-          <div class="relative">
-            <MagnifyingGlassIcon class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
-            <input v-model="ivrSearchQuery" type="text" placeholder="Search IVR requests..." class="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
-          </div>
-          <select
-            v-model="statusFilter"
-            class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-          >
-            <option value="all">All Status</option>
-            <option value="pending">Pending</option>
-            <option value="eligible">Eligible</option>
-            <option value="not_eligible">Not Eligible</option>
-          </select>
-        </div>
       </div>
 
       <div class="overflow-x-auto">

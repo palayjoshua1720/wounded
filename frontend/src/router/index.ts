@@ -17,19 +17,15 @@ import UsageLoggingView from '@/views/UsageLoggingView.vue'
 import UserManagementView from '@/views/UserManagementView.vue'
 import ClinicianManagementView from '@/views/ClinicianManagementView.vue'
 import ClinicManagementView from '@/views/ClinicManagementView.vue'
-import ManufacturerManagementView from '@/views/ManufacturerManagementView.vue'
 import ProfileView from '@/views/ProfileView.vue'
 import ChangeAccountView from '@/views/ChangeAccountView.vue'
 import SettingsView from '@/views/SettingsView.vue'
-import BrandManagementView from '@/views/BrandManagementView.vue'
 import ManufacturerManagementView from '@/views/ManufacturerManagementView.vue'
 import { ClipboardDocumentCheckIcon, Squares2X2Icon, SquaresPlusIcon, BuildingLibraryIcon, ClipboardDocumentListIcon, ShieldCheckIcon, BellIcon, ShoppingCartIcon, ChartBarIcon, ArrowPathIcon, CalculatorIcon, CubeIcon, UsersIcon } from '@heroicons/vue/24/outline'
 import {
-    Box,
 	Factory
 } from 'lucide-vue-next'
 import { pageLoader } from '@/composables/ui/usePageLoader'
-import { Factory } from 'lucide-vue-next'
 
 // Types
 interface NavigationItem {
@@ -211,176 +207,6 @@ const routes: RouteRecordRaw[] = [
 					icon: ChartBarIcon
 				}
 			},
-		{
-			path: 'admin-dashboard',
-			name: 'admin-dashboard',
-			component: AdminDashboardView,
-			meta: {
-			requiresAuth: true,
-				title: 'Dashboard',
-				icon: Squares2X2Icon
-			}
-		},
-		{
-			path: 'clinic-dashboard',
-			name: 'clinic-dashboard',
-			component: ClinicDashboardView,
-			meta: {
-			requiresAuth: true,
-				title: 'Clinic Dashboard',
-				icon: SquaresPlusIcon
-			}
-		},
-		{
-			path: 'users',
-			name: 'users',
-			component: UserManagementView,
-			meta: {
-			requiresAuth: true,
-				title: 'User Management',
-				icon: UsersIcon
-			}
-		},
-		{
-			path: 'user-clinic',
-			name: 'user-clinic',
-			component: ClinicManagementView,
-			meta: {
-			requiresAuth: true,
-				title: 'Clinic',
-				icon: BuildingLibraryIcon
-			}
-		},
-		{
-			path: 'user-clinicians',
-			name: 'user-clinicians',
-			component: ClinicianManagementView,
-			meta: {
-			requiresAuth: true,
-				title: 'Clinicians',
-				icon: UsersIcon
-			}
-		},
-		{
-			path: 'orders',
-			name: 'orders',
-			component: OrderManagementView,
-			meta: {
-			requiresAuth: true,
-				title: 'Order Management',
-				icon: ShoppingCartIcon
-			}
-		},
-		{
-			path: 'brands',
-			name: 'brands',
-			component: BrandManagementView,
-			meta: {
-			requiresAuth: true,
-				title: 'Brands',
-				icon: Box
-			}
-		},
-		{
-			path: 'manufacturers',
-			name: 'manufacturers',
-			component: ManufacturerManagementView,
-			meta: {
-			requiresAuth: true,
-				title: 'Manufacturers',
-				icon: Factory
-			}
-		},
-		{
-			path: 'usage',
-			name: 'usage',
-			component: UsageLoggingView,
-			meta: {
-			requiresAuth: true,
-				title: 'Graft Usage',
-				icon: ClipboardDocumentCheckIcon
-			}
-		},
-		{
-			path: 'invoices',
-			name: 'invoices',
-			component: InvoiceManagementView,
-			meta: {
-			requiresAuth: true,
-				title: 'Invoices & Payments',
-				icon: ClipboardDocumentListIcon
-			}
-		},
-		{
-			path: 'ivr',
-			name: 'ivr',
-			component: IVRManagementView,
-			meta: {
-			requiresAuth: true,
-				title: 'IVR Management',
-				icon: ShieldCheckIcon
-			}
-		},
-		{
-			path: 'inventory',
-			name: 'inventory',
-			component: InventoryManagementView,
-			meta: {
-			requiresAuth: true,
-				title: 'Inventory & Serials',
-				icon: CubeIcon
-			}
-		},
-		{
-			path: 'notifications',
-			name: 'notifications',
-			component: NotificationCenterView,
-			meta: {
-			requiresAuth: true,
-				title: 'Notifications',
-				icon: BellIcon
-			}
-		},
-		{
-			path: 'returns',
-			name: 'returns',
-			component: ReturnManagementView,
-			meta: {
-			requiresAuth: true,
-				title: 'Return Management',
-				icon: ArrowPathIcon
-			}
-		},
-		{
-			path: 'profile',
-			name: 'profile',
-			component: ProfileView,
-			meta: {
-			requiresAuth: true,
-				title: 'Profile',
-				icon: UsersIcon
-			}
-		},
-		{
-			path: 'smart-selector',
-			name: 'smart-selector',
-			component: () => import('@/views/SmartGraftSelectorView.vue'),
-			meta: {
-			requiresAuth: true,
-				title: 'Smart Size Calculator',
-				icon: CalculatorIcon // You may need to import this icon at the top
-			}
-		},
-		{
-			path: 'reports',
-			name: 'reports',
-			component: ReportCenterView,
-			meta: {
-			requiresAuth: true,
-				title: 'Reports',
-				icon: ChartBarIcon
-			}
-		},
 		]
 	},
 	{
@@ -468,13 +294,13 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 
 	return layoutRoute.children
 		.filter(route => {
-			// if (role === 0) {
-			// 	return true
-			// }
-
 			if (role === 0) {
-				return ['admin-dashboard', 'users', 'user-clinic', 'manufacturer-management'].includes(route.name as string)
+				return true
 			}
+
+			// if (role === 0) {
+			// 	return ['admin-dashboard', 'users', 'user-clinic', 'manufacturer-management', 'clinic-dashboard', 'ivr'].includes(route.name as string)
+			// }
 
 			if (role === 1) {
 				return ['admin-dashboard', 'users', 'user-clinic', 'manufacturer-management'].includes(route.name as string)

@@ -23,8 +23,6 @@ class PatientInfo extends Model
         'user_id',
         'patient_name',
         'email',
-        'added_at',
-        'updated_at',
     ];
 
     /**
