@@ -6,6 +6,9 @@ use App\Http\Controllers\Api\SampleController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ClinicController;
 use App\Http\Controllers\Api\ManufacturerController;
+use App\Http\Controllers\Api\ForgotPassword;
+use App\Http\Controllers\Api\ResetPassword;
+
 
 // System Info
 Route::get('/version', function (Request $request) {
@@ -14,6 +17,11 @@ Route::get('/version', function (Request $request) {
         'php_version' => phpversion(),
     ]);
 });
+
+
+//  ############## FORGOT PASSWORD #####################
+Route::post('/forgot-password', [ForgotPassword::class, 'sendResetLink']);
+Route::post('/reset-password', [ResetPassword::class, 'reset']);
 
 // Sample Routes
 Route::get('/sample', [SampleController::class, 'index']);

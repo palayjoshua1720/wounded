@@ -16,13 +16,13 @@ api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const appStore = useAppStore()
     appStore.setLoading(true)
-    
+
     // Get token from localStorage
     const token = localStorage.getItem('token')
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`
     }
-    
+
     return config
   },
   (error: AxiosError) => {
@@ -88,6 +88,15 @@ export const sampleApi = {
       throw error
     }
   }
+}
+
+export const authApi = {
+  forgotPassword(email: string) {
+    return api.post('/forgot-password', { email })
+  },
+  resetPassword(payload: { token: string, email: string, password: string, password_confirmation: string }) {
+    return api.post('/reset-password', payload)
+  },
 }
 
 export default api 
