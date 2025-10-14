@@ -57,6 +57,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/management/facilities/clinics/{clinicId}/update', [ClinicController::class, 'updateClinic']);
     Route::put('/management/facilities/clinics/{clinicId}/updatestatus', [ClinicController::class, 'updateClinicStatus']);
     Route::put('/management/facilities/clinics/{clinicId}/deleteclinic', [ClinicController::class, 'deleteClinic']);
+    Route::put('/management/facilities/clinics/{clinicId}/archiveclinic', [ClinicController::class, 'archiveClinic']);
+    Route::put('/management/facilities/clinics/{clinicId}/unarchiveclinic', [ClinicController::class, 'unarchiveClinic']);
 
 
     // IVR

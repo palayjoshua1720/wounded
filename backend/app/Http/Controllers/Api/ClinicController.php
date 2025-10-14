@@ -388,6 +388,30 @@ class ClinicController extends Controller
         ]);
     }
 
+    public function archiveClinic(Request $request, $clinicId)
+    {
+        $clinic = Clinic::findOrFail($clinicId);
+        $clinic->clinic_status = 2;
+        $clinic->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Clinic archived successfully',
+        ]);
+    }
+
+    public function unarchiveClinic(Request $request, $clinicId)
+    {
+        $clinic = Clinic::findOrFail($clinicId);
+        $clinic->clinic_status = 0;
+        $clinic->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Clinic unarchived successfully',
+        ]);
+    }
+
     private function generateRowHash(array $data, $prevHash = null)
     {
         $string = json_encode($data) . $prevHash;

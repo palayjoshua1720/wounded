@@ -71,7 +71,9 @@
 			@view-clinic="selectedUser = $event"
 			@edit-clinic="editUser"
 			@toggle-status="handleToggleStatus"
-			@delete-clinic="handleDeleteUser"
+			@delete-clinic="confirmDelete"
+			@archive-clinic="confirmArchive"
+			@unarchive-clinic="confirmUnarchive"
 			@update:page="getAllClinics"
 		/>
 
@@ -431,39 +433,6 @@
 				</div>
 			</template>
 		</BaseModal>
-
-		<BaseModal
-			v-model="showDeleteModal"
-			title="Confirm Deletion"
-		>
-			<div class="p-6 text-center">
-				<p class="text-lg text-gray-800 mb-4">
-					Are you sure you want to delete
-					<span class="font-semibold text-red-600">
-						{{
-							users.find(u => u.id === userIdToDelete)?.name || 'this clinic'
-						}}
-					</span>
-					?
-				</p>
-				<div class="flex justify-center gap-4 mt-6">
-					<button
-						type="button"
-						@click="showDeleteModal = false"
-						class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
-					>
-						Cancel
-					</button>
-					<button
-						type="button"
-						@click="confirmDelete"
-						class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-					>
-						Yes, Delete
-					</button>
-				</div>
-			</div>
-		</BaseModal>
 	</div>
 </template>
 
@@ -496,6 +465,7 @@ import {
 import api from '@/services/api'
 import { toast } from 'vue3-toastify'
 import 'vue3-toastify/dist/index.css'
+import Swal from 'sweetalert2'
 
 interface User {
 	id: string
@@ -525,9 +495,6 @@ interface Clinic{
 	name: string
 	user_role: number
 }
-
-const showDeleteModal = ref(false)
-const userIdToDelete = ref<string | null>(null)
 
 const showUsers = ref(false)
 const isOpen = ref(false);
@@ -587,18 +554,13 @@ async function handleToggleStatus(clinicId: string) {
 			if (idx !== -1) {
 				users.value[idx].isActive = response.data.status;
 			}
+			getAllClinics();
 		}
 
 		toast.success(response.data.message || 'Status updated successfully!')
     } catch (err) {
         console.error('Error toggling status:', err);
     }
-}
-
-
-function handleDeleteUser(userId: string) {
-    userIdToDelete.value = userId
-    showDeleteModal.value = true
 }
 
 const editUser = (user: User) => {
@@ -798,20 +760,73 @@ function removeClinician(index: number) {
 	];
 }
 
-async function confirmDelete() {
-    if (userIdToDelete.value) {
+async function confirmDelete(userId: string) {
+	const result = await Swal.fire({
+		title: "Are you sure?",
+		text: "This action cannot be undone.",
+		icon: "warning",
+		showCancelButton: true,
+		confirmButtonColor: "#3085d6",
+		cancelButtonColor: "#d33",
+		confirmButtonText: "Yes, delete it!"
+	});
+
+    if (result.isConfirmed && userId) {
         try {
-            await api.put(`/management/facilities/clinics/${userIdToDelete.value}/deleteclinic`)
+            await api.put(`/management/facilities/clinics/${userId}/deleteclinic`)
             toast.success('Clinic deleted successfully!')
             await getAllClinics()
         } catch (error) {
             toast.error('Failed to delete clinic.')
         }
     }
-    showDeleteModal.value = false
-    userIdToDelete.value = null
 }
 
+async function confirmArchive(userId: string) {
+	const result = await Swal.fire({
+		title: "Are you sure?",
+		text: "This action cannot be undone.",
+		icon: "warning",
+		showCancelButton: true,
+		confirmButtonColor: "#3085d6",
+		cancelButtonColor: "#d33",
+		confirmButtonText: "Yes, archive it!"
+	});
+
+	if (result.isConfirmed && userId) {
+		try {
+			await api.put(`/management/facilities/clinics/${userId}/archiveclinic`)
+			toast.success('Clinic archived successfully!')
+			await getAllClinics()
+		} catch (error) {
+			toast.error('Failed to archive clinic.')
+		}
+	}
+}
+
+async function confirmUnarchive(userId: string) {
+	console.log('unarchvie: ' + userId);
+	
+	const result = await Swal.fire({
+		title: "Are you sure?",
+		text: "This will restore the clinic.",
+		icon: "question",
+		showCancelButton: true,
+		confirmButtonColor: "#3085d6",
+		cancelButtonColor: "#d33",
+		confirmButtonText: "Yes, unarchive it!"
+	});
+
+	if (result.isConfirmed && userId) {
+		try {
+			await api.put(`/management/facilities/clinics/${userId}/unarchiveclinic`);
+			toast.success("Clinic restored successfully!");
+			await getAllClinics();
+		} catch (error) {
+			toast.error("Failed to unarchive clinic.");
+		}
+	}
+}
 
 onMounted(async () => {
     getAllClinics(1);

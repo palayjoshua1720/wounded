@@ -39,22 +39,35 @@
 						<button @click="$emit('edit-clinic', user)" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
 							<SquarePen class="w-4 h-4" />
 						</button>
-						<button 
-							@click="$emit('toggle-status', user.id)" 
-							:class="user.isActive === 0 
-								? 'text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300' 
-								: 'text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300'"
-							:title="user.isActive === 0 ? 'Active' : 'Inactive'"
+						<template v-if="user.isActive === 0 || user.isActive === 1">
+							<button
+								@click="$emit('toggle-status', user.id)" 
+								:class="user.isActive === 0 
+									? 'text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300' 
+									: 'text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300'"
+								:title="user.isActive == 0 ? 'Deactivate' : 'Activate'"
 							>
-							<component :is="user.isActive === 0 ? CircleX : CircleCheck" class="w-4 h-4" />
-						</button>
+								<component 
+									:is="user.isActive == 0 ? CircleX : CircleCheck" 
+									class="w-4 h-4" 
+								/>
+							</button>
+						</template>
 						<button @click="$emit('delete-clinic', user.id)" class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300" title="Delete User">
 							<Trash2 class="w-4 h-4" />
 						</button>
-						<button @click="$emit('delete-clinic', user.id)" class="text-yellow-600 hover:text-yellow-800 dark:text-yellow-400 dark:hover:text-yellow-300" title="Archive User">
-							<Archive class="w-4 h-4" />
-						</button>
-						<!-- can only be archived when inactive -->
+						<template v-if="user.isActive === 1 || user.isActive === 2">
+							<button
+								@click="user.isActive === 2 ? $emit('unarchive-clinic', user.id) : $emit('archive-clinic', user.id)"
+								class="text-yellow-600 hover:text-yellow-900 dark:text-yellow-400 dark:hover:text-yellow-300"
+								:title="user.isActive === 2 ? 'Unarchive Clinic' : 'Archive Clinic'"
+							>
+								<component
+									:is="user.isActive === 1 ? Archive : ArchiveRestore"
+									class="w-4 h-4"
+								/>
+							</button>
+						</template>
 					</div>
 				</div>
 				<div class="space-y-2 text-sm text-gray-600 dark:text-gray-400">
@@ -121,6 +134,7 @@ import {
 	IdCard,
 	IdCardLanyard,
 	Archive,
+	ArchiveRestore,
 } from 'lucide-vue-next'
 
 interface Clinician {
@@ -162,6 +176,8 @@ defineEmits<{
 	'edit-clinic': [user: User]
 	'toggle-status': [userId: string]
 	'delete-clinic': [userId: string]
+	'archive-clinic': [userId: string]
+	'unarchive-clinic': [userId: string]
 	'update:page': [page: number]
 }>()
 
