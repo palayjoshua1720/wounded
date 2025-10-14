@@ -523,21 +523,36 @@
 					</div>
 
 					<!-- Template Download -->
+					<!-- <div class="flex items-center gap-3">
+						<div class="flex items-center justify-center w-10 h-10 rounded-lg bg-blue-100">
+							<Download class="w-6 h-6 text-blue-500" />
+						</div>
+						<div>
+							<p class="text-xs text-gray-600 dark:text-gray-400">Template</p>
+							<a
+							:href="`/uploads/ivr/${viewManufacturer.filename}`"
+							download
+							class="text-blue-600 hover:underline text-sm font-medium"
+							>
+							Download IVR Form
+							</a>
+						</div>
+					</div> -->
+
+					<!-- Template Download -->
 					<div class="flex items-center gap-3">
-					<div class="flex items-center justify-center w-10 h-10 rounded-lg bg-blue-100">
-						<Download class="w-6 h-6 text-blue-500" />
-					</div>
-					<div>
-						<p class="text-xs text-gray-600 dark:text-gray-400">Template</p>
-						<a
-						:href="`/uploads/ivr/${viewManufacturer.filename}`"
-						download
-						class="text-blue-600 hover:underline text-sm font-medium"
-						>
+						<div class="flex items-center justify-center w-10 h-10 rounded-lg bg-blue-100">
+							<Download class="w-6 h-6 text-blue-500" />
+						</div>
+						<div>
+							<p class="text-xs text-gray-600 dark:text-gray-400">Template</p>
+						<button @click="downloadIVRForm(viewManufacturer.id)" class="text-blue-600 hover:underline text-sm font-medium">
 						Download IVR Form
-						</a>
+						</button>
+
+						</div>
 					</div>
-					</div>
+
 				</div>
 				</div>
 
@@ -604,6 +619,25 @@ const showManufacturerDetailsModal = computed({
     if (!value) viewManufacturer.value = null
   },
 })
+
+// Download file securely
+const downloadIVRForm = async (id) => {
+  try {
+    const response = await axios.get(`/api/management/manufacturers/${id}/download`, {
+      responseType: 'blob',
+    });
+
+    const blob = new Blob([response.data]);
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'IVR_Form.pdf';
+    link.click();
+    URL.revokeObjectURL(link.href);
+  } catch (error) {
+    console.error('Download failed:', error);
+  }
+};
+
 
 const formData = ref({
   manufacturerName: '',
@@ -700,7 +734,7 @@ async function handleSubmitForm() {
       })
 	  toast.success('Manufacturer created!')
     } else if (showEditForm.value && selectedManufacturer.value) {
-      await api.post(`/management/manufacturers/${selectedManufacturer.value.id}?_method=PUT`, form, {
+      await api.post(`/management/manufacturers/${selectedManufacturer.value.id}`, form, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
           'Content-Type': 'multipart/form-data'

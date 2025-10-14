@@ -17,16 +17,15 @@ import UsageLoggingView from '@/views/UsageLoggingView.vue'
 import UserManagementView from '@/views/UserManagementView.vue'
 import ClinicianManagementView from '@/views/ClinicianManagementView.vue'
 import ClinicManagementView from '@/views/ClinicManagementView.vue'
+import ManufacturerManagementView from '@/views/ManufacturerManagementView.vue'
+import BrandManagementView from '@/views/BrandManagementView.vue'
 import ProfileView from '@/views/ProfileView.vue'
 import ChangeAccountView from '@/views/ChangeAccountView.vue'
 import ResetPasswordView from '@/views/ResetPasswordView.vue'
 import SettingsView from '@/views/SettingsView.vue'
-import ManufacturerManagementView from '@/views/ManufacturerManagementView.vue'
 import { ClipboardDocumentCheckIcon, Squares2X2Icon, SquaresPlusIcon, BuildingLibraryIcon, ClipboardDocumentListIcon, ShieldCheckIcon, BellIcon, ShoppingCartIcon, ChartBarIcon, ArrowPathIcon, CalculatorIcon, CubeIcon, UsersIcon } from '@heroicons/vue/24/outline'
-import {
-	Factory
-} from 'lucide-vue-next'
 import { pageLoader } from '@/composables/ui/usePageLoader'
+import { Factory, Package } from 'lucide-vue-next'
 
 // Types
 interface NavigationItem {
@@ -96,6 +95,16 @@ const routes: RouteRecordRaw[] = [
 					requiresAuth: true,
 					title: 'Manufacturers',
 					icon: Factory
+				}
+			},
+			{
+				path: 'brand-management',
+				name: 'brand-management',
+				component: BrandManagementView,
+				meta: {
+					requiresAuth: true,
+					title: 'Brands',
+					icon: Package
 				}
 			},
 			{
@@ -306,7 +315,7 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 			// }
 
 			if (role === 0) {
-				return ['admin-dashboard', 'users', 'user-clinic', 'manufacturer-management', 'clinic-dashboard', 'ivr'].includes(route.name as string)
+				return ['admin-dashboard', 'users', 'user-clinic', 'manufacturer-management', 'clinic-dashboard', 'ivr', 'brand-management'].includes(route.name as string)
 			}
 
 			if (role === 1) {

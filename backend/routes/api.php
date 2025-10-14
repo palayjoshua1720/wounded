@@ -52,6 +52,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/management/manufacturers/{id}/toggle', [ManufacturerController::class, 'toggleManufacturerStatus']);
     Route::delete('/management/manufacturers/{id}', [ManufacturerController::class, 'deleteManufacturer']);
     Route::post('/management/manufacturers/{id}', [ManufacturerController::class, 'updateManufacturer']);
+    Route::get('/management/manufacturers/{id}/download', [ManufacturerController::class, 'downloadIVRForm']);
 
     // Route::get('/manufacturers/{id}/ivr-form', [ManufacturerController::class, 'downloadForm']);
     Route::put('/management/facilities/clinics/{clinicId}/update', [ClinicController::class, 'updateClinic']);

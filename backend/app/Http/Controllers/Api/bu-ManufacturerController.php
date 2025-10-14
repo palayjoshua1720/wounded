@@ -13,45 +13,6 @@ use Illuminate\Validation\ValidationException;
 
 class ManufacturerController extends Controller
 {
-    private function logAudit(Request $request, $actionType, $actionMessage, $entityId, $status = 0)
-    {
-        $userId = $request->user()->id ?? null;
-        $attemptedIdentifier = $userId ? null : 'N/A'; // Authenticated requests will have user_id
-        $ipAddress = $request->ip();
-        $entity = 'woundmed_manufacturers';
-        $entityType = 'manufacturer';
-
-        // Get prev_hash from the latest audit log entry
-        $lastLog = DB::table('woundmed_audit_logs')->latest('audit_log_id')->first();
-        $prevHash = $lastLog ? $lastLog->row_hash : null;
-
-        // Insert new log entry (row_hash temporarily empty string)
-        $logId = DB::table('woundmed_audit_logs')->insertGetId([
-            'user_id' => $userId,
-            'attempted_identifier' => $attemptedIdentifier,
-            'ip_address' => $ipAddress,
-            'action_type' => $actionType,
-            'action_message' => $actionMessage,
-            'entity_id' => $entityId,
-            'entity' => $entity,
-            'entity_type' => $entityType,
-            'status' => $status,
-            'prev_hash' => $prevHash,
-            'row_hash' => '', // Temporarily empty string to avoid NULL constraint
-            'timestamp' => now()->toDateTimeString(),
-        ]);
-
-        // Fetch the inserted log data (excluding row_hash and audit_log_id for hashing)
-        $logData = DB::table('woundmed_audit_logs')->where('audit_log_id', $logId)->first();
-        unset($logData->audit_log_id);
-        unset($logData->row_hash);
-        $dataString = json_encode($logData);
-        $rowHash = hash('sha256', $dataString);
-
-        // Update the log entry with the computed row_hash
-        DB::table('woundmed_audit_logs')->where('audit_log_id', $logId)->update(['row_hash' => $rowHash]);
-    }
-
     public function getAllManufacturers(Request $request)
     {
         $perPage = $request->query('per_page', 10);
@@ -118,24 +79,19 @@ class ManufacturerController extends Controller
             'manufacturer_status'  => $validated['manufacturerStatus'] ?? 0,
         ]);
 
-        $this->logAudit($request, 'manufacturer_create', "Manufacturer created: {$validated['manufacturerName']}", $manufacturer->manufacturer_id);
-
         return response()->json([
             'message' => 'Manufacturer created successfully',
             'data'    => $manufacturer,
         ]);
     }
 
-    public function archiveManufacturer(Request $request, $id)
+    public function archiveManufacturer($id)
     {
         $manufacturer = Manufacturer::findOrFail($id);
 
         if ($manufacturer->manufacturer_status !== 2) {
-            $oldStatus = $manufacturer->manufacturer_status;
             $manufacturer->manufacturer_status = 2; // Archived
             $manufacturer->save();
-
-            $this->logAudit($request, 'manufacturer_archive', "Manufacturer archived: {$manufacturer->manufacturer_name} (from status {$oldStatus})", $id);
         }
 
         return response()->json([
@@ -144,31 +100,24 @@ class ManufacturerController extends Controller
         ]);
     }
 
-    public function toggleManufacturerStatus(Request $request, $id)
+    public function toggleManufacturerStatus($id)
     {
         $manufacturer = Manufacturer::findOrFail($id);
 
-        $oldStatus = $manufacturer->manufacturer_status;
-        $statusMap = [
-            2 => 0, // Archived -> Active
-            1 => 0, // Inactive -> Active
-            0 => 1, // Active -> Inactive
-        ];
-        $newStatus = $statusMap[$oldStatus] ?? $oldStatus;
-        $manufacturer->manufacturer_status = $newStatus;
-        $manufacturer->save();
-
-        $statusText = $newStatus === 0 ? 'Active' : 'Inactive';
-        if ($oldStatus === 2) {
-            $actionType = 'manufacturer_reactivate';
-        } elseif ($newStatus === 0) {
-            $actionType = 'manufacturer_activate';
-        } else {
-            $actionType = 'manufacturer_deactivate';
+        // If archived, set to Active
+        if ($manufacturer->manufacturer_status === 2) {
+            $manufacturer->manufacturer_status = 0;
+        }
+        // If inactive, set to Active
+        elseif ($manufacturer->manufacturer_status === 1) {
+            $manufacturer->manufacturer_status = 0;
+        }
+        // If active, set to Inactive
+        elseif ($manufacturer->manufacturer_status === 0) {
+            $manufacturer->manufacturer_status = 1;
         }
 
-        // Log successful toggle
-        $this->logAudit($request, $actionType, "Manufacturer status toggled to {$statusText}: {$manufacturer->manufacturer_name} (from {$oldStatus})", $id);
+        $manufacturer->save();
 
         return response()->json([
             'message' => 'Manufacturer status updated successfully',
@@ -176,14 +125,10 @@ class ManufacturerController extends Controller
         ]);
     }
 
-    public function deleteManufacturer(Request $request, $id)
+    public function deleteManufacturer($id)
     {
         $manufacturer = Manufacturer::findOrFail($id);
-        $name = $manufacturer->manufacturer_name; // Capture before delete
-        $manufacturer->delete(); // Soft delete
-
-        // Log successful deletion
-        $this->logAudit($request, 'manufacturer_delete', "Manufacturer deleted: {$name}", $id);
+        $manufacturer->delete(); // soft delete (use forceDelete() for permanent)
 
         return response()->json([
             'message' => 'Manufacturer deleted successfully',
@@ -202,21 +147,16 @@ class ManufacturerController extends Controller
             'address'           => 'nullable|string|max:255',
             'contactPerson'     => 'required|string|max:255',
             'contactNumber'     => 'required|string|max:20',
-            'ivrForm'           => 'nullable|file|mimes:pdf,doc,docx|max:10240',
+            'ivrForm'           => 'nullable|file|mimes:pdf,doc,docx|max:10240', // 10MB max
             'manufacturerStatus' => 'required|in:0,1,2',
         ]);
 
         // If a new file is uploaded, store it and update the path
         if ($request->hasFile('ivrForm')) {
-            // Optionally delete old file if exists
-            if ($manufacturer->filepath && Storage::disk('private')->exists($manufacturer->filepath)) {
-                Storage::disk('private')->delete($manufacturer->filepath);
-            }
             $path = $request->file('ivrForm')->store('manufacturers', 'private');
             $manufacturer->filepath = $path;
         }
 
-        $oldName = $manufacturer->manufacturer_name;
         $manufacturer->manufacturer_name = $validated['manufacturerName'];
         $manufacturer->primary_email = $validated['primaryEmail'];
         $manufacturer->secondary_email = $validated['secondaryEmail'] ?? null;
@@ -228,14 +168,12 @@ class ManufacturerController extends Controller
 
         $manufacturer->save();
 
-        // Log successful update
-        $this->logAudit($request, 'manufacturer_update', "Manufacturer updated: {$oldName} -> {$validated['manufacturerName']}", $id);
-
         return response()->json([
             'message' => 'Manufacturer updated successfully',
             'data'    => $manufacturer,
         ]);
     }
+
 
     // 
     public function handleAction(Request $request, $id)
