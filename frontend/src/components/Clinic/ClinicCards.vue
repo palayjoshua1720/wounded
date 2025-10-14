@@ -48,9 +48,13 @@
 							>
 							<component :is="user.isActive === 0 ? CircleX : CircleCheck" class="w-4 h-4" />
 						</button>
-						<button @click="$emit('delete-clinic', user.id)" class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300">
+						<button @click="$emit('delete-clinic', user.id)" class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300" title="Delete User">
 							<Trash2 class="w-4 h-4" />
 						</button>
+						<button @click="$emit('delete-clinic', user.id)" class="text-yellow-600 hover:text-yellow-800 dark:text-yellow-400 dark:hover:text-yellow-300" title="Archive User">
+							<Archive class="w-4 h-4" />
+						</button>
+						<!-- can only be archived when inactive -->
 					</div>
 				</div>
 				<div class="space-y-2 text-sm text-gray-600 dark:text-gray-400">
@@ -116,6 +120,7 @@ import {
 	CalendarPlus,
 	IdCard,
 	IdCardLanyard,
+	Archive,
 } from 'lucide-vue-next'
 
 interface Clinician {

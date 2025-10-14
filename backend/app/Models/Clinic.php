@@ -65,5 +65,12 @@ class Clinic extends Model
             'clinic_id',
             'clinician_id'
         );
-    }  
+    }
+
+    public function getAllClinicianIdsAttribute()
+    {
+        $pivotClinicians = $this->clinicians()->pluck('users.id')->toArray();
+        $jsonClinicians = $this->assigned_clinician_ids ?? [];
+        return array_unique(array_merge($pivotClinicians, $jsonClinicians));
+    }
 }

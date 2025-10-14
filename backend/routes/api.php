@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\SampleController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ClinicController;
 use App\Http\Controllers\Api\ManufacturerController;
+use App\Http\Controllers\Api\IVRRequestController;
 use App\Http\Controllers\Api\ForgotPassword;
 use App\Http\Controllers\Api\ResetPassword;
 
@@ -56,4 +57,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/management/facilities/clinics/{clinicId}/update', [ClinicController::class, 'updateClinic']);
     Route::put('/management/facilities/clinics/{clinicId}/updatestatus', [ClinicController::class, 'updateClinicStatus']);
     Route::put('/management/facilities/clinics/{clinicId}/deleteclinic', [ClinicController::class, 'deleteClinic']);
+
+
+    // IVR
+    Route::get('/management/ivr/ivrrequests', [IVRRequestController::class, 'getAllIVRRequests']);
+    Route::get('/management/ivr/getbrands', [IVRRequestController::class, 'getAllBrands']);
+    Route::get('/management/ivr/getclinics', [IVRRequestController::class, 'getAllClinic']);
+    Route::get('/management/patients/patientinfo', [IVRRequestController::class, 'getAllPatientInfo']);
+    Route::post('/management/add/newivrrequest', [IVRRequestController::class, 'addIVRRequest']);
+    Route::put('/management/update/{id}/updateivrrequest', [IVRRequestController::class, 'updateIVRRequest']);
+    Route::put('/management/delete/{id}/deleteivrrequest', [IVRRequestController::class, 'deleteIVRRequest']);
+    Route::put('/management/archive/{id}/archiveivrrequest', [IVRRequestController::class, 'archiveIVRRequest']);
+    Route::put('/management/archive/{id}/unarchiveivrrequest', [IVRRequestController::class, 'unarchiveIVRRequest']);
 });

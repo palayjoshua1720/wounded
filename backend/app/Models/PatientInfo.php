@@ -40,4 +40,16 @@ class PatientInfo extends Model
     {
         return $this->hasMany(IVR::class, 'patient_id', 'patient_id');
     }
+
+    public function clinics()
+    {
+        return $this->hasManyThrough(
+            Clinic::class,
+            User::class,
+            'id',
+            'clinic_id',
+            'user_id',
+            'id'
+        );
+    }
 }

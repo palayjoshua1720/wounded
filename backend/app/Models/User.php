@@ -63,8 +63,8 @@ class User extends Authenticatable
         return $this->belongsToMany(
             Clinic::class,
             'woundmed_clinic_clinician',
-            'clinic_id',
             'clinician_id',
+            'clinic_id'
         );
     }
 }

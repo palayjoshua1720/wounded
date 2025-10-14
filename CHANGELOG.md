@@ -8,6 +8,16 @@
 
 ---
 
+## [Joshua] - 2025-10-14
+
+### Added
+- **IVR Management**
+  - Add New IVR Request
+  - View IVR Request Details
+  - Update IVR Request details
+  - Delete IVR Request
+  - Archive/Unarchive IVR Request
+
 ## [Joshua] - 2025-09-05
 
 ### Modified

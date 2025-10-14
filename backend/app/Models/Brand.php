@@ -26,4 +26,10 @@ class Brand extends Model
         'description',
         'brand_status',
     ];
+
+    # relationship - brand belongs to manufacturer
+    public function manufacturer()
+    {
+        return $this->belongsTo(Manufacturer::class, 'manufacturer_id', 'manufacturer_id');
+    }
 }

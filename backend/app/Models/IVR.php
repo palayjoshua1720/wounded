@@ -29,5 +29,30 @@ class IVR extends Model
         'ivr_status',
         'verified_at',
         'submitted_at',
+        'ivr_number',
     ];
+
+    # Relationships
+    public function clinic()
+    {
+        return $this->belongsTo(Clinic::class, 'clinic_id', 'clinic_id');
+    }
+
+    // Brand relation
+    public function brand()
+    {
+        return $this->belongsTo(Brand::class, 'brand_id', 'brand_id');
+    }
+
+    // Manufacturer relation
+    public function manufacturer()
+    {
+        return $this->belongsTo(Manufacturer::class, 'manufacturer_id', 'manufacturer_id');
+    }
+
+    // Patient relation
+    public function patient()
+    {
+        return $this->belongsTo(PatientInfo::class, 'patient_id', 'patient_id');
+    }
 }

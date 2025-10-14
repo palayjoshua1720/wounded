@@ -301,13 +301,13 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 
 	return layoutRoute.children
 		.filter(route => {
-			if (role === 0) {
-				return true
-			}
-
 			// if (role === 0) {
-			// 	return ['admin-dashboard', 'users', 'user-clinic', 'manufacturer-management', 'clinic-dashboard', 'ivr'].includes(route.name as string)
+			// 	return true
 			// }
+
+			if (role === 0) {
+				return ['admin-dashboard', 'users', 'user-clinic', 'manufacturer-management', 'clinic-dashboard', 'ivr'].includes(route.name as string)
+			}
 
 			if (role === 1) {
 				return ['admin-dashboard', 'users', 'user-clinic', 'manufacturer-management'].includes(route.name as string)
