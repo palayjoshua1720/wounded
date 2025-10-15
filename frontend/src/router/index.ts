@@ -315,9 +315,6 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 			// }
 
 			if (role === 0) {
-<<<<<<< Updated upstream
-				return ['admin-dashboard', 'users', 'user-clinic', 'manufacturer-management', 'clinic-dashboard', 'ivr', 'brand-management'].includes(route.name as string)
-=======
 				return [
 					'admin-dashboard',
 					'users',
@@ -327,7 +324,6 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 					'ivr',
 					'order-management'
 				].includes(route.name as string)
->>>>>>> Stashed changes
 			}
 
 			if (role === 1) {
