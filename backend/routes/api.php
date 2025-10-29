@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ClinicController;
 use App\Http\Controllers\Api\ManufacturerController;
 use App\Http\Controllers\Api\IVRRequestController;
+use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\ForgotPassword;
 use App\Http\Controllers\Api\ResetPassword;
 
@@ -72,4 +73,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/management/delete/{id}/deleteivrrequest', [IVRRequestController::class, 'deleteIVRRequest']);
     Route::put('/management/archive/{id}/archiveivrrequest', [IVRRequestController::class, 'archiveIVRRequest']);
     Route::put('/management/archive/{id}/unarchiveivrrequest', [IVRRequestController::class, 'unarchiveIVRRequest']);
+    
+    // Order
+    Route::get('/management/order/getorders', [OrderController::class, 'getAllOrders']);
+    Route::get('/management/order/getclinics', [OrderController::class, 'getAllClinics']);
+    Route::get('/management/order/getbrands', [OrderController::class, 'getAllPatients']);
+    Route::get('/management/order/getgraftsizes', [OrderController::class, 'getAllGraftSizes']);
+    Route::get('/management/order/users/getpatients', [OrderController::class, 'getAllPatients']);
+    
+    Route::post('/management/order/add/neworder', [OrderController::class, 'addNewOrder']);
+    Route::put('/management/order/update/{id}/updateorder', [OrderController::class, 'updateOrder']);
+    Route::put('/management/order/delete/{id}/deleteorder', [OrderController::class, 'deleteOrder']);
+    Route::put('/management/order/update/{id}/updateorderstatus', [OrderController::class, 'updateOrderStatus']);
 });

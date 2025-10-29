@@ -150,8 +150,7 @@
 						</div>
 					</div>
 
-					<div class="border rounded-lg">
-						<!-- Accordion Header -->
+					<!-- <div class="border rounded-lg">
 						<button
 							@click="showUsers = !showUsers"
 							class="w-full flex justify-between items-center px-4 py-3 text-left bg-gray-100 rounded-lg hover:bg-gray-200"
@@ -165,7 +164,6 @@
 							/>
 						</button>
 
-						<!-- Accordion Content -->
 						<transition
 							enter-active-class="transition ease-out duration-200"
 							enter-from-class="opacity-0 max-h-0"
@@ -200,9 +198,9 @@
 								</p>
 							</div>
 						</transition>
-					</div>
+					</div> -->
 
-					<div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+					<!-- <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
 						<h4 class="font-medium text-blue-900 mb-3">Clinic Statistics</h4>
 						<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 place-items-center text-center">
 							<div class="flex flex-col items-center justify-center h-24 bg-white rounded-lg shadow-sm w-full max-w-[14rem]">
@@ -218,7 +216,7 @@
 								<p class="text-sm text-blue-700">Status</p>
 							</div>
 						</div>
-					</div>
+					</div> -->
 				</div>
 			</template>
 			<template #actions>
@@ -351,7 +349,7 @@
 				</div>
 
 				<!-- Assign Clinicians -->
-				<div>
+				<!-- <div>
 					<div class="flex items-center gap-2 mb-2">
 						<UserPlus class="w-5 h-5 text-green-500" />
 						<h3 class="text-md font-semibold text-gray-900 dark:text-gray-100">Assign Clinicians</h3>
@@ -392,7 +390,7 @@
 							</ul>
 						</div>
 					</div>
-				</div>
+				</div> -->
 
 				<!-- Address Input -->
 				<div>

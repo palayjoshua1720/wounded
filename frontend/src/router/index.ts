@@ -23,9 +23,9 @@ import ProfileView from '@/views/ProfileView.vue'
 import ChangeAccountView from '@/views/ChangeAccountView.vue'
 import ResetPasswordView from '@/views/ResetPasswordView.vue'
 import SettingsView from '@/views/SettingsView.vue'
-import { ClipboardDocumentCheckIcon, Squares2X2Icon, SquaresPlusIcon, BuildingLibraryIcon, ClipboardDocumentListIcon, ShieldCheckIcon, BellIcon, ShoppingCartIcon, ChartBarIcon, ArrowPathIcon, CalculatorIcon, CubeIcon, UsersIcon } from '@heroicons/vue/24/outline'
+import { ClipboardDocumentCheckIcon, Squares2X2Icon, SquaresPlusIcon, BuildingLibraryIcon, ClipboardDocumentListIcon, ShieldCheckIcon, BellIcon, ChartBarIcon, ArrowPathIcon, CalculatorIcon, CubeIcon, UsersIcon } from '@heroicons/vue/24/outline'
 import { pageLoader } from '@/composables/ui/usePageLoader'
-import { Factory, Package } from 'lucide-vue-next'
+import { Factory, Package, ShoppingCart } from 'lucide-vue-next'
 
 // Types
 interface NavigationItem {
@@ -78,6 +78,16 @@ const routes: RouteRecordRaw[] = [
 				}
 			},
 			{
+				path: 'user-clinicians',
+				name: 'user-clinicians',
+				component: ClinicianManagementView,
+				meta: {
+					requiresAuth: true,
+					title: 'Clinicians',
+					icon: UsersIcon
+				}
+			},
+			{
 				path: 'user-clinic',
 				name: 'user-clinic',
 				component: ClinicManagementView,
@@ -108,23 +118,13 @@ const routes: RouteRecordRaw[] = [
 				}
 			},
 			{
-				path: 'user-clinicians',
-				name: 'user-clinicians',
-				component: ClinicianManagementView,
-				meta: {
-					requiresAuth: true,
-					title: 'Clinicians Management',
-					icon: UsersIcon
-				}
-			},
-			{
 				path: 'order-management',
 				name: 'order-management',
 				component: OrderManagementView,
 				meta: {
 					requiresAuth: true,
-					title: 'Order Management',
-					icon: ShoppingCartIcon
+					title: 'Orders',
+					icon: ShoppingCart
 				}
 			},
 			{
@@ -153,7 +153,7 @@ const routes: RouteRecordRaw[] = [
 				component: IVRManagementView,
 				meta: {
 					requiresAuth: true,
-					title: 'IVR Management',
+					title: 'IVR',
 					icon: ShieldCheckIcon
 				}
 			},
@@ -319,6 +319,7 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 					'admin-dashboard',
 					'users',
 					'user-clinic',
+					'user-clinicians',
 					'manufacturer-management',
 					'clinic-dashboard',
 					'ivr',
