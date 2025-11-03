@@ -245,7 +245,7 @@
 							<button v-if="selectedOrder.order_status === 'submitted'" @click="updateOrderStatusNew(selectedOrder.order_id, 'acknowledged')" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">Mark Acknowledged</button>
 							<button v-if="selectedOrder.order_status === 'acknowledged'" @click="updateOrderStatusNew(selectedOrder.order_id, 'shipped')" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">Mark Shipped</button>
 							<button v-if="selectedOrder.order_status === 'shipped'" @click="updateOrderStatusNew(selectedOrder.order_id, 'delivered')" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">Mark Delivered</button>
-							<span v-else class="bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400">Delivered</span>
+							<span v-if="selectedOrder.order_status === 'delivered'" class="bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400">Delivered</span>
 						</div>
 					</div>
 				</div>

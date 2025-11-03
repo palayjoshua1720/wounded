@@ -138,8 +138,8 @@ const routes: RouteRecordRaw[] = [
 				}
 			},
 			{
-				path: 'invoices',
-				name: 'invoices',
+				path: 'invoice-management',
+				name: 'invoice-management',
 				component: InvoiceManagementView,
 				meta: {
 					requiresAuth: true,
@@ -297,7 +297,7 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 		'clinic-dashboard': [0, 1, 2],
 		'clinic': [0, 1, 2],
 		'inventory': [0, 1],
-		'invoices': [0, 1],
+		'invoice-management': [0, 1],
 		'ivr': [0, 1],
 		'notifications': [0, 1],
 		'order-management': [0, 1],
@@ -323,12 +323,13 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 					'manufacturer-management',
 					'clinic-dashboard',
 					'ivr',
-					'order-management'
+					'order-management',
+					'invoice-management'
 				].includes(route.name as string)
 			}
 
 			if (role === 1) {
-				return ['admin-dashboard', 'users', 'user-clinic', 'manufacturer-management'].includes(route.name as string)
+				return ['admin-dashboard', 'users', 'user-clinic', 'manufacturer-management', 'invoice-management'].includes(route.name as string)
 			}
 
 			if (role === 2) {
