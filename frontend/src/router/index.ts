@@ -9,6 +9,7 @@ import ClinicDashboardView from '@/views/ClinicDashboardView.vue'
 import InventoryManagementView from '@/views/InventoryManagementView.vue'
 import InvoiceManagementView from '@/views/InvoiceManagementView.vue'
 import IVRManagementView from '@/views/IVRManagementView.vue'
+import GraftSizeManagementView from '@/views/GraftSizeManagementView.vue'
 import NotificationCenterView from '@/views/NotificationCenterView.vue'
 import OrderManagementView from '@/views/OrderManagementView.vue'
 import ReportCenterView from '@/views/ReportCenterView.vue'
@@ -25,7 +26,7 @@ import ResetPasswordView from '@/views/ResetPasswordView.vue'
 import SettingsView from '@/views/SettingsView.vue'
 import { ClipboardDocumentCheckIcon, Squares2X2Icon, SquaresPlusIcon, BuildingLibraryIcon, ClipboardDocumentListIcon, ShieldCheckIcon, BellIcon, ShoppingCartIcon, ChartBarIcon, ArrowPathIcon, CalculatorIcon, CubeIcon, UsersIcon } from '@heroicons/vue/24/outline'
 import { pageLoader } from '@/composables/ui/usePageLoader'
-import { Factory, Package } from 'lucide-vue-next'
+import { Factory, Package, PencilRuler } from 'lucide-vue-next'
 
 // Types
 interface NavigationItem {
@@ -155,6 +156,16 @@ const routes: RouteRecordRaw[] = [
 					requiresAuth: true,
 					title: 'IVR Management',
 					icon: ShieldCheckIcon
+				}
+			},
+			{
+				path: 'graft-size',
+				name: 'graft-size',
+				component: GraftSizeManagementView,
+				meta: {
+					requiresAuth: true,
+					title: 'Graft Size',
+					icon: PencilRuler
 				}
 			},
 			{
@@ -315,7 +326,7 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 			// }
 
 			if (role === 0) {
-				return ['admin-dashboard', 'users', 'user-clinic', 'manufacturer-management', 'clinic-dashboard', 'ivr', 'brand-management'].includes(route.name as string)
+				return ['admin-dashboard', 'users', 'user-clinic', 'manufacturer-management', 'ivr', 'brand-management', 'graft-size'].includes(route.name as string)
 			}
 
 			if (role === 1) {
