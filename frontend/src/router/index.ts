@@ -322,7 +322,8 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 					'manufacturer-management',
 					'clinic-dashboard',
 					'ivr',
-					'order-management'
+					'order-management',
+					'invoices'
 				].includes(route.name as string)
 			}
 

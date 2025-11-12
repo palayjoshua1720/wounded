@@ -1,24 +1,23 @@
 <?php
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\SampleController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ClinicController;
-use App\Http\Controllers\Api\ManufacturerController;
-use App\Http\Controllers\Api\IVRRequestController;
 use App\Http\Controllers\Api\ForgotPassword;
+use App\Http\Controllers\Api\InvoiceController;
+use App\Http\Controllers\Api\IVRRequestController;
+use App\Http\Controllers\Api\ManufacturerController;
 use App\Http\Controllers\Api\ResetPassword;
-
+use App\Http\Controllers\Api\SampleController;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 
 // System Info
 Route::get('/version', function (Request $request) {
     return response()->json([
         'laravel_version' => app()->version(),
-        'php_version' => phpversion(),
+        'php_version'     => phpversion(),
     ]);
 });
-
 
 //  ############## FORGOT PASSWORD #####################
 Route::post('/forgot-password', [ForgotPassword::class, 'sendResetLink']);
@@ -35,6 +34,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/auth/profile/security/enable-tfa', [AuthController::class, 'enable_tfauth']);
     Route::post('/auth/profile/security/disable-tfauth', [AuthController::class, 'disable_tfauth']);
     Route::post('/auth/profile/security/update-tfauth', [AuthController::class, 'update_tfauth']);
+    Route::get('/invoices', [InvoiceController::class, 'index']);
+    Route::get('/invoices/stats', [InvoiceController::class, 'getStats']);
+    Route::get('/invoices/clinics', [InvoiceController::class, 'getClinics']);
+    Route::post('/invoices', [InvoiceController::class, 'store']);
+    Route::get('/invoices/{invoices}', [InvoiceController::class, 'show']);
+    Route::put('/invoices/{invoices}', [InvoiceController::class, 'update']);
+    Route::delete('/invoices/{invoices}', [InvoiceController::class, 'destroy']);
+    Route::post('/invoices/{invoices}/status', [InvoiceController::class, 'updateStatus']);
+    Route::post('/invoices/upload-pdf', [InvoiceController::class, 'uploadPdf']);
 
     // Clinicians
     Route::get('/management/users/clinician', [ClinicController::class, 'getAllClinicians']);
@@ -60,7 +68,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/management/facilities/clinics/{clinicId}/deleteclinic', [ClinicController::class, 'deleteClinic']);
     Route::put('/management/facilities/clinics/{clinicId}/archiveclinic', [ClinicController::class, 'archiveClinic']);
     Route::put('/management/facilities/clinics/{clinicId}/unarchiveclinic', [ClinicController::class, 'unarchiveClinic']);
-
 
     // IVR
     Route::get('/management/ivr/ivrrequests', [IVRRequestController::class, 'getAllIVRRequests']);
