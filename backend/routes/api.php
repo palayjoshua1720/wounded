@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\ClinicController;
 use App\Http\Controllers\Api\ManufacturerController;
 use App\Http\Controllers\Api\ForgotPassword;
 use App\Http\Controllers\Api\ResetPassword;
+use App\Http\Controllers\Api\UserController;
 
 
 // System Info
@@ -51,6 +52,17 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/management/manufacturers/{id}/toggle', [ManufacturerController::class, 'toggleManufacturerStatus']);
     Route::delete('/management/manufacturers/{id}', [ManufacturerController::class, 'deleteManufacturer']);
     Route::post('/management/manufacturers/{id}', [ManufacturerController::class, 'updateManufacturer']);
+
+    // User management routes
+    Route::get('/users/stats', [UserController::class, 'stats']);
+    Route::get('/users', [UserController::class, 'index']);
+    Route::post('/users', [UserController::class, 'store']);
+    Route::get('/users/{user}', [UserController::class, 'show']);
+    Route::put('/users/{user}', [UserController::class, 'update']);
+    Route::patch('/users/{user}/toggle-status', [UserController::class, 'toggleStatus']);
+    Route::patch('/users/{user}/archive', [UserController::class, 'archive']);
+    Route::delete('/users/{user}/soft-delete', [UserController::class, 'softDelete']);
+    Route::patch('/users/{user}/restore', [UserController::class, 'restore']);
 
     // Route::get('/manufacturers/{id}/ivr-form', [ManufacturerController::class, 'downloadForm']);
 });

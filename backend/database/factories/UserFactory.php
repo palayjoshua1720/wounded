@@ -30,8 +30,8 @@ class UserFactory extends Factory
             'email'        => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
             'password'     => bcrypt('proweaver'),
-            'user_role'    => 0,
-            'user_status'  => 0,
+            'user_role'    => $this->faker->randomElement([0, 1, 2, 4, 5]),
+            'user_status'  => $this->faker->randomElement([0, 1, 2]),
             'phone'        => fake()->phoneNumber(),
             'remember_token' => Str::random(10),
         ];
