@@ -119,8 +119,8 @@ const routes: RouteRecordRaw[] = [
 				}
 			},
 			{
-				path: 'order-management',
-				name: 'order-management',
+				path: 'orders',
+				name: 'orders',
 				component: OrderManagementView,
 				meta: {
 					requiresAuth: true,
@@ -311,7 +311,7 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 		'invoices': [0, 1],
 		'ivr': [0, 1],
 		'notifications': [0, 1],
-		'order-management': [0, 1],
+		'orders': [0, 1],
 		'reports': [0, 1],
 		'returns': [0, 1],
 		'usage': [0, 1],
@@ -326,7 +326,7 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 			// }
 
 			if (role === 0) {
-				return ['admin-dashboard', 'users', 'user-clinic', 'manufacturer-management', 'clinic-dashboard', 'ivr', 'order-management', 'brand-management', 'graft-size'].includes(route.name as string)
+				return ['admin-dashboard', 'users', 'user-clinic', 'manufacturer-management', 'ivr', 'brand-management', 'graft-size'].includes(route.name as string)
 			}
 
 			if (role === 1) {
@@ -347,7 +347,7 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 			// Role-based title adjustments
 			if (role === 2) {
 				switch (route.name) {
-					case 'order-management':
+					case 'orders':
 						title = 'My Orders'
 						break
 					case 'usage':
@@ -410,7 +410,7 @@ router.beforeEach(async (to, from, next) => {
 		}
 
 		// Notifications / Orders / Reports → Admin + OfficeStaff + Clinics
-		if (['notifications', 'order-management', 'reports'].includes(to.name?.toString() || '') && role !== Admin && role !== OfficeStaff && role !== Clinics) {
+		if (['notifications', 'orders', 'reports'].includes(to.name?.toString() || '') && role !== Admin && role !== OfficeStaff && role !== Clinics) {
 			next({ name: 'admin-dashboard' })
 			return
 		}
