@@ -21,15 +21,31 @@ class Brand extends Model
 
     protected $fillable = [
         'manufacturer_id',
+        'brand_name',
         'product_type',
         'mue',
         'description',
         'brand_status',
+        'filepath',
+        'graft_sizes',
+    ];
+
+    protected $casts = [
+        'mue' => 'integer',
+        'product_type' => 'integer',
+        'brand_status' => 'integer',
+        'graft_sizes' => 'array',
     ];
 
     # relationship - brand belongs to manufacturer
     public function manufacturer()
     {
         return $this->belongsTo(Manufacturer::class, 'manufacturer_id', 'manufacturer_id');
+    }
+
+    // Add to your existing Brand class
+    public function graftSizes()
+    {
+        return $this->hasMany(GraftSize::class, 'brand_id', 'brand_id')->orderBy('size');
     }
 }

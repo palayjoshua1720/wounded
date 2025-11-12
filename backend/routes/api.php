@@ -6,10 +6,13 @@ use App\Http\Controllers\Api\SampleController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ClinicController;
 use App\Http\Controllers\Api\ManufacturerController;
+use App\Http\Controllers\Api\BrandController;
 use App\Http\Controllers\Api\IVRRequestController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\ForgotPassword;
+use App\Http\Controllers\Api\GraftSizeController;
 use App\Http\Controllers\Api\ResetPassword;
+use App\Http\Controllers\Api\UserController;
 
 
 // System Info
@@ -55,6 +58,17 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/management/manufacturers/{id}', [ManufacturerController::class, 'updateManufacturer']);
     Route::get('/management/manufacturers/{id}/download', [ManufacturerController::class, 'downloadIVRForm']);
 
+    // User management routes
+    Route::get('/users/stats', [UserController::class, 'stats']);
+    Route::get('/users', [UserController::class, 'index']);
+    Route::post('/users', [UserController::class, 'store']);
+    Route::get('/users/{user}', [UserController::class, 'show']);
+    Route::put('/users/{user}', [UserController::class, 'update']);
+    Route::patch('/users/{user}/toggle-status', [UserController::class, 'toggleStatus']);
+    Route::patch('/users/{user}/archive', [UserController::class, 'archive']);
+    Route::delete('/users/{user}/soft-delete', [UserController::class, 'softDelete']);
+    Route::patch('/users/{user}/restore', [UserController::class, 'restore']);
+
     // Route::get('/manufacturers/{id}/ivr-form', [ManufacturerController::class, 'downloadForm']);
     Route::put('/management/facilities/clinics/{clinicId}/update', [ClinicController::class, 'updateClinic']);
     Route::put('/management/facilities/clinics/{clinicId}/updatestatus', [ClinicController::class, 'updateClinicStatus']);
@@ -73,6 +87,22 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/management/delete/{id}/deleteivrrequest', [IVRRequestController::class, 'deleteIVRRequest']);
     Route::put('/management/archive/{id}/archiveivrrequest', [IVRRequestController::class, 'archiveIVRRequest']);
     Route::put('/management/archive/{id}/unarchiveivrrequest', [IVRRequestController::class, 'unarchiveIVRRequest']);
+
+    // Brand
+    Route::get('/management/brands', [BrandController::class, 'getAllBrands']);
+    Route::post('/management/brands', [BrandController::class, 'addBrand']);
+    Route::post('management/brands/{id}', [BrandController::class, 'updateBrand']);
+    Route::get('/management/brands/{id}/archive', [BrandController::class, 'archiveBrand']);
+    Route::get('/management/brands/{id}/toggle', [BrandController::class, 'toggleBrandStatus']);
+    Route::delete('/management/brands/{id}', [BrandController::class, 'deleteBrand']);
+
+    // Graft Size
+    Route::get('/management/graft-sizes', [GraftSizeController::class, 'getAllGraftSizes']);
+    Route::post('/management/graft-sizes', [GraftSizeController::class, 'addNewGraftSize']);
+    // Route::post('/management/graft-sizes/{id}', [GraftSizeController::class, 'updateGraftSize']);
+    // Route::get('/management/graft-sizes/{id}/archive', [GraftSizeController::class, 'archiveGraftSize']);
+    // Route::get('/management/graft-sizes/{id}/unarchive', [GraftSizeController::class, 'unarchiveGraftSize']);
+    // Route::delete('/management/graft-sizes/{id}', [GraftSizeController::class, 'deleteGraftSize']);
     
     // Order
     Route::get('/management/order/getorders', [OrderController::class, 'getAllOrders']);

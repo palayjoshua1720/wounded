@@ -9,6 +9,7 @@ import ClinicDashboardView from '@/views/ClinicDashboardView.vue'
 import InventoryManagementView from '@/views/InventoryManagementView.vue'
 import InvoiceManagementView from '@/views/InvoiceManagementView.vue'
 import IVRManagementView from '@/views/IVRManagementView.vue'
+import GraftSizeManagementView from '@/views/GraftSizeManagementView.vue'
 import NotificationCenterView from '@/views/NotificationCenterView.vue'
 import OrderManagementView from '@/views/OrderManagementView.vue'
 import ReportCenterView from '@/views/ReportCenterView.vue'
@@ -26,7 +27,7 @@ import ResetPasswordView from '@/views/ResetPasswordView.vue'
 import SettingsView from '@/views/SettingsView.vue'
 import { ClipboardDocumentCheckIcon, Squares2X2Icon, SquaresPlusIcon, BuildingLibraryIcon, ClipboardDocumentListIcon, ShieldCheckIcon, BellIcon, ChartBarIcon, ArrowPathIcon, CalculatorIcon, CubeIcon, UsersIcon } from '@heroicons/vue/24/outline'
 import { pageLoader } from '@/composables/ui/usePageLoader'
-import { Factory, Package, ShoppingCart } from 'lucide-vue-next'
+import { Factory, Package, PencilRuler, ShoppingCart} from 'lucide-vue-next'
 
 // Types
 interface NavigationItem {
@@ -166,6 +167,16 @@ const routes: RouteRecordRaw[] = [
 					requiresAuth: true,
 					title: 'IVR',
 					icon: ShieldCheckIcon
+				}
+			},
+			{
+				path: 'graft-size',
+				name: 'graft-size',
+				component: GraftSizeManagementView,
+				meta: {
+					requiresAuth: true,
+					title: 'Graft Size',
+					icon: PencilRuler
 				}
 			},
 			{
@@ -336,12 +347,15 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 					'clinic-dashboard',
 					'ivr',
 					'order-management',
+					'inventory',
+					'brand-management',
+					'graft-size',
 					'invoice-management'
 				].includes(route.name as string)
 			}
 
 			if (role === 1) {
-				return ['admin-dashboard', 'users', 'user-clinic', 'manufacturer-management', 'invoice-management'].includes(route.name as string)
+				return ['admin-dashboard', 'users', 'user-clinic', 'manufacturer-management', 'inventory', 'invoice-management'].includes(route.name as string)
 			}
 
 			if (role === 2) {
@@ -363,7 +377,7 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 			// Role-based title adjustments
 			if (role === 2) {
 				switch (route.name) {
-					case 'order-management':
+					case 'orders':
 						title = 'My Orders'
 						break
 					case 'usage':
@@ -426,7 +440,7 @@ router.beforeEach(async (to, from, next) => {
 		}
 
 		// Notifications / Orders / Reports → Admin + OfficeStaff + Clinics
-		if (['notifications', 'order-management', 'reports'].includes(to.name?.toString() || '') && role !== Admin && role !== OfficeStaff && role !== Clinics) {
+		if (['notifications', 'orders', 'reports'].includes(to.name?.toString() || '') && role !== Admin && role !== OfficeStaff && role !== Clinics) {
 			next({ name: 'admin-dashboard' })
 			return
 		}
