@@ -322,12 +322,13 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 					'manufacturer-management',
 					'clinic-dashboard',
 					'ivr',
-					'order-management'
+					'order-management',
+					'inventory'
 				].includes(route.name as string)
 			}
 
 			if (role === 1) {
-				return ['admin-dashboard', 'users', 'user-clinic', 'manufacturer-management'].includes(route.name as string)
+				return ['admin-dashboard', 'users', 'user-clinic', 'manufacturer-management', 'inventory'].includes(route.name as string)
 			}
 
 			if (role === 2) {
