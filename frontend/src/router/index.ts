@@ -326,11 +326,22 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 			// }
 
 			if (role === 0) {
-				return ['admin-dashboard', 'users', 'user-clinic', 'manufacturer-management', 'ivr', 'brand-management', 'graft-size'].includes(route.name as string)
+				return [
+					'admin-dashboard',
+					'users',
+					'user-clinic',
+					'manufacturer-management',
+					'clinic-dashboard',
+					'ivr',
+					'order-management',
+					'inventory',
+					'brand-management',
+					'graft-size'
+				].includes(route.name as string)
 			}
 
 			if (role === 1) {
-				return ['admin-dashboard', 'users', 'user-clinic', 'manufacturer-management'].includes(route.name as string)
+				return ['admin-dashboard', 'users', 'user-clinic', 'manufacturer-management', 'inventory'].includes(route.name as string)
 			}
 
 			if (role === 2) {
