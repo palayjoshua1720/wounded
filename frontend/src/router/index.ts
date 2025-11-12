@@ -18,6 +18,7 @@ import UserManagementView from '@/views/UserManagementView.vue'
 import ClinicianManagementView from '@/views/ClinicianManagementView.vue'
 import ClinicManagementView from '@/views/ClinicManagementView.vue'
 import ManufacturerManagementView from '@/views/ManufacturerManagementView.vue'
+import OrderManagementviewManufacturer from '@/views/OrderManagementviewManufacturer.vue'
 import BrandManagementView from '@/views/BrandManagementView.vue'
 import ProfileView from '@/views/ProfileView.vue'
 import ChangeAccountView from '@/views/ChangeAccountView.vue'
@@ -121,6 +122,16 @@ const routes: RouteRecordRaw[] = [
 				path: 'order-management',
 				name: 'order-management',
 				component: OrderManagementView,
+				meta: {
+					requiresAuth: true,
+					title: 'Orders',
+					icon: ShoppingCart
+				}
+			},
+			{
+				path: 'manufacturer/order-management',
+				name: 'manufacturer/order-management',
+				component: OrderManagementviewManufacturer,
 				meta: {
 					requiresAuth: true,
 					title: 'Orders',
@@ -301,6 +312,7 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 		'ivr': [0, 1],
 		'notifications': [0, 1],
 		'order-management': [0, 1],
+		'manufacturer/order-management': [4],
 		'reports': [0, 1],
 		'returns': [0, 1],
 		'usage': [0, 1],
@@ -334,6 +346,11 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 
 			if (role === 2) {
 				return ['clinic-dashboard', 'user-clinicians', 'user-clinic'].includes(route.name as string)
+			}
+
+			// manufacturer
+			if (role === 4) {
+				return ['manufacturer/order-management'].includes(route.name as string)
 			}
 
 			const allowedRoles = routeRoles[route.name as string]

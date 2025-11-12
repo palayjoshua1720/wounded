@@ -143,6 +143,8 @@ export function useLogin() {
 			router.push('/admin-dashboard')
 		} else if (role === 2) {
 			router.push('/clinic-dashboard')
+		} else if (role === 4) {
+			router.push('/manufacturer/order-management')
 		} else {
 			router.push('/')
 		}
