@@ -402,175 +402,143 @@
 
 		<!-- Show Brand Details -->
 		<BaseModal v-model="showBrandDetailsModal" title="Brand Details">
-			<template v-if="viewBrand">
-				<div class="space-y-6 p-4 sm:p-2">
-					
-					<div class="flex items-start justify-between">
-						<div class="flex items-center space-x-4">
-							<div class="w-12 h-12 bg-blue-50 dark:bg-blue-900/30 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg">
-								<PackageOpen class="w-6 h-6 text-blue-600 dark:text-blue-400" />
-							</div>
+		<template v-if="viewBrand">
+			<div class="space-y-4">
+			<div class="flex items-center space-x-4">
+				<div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+				<PackageOpen class="w-8 h-8 text-green-500" />
+				</div>
+				<div>
+				<p class="text-xl font-semibold text-gray-900 dark:text-white">
+					{{ viewBrand.brandName }}
+				</p>
+				<span
+					:class="[
+					'inline-flex px-2 py-1 text-xs rounded-full w-fit',
+					viewBrand.brandStatus === 0
+						? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
+						: viewBrand.brandStatus === 1
+						? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
+						: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'
+					]"
+				>
+					{{ viewBrand.brandStatus === 0 ? 'Active' : viewBrand.brandStatus === 1 ? 'Inactive' : 'Archived' }} 
+				</span>
+				</div>
+			</div>
+			<!-- Product Information Section -->
+			<div>
+				<h3 class="font-semibold text-gray-900 dark:text-white mb-4">Product Information</h3>
+				<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+					<!-- Manufacturer -->
+					<div>
+						<div class="flex items-center gap-2">
+							<Factory class="w-6 h-6 text-blue-500 dark:text-blue-400 flex-shrink-0" />
 							<div>
-								<h2 class="text-2xl font-bold text-gray-900 dark:text-white">
-									{{ viewBrand.brandName }}
-								</h2>
+								<h4 class="font-medium text-gray-700 dark:text-gray-300 mb-1">Manufacturer</h4>
+								<p class="text-gray-600 dark:text-gray-400">{{ viewBrand.manufacturerName || 'No Manufacturer' }}</p>
 							</div>
 						</div>
+					</div>
 
+					<!-- Product Type -->
+					<div>
+						<div class="flex items-center gap-2">
+							<PackageSearch class="w-6 h-6 text-yellow-500 dark:text-yellow-400 flex-shrink-0" />
+							<div>
+								<h4 class="font-medium text-gray-700 dark:text-gray-300 mb-1">Product Type</h4>
+								<p class="text-gray-600 dark:text-gray-400">Graft</p>
+							</div>
+						</div>
+					</div>
+
+					<!-- Available Sizes -->
+					<div>
+						<div class="flex items-center gap-2">
+							<Ruler class="w-6 h-6 text-purple-500 dark:text-purple-400 flex-shrink-0" />
+							<div>
+								<h4 class="font-medium text-gray-700 dark:text-gray-300 mb-1">Available Sizes</h4>
+								<p class="text-gray-600 dark:text-gray-400">{{ getActiveSizes(viewBrand).length }} size options</p>
+							</div>
+						</div>
+					</div>
+
+					<!-- MUE Limit -->
+					<div>
+						<div class="flex items-center gap-2">
+							<TriangleAlert class="w-6 h-6 text-orange-500 dark:text-orange-400 flex-shrink-0" />
+							<div>
+								<h4 class="font-medium text-gray-700 dark:text-gray-300 mb-1">MUE Limit</h4>
+								<p class="text-gray-600 dark:text-gray-400">{{ viewBrand.mue || 'N/A' }} units per day per patient</p>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Description -->
+			<div>
+				<h3 class="font-semibold text-gray-900 dark:text-white mb-4">Description</h3>
+				<div v-if="viewBrand.description" class="sm:col-span-2">
+					<p class="text-gray-600 dark:text-gray-400">{{ viewBrand.description }}</p>
+				</div>
+			</div>
+			
+			<hr />
+
+			<!-- Graft Sizes Table -->
+			<div>
+				<h4 class="font-semibold text-gray-900 dark:text-white mb-2">Graft Sizes</h4>
+				<div class="overflow-x-auto">
+				<table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+					<thead class="bg-gray-50 dark:bg-gray-800">
+					<tr>
+						<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Size</th>
+						<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Area (cm²)</th>
+						<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Price</th>
+						<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+					</tr>
+					</thead>
+					<tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+					<tr v-for="size in viewBrand.graftSizes" :key="size.id || size.size">
+						<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ size.size }}</td>
+						<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ size.area }}</td>
+						<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">${{ size.price ? size.price.toFixed(2) : 'N/A' }}</td>
+						<td class="px-6 py-4 whitespace-nowrap">
 						<span
 							:class="[
-								'inline-flex px-3 py-1 text-sm font-medium rounded-full w-fit capitalize transition-colors duration-200',
-								viewBrand.brandStatus === 0
-									? 'bg-green-100 text-green-800 dark:bg-green-800/30 dark:text-green-400'
-									: viewBrand.brandStatus === 1
-									? 'bg-red-100 text-red-800 dark:bg-red-800/30 dark:text-red-400'
-									: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-800/30 dark:text-yellow-400'
+							'inline-flex px-2 py-1 text-xs rounded-full',
+							size.graftStatus === 0
+								? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
+								: size.graftStatus === 1
+								? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
+								: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'
 							]"
 						>
-							{{ viewBrand.brandStatus === 0 ? 'Active' : viewBrand.brandStatus === 1 ? 'Inactive' : 'Archived' }} 
+							{{ size.graftStatus === 0 ? 'Active' : size.graftStatus === 1 ? 'Inactive' : 'Archived' }}
 						</span>
-					</div>
-
-					<hr class="border-gray-200 dark:border-gray-700">
-
-					<div>
-						<h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Product Overview</h3>
-						<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-							
-							<div class="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm">
-								<div class="flex items-start gap-3">
-									<Factory class="w-5 h-5 text-indigo-500 dark:text-indigo-400 flex-shrink-0 mt-0.5" />
-									<div>
-										<h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-0.5">Manufacturer</h4>
-										<p class="text-base text-gray-900 dark:text-gray-100 font-medium">
-											{{ viewBrand.manufacturerName || 'No Manufacturer' }}
-										</p>
-									</div>
-								</div>
-							</div>
-
-							<div class="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm">
-								<div class="flex items-start gap-3">
-									<PackageSearch class="w-5 h-5 text-teal-500 dark:text-teal-400 flex-shrink-0 mt-0.5" />
-									<div>
-										<h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-0.5">Product Type</h4>
-										<p class="text-base text-gray-900 dark:text-gray-100 font-medium">
-											Graft
-										</p>
-									</div>
-								</div>
-							</div>
-
-							<div class="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm">
-								<div class="flex items-start gap-3">
-									<Ruler class="w-5 h-5 text-purple-500 dark:text-purple-400 flex-shrink-0 mt-0.5" />
-									<div>
-										<h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-0.5">Available Sizes</h4>
-										<p class="text-base text-gray-900 dark:text-gray-100 font-medium">
-											{{ getActiveSizes(viewBrand).length }} size options
-										</p>
-									</div>
-								</div>
-							</div>
-
-							<div class="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm">
-								<div class="flex items-start gap-3">
-									<TriangleAlert class="w-5 h-5 text-orange-500 dark:text-orange-400 flex-shrink-0 mt-0.5" />
-									<div>
-										<h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-0.5">MUE Limit</h4>
-										<p class="text-base text-gray-900 dark:text-gray-100 font-medium">
-											{{ viewBrand.mue || 'N/A' }} units / day / patient
-										</p>
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-					
-					<hr class="border-gray-200 dark:border-gray-700">
-
-					<div>
-						<h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">Description</h3>
-						<div class="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-							<p class="text-gray-600 dark:text-gray-400 italic" v-if="!viewBrand.description">
-								No detailed description provided for this brand.
-							</p>
-							<p class="text-gray-800 dark:text-gray-300 whitespace-pre-wrap" v-else>
-								{{ viewBrand.description }}
-							</p>
-						</div>
-					</div>
-
-					<hr class="border-gray-200 dark:border-gray-700">
-
-					<div>
-						<h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">Graft Sizes</h4>
-						
-						<div v-if="viewBrand.graftSizes.length === 0" class="text-center text-sm text-gray-500 dark:text-gray-400 p-6 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-700">
-							<p>No graft sizes are currently configured for this brand.</p>
-						</div>
-						
-						<div v-else class="border border-gray-300 dark:border-gray-700 rounded-lg overflow-hidden shadow-md">
-							
-							<button
-								type="button"
-								class="w-full flex items-center justify-between px-4 py-3 text-left bg-gray-100 dark:bg-gray-700 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors focus:outline-none" 
-								@click="graftSizesExpanded = !graftSizesExpanded"
-							>
-								<span class="font-bold text-gray-900 dark:text-white">View All Sizes ({{ viewBrand.graftSizes.length }})</span>
-								<ChevronDown :class="{ 'rotate-180': graftSizesExpanded }" class="w-5 h-5 text-gray-600 dark:text-gray-300 transition-transform duration-300" />
-							</button>
-							
-							<div v-show="graftSizesExpanded" class="divide-y divide-gray-200 dark:divide-gray-700 max-h-80 overflow-y-auto">
-								<div 
-									v-for="size in viewBrand.graftSizes" 
-									:key="size.id || size.size" 
-									class="px-4 py-3 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-								>
-									<div class="flex justify-between items-center">
-										<div class="flex-1 min-w-0">
-											<h5 class="text-base font-semibold text-gray-900 dark:text-white truncate mb-1">{{ size.size }}</h5>
-											<div class="flex flex-wrap gap-x-4 text-sm text-gray-600 dark:text-gray-400">
-												<span class="flex items-center">
-													Area: <span class="ml-1 font-medium text-gray-700 dark:text-gray-300">{{ size.area }} cm²</span>
-												</span>
-												<span class="flex items-center">
-													Price: <span class="ml-1 font-medium text-gray-700 dark:text-gray-300">{{ size.price ? `$${size.price.toFixed(2)}` : 'N/A' }}</span>
-												</span>
-											</div>
-										</div>
-										
-										<span 
-											class="ml-4 flex-shrink-0 inline-flex px-2 py-0.5 text-xs font-medium rounded-full"
-											:class="[
-												size.graftStatus === 0
-													? 'bg-green-100 text-green-800 dark:bg-green-800/30 dark:text-green-400'
-													: size.graftStatus === 1
-													? 'bg-red-100 text-red-800 dark:bg-red-800/30 dark:text-red-400'
-													: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-800/30 dark:text-yellow-400'
-											]"
-										>
-											{{ size.graftStatus === 0 ? 'Active' : size.graftStatus === 1 ? 'Inactive' : 'Archived' }}
-										</span>
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
+						</td>
+					</tr>
+					<tr v-if="viewBrand.graftSizes.length === 0">
+						<td colspan="4" class="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400">No graft sizes available.</td>
+					</tr>
+					</tbody>
+				</table>
 				</div>
-			</template>
-			
-			<template #actions>
-				<div class="p-4 sm:p-6 pt-0">
-					<button
-						type="button"
-						@click="viewBrand = null"
-						class="w-full justify-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors shadow-sm font-medium"
-					>
-						Close
-					</button>
-				</div>
-			</template>
+			</div>
+			</div>
+		</template>
+		<template #actions>
+			<div class="p-4">
+			<button
+				type="button"
+				@click="viewBrand = null"
+				class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+			>
+				Close
+			</button>
+			</div>
+		</template>
 		</BaseModal>
 
 	</div>
@@ -583,7 +551,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import BaseModal from '@/components/common/BaseModal.vue'
 import Pagination from '@/components/ui/Pagination.vue'
 import ContentLoader from '@/components/ui/ContentLoader.vue'
-import { Package, PackagePlus, Eye, SquarePen, Trash2, Archive, CircleCheck, CircleX, Factory, TriangleAlert, Hash, RulerDimensionLine, Diameter, DollarSign, PencilRuler, Plus, Search, Funnel, Globe, Ruler, PackageOpen, PackageSearch, ChevronDown } from 'lucide-vue-next'
+import { Package, PackagePlus, Eye, SquarePen, Trash2, Archive, CircleCheck, CircleX, Factory, TriangleAlert, Hash, RulerDimensionLine, Diameter, DollarSign, PencilRuler, Plus, Search, Funnel, Globe, Ruler, PackageOpen, PackageSearch} from 'lucide-vue-next'
 import api from '@/services/api'
 import axios from "axios";
 
@@ -626,15 +594,11 @@ const selectedBrand = ref<Brand | null>(null)
 const showCreateForm = ref(false)
 const showEditForm = ref(false)
 const viewBrand = ref<Brand | null>(null)
-const graftSizesExpanded = ref(false)
 
 const showBrandDetailsModal = computed({
   get: () => viewBrand.value !== null,
   set: (value: boolean) => {
-    if (!value) {
-      viewBrand.value = null
-      graftSizesExpanded.value = false
-    }
+    if (!value) viewBrand.value = null
   },
 })
 

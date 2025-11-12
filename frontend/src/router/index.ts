@@ -9,6 +9,7 @@ import ClinicDashboardView from '@/views/ClinicDashboardView.vue'
 import InventoryManagementView from '@/views/InventoryManagementView.vue'
 import InvoiceManagementView from '@/views/InvoiceManagementView.vue'
 import IVRManagementView from '@/views/IVRManagementView.vue'
+import GraftSizeManagementView from '@/views/GraftSizeManagementView.vue'
 import NotificationCenterView from '@/views/NotificationCenterView.vue'
 import OrderManagementView from '@/views/OrderManagementView.vue'
 import ReportCenterView from '@/views/ReportCenterView.vue'
@@ -18,14 +19,15 @@ import UserManagementView from '@/views/UserManagementView.vue'
 import ClinicianManagementView from '@/views/ClinicianManagementView.vue'
 import ClinicManagementView from '@/views/ClinicManagementView.vue'
 import ManufacturerManagementView from '@/views/ManufacturerManagementView.vue'
+import OrderManagementviewManufacturer from '@/views/OrderManagementviewManufacturer.vue'
 import BrandManagementView from '@/views/BrandManagementView.vue'
 import ProfileView from '@/views/ProfileView.vue'
 import ChangeAccountView from '@/views/ChangeAccountView.vue'
 import ResetPasswordView from '@/views/ResetPasswordView.vue'
 import SettingsView from '@/views/SettingsView.vue'
-import { ClipboardDocumentCheckIcon, Squares2X2Icon, SquaresPlusIcon, BuildingLibraryIcon, ClipboardDocumentListIcon, ShieldCheckIcon, BellIcon, ShoppingCartIcon, ChartBarIcon, ArrowPathIcon, CalculatorIcon, CubeIcon, UsersIcon } from '@heroicons/vue/24/outline'
+import { ClipboardDocumentCheckIcon, Squares2X2Icon, SquaresPlusIcon, BuildingLibraryIcon, ClipboardDocumentListIcon, ShieldCheckIcon, BellIcon, ChartBarIcon, ArrowPathIcon, CalculatorIcon, CubeIcon, UsersIcon } from '@heroicons/vue/24/outline'
 import { pageLoader } from '@/composables/ui/usePageLoader'
-import { Factory, Package } from 'lucide-vue-next'
+import { Factory, Package, PencilRuler, ShoppingCart} from 'lucide-vue-next'
 
 // Types
 interface NavigationItem {
@@ -78,6 +80,16 @@ const routes: RouteRecordRaw[] = [
 				}
 			},
 			{
+				path: 'user-clinicians',
+				name: 'user-clinicians',
+				component: ClinicianManagementView,
+				meta: {
+					requiresAuth: true,
+					title: 'Clinicians',
+					icon: UsersIcon
+				}
+			},
+			{
 				path: 'user-clinic',
 				name: 'user-clinic',
 				component: ClinicManagementView,
@@ -108,23 +120,23 @@ const routes: RouteRecordRaw[] = [
 				}
 			},
 			{
-				path: 'user-clinicians',
-				name: 'user-clinicians',
-				component: ClinicianManagementView,
-				meta: {
-					requiresAuth: true,
-					title: 'Clinicians Management',
-					icon: UsersIcon
-				}
-			},
-			{
 				path: 'order-management',
 				name: 'order-management',
 				component: OrderManagementView,
 				meta: {
 					requiresAuth: true,
-					title: 'Order Management',
-					icon: ShoppingCartIcon
+					title: 'Orders',
+					icon: ShoppingCart
+				}
+			},
+			{
+				path: 'manufacturer/order-management',
+				name: 'manufacturer/order-management',
+				component: OrderManagementviewManufacturer,
+				meta: {
+					requiresAuth: true,
+					title: 'Orders',
+					icon: ShoppingCart
 				}
 			},
 			{
@@ -138,8 +150,8 @@ const routes: RouteRecordRaw[] = [
 				}
 			},
 			{
-				path: 'invoices',
-				name: 'invoices',
+				path: 'invoice-management',
+				name: 'invoice-management',
 				component: InvoiceManagementView,
 				meta: {
 					requiresAuth: true,
@@ -153,8 +165,18 @@ const routes: RouteRecordRaw[] = [
 				component: IVRManagementView,
 				meta: {
 					requiresAuth: true,
-					title: 'IVR Management',
+					title: 'IVR',
 					icon: ShieldCheckIcon
+				}
+			},
+			{
+				path: 'graft-size',
+				name: 'graft-size',
+				component: GraftSizeManagementView,
+				meta: {
+					requiresAuth: true,
+					title: 'Graft Size',
+					icon: PencilRuler
 				}
 			},
 			{
@@ -297,10 +319,11 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 		'clinic-dashboard': [0, 1, 2],
 		'clinic': [0, 1, 2],
 		'inventory': [0, 1],
-		'invoices': [0, 1],
+		'invoice-management': [0, 1],
 		'ivr': [0, 1],
 		'notifications': [0, 1],
 		'order-management': [0, 1],
+		'manufacturer/order-management': [4],
 		'reports': [0, 1],
 		'returns': [0, 1],
 		'usage': [0, 1],
@@ -319,20 +342,29 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 					'admin-dashboard',
 					'users',
 					'user-clinic',
+					'user-clinicians',
 					'manufacturer-management',
 					'clinic-dashboard',
 					'ivr',
 					'order-management',
+					'inventory',
+					'brand-management',
+					'graft-size',  
 					'invoices'
 				].includes(route.name as string)
 			}
 
 			if (role === 1) {
-				return ['admin-dashboard', 'users', 'user-clinic', 'manufacturer-management'].includes(route.name as string)
+				return ['admin-dashboard', 'users', 'user-clinic', 'manufacturer-management', 'inventory', 'invoice-management'].includes(route.name as string)
 			}
 
 			if (role === 2) {
 				return ['clinic-dashboard', 'user-clinicians', 'user-clinic'].includes(route.name as string)
+			}
+
+			// manufacturer
+			if (role === 4) {
+				return ['manufacturer/order-management'].includes(route.name as string)
 			}
 
 			const allowedRoles = routeRoles[route.name as string]
@@ -345,7 +377,7 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 			// Role-based title adjustments
 			if (role === 2) {
 				switch (route.name) {
-					case 'order-management':
+					case 'orders':
 						title = 'My Orders'
 						break
 					case 'usage':
@@ -408,7 +440,7 @@ router.beforeEach(async (to, from, next) => {
 		}
 
 		// Notifications / Orders / Reports → Admin + OfficeStaff + Clinics
-		if (['notifications', 'order-management', 'reports'].includes(to.name?.toString() || '') && role !== Admin && role !== OfficeStaff && role !== Clinics) {
+		if (['notifications', 'orders', 'reports'].includes(to.name?.toString() || '') && role !== Admin && role !== OfficeStaff && role !== Clinics) {
 			next({ name: 'admin-dashboard' })
 			return
 		}

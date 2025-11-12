@@ -13,7 +13,7 @@ class IVR extends Model
 {
     use SoftDeletes;
 
-    protected $table = 'woundmend_ivr';
+    protected $table = 'woundmed_ivr';
     protected $primaryKey = 'ivr_id';
     public $timestamps = true;
 
