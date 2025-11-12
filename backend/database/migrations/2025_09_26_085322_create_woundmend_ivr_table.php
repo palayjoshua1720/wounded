@@ -27,7 +27,7 @@ return new class extends Migration
                 ->onDelete('cascade');
         });
 
-        Schema::create('woundmend_ivr', function (Blueprint $table) {
+        Schema::create('woundmed_ivr', function (Blueprint $table) {
             $table->bigIncrements('ivr_id');
             $table->unsignedBigInteger('clinic_id');
             $table->unsignedBigInteger('brand_id');
@@ -76,7 +76,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('woundmend_ivr');
+        Schema::dropIfExists('woundmed_ivr');
         Schema::dropIfExists('woundmed_patient_info');
     }
 };
