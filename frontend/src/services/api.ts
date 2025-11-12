@@ -99,4 +99,51 @@ export const authApi = {
   },
 }
 
+
+export const userService = {
+    getUsers(params?: { search?: string; role?: string | number; status?: string; page?: number }) {
+        return api.get('/users', { params });
+    },
+
+    getUserStats() {
+        return api.get('/users/stats');
+    },
+
+    getManufacturers() {
+        return api.get('/management/manufacturers');
+    },
+
+    getClinics() {
+        return api.get('/management/users/clinics');
+    },
+
+    getUser(id: string) {
+        return api.get(`/users/${id}`);
+    },
+
+    createUser(userData: any) {
+        return api.post('/users', userData);
+    },
+
+    updateUser(id: string, userData: any) {
+        return api.put(`/users/${id}`, userData);
+    },
+
+    toggleUserStatus(id: string) {
+        return api.patch(`/users/${id}/toggle-status`);
+    },
+
+    archiveUser(id: string) {
+        return api.patch(`/users/${id}/archive`);
+    },
+
+    softDeleteUser(id: string) {
+        return api.delete(`/users/${id}/soft-delete`);
+    },
+
+    restoreUser(id: string) {
+        return api.patch(`/users/${id}/restore`);
+    },
+};
+
 export default api 
