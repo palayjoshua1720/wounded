@@ -64,6 +64,7 @@
               />
             </div>
             <span class="text-sm font-medium truncate">{{ item.name }}</span>
+            
           </div>
 
           <!-- Hover Effect -->

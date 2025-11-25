@@ -28,7 +28,7 @@ return new class extends Migration
     // Foreign Key Constraints
     $table->foreign('graft_log_id')
         ->references('graft_log_id')
-        ->on('woundmed_graft_logs')
+        ->on('woundmed_usage_log')
         ->onDelete('cascade');
 
     $table->foreign('brand_id')

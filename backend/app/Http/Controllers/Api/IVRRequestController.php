@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Storage;
 
 class IVRRequestController extends Controller
 {
@@ -29,6 +30,17 @@ class IVRRequestController extends Controller
         ->orderBy('created_at', 'desc')
         ->paginate($perPage);
 
+        $ivrRequests->getCollection()->transform(function ($ivr) {
+
+            if ($ivr->filepath) {
+                $fileName = basename($ivr->filepath);
+
+                $ivr->filepath = url('/storage/ivr/' . $fileName);
+            }
+
+            return $ivr;
+        });
+
         return response()->json([
             'data' => $ivrRequests->items(),
             'meta' => [
@@ -37,6 +49,20 @@ class IVRRequestController extends Controller
                 'per_page'     => $ivrRequests->perPage(),
                 'total'        => $ivrRequests->total(),
             ]
+        ]);
+    }
+
+    public function getAllManufacturers(Request $request)
+    {
+
+        $manufacturerData = Manufacturer::orderBy('created_at', 'desc')
+            ->where('manufacturer_status', 0)
+            ->get();
+
+
+        return response()->json([
+            'success' => true,
+            'manufacturer_data' => $manufacturerData,
         ]);
     }
 
@@ -102,26 +128,37 @@ class IVRRequestController extends Controller
         try {
             $validated = $request->validate([
                 'patient_id' => 'required|int|max:255',
-                'brand_id' => 'required|int|max:255',
-                'notes' => 'required|string',
+                'brand_id' => 'nullable|int|max:255',
+                'manufacturer_id' => 'required|int|max:255',
+                'filepath' => 'required|file|mimes:pdf,doc,docx|max:10240',
+                'notes' => 'nullable|string',
             ]);
 
+            $path = $request->file('filepath')->store('ivr', 'public');
+
             $newIVR = IVR::create([
+                'ivr_number' => '#IVR-' . strtoupper(uniqid()),
                 'clinic_id' => $request['clinic_id'] ?? null,
                 'brand_id' => $validated['brand_id'] ?? null,
-                'manufacturer_id' => $request['manufacturer_id'] ?? null,
+                'manufacturer_id' => $validated['manufacturer_id'] ?? null,
                 'patient_id' => $validated['patient_id'] ?? null,
+                'filepath' => $path,
                 'description' => $validated['notes'] ?? null,
                 'eligibility_status' => $request['eligibility_status'] ?? 0,
                 'submitted_at' => now(),
                 'timestamp' => now(),
             ]);
 
-            $newIVR->update([
-                'ivr_number' => '#IVR-' . $newIVR->ivr_id
+            return response()->json([
+                'success' => true,
+                'message' => 'IVR created successfully!',
             ]);
-        } catch (ValidationException $e) {
-            //throw $th;
+
+        } catch (ValidationException $th) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create IVR: ' . $th->getMessage(),
+            ], 500);
         }
     }
 
@@ -134,24 +171,53 @@ class IVRRequestController extends Controller
         try {
             $validated = $request->validate([
                 'patient_id' => 'required|int|max:255',
-                'brand_id' => 'required|int|max:255',
+                'brand_id' => 'nullable|int|max:255',
+                'manufacturer_id' => 'required|int|max:255',
+                'eligibility_status' => 'nullable|int|max:255',
                 'notes' => 'required|string',
+                'filepath' => 'nullable|file|mimes:pdf,doc,docx|max:10240',
+                'remove_existing_file' => 'nullable|boolean',
             ]);
 
             $ivr = IVR::findOrFail($id);
-            $ivr->update([
-                'clinic_id' => $request['clinic_id'] ?? null,
-                'brand_id' => $validated['brand_id'] ?? null,
-                'manufacturer_id' => $request['manufacturer_id'] ?? null,
-                'patient_id' => $validated['patient_id'] ?? null,
-                'description' => $validated['notes'] ?? null,
-                'eligibility_status' => $validated['eligibility_status'] ?? 0,
-                'ivr_status' => $validated['ivr_status'] ?? 0,
-                'verified_at' => now(),
-                'timestamp' => now(),
+
+            if ($request->hasFile('filepath')) {
+                if ($ivr->filepath && Storage::disk('private')->exists($ivr->filepath)) {
+                    Storage::disk('private')->delete($ivr->filepath);
+                }
+
+                $newPath = $request->file('filepath')->store('ivr', 'private');
+                $ivr->filepath = $newPath;
+            }
+
+            elseif ($request->remove_existing_file) {
+                if ($ivr->filepath && Storage::disk('private')->exists($ivr->filepath)) {
+                    Storage::disk('private')->delete($ivr->filepath);
+                }
+
+                $ivr->filepath = null;
+            }
+
+            $ivr->clinic_id = $request->clinic_id ?? $ivr->clinic_id;
+            $ivr->brand_id = $validated['brand_id'] ?? null;
+            $ivr->manufacturer_id = $validated['manufacturer_id'];
+            $ivr->patient_id = $validated['patient_id'];
+            $ivr->description = $validated['notes'];
+            $ivr->eligibility_status = $validated['eligibility_status'];
+            // $ivr->verified_at = now();
+            // $ivr->timestamp = now();
+
+            $ivr->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Order details updated successfully!',
             ]);
-        } catch (ValidationException $e) {
-            //throw $th;
+        } catch (ValidationException $th) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update IVR: ' . $th->getMessage(),
+            ], 500);
         }
     }
 
@@ -177,6 +243,18 @@ class IVRRequestController extends Controller
         $ivr->update(['ivr_status' => 0]);
 
         return response()->json(['message' => 'IVR Request unarchived successfully.']);
+    }
+
+    public function downloadIVRForm($id)
+    {
+        $manufacturer = Manufacturer::findOrFail($id);
+
+        if (!$manufacturer->filepath || !Storage::disk('private')->exists($manufacturer->filepath)) {
+            return response()->json(['error' => 'File not found'], 404);
+        }
+
+        $filename = basename($manufacturer->filepath);
+        return Storage::disk('private')->download($manufacturer->filepath, $filename);
     }
 
     private function generateRowHash(array $data, $prevHash = null)

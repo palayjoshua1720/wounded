@@ -1,569 +1,1768 @@
 <template>
   <div class="space-y-6">
+    <!-- Header -->
     <div class="flex items-center justify-between">
       <div>
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Invoice & Payment Tracking</h1>
-        <p class="text-gray-600 dark:text-gray-400">Manage invoices and track payment status</p>
+        <p class="text-gray-600 dark:text-gray-400">Manage invoices, OCR extraction, and payment synchronization</p>
       </div>
       <div class="flex gap-2">
         <button
-          class="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          @click="showUploadModal = true"
-        >
-          <ArrowUpTrayIcon class="w-4 h-4 mr-2" />
-          Upload Invoice
-        </button>
-        <button
           class="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-          @click="showManualModal = true"
-        >
-          <PlusIcon class="w-4 h-4 mr-2" />
-          Add Invoice Manually
+          @click="showAddInvoiceModal = true" :disabled="loading">
+          <Plus class="w-4 h-4 mr-2" />
+          Add Invoice
         </button>
       </div>
     </div>
 
-    <!-- Stats Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-      <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Amount</p>
-            <p class="text-2xl font-semibold text-gray-900 dark:text-white">${{ totalAmount.toLocaleString() }}</p>
-          </div>
-          <BanknotesIcon class="w-8 h-8 text-blue-600 dark:text-blue-400" />
-        </div>
-      </div>
-      <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Paid</p>
-            <p class="text-2xl font-semibold text-gray-900 dark:text-white">${{ paidAmount.toLocaleString() }}</p>
-          </div>
-          <CheckCircleIcon class="w-8 h-8 text-green-600 dark:text-green-400" />
-        </div>
-      </div>
-      <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Pending</p>
-            <p class="text-2xl font-semibold text-gray-900 dark:text-white">${{ pendingAmount.toLocaleString() }}</p>
-          </div>
-          <ClockIcon class="w-8 h-8 text-yellow-600 dark:text-yellow-400" />
-        </div>
-      </div>
-      <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Overdue</p>
-            <p class="text-2xl font-semibold text-gray-900 dark:text-white">${{ overdueAmount.toLocaleString() }}</p>
-          </div>
-          <ExclamationTriangleIcon class="w-8 h-8 text-red-600 dark:text-red-400" />
-        </div>
-      </div>
+    <!-- Loading State -->
+    <div v-if="loading && invoices.length === 0" class="flex justify-center py-12">
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
     </div>
 
     <!-- Filters -->
-    <div class="flex flex-col sm:flex-row gap-4 bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+    <div v-if="!loading"
+      class="flex flex-col sm:flex-row gap-4 bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
       <div class="flex-1">
         <div class="relative">
-          <MagnifyingGlassIcon class="absolute left-3 top-3 h-4 w-4 text-gray-400 dark:text-gray-500" />
-          <input
-            type="text"
-            placeholder="Search invoices..."
+          <Search class="absolute left-3 top-3 h-4 w-4 text-gray-400 dark:text-gray-500" />
+          <input type="text" placeholder="Search invoices, serial numbers, clinics..."
             class="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-            v-model="searchTerm"
-          />
+            v-model="filters.search" @input="fetchInvoices" />
         </div>
       </div>
-      <div class="flex items-center space-x-2">
-        <FunnelIcon class="w-4 h-4 text-gray-500 dark:text-gray-400" />
-        <select
-          v-model="statusFilter"
-          class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-        >
+      <div class="flex items-center space-x-2 flex-wrap gap-2">
+        <Filter class="w-4 h-4 text-gray-500 dark:text-gray-400" />
+        <select v-model="filters.status" @change="fetchInvoices"
+          class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
           <option value="all">All Status</option>
-          <option value="pending">Pending</option>
+          <option value="pending_review">Pending Review</option>
+          <option value="pending">Pending Payment</option>
           <option value="paid">Paid</option>
           <option value="overdue">Overdue</option>
           <option value="cancelled">Cancelled</option>
         </select>
-        <select
-          v-model="clinicFilter"
-          class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-        >
+        <select v-model="filters.clinic_id" @change="fetchInvoices"
+          class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
           <option value="all">All Clinics</option>
-          <option v-for="clinic in uniqueClinics" :key="clinic.id" :value="clinic.id">{{ clinic.name }}</option>
+          <option v-for="clinic in clinics" :key="clinic.clinic_id" :value="clinic.clinic_id">
+            {{ clinicDisplayName(clinic) }}
+          </option>
         </select>
+        <input type="date" v-model="filters.date_from" @change="fetchInvoices"
+          class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+          placeholder="From Date" />
+        <input type="date" v-model="filters.date_to" @change="fetchInvoices"
+          class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+          placeholder="To Date" />
       </div>
     </div>
 
     <!-- Invoices Table -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+    <div v-if="!loading"
+      class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
       <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
           <thead class="bg-gray-50 dark:bg-gray-700">
             <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                Invoice Number
+              <th
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                Invoice Details
               </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                Clinic
-              </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+              <!-- <th
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                Clinic & Order
+              </th> Temporarily Commented -->
+              <th
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 Amount
               </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+              <th
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 Status
               </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                Due Date
+              <th
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                Dates
               </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+              <th
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 Actions
               </th>
             </tr>
           </thead>
           <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-            <tr v-for="invoice in filteredInvoices" :key="invoice.id" class="hover:bg-gray-50 dark:hover:bg-gray-700">
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm font-medium text-gray-900 dark:text-white">{{ invoice.invoiceNumber }}</div>
-                <div v-if="invoice.orderId" class="text-sm text-gray-500 dark:text-gray-400">Order: {{ invoice.orderId }}</div>
+            <tr v-for="invoice in invoices" :key="invoice.id" class="hover:bg-gray-50 dark:hover:bg-gray-700">
+              <td class="px-6 py-4">
+                <div class="flex items-center space-x-3">
+                  <div v-if="invoice.needs_review" class="flex-shrink-0">
+                    <span
+                      class="inline-flex items-center justify-center w-6 h-6 bg-yellow-100 text-yellow-800 rounded-full text-xs">
+                      <Eye class="w-3 h-3" />
+                    </span>
+                  </div>
+                  <div>
+                    <div class="text-sm font-medium text-gray-900 dark:text-white">{{ invoice.invoice_number }}</div>
+                    <div class="text-sm text-gray-500 dark:text-gray-400">{{ invoice.serials?.length || 0 }} serials
+                    </div>
+                  </div>
+                </div>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-900 dark:text-white">{{ invoice.clinicName }}</div>
+              <!-- <td class="px-6 py-4">
+                <div class="text-sm text-gray-900 dark:text-white">{{ invoice.clinic.clinic_name }}</div>
+                <div class="text-sm text-gray-500 dark:text-gray-400">{{ invoice.clinic.clinic_code }}</div> 
+              </td> Temporarily Commented -->
+              <td class="px-6 py-4">
+                <div class="text-sm font-medium text-gray-900 dark:text-white">${{ invoice.amount.toLocaleString() }}
+                </div>
+                <div v-if="invoice.partial_payment" class="text-sm text-orange-600 dark:text-orange-400">
+                  Partial: ${{ invoice.paid_amount?.toLocaleString() }}
+                </div>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm font-medium text-gray-900 dark:text-white">${{ invoice.amount.toLocaleString() }}</div>
+              <td class="px-6 py-4">
+                <div class="flex flex-col space-y-1">
+                  <span
+                    :class="`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(invoice.status)} w-fit`">
+                    <component :is="getStatusIcon(invoice.status)" class="w-4 h-4" />
+                    <span class="ml-1 capitalize">{{ invoice.status.replace('_', ' ') }}</span>
+                  </span>
+                </div>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <span :class="`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(invoice.status)}`">
-                  <component :is="getStatusIcon(invoice.status)" class="w-4 h-4" />
-                  <span class="ml-1 capitalize">{{ invoice.status }}</span>
-                </span>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                {{ formatDate(invoice.dueDate) }}
+              <td class="px-6 py-4">
+                <div class="text-sm text-gray-900 dark:text-white">{{ formatDate(invoice.invoice_date) }}</div>
+                <div class="text-sm text-gray-500 dark:text-gray-400">Due: {{ formatDate(invoice.due_date) }}</div>
+                <div v-if="invoice.paid_date" class="text-sm text-green-600 dark:text-green-400">
+                  Paid: {{ formatDate(invoice.paid_date) }}
+                </div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                <button
-                  @click="selectedInvoice = invoice"
-                  class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
-                >
-                  View
+                <button @click="viewInvoiceDetails(invoice)"
+                  class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">
+                  <Eye class="w-4 h-4" />
                 </button>
-                <div class="inline-flex space-x-1">
-                  <button
-                    v-if="invoice.status === 'pending'"
-                    @click="handleStatusUpdate(invoice.id, 'paid')"
-                    class="px-2 py-1 text-xs bg-green-100 text-green-800 rounded hover:bg-green-200 dark:bg-green-900/20 dark:text-green-400 dark:hover:bg-green-900/30"
-                  >
-                    Mark Paid
-                  </button>
-                  <button
-                    v-if="invoice.status === 'overdue'"
-                    @click="handleStatusUpdate(invoice.id, 'paid')"
-                    class="px-2 py-1 text-xs bg-green-100 text-green-800 rounded hover:bg-green-200 dark:bg-green-900/20 dark:text-green-400 dark:hover:bg-green-900/30"
-                  >
-                    Mark Paid
-                  </button>
-                </div>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
+
+      <!-- Empty State -->
+      <div v-if="!loading && invoices.length === 0" class="text-center py-12">
+        <FileText class="w-12 h-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" /> 
+          <div class="flex flex-col items-center justify-center gap-2">
+            <span class="text-gray-400"><Users class="w-10 h-10 mb-1" />No invoices found.</span>
+          </div> 
+      </div>
+
+      <!-- Pagination -->
+      <div v-if="pagination" class="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+        <div class="flex items-center justify-between">
+          <div class="text-sm text-gray-700 dark:text-gray-400">
+            Showing {{ pagination.from }} to {{ pagination.to }} of {{ pagination.total }} results
+          </div>
+          <div class="flex space-x-2">
+            <button @click="changePage(pagination.current_page - 1)" :disabled="pagination.current_page === 1"
+              class="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed">
+              Previous
+            </button>
+            <button @click="changePage(pagination.current_page + 1)"
+              :disabled="pagination.current_page === pagination.last_page"
+              class="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed">
+              Next
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- Upload Modal -->
-  <BaseModal v-model="showUploadModal" title="Upload Invoice & Payment Files">
+  <!-- Upload Invoice PDF Modal -->
+  <BaseModal v-model="showUploadModal" title="Upload Invoice PDF for OCR Processing" size="lg">
     <div class="space-y-6">
-      <div class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center">
-        <DocumentTextIcon class="w-12 h-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+      <!-- File Upload -->
+      <div
+        class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center hover:border-blue-400 transition-colors"
+        @drop="handleDrop" @dragover.prevent @dragenter.prevent>
+        <FileText class="w-12 h-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
         <p class="text-lg font-medium text-gray-900 dark:text-white mb-2">Upload Invoice PDF</p>
         <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
-          Upload PDF invoices for OCR extraction and processing
+          Drag and drop your PDF file here, or click to browse
         </p>
-        <input
-          type="file"
-          accept=".pdf"
-          class="hidden"
-          id="invoice-upload"
-        />
-        <label
-          for="invoice-upload"
-          class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 cursor-pointer"
-        >
-          <ArrowUpTrayIcon class="w-4 h-4 mr-2" />
-          Choose PDF File
-        </label>
-      </div>
-      <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
-        <h4 class="font-medium text-blue-900 dark:text-blue-400 mb-2">OCR will extract:</h4>
-        <ul class="text-sm text-blue-800 dark:text-blue-300 space-y-1">
-          <li>• Invoice number and date</li>
-          <li>• Clinic information</li>
-          <li>• Amount and line items</li>
-          <li>• Serial numbers (if present)</li>
-          <li>• Due date and payment terms</li>
-        </ul>
-      </div>
-      <div class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center">
-        <CalendarIcon class="w-12 h-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
-        <p class="text-lg font-medium text-gray-900 dark:text-white mb-2">Upload Payment Status</p>
-        <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
-          Upload Google Sheet or CSV file to sync payment status
-        </p>
-        <input
-          type="file"
-          accept=".csv,.xlsx,.xls"
-          class="hidden"
-          id="payment-upload"
-        />
-        <label
-          for="payment-upload"
-          class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 cursor-pointer"
-        >
-          <ArrowUpTrayIcon class="w-4 h-4 mr-2" />
-          Choose Payment File
-        </label>
-      </div>
-    </div>
-    <template #actions>
-      <button
-        @click="showUploadModal = false"
-        class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
-      >
-        Cancel
-      </button>
-      <button
-        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-      >
-        Process Files
-      </button>
-    </template>
-  </BaseModal>
-
-  <!-- Invoice Details Modal -->
-  <BaseModal v-model="showInvoiceModal" title="Invoice Details">
-    <div v-if="selectedInvoice" class="space-y-4">
-      <div class="grid grid-cols-2 gap-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Invoice Number</label>
-          <p class="mt-1 text-sm text-gray-900 dark:text-white">{{ selectedInvoice.invoiceNumber }}</p>
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
-          <span :class="`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(selectedInvoice.status)}`">
-            <component :is="getStatusIcon(selectedInvoice.status)" class="w-4 h-4" />
-            <span class="ml-1 capitalize">{{ selectedInvoice.status }}</span>
-          </span>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-2 gap-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Clinic</label>
-          <p class="mt-1 text-sm text-gray-900 dark:text-white">{{ selectedInvoice.clinicName }}</p>
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Amount</label>
-          <p class="mt-1 text-sm text-gray-900 dark:text-white">${{ selectedInvoice.amount.toLocaleString() }}</p>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-2 gap-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Due Date</label>
-          <p class="mt-1 text-sm text-gray-900 dark:text-white">{{ formatDate(selectedInvoice.dueDate) }}</p>
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Paid Date</label>
-          <p class="mt-1 text-sm text-gray-900 dark:text-white">
-            {{ selectedInvoice.paidDate ? formatDate(selectedInvoice.paidDate) : 'Not paid' }}
+        <div class="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg mb-4">
+          <p class="text-xs text-blue-800 dark:text-blue-300">
+            <strong>Tip:</strong> For best results, upload clear PDF invoices with readable text. Scanned images may not extract properly.
+            If extraction fails, you'll be able to enter details manually.
           </p>
         </div>
+        <input type="file" accept=".pdf" class="hidden" id="invoice-pdf-upload" @change="handlePdfUpload"
+          ref="pdfInput" />
+        <label for="invoice-pdf-upload"
+          class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 cursor-pointer">
+          <Upload class="w-4 h-4 mr-2" />
+          Choose PDF Files
+        </label>
       </div>
 
-      <div v-if="selectedInvoice.orderId">
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Related Order</label>
-        <p class="mt-1 text-sm text-gray-900 dark:text-white">{{ selectedInvoice.orderId }}</p>
-      </div>
+      <!-- Uploaded Files -->
+      <div v-if="uploadedFiles.length > 0" class="space-y-2">
+        <h4 class="font-medium text-gray-900 dark:text-white">Selected Files:</h4>
+        <div v-for="(file, index) in uploadedFiles" :key="index"
+          class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+          <div class="flex items-center space-x-3">
+            <FileText class="w-5 h-5 text-gray-400" />
+            <span class="text-sm text-gray-900 dark:text-white">{{ file.name }}</span>
+          </div>
+          <button @click="removeUploadedFile(index)" class="text-red-600 hover:text-red-800">
+            <X class="w-5 h-5" />
+          </button>
+        </div>
+      </div> 
 
-      <div v-if="selectedInvoice.serials && selectedInvoice.serials.length > 0">
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Serial Numbers</label>
-        <p class="mt-1 text-sm text-gray-900 dark:text-white">{{ selectedInvoice.serials.join(', ') }}</p>
-      </div>
-
-      <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Created</label>
-        <p class="mt-1 text-sm text-gray-900 dark:text-white">{{ formatDateTime(selectedInvoice.createdAt) }}</p>
+      <!-- OCR Extraction Preview -->
+      <div v-if="extractionPreview" class="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+        <h4 class="font-medium text-gray-900 dark:text-white mb-3">OCR Extraction Preview</h4>
+        <div class="space-y-2 text-sm">
+          <div class="flex justify-between">
+            <span class="text-gray-600 dark:text-gray-400">Invoice Number:</span>
+            <span class="font-medium">{{ extractionPreview.invoice_number }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-600 dark:text-gray-400">Amount:</span>
+            <span class="font-medium">${{ extractionPreview.amount?.toLocaleString() }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-600 dark:text-gray-400">Invoice Date:</span>
+            <span class="font-medium">{{ formatDate(extractionPreview.invoice_date) }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-600 dark:text-gray-400">Due Date:</span>
+            <span class="font-medium">{{ formatDate(extractionPreview.due_date) }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-600 dark:text-gray-400">Vendor:</span>
+            <span class="font-medium">{{ extractionPreview.vendor || 'Not found' }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-600 dark:text-gray-400">Bill To:</span>
+            <span class="font-medium">{{ extractionPreview.bill_to || 'Not found' }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-600 dark:text-gray-400">Serials Found:</span>
+            <span class="font-medium">{{ extractionPreview.serials?.length || 0 }}</span>
+          </div>
+          <div v-if="extractionPreview.line_items && extractionPreview.line_items.length > 0" class="mt-3">
+            <h5 class="font-medium text-gray-900 dark:text-white mb-2">Line Items ({{
+              extractionPreview.line_items.length }}):</h5>
+            <div class="max-h-32 overflow-y-auto">
+              <div v-for="(item, index) in extractionPreview.line_items" :key="index"
+                class="flex justify-between text-xs py-1 border-b border-gray-200 dark:border-gray-700">
+                <span class="text-gray-600 dark:text-gray-400 truncate mr-2">{{ item.description }}</span>
+                <span class="font-medium">${{ item.amount?.toLocaleString() }}</span>
+              </div>
+            </div>
+          </div>
+          <div v-if="extractionPreview.notes" class="mt-2">
+            <h5 class="font-medium text-gray-900 dark:text-white mb-1">Notes:</h5>
+            <p class="text-gray-600 dark:text-gray-400 text-xs">{{ extractionPreview.notes }}</p>
+          </div>
+          <div v-if="extractionPreview.payment_terms" class="mt-2">
+            <h5 class="font-medium text-gray-900 dark:text-white mb-1">Payment Terms:</h5>
+            <p class="text-gray-600 dark:text-gray-400 text-xs">{{ extractionPreview.payment_terms }}</p>
+          </div>
+        </div>
       </div>
     </div>
     <template #actions>
-      <button
-        @click="showInvoiceModal = false"
-        class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
-      >
-        Close
-      </button>
+      <div class="p-5 flex gap-2">
+        <button @click="showUploadModal = false; showAddInvoiceModal = true;"
+          class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+          :disabled="uploading">
+          Back
+        </button>
+        <button @click="processUploadedInvoices" :disabled="!hasFilesForProcessing || uploading"
+          class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">
+          <RefreshCw v-if="uploading" class="w-4 h-4 mr-2 inline animate-spin" />
+          <span v-else>Process {{ uploadedFiles.length }} File(s)</span>
+        </button>
+      </div>
     </template>
   </BaseModal>
 
   <!-- Add Invoice Manually Modal -->
-  <BaseModal v-model="showManualModal" title="Add Invoice Manually">
-    <form @submit.prevent="handleManualInvoiceSubmit" class="space-y-4">
+  <BaseModal v-model="showManualModal" title="Add Invoice Manually" size="lg">
+    <form @submit.prevent="handleManualInvoiceSubmit" class="space-y-6">
+      <!-- Invoice Details -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Invoice Number <span class="text-red-500">*</span></label>
-          <input v-model="manualInvoice.invoiceNumber" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Invoice Number</label>
+          <input v-model="manualInvoice.invoice_number"
+            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            placeholder="Invoice Number" />
         </div>
+
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Clinic <span class="text-red-500">*</span></label>
-          <select v-model="manualInvoice.clinicId" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Clinic</label>
+          <select v-model="manualInvoice.clinic_id"
+            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
             <option value="">Select Clinic</option>
-            <option v-for="clinic in uniqueClinics" :key="clinic.id" :value="clinic.id">{{ clinic.name }}</option>
+            <option v-for="clinic in clinics" :key="clinic.clinic_id" :value="clinic.clinic_id">
+              {{ clinicDisplayName(clinic) }}
+            </option>
           </select>
         </div>
+
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Date <span class="text-red-500">*</span></label>
-          <input v-model="manualInvoice.date" type="date" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Amount</label>
+          <div
+            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white">
+            ${{ calculateTotalAmount().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+            }}
+          </div>
+          <input v-model.number="manualInvoice.amount" type="hidden" />
         </div>
+
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Amount <span class="text-red-500">*</span></label>
-          <input v-model.number="manualInvoice.amount" type="number" min="0" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Invoice Date</label>
+          <input v-model="manualInvoice.invoice_date" type="date"
+            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
         </div>
+
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Status <span class="text-red-500">*</span></label>
-          <select v-model="manualInvoice.status" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
-            <option value="pending">Pending</option>
-            <option value="paid">Paid</option>
-            <option value="overdue">Overdue</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Due Date</label>
+          <input v-model="manualInvoice.due_date" type="date"
+            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
         </div>
+        
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Due Date</label>
-          <input v-model="manualInvoice.dueDate" type="date" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Order ID</label>
-          <input v-model="manualInvoice.orderId" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" placeholder="Enter order ID (optional)" />
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Bill To</label>
+          <input v-model="manualInvoice.bill_to"
+            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            placeholder="Bill To" />
         </div>
       </div>
+
+      <!-- Line Items -->
+      <div class="border-t pt-4">
+        <div class="flex justify-between items-center mb-3">
+          <h4 class="text-lg font-medium text-gray-900 dark:text-white">Line Items</h4>
+          <button type="button" @click="addProduct" class="flex items-center px-2 py-1 text-sm bg-blue-100 text-blue-700 rounded hover:bg-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:hover:bg-blue-900/40">
+            <Plus class="w-4 h-4 mr-1" />
+            Add Item
+          </button>
+        </div>
+        <div class="max-h-96 overflow-y-auto space-y-3">
+          <div v-for="(product, index) in manualInvoice.products" :key="index"
+            class="p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-2">
+              <div>
+                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
+                <input v-model="product.name"
+                  class="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+                  placeholder="Product description" />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Size</label>
+                <input v-model="product.size"
+                  class="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+                  placeholder="Product size (e.g. 2x2cm)" />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Serial Number</label>
+                <input v-model="product.serials[0]"
+                  class="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+                  placeholder="Serial number" />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Quantity</label>
+                <input v-model.number="product.quantity" type="number" min="1"
+                  class="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+                  placeholder="1" />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Amount</label>
+                <input v-model.number="product.unit_price" type="number" step="0.01" min="0"
+                  class="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+                  placeholder="0.00" />
+              </div>
+            </div>
+            <div class="flex justify-end">
+              <button type="button" @click="removeProduct(index)" v-if="manualInvoice.products.length > 1" class="text-red-600 hover:text-red-800 text-sm flex items-center">
+                <Minus class="w-4 h-4 mr-1" />
+                Remove
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Notes -->
       <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Graft Serial Numbers</label>
-        <div v-for="(serial, idx) in manualInvoice.serialNumbers" :key="idx" class="flex items-center gap-2 mb-2">
-          <input v-model="manualInvoice.serialNumbers[idx]" class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" placeholder="Enter serial number" />
-          <button type="button" @click="removeSerial(idx)" class="text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/10 rounded-lg p-2"><MinusIcon class="w-4 h-4" /></button>
-        </div>
-        <button type="button" @click="addSerial" class="px-3 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:hover:bg-blue-900/40 text-xs">Add Serial</button>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Notes
+        </label>
+        <textarea v-model="manualInvoice.notes" rows="3"
+          class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+          placeholder="Additional notes (optional)"></textarea>
       </div>
-      <div class="flex justify-end gap-2">
-        <button type="button" @click="showManualModal = false" class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">Cancel</button>
-        <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Add Invoice</button>
+
+      <div class="flex justify-end gap-2 pt-4">
+        <button type="button" @click="showManualModal = false; showAddInvoiceModal = true;"
+          class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
+          Back
+        </button>
+        <button type="submit" :disabled="submitting"
+          class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed">
+          <Plus v-if="submitting" class="w-4 h-4 mr-2 inline animate-spin" />
+          <span v-else>Add Invoice</span>
+        </button>
       </div>
     </form>
   </BaseModal>
+
+  <!-- Invoice Details Modal -->
+  <BaseModal v-model="showInvoiceModal" title="Invoice Details" size="xl">
+    <div v-if="selectedInvoice" class="space-y-6">
+      <!-- Basic Information -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Invoice Number</label>
+          <p class="mt-1 text-lg font-semibold text-gray-900 dark:text-white">{{ selectedInvoice.invoice_number }}</p>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
+          <span
+            :class="`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium mt-1 ${getStatusColor(selectedInvoice.status)}`">
+            <component :is="getStatusIcon(selectedInvoice.status)" class="w-4 h-4 mr-1" />
+            <span class="capitalize">{{ selectedInvoice.status.replace('_', ' ') }}</span>
+          </span>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Clinic</label>
+          <p class="mt-1 text-sm text-gray-900 dark:text-white">{{ selectedInvoice.clinic.clinic_name }}</p>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Amount</label>
+          <p class="mt-1 text-lg font-semibold text-gray-900 dark:text-white">${{
+            selectedInvoice.amount.toLocaleString()
+          }}</p>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Invoice Date</label>
+          <p class="mt-1 text-sm text-gray-900 dark:text-white">{{ formatDate(selectedInvoice.invoice_date) }}</p>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Due Date</label>
+          <p class="mt-1 text-sm text-gray-900 dark:text-white">{{ formatDate(selectedInvoice.due_date) }}</p>
+        </div>
+        <div v-if="selectedInvoice.paid_date">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Paid Date</label>
+          <p class="mt-1 text-sm text-green-600 dark:text-green-400">{{ formatDate(selectedInvoice.paid_date) }}</p>
+        </div>
+        <div v-if="selectedInvoice.order_id">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Order ID</label>
+          <p class="mt-1 text-sm text-blue-600 dark:text-blue-400">{{ selectedInvoice.order_id }}</p>
+        </div>
+        <div v-if="selectedInvoice.bill_to">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Bill To</label>
+          <p class="mt-1 text-sm text-gray-900 dark:text-white">{{ selectedInvoice.bill_to }}</p>
+        </div>
+      </div>
+
+      <!-- Line Items -->
+      <div class="border-t pt-4">
+        <h4 class="text-lg font-medium text-gray-900 dark:text-white mb-3">Product Details</h4>
+        <div class="max-h-96 overflow-y-auto">
+          <!-- Display line items if available -->
+          <div v-if="selectedInvoice.has_line_items && selectedInvoice.line_items && selectedInvoice.line_items.length > 0">
+            <div v-for="(item, index) in selectedInvoice.line_items" :key="index"
+              class="py-2 border-b border-gray-200 dark:border-gray-700 text-sm">
+              <div class="font-medium text-gray-900 dark:text-white">{{ item.description }} <span v-if="item.size">({{ item.size }})</span></div>
+              <div v-if="item.serial" class="text-gray-600 dark:text-gray-400 text-xs">
+                S/N: {{ item.serial }}
+              </div>
+              <div class="text-gray-600 dark:text-gray-400 text-xs">${{ item.amount ? item.amount.toFixed(2) : '0.00' }} x {{ item.quantity || 1 }} = ${{ (item.amount * (item.quantity || 1)).toFixed(2) }}</div>
+            </div>
+          </div>
+          <!-- Fallback to parsing notes if no line items -->
+          <div v-else-if="selectedInvoice.notes && (selectedInvoice.notes.includes('Line Items:') || selectedInvoice.notes.includes('Line Items :'))">
+            <div v-for="(product, index) in parseLineItems(selectedInvoice.notes)" :key="index"
+              class="py-2 border-b border-gray-200 dark:border-gray-700 text-sm">
+              <div class="font-medium text-gray-900 dark:text-white">{{ product.size ? product.name + ' ' + product.size :
+                product.name }}</div>
+              <div v-for="(serial, sIndex) in product.serials" :key="sIndex"
+                class="text-gray-600 dark:text-gray-400 text-xs">
+                S/N: {{ serial }}
+              </div>
+              <div class="text-gray-600 dark:text-gray-400 text-xs">${{ product.unit_price ? product.unit_price.toFixed(2)
+                :
+                '0.00' }} x {{ product.quantity || 0 }} = ${{ product.total ? product.total.toFixed(2) :
+                  (product.unit_price
+                    * product.quantity).toFixed(2) }}</div>
+            </div>
+          </div>
+          <!-- Fallback to serials only -->
+          <div v-else-if="selectedInvoice.serials && selectedInvoice.serials.length > 0">
+            <div v-for="(serial, index) in selectedInvoice.serials" :key="index"
+              class="py-2 border-b border-gray-200 dark:border-gray-700 text-sm">
+              <div class="font-medium text-gray-900 dark:text-white">Graft Product</div>
+              <div class="text-gray-600 dark:text-gray-400 text-xs">S/N: {{ serial }}</div>
+              <div class="text-gray-600 dark:text-gray-400 text-xs">$0.00 x 1 = $0.00</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Serial Numbers (fallback) - Display in the same format as line items -->
+      <!-- <div v-else-if="selectedInvoice.serials && selectedInvoice.serials.length > 0" class="border-t pt-4">
+        <h4 class="text-lg font-medium text-gray-900 dark:text-white mb-3">Product Details</h4>
+        <div class="max-h-96 overflow-y-auto">
+          <div v-for="(serial, index) in selectedInvoice.serials" :key="index"
+            class="py-2 border-b border-gray-200 dark:border-gray-700 text-sm">
+            <div class="font-medium text-gray-900 dark:text-white">Graft Product</div>
+            <div class="text-gray-600 dark:text-gray-400 text-xs">S/N: {{ serial }}</div>
+            <div class="text-gray-600 dark:text-gray-400 text-xs">$0.00 x 1 = $0.00</div>
+          </div>
+        </div>
+      </div> -->
+
+      <!-- Payment Information -->
+      <div v-if="selectedInvoice.status === 'paid'" class="border-t pt-4">
+        <h4 class="text-lg font-medium text-gray-900 dark:text-white mb-3">Payment Information</h4>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Paid Amount</label>
+            <p class="mt-1 text-sm text-gray-900 dark:text-white">${{ selectedInvoice.paid_amount?.toLocaleString() ||
+              selectedInvoice.amount.toLocaleString() }}</p>
+          </div>
+          <div v-if="selectedInvoice.payment_method">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Payment Method</label>
+            <p class="mt-1 text-sm text-gray-900 dark:text-white">{{ selectedInvoice.payment_method }}</p>
+          </div>
+          <div v-if="selectedInvoice.payment_reference">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Payment Reference</label>
+            <p class="mt-1 text-sm text-gray-900 dark:text-white">{{ selectedInvoice.payment_reference }}</p>
+          </div>
+          <div v-if="selectedInvoice.partial_payment">
+            <span
+              class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400">
+              Partial Payment
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Notes -->
+      <div v-if="selectedInvoice.notes">
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Notes</label>
+        <p class="text-sm text-gray-900 dark:text-white whitespace-pre-wrap">{{ selectedInvoice.notes }}</p>
+      </div>
+    </div>
+    <template #actions>
+      <div class="flex justify-end w-full p-5">
+        <button @click="showInvoiceModal = false"
+          class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
+          Close
+        </button>
+      </div>
+    </template>
+  </BaseModal>
+
+  <!-- Add Invoice Selection Modal -->
+  <BaseModal v-model="showAddInvoiceModal" title="Add Invoice">
+    <div class="space-y-4">
+      <p class="text-gray-600 dark:text-gray-400">Choose how you want to add the invoice:</p>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+        <button @click="showUploadModal = true; showAddInvoiceModal = false"
+          class="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-gray-700 transition-colors">
+          <Upload class="w-8 h-8 text-blue-600 dark:text-blue-400 mb-2" />
+          <span class="font-medium text-gray-900 dark:text-white">Upload PDF</span>
+          <span class="text-sm text-gray-500 dark:text-gray-400 mt-1">Extract data from invoice PDF</span>
+        </button>
+
+        <button @click="showManualModal = true; showAddInvoiceModal = false"
+          class="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-purple-500 hover:bg-purple-50 dark:hover:bg-gray-700 transition-colors">
+          <Plus class="w-8 h-8 text-purple-600 dark:text-purple-400 mb-2" />
+          <span class="font-medium text-gray-900 dark:text-white">Manual Entry</span>
+          <span class="text-sm text-gray-500 dark:text-gray-400 mt-1">Enter invoice details manually</span>
+        </button>
+      </div>
+    </div>
+
+    <template #actions>
+      <div class="flex justify-end w-full p-5">
+        <button @click="showAddInvoiceModal = false; showManualModal = false; showUploadModal = false;"
+          class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
+          Cancel
+        </button>
+      </div>
+    </template>
+  </BaseModal>
+
+  <!-- PDF Review Modal -->
+  <BaseModal v-model="showPdfReviewModal" title="Review Extracted Invoice Data" size="xl">
+    <div class="space-y-6">
+      <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+        <p class="text-sm text-blue-800 dark:text-blue-300">
+          Please review the extracted data from the PDF. You can edit any fields before saving.
+        </p>
+      </div>
+      
+      <div v-if="extractedInvoiceData" class="space-y-4">
+        <!-- Invoice Details -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Invoice Number</label>
+            <input v-model="extractedInvoiceData.invoice_number"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              placeholder="Invoice Number" />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Amount</label>
+            <input v-model.number="extractedInvoiceData.amount" type="number" step="0.01"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              placeholder="Amount" />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Invoice Date</label>
+            <input v-model="extractedInvoiceData.invoice_date" type="date"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Due Date</label>
+            <input v-model="extractedInvoiceData.due_date" type="date"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+          </div>
+          
+          <div v-if="extractedInvoiceData.bill_to">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Bill To</label>
+            <div class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white">
+              {{ extractedInvoiceData.bill_to }}
+            </div>
+          </div>
+        </div>
+        
+        <!-- Extraction Source Information -->
+        <div v-if="extractedInvoiceData.source && extractedInvoiceData.source !== 'pdf'" class="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
+          <div class="flex items-center">
+            <Info class="w-5 h-5 text-blue-600 dark:text-blue-400 mr-2" />
+            <span class="text-sm text-blue-800 dark:text-blue-300">
+              <span v-if="extractedInvoiceData.source === 'fallback'">PDF extraction failed. Please manually review and enter all details.</span>
+              <span v-else>Enhanced extraction used ({{ extractedInvoiceData.source }}).</span>
+            </span>
+          </div>
+        </div>
+
+
+
+        <!-- Line Items -->
+        <div class="border-t pt-4">
+          <div class="flex justify-between items-center mb-3">
+            <h4 class="text-lg font-medium text-gray-900 dark:text-white">Line Items</h4>
+            <button @click="addLineItem" class="flex items-center px-2 py-1 text-sm bg-blue-100 text-blue-700 rounded hover:bg-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:hover:bg-blue-900/40">
+              <Plus class="w-4 h-4 mr-1" />
+              Add Item
+            </button>
+          </div>
+          <div class="max-h-96 overflow-y-auto space-y-3">
+            <div v-for="(item, index) in extractedInvoiceData.line_items" :key="index"
+              class="p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800">
+              <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-2">
+                <div>
+                  <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
+                  <input v-model="item.description"
+                    class="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+                    placeholder="Product description" />
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Size</label>
+                  <input v-model="item.size"
+                    class="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+                    placeholder="Product size (e.g. 2x2cm)" />
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Serial Number</label>
+                  <input v-model="item.serial"
+                    class="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+                    placeholder="Serial number" />
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Quantity</label>
+                  <input v-model.number="item.quantity" type="number" min="1"
+                    class="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+                    placeholder="1" />
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Amount</label>
+                  <input v-model.number="item.amount" type="number" step="0.01" min="0"
+                    class="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+                    placeholder="0.00" />
+                </div>
+              </div>
+              <div class="flex justify-end">
+                <button @click="removeLineItem(index)" class="text-red-600 hover:text-red-800 text-sm flex items-center">
+                  <Minus class="w-4 h-4 mr-1" />
+                  Remove
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Notes -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes</label>
+          <textarea v-model="extractedInvoiceData.notes" rows="3"
+            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            placeholder="Additional notes"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <template #actions>
+      <div class="flex gap-2 p-5">
+        <button @click="showPdfReviewModal = false"
+          class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
+          Cancel
+        </button>
+        <button @click="resetLineItems" v-if="extractedInvoiceData && extractedInvoiceData.source === 'fallback'"
+          class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+          Clear & Add Manually
+        </button>
+        <button @click="saveReviewedInvoice" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+          Save Invoice
+        </button>
+      </div>
+    </template>
+  </BaseModal>
+
+
+
+  <!-- Mark as Paid Modal -->
+  <BaseModal v-model="showMarkPaidModal" title="Mark Invoice as Paid">
+    <div v-if="invoiceToMarkPaid" class="space-y-4">
+      <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+        <p class="text-sm text-blue-800 dark:text-blue-300">
+          Marking <strong>{{ invoiceToMarkPaid.invoice_number }}</strong> as paid.
+          Amount: <strong>${{ invoiceToMarkPaid.amount.toLocaleString() }}</strong>
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Paid Amount
+          </label>
+          <input v-model.number="paymentData.paid_amount" type="number" step="0.01" :max="invoiceToMarkPaid.amount"
+            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            placeholder="Enter paid amount" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Payment Method
+          </label>
+          <select v-model="paymentData.payment_method"
+            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+            <option value="">Select Method</option>
+            <option value="bank_transfer">Bank Transfer</option>
+            <option value="credit_card">Credit Card</option>
+            <option value="check">Check</option>
+            <option value="cash">Cash</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="md:col-span-2">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Payment Reference
+          </label>
+          <input v-model="paymentData.payment_reference" type="text"
+            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            placeholder="Transaction ID, check number, etc." />
+        </div>
+      </div>
+
+      <div v-if="paymentData.paid_amount && paymentData.paid_amount < invoiceToMarkPaid.amount"
+        class="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-lg">
+        <div class="flex items-center">
+          <AlertTriangle class="w-5 h-5 text-yellow-600 dark:text-yellow-400 mr-2" />
+          <span class="text-sm text-yellow-800 dark:text-yellow-300">
+            This will be marked as a partial payment. Remaining:
+            <strong>${{ (invoiceToMarkPaid.amount - paymentData.paid_amount).toLocaleString() }}</strong>
+          </span>
+        </div>
+      </div>
+    </div>
+    <template #actions>
+      <div class="flex gap-2">
+        <button @click="showMarkPaidModal = false"
+          class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
+          Cancel
+        </button>
+        <button @click="confirmMarkAsPaid" :disabled="!paymentData.paid_amount"
+          class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed">
+          Mark as Paid
+        </button>
+      </div>
+    </template>
+  </BaseModal>
+
+  <!-- Delete Invoice Modal -->
+  <BaseModal v-model="showDeleteModal" title="Delete Invoice">
+    <div v-if="invoiceToDelete" class="space-y-4">
+      <div class="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg">
+        <p class="text-sm text-red-800 dark:text-red-300">
+          Are you sure you want to delete <strong>{{ invoiceToDelete.invoice_number }}</strong>?
+        </p>
+      </div>
+
+      <div class="flex gap-2">
+        <button @click="showDeleteModal = false"
+          class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
+          Cancel
+        </button>
+        <button @click="deleteInvoice" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
+          Delete Invoice
+        </button>
+      </div>
+    </div>
+  </BaseModal>
+
+  <!-- Toast Notifications -->
+  <div class="fixed top-4 right-4 space-y-2 z-50">
+    <div v-for="toast in toasts" :key="toast.id" :class="`p-4 rounded-lg shadow-lg border-l-4 ${toast.type === 'success' ? 'bg-green-50 border-green-500 text-green-800 dark:bg-green-900/20 dark:text-green-300' :
+      toast.type === 'error' ? 'bg-red-50 border-red-500 text-red-800 dark:bg-red-900/20 dark:text-red-300' :
+        'bg-blue-50 border-blue-500 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300'
+      }`">
+      <div class="flex items-center">
+        <CheckCircle v-if="toast.type === 'success'" class="w-5 h-5 mr-2" />
+        <AlertTriangle v-else class="w-5 h-5 mr-2" />
+        <span class="font-medium">{{ toast.message }}</span>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
 import BaseModal from '@/components/common/BaseModal.vue'
-import { ArrowUpTrayIcon, MagnifyingGlassIcon, FunnelIcon, BanknotesIcon, CheckCircleIcon, ExclamationTriangleIcon, ClockIcon, DocumentTextIcon, CalendarIcon, PlusIcon, MinusIcon } from '@heroicons/vue/24/outline'
+import api from '@/services/api'
+import axios from 'axios'
+import {
+  Upload,
+  Search,
+  Filter,
+  FileText,
+  Clock,
+  AlertTriangle,
+  Plus,
+  Minus,
+  Link,
+  RefreshCw,
+  Eye,
+  Table,
+  AlertCircle,
+  X,
+  CheckCircle,
+  Info
+} from 'lucide-vue-next'
+
+// Updated Types for woundmed_clinics
+interface Clinic {
+  clinic_id: string
+  clinic_code: string
+  clinic_name: string
+  email?: string
+  contact_person?: string
+  phone?: string
+  address?: string
+  clinic_status?: number
+}
 
 interface Invoice {
   id: string
-  clinicId: string
-  clinicName: string
-  invoiceNumber: string
+  clinic_id: string
+  clinic: Clinic
+  invoice_number: string
   amount: number
-  status: 'pending' | 'paid' | 'overdue' | 'cancelled'
-  dueDate: string
-  paidDate?: string
-  orderId?: string
+  status: 'pending_review' | 'pending' | 'paid' | 'overdue' | 'cancelled'
+  invoice_date: string
+  due_date: string
+  paid_date?: string
+  order_id?: string
   serials: string[]
-  createdAt: string
+  line_items: Array<{
+    description: string
+    size: string
+    serial: string
+    quantity: number
+    amount: number
+  }> | null
+  has_line_items: boolean
+  notes?: string
+  bill_to?: string
+  needs_review: boolean
+  sync_status: 'synced' | 'out_of_sync'
+  partial_payment: boolean
+  paid_amount?: number
+  payment_method?: string
+  payment_reference?: string
+  pdf_path?: string
+  created_at: string
+  updated_at: string
 }
 
-const mockInvoices: Invoice[] = [
-  {
-    id: '1',
-    clinicId: '1',
-    clinicName: "St. Mary's Hospital",
-    invoiceNumber: 'INV-2025-001',
-    amount: 2500.00,
-    status: 'paid',
-    dueDate: '2025-02-15',
-    paidDate: '2025-01-25',
-    orderId: 'ORD-001',
-    serials: ['GM001', 'GM002'],
-    createdAt: '2025-01-15T10:00:00Z'
-  },
-  {
-    id: '2',
-    clinicId: '2',
-    clinicName: 'General Health Center',
-    invoiceNumber: 'INV-2025-002',
-    amount: 1800.00,
-    status: 'pending',
-    dueDate: '2025-02-20',
-    orderId: 'ORD-002',
-    serials: ['WC003'],
-    createdAt: '2025-01-20T14:30:00Z'
-  },
-  {
-    id: '3',
-    clinicId: '1',
-    clinicName: "St. Mary's Hospital",
-    invoiceNumber: 'INV-2025-003',
-    amount: 3200.00,
-    status: 'overdue',
-    dueDate: '2025-01-10',
-    orderId: 'ORD-003',
-    serials: ['SG004', 'SG005'],
-    createdAt: '2025-01-01T09:00:00Z'
-  },
-  {
-    id: '4',
-    clinicId: '3',
-    clinicName: 'City Medical Center',
-    invoiceNumber: 'INV-2025-004',
-    amount: 4500.00,
-    status: 'pending',
-    dueDate: '2025-03-01',
-    orderId: 'ORD-004',
-    serials: ['AW006', 'AW007'],
-    createdAt: '2025-01-25T16:45:00Z'
-  },
-  {
-    id: '5',
-    clinicId: '2',
-    clinicName: 'General Health Center',
-    invoiceNumber: 'INV-2025-005',
-    amount: 1200.00,
-    status: 'paid',
-    dueDate: '2025-01-20',
-    paidDate: '2025-01-18',
-    orderId: 'ORD-005',
-    serials: ['TR008'],
-    createdAt: '2025-01-10T11:20:00Z'
-  }
-]
+interface Pagination {
+  current_page: number
+  last_page: number
+  per_page: number
+  total: number
+  from: number
+  to: number
+}
 
-const invoices = ref<Invoice[]>([...mockInvoices])
-const searchTerm = ref('')
-const statusFilter = ref('all')
-const clinicFilter = ref('all')
+interface Stats {
+  total_invoices: number
+  pending_review: number
+  pending_payment: number
+  sync_required: number
+  total_amount: number
+  paid_amount: number
+  pending_amount: number
+  overdue_amount: number
+}
+
+interface Toast {
+  id: number
+  type: 'success' | 'error' | 'info'
+  message: string
+}
+
+interface Product {
+  name: string
+  size: string
+  unit_price: number
+  quantity: number
+  serials: string[]
+}
+
+// Reactive state
+const invoices = ref<Invoice[]>([])
+const clinics = ref<Clinic[]>([])
+const loading = ref(false)
+const uploading = ref(false)
+const submitting = ref(false)
+const pagination = ref<Pagination | null>(null)
+const stats = ref<Stats>({
+  total_invoices: 0,
+  pending_review: 0,
+  pending_payment: 0,
+  sync_required: 0,
+  total_amount: 0,
+  paid_amount: 0,
+  pending_amount: 0,
+  overdue_amount: 0
+})
+
+// Filters
+const filters = ref({
+  search: '',
+  status: 'all',
+  clinic_id: 'all',
+  date_from: '',
+  date_to: '',
+  page: 1
+})
+
+// Modal states
+const showAddInvoiceModal = ref(false)
 const showUploadModal = ref(false)
-const showInvoiceModal = ref(false)
-const selectedInvoice = ref<Invoice | null>(null)
+const showSheetSyncModal = ref(false)
 const showManualModal = ref(false)
+const showInvoiceModal = ref(false)
+const showMarkPaidModal = ref(false)
+const showReviewModal = ref(false)
+const showPdfReviewModal = ref(false)
+const showDeleteModal = ref(false)
+
+// Selected data
+const selectedInvoice = ref<Invoice | null>(null)
+const invoiceUnderReview = ref<Invoice | null>(null)
+const invoiceToMarkPaid = ref<Invoice | null>(null)
+const extractedInvoiceData = ref<any>(null)
+const invoiceToDelete = ref<Invoice | null>(null)
+
+// Upload state
+const uploadedFiles = ref<File[]>([])
+const pdfInput = ref<HTMLInputElement | null>(null)
+const uploadOptions = ref({
+  grouping: 'auto',
+  confidence: 'standard'
+})
+const extractionPreview = ref<any>(null)
+
+// Manual invoice form
 const manualInvoice = ref({
-  invoiceNumber: '',
-  clinicId: '',
-  date: '',
+  invoice_number: '',
+  clinic_id: '',
+  invoice_date: '',
+  due_date: '',
   amount: 0,
-  status: 'pending' as 'pending' | 'paid' | 'overdue' | 'cancelled',
-  dueDate: '',
-  serialNumbers: [''],
-  orderId: ''
-})
-
-const uniqueClinics = computed(() => {
-  const seen = new Map()
-  for (const invoice of invoices.value) {
-    if (!seen.has(invoice.clinicId)) {
-      seen.set(invoice.clinicId, invoice.clinicName)
+  bill_to: '',
+  products: [
+    {
+      name: '',
+      size: '',
+      unit_price: 0,
+      quantity: 1,
+      serials: ['']
     }
+  ],
+  notes: ''
+})
+
+// Payment data
+const paymentData = ref({
+  paid_amount: 0,
+  payment_method: '',
+  payment_reference: ''
+})
+
+// Notifications
+const toasts = ref<Toast[]>([])
+
+// Computed properties
+const hasFilesForProcessing = computed(() => uploadedFiles.value.length > 0)
+
+// Format clinic display name for dropdowns
+const clinicDisplayName = (clinic: Clinic) => {
+  return `${clinic.clinic_name} (${clinic.clinic_code})`;
+}
+
+// Methods
+function showToast(message: string, type: Toast['type'] = 'info') {
+  const id = Date.now()
+  toasts.value.push({ id, type, message })
+  setTimeout(() => {
+    toasts.value = toasts.value.filter(toast => toast.id !== id)
+  }, 5000)
+}
+
+async function fetchInvoices() {
+  loading.value = true
+  try {
+    const params = new URLSearchParams()
+
+    if (filters.value.search) params.append('search', filters.value.search)
+    if (filters.value.status !== 'all') params.append('status', filters.value.status)
+    if (filters.value.clinic_id !== 'all') params.append('clinic_id', filters.value.clinic_id)
+    if (filters.value.date_from) params.append('date_from', filters.value.date_from)
+    if (filters.value.date_to) params.append('date_to', filters.value.date_to)
+    params.append('page', filters.value.page.toString())
+
+    const response = await api.get(`/invoice-management`, { params })
+    const data = response.data
+    invoices.value = data.data
+    pagination.value = {
+      current_page: data.current_page,
+      last_page: data.last_page,
+      per_page: data.per_page,
+      total: data.total,
+      from: data.from,
+      to: data.to
+    }
+  } catch (error) {
+    console.error('Error fetching invoices:', error)
+    showToast('Failed to load invoices', 'error')
+  } finally {
+    loading.value = false
   }
-  return Array.from(seen, ([id, name]) => ({ id, name }))
-})
+}
 
-const filteredInvoices = computed(() => {
-  return invoices.value.filter(invoice => {
-    const matchesSearch = invoice.invoiceNumber.toLowerCase().includes(searchTerm.value.toLowerCase()) ||
-      invoice.clinicName.toLowerCase().includes(searchTerm.value.toLowerCase())
-    const matchesStatus = statusFilter.value === 'all' || invoice.status === statusFilter.value
-    const matchesClinic = clinicFilter.value === 'all' || invoice.clinicId === clinicFilter.value
-    return matchesSearch && matchesStatus && matchesClinic
-  })
-})
+async function fetchStats() {
+  try {
+    const response = await api.get('/invoice-management/stats')
+    stats.value = response.data
+  } catch (error) {
+    console.error('Error fetching stats:', error)
+  }
+}
 
-const totalAmount = computed(() => invoices.value.reduce((sum, invoice) => sum + invoice.amount, 0))
-const paidAmount = computed(() => invoices.value.filter(inv => inv.status === 'paid').reduce((sum, invoice) => sum + invoice.amount, 0))
-const pendingAmount = computed(() => invoices.value.filter(inv => inv.status === 'pending').reduce((sum, invoice) => sum + invoice.amount, 0))
-const overdueAmount = computed(() => invoices.value.filter(inv => inv.status === 'overdue').reduce((sum, invoice) => sum + invoice.amount, 0))
+async function fetchClinics() {
+  try {
+    const response = await api.get('/invoice-management/clinics')
+    clinics.value = response.data
+
+    // If we have clinics, set the first one as default for manual invoice
+    if (clinics.value.length > 0 && !manualInvoice.value.clinic_id) {
+      manualInvoice.value.clinic_id = clinics.value[0].clinic_id
+    }
+  } catch (error) {
+    console.error('Error fetching clinics:', error)
+    showToast('Failed to load clinics', 'error')
+  }
+}
 
 function getStatusColor(status: string) {
   switch (status) {
-    case 'paid': return 'bg-green-100 text-green-800'
-    case 'pending': return 'bg-yellow-100 text-yellow-800'
-    case 'overdue': return 'bg-red-100 text-red-800'
-    case 'cancelled': return 'bg-gray-100 text-gray-800'
-    default: return 'bg-gray-100 text-gray-800'
+    case 'paid': return 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
+    case 'pending': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'
+    case 'pending_review': return 'bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400'
+    case 'overdue': return 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
+    case 'cancelled': return 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400'
+    default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400'
   }
 }
 
 function getStatusIcon(status: string) {
   switch (status) {
-    case 'paid': return CheckCircleIcon
-    case 'pending': return ClockIcon
-    case 'overdue': return ExclamationTriangleIcon
-    default: return null
+    case 'paid': return CheckCircle
+    case 'pending': return Clock
+    case 'pending_review': return Eye
+    case 'overdue': return AlertTriangle
+    default: return FileText
   }
 }
 
-function handleStatusUpdate(invoiceId: string, newStatus: Invoice['status']) {
-  invoices.value = invoices.value.map(invoice => 
-    invoice.id === invoiceId 
-      ? { 
-          ...invoice, 
-          status: newStatus,
-          paidDate: newStatus === 'paid' ? new Date().toISOString().split('T')[0] : undefined
-        }
-      : invoice
-  )
-}
-
 function formatDate(dateString: string) {
-  return new Date(dateString).toLocaleDateString()
-}
-
-function formatDateTime(dateTimeString: string) {
-  return new Date(dateTimeString).toLocaleString()
-}
-
-function addSerial() {
-  manualInvoice.value.serialNumbers.push('')
-}
-function removeSerial(idx: number) {
-  if (manualInvoice.value.serialNumbers.length > 1) manualInvoice.value.serialNumbers.splice(idx, 1)
-}
-function handleManualInvoiceSubmit() {
-  // Find clinic name
-  const clinic = uniqueClinics.value.find((c: { id: string }) => c.id === manualInvoice.value.clinicId)
-  invoices.value.unshift({
-    id: `INV-${Math.floor(Math.random() * 100000)}`,
-    invoiceNumber: manualInvoice.value.invoiceNumber,
-    clinicId: manualInvoice.value.clinicId,
-    clinicName: clinic ? clinic.name : '',
-    createdAt: manualInvoice.value.date || new Date().toISOString(),
-    amount: manualInvoice.value.amount,
-    status: manualInvoice.value.status,
-    dueDate: manualInvoice.value.dueDate,
-    serials: manualInvoice.value.serialNumbers.filter(s => s.trim()),
-    orderId: manualInvoice.value.orderId,
-    paidDate: undefined
+  return new Date(dateString).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
   })
-  showManualModal.value = false
-  manualInvoice.value = { invoiceNumber: '', clinicId: '', date: '', amount: 0, status: 'pending', dueDate: '', serialNumbers: [''], orderId: '' }
 }
 
-// Watch for selectedInvoice changes to show modal
-import { watch } from 'vue'
-watch(selectedInvoice, (newInvoice) => {
-  showInvoiceModal.value = !!newInvoice
+// Debounced search
+// let searchTimeout: NodeJS.Timeout
+// function debouncedFetchInvoices() {
+//   clearTimeout(searchTimeout)
+//   searchTimeout = setTimeout(() => {
+//     filters.value.page = 1
+//     fetchInvoices()
+//   }, 500)
+// }
+
+function changePage(page: number) {
+  if (page < 1 || page > (pagination.value?.last_page || 1)) return
+  filters.value.page = page
+  fetchInvoices()
+}
+
+function handlePdfUpload(event: Event) {
+  const target = event.target as HTMLInputElement
+  if (target.files) {
+    uploadedFiles.value = Array.from(target.files)
+    // Clear extraction preview as it will be populated after processing
+    extractionPreview.value = null
+  }
+}
+
+function handleDrop(event: DragEvent) {
+  event.preventDefault()
+  if (event.dataTransfer?.files) {
+    uploadedFiles.value = Array.from(event.dataTransfer.files).filter(file =>
+      file.type === 'application/pdf'
+    )
+    // Clear extraction preview as it will be populated after processing
+    extractionPreview.value = null
+  }
+}
+
+function removeUploadedFile(index: number) {
+  uploadedFiles.value.splice(index, 1)
+  if (uploadedFiles.value.length === 0) {
+    extractionPreview.value = null
+  }
+}
+
+function simulateOcrExtraction(file: File) {
+  // In a real application, this would call your OCR service
+  extractionPreview.value = {
+    invoice_number: `INV-${new Date().getFullYear()}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
+    amount: Math.floor(Math.random() * 5000) + 1000,
+    invoice_date: new Date().toISOString().split('T')[0],
+    due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    serials: Array.from({ length: Math.floor(Math.random() * 3) + 1 }, () =>
+      `GS${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`
+    )
+  }
+}
+
+async function processUploadedInvoices() {
+  uploading.value = true
+  try {
+    for (const file of uploadedFiles.value) {
+      const formData = new FormData()
+      formData.append('pdf_file', file)
+
+      const response = await api.post('/invoice-management/upload-pdf', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      })
+
+      const result = response.data
+
+      // Store extracted data for review
+      extractedInvoiceData.value = result.extracted_data
+
+      // Ensure line items array exists and has at least one item for editing
+      // Fix: Only create line items from serials if no line items were extracted
+      if (!extractedInvoiceData.value.line_items || extractedInvoiceData.value.line_items.length === 0) {
+        // Try to create line items from serials if available
+        if (extractedInvoiceData.value.serials && extractedInvoiceData.value.serials.length > 0) {
+          extractedInvoiceData.value.line_items = extractedInvoiceData.value.serials.map((serial: string) => ({
+            description: 'Graft Product',
+            size: '',
+            serial: serial,
+            quantity: 1,
+            amount: 0
+          }));
+        } else {
+          // Create at least one empty line item for manual entry
+          extractedInvoiceData.value.line_items = [{
+            description: '',
+            size: '',
+            serial: '',
+            quantity: 1,
+            amount: 0
+          }];
+        }
+      } else {
+        // Ensure line items have all required properties
+        extractedInvoiceData.value.line_items = extractedInvoiceData.value.line_items.map((item: any) => ({
+          description: item.description || '',
+          size: item.size || '',
+          serial: item.serial || '',
+          quantity: item.quantity || 1,
+          amount: item.amount || 0
+        }));
+      }
+              
+      // If we have a fallback source, show a warning to the user
+      if (extractedInvoiceData.value.source && extractedInvoiceData.value.source === 'fallback') {
+        showToast('PDF extraction failed. Please manually enter invoice details.', 'error');
+      }
+
+      // Show review modal instead of automatically creating invoice
+      showPdfReviewModal.value = true
+      showUploadModal.value = false
+      return
+    }
+  } catch (error: any) {
+    console.error('Error processing PDFs:', error)
+    let errorMessage = 'Failed to process PDFs'
+    if (axios.isAxiosError(error)) {
+      const status = error.response?.status
+      const data = error.response?.data
+      
+      if (status === 422 && data?.errors) {
+        const errors = data.errors
+        if (errors.invoice_number) {
+          errorMessage = `Invoice already exists: ${errors.invoice_number[0]}`
+        }
+      } else if (status === 500) {
+        errorMessage = 'Failed to extract data from PDF. The system will open the manual entry form for you to input the details.' 
+        setTimeout(() => {
+          showPdfReviewModal.value = false;
+          showManualModal.value = true;
+        }, 2000);
+      } else {
+        errorMessage = data?.message || `Request failed with status code ${status}`
+      }
+    } else if (error instanceof Error) {
+      errorMessage = error.message
+    }
+    showToast(errorMessage, 'error')
+  } finally {
+    uploading.value = false
+  }
+}
+
+async function saveReviewedInvoice() {
+  if (!extractedInvoiceData.value || clinics.value.length === 0) return
+
+  submitting.value = true
+  try { 
+    let notes = 'Created from PDF upload';
+
+    if (extractedInvoiceData.value.vendor) {
+      notes += `\nVendor: ${extractedInvoiceData.value.vendor}`;
+    }
+
+    if (extractedInvoiceData.value.notes) {
+      notes += `\nNotes: ${extractedInvoiceData.value.notes}`;
+    }
+
+    if (extractedInvoiceData.value.payment_terms) {
+      notes += `\nPayment Terms: ${extractedInvoiceData.value.payment_terms}`;
+    }
+
+    if (extractedInvoiceData.value.bill_to) {
+      notes += `\nBill To: ${extractedInvoiceData.value.bill_to}`;
+    }
+    const allSerials: string[] = [];
+    let lineItemsNotes = '';
+    const lineItemsForStorage: Array<{description: string, size: string, serial: string, quantity: number, amount: number}> = [];
+    
+    if (extractedInvoiceData.value.line_items && extractedInvoiceData.value.line_items.length > 0) {
+      notes += `\nLine Items:\n`;
+      extractedInvoiceData.value.line_items.forEach((item: any) => {
+        // Add to notes
+        const itemDescription = item.size ? `${item.description} (${item.size})` : item.description;
+        notes += `${itemDescription}\n`;
+        notes += `S/N: ${item.serial}\n`;
+        notes += `$${item.amount} x ${item.quantity || 1} = $${(item.amount * (item.quantity || 1)).toFixed(2)}\n\n`;
+        
+        // Collect serials from line items only
+        if (item.serial && typeof item.serial === 'string' && item.serial.trim() !== '') {
+          // Only add if not already in the array
+          if (!allSerials.includes(item.serial.trim())) {
+            allSerials.push(item.serial.trim());
+          }
+        }
+        
+        // Build line items for storage
+        lineItemsForStorage.push({
+          description: item.description,
+          size: item.size || '',
+          serial: item.serial || '',
+          quantity: item.quantity || 1,
+          amount: item.amount || 0
+        });
+        
+        // Build line items notes for display
+        lineItemsNotes += `${itemDescription}\n`;
+        lineItemsNotes += `S/N: ${item.serial}\n`;
+        lineItemsNotes += `$${item.amount} x ${item.quantity || 1} = $${(item.amount * (item.quantity || 1)).toFixed(2)}\n\n`;
+      });
+    }
+
+    // Include raw text for review if available
+    if (extractedInvoiceData.value.raw_text) {
+      notes += `\n\nRaw Extracted Text (first 1000 chars):\n${extractedInvoiceData.value.raw_text}`;
+    }
+
+    // Filter out any empty or invalid serials and remove duplicates
+    const validSerials = [...new Set(allSerials.filter(serial => serial && typeof serial === 'string' && serial.trim() !== ''))];
+    
+    const invoiceData = {
+      invoice_number: extractedInvoiceData.value.invoice_number,
+      clinic_id: clinics.value[0].clinic_id,
+      amount: extractedInvoiceData.value.amount,
+      invoice_date: extractedInvoiceData.value.invoice_date,
+      due_date: extractedInvoiceData.value.due_date,
+      status: 'pending_review' as const,
+      serials: validSerials,
+      line_items: lineItemsForStorage,
+      has_line_items: lineItemsForStorage.length > 0,
+      notes: notes,
+      bill_to: extractedInvoiceData.value.bill_to
+    }
+
+    const response = await api.post('/invoice-management', invoiceData)
+
+    showToast('Invoice created successfully', 'success')
+    showPdfReviewModal.value = false
+    extractedInvoiceData.value = null
+    fetchInvoices()
+    fetchStats()
+  } catch (error: any) {
+    console.error('Error creating invoice:', error)
+    let errorMessage = 'Failed to create invoice'
+    if (axios.isAxiosError(error)) {
+      const status = error.response?.status
+      const data = error.response?.data
+      
+      if (status === 422 && data?.errors) {
+        const errors = data.errors
+        if (errors.invoice_number) {
+          errorMessage = `Invoice already exists: ${errors.invoice_number[0]}`
+        }
+      } else {
+        errorMessage = data?.message || `Request failed with status code ${status}`
+      }
+    } else if (error instanceof Error) {
+      errorMessage = error.message
+    }
+    showToast(errorMessage, 'error')
+  } finally {
+    submitting.value = false
+  }
+}
+ 
+
+async function handleManualInvoiceSubmit() {
+  submitting.value = true
+  try {
+    // Process line items to collect serials and build notes
+    const allSerials: string[] = [];
+    let lineItemsNotes = '';
+    const lineItemsForStorage: Array<{description: string, size: string, serial: string, quantity: number, amount: number}> = [];
+    
+    if (manualInvoice.value.products && manualInvoice.value.products.length > 0) {
+      manualInvoice.value.products.forEach((product, index) => {
+        // Add to notes
+        const itemDescription = product.size ? `${product.name} (${product.size})` : product.name;
+        lineItemsNotes += `${itemDescription}\n`;
+        lineItemsNotes += `S/N: ${product.serials[0]}\n`;
+        lineItemsNotes += `$${product.unit_price} x ${product.quantity || 1} = $${(product.unit_price * (product.quantity || 1)).toFixed(2)}\n\n`;
+        
+        // Collect serials from line items only
+        if (product.serials[0] && typeof product.serials[0] === 'string' && product.serials[0].trim() !== '') {
+          // Only add if not already in the array
+          if (!allSerials.includes(product.serials[0].trim())) {
+            allSerials.push(product.serials[0].trim());
+          }
+        }
+        
+        // Build line items for storage
+        lineItemsForStorage.push({
+          description: product.name,
+          size: product.size || '',
+          serial: product.serials[0] || '',
+          quantity: product.quantity || 1,
+          amount: product.unit_price || 0
+        });
+      });
+    }
+
+    // Build notes with line items
+    let notes = manualInvoice.value.notes || '';
+    if (lineItemsNotes) {
+      notes += `\nLine Items:\n${lineItemsNotes}`;
+    }
+
+    // Filter out any empty or invalid serials and remove duplicates
+    const validSerials = [...new Set(allSerials.filter(serial => serial && typeof serial === 'string' && serial.trim() !== ''))];
+    
+    const invoiceData = {
+      invoice_number: manualInvoice.value.invoice_number,
+      clinic_id: manualInvoice.value.clinic_id || clinics.value[0].clinic_id,
+      amount: manualInvoice.value.amount,
+      invoice_date: manualInvoice.value.invoice_date,
+      due_date: manualInvoice.value.due_date,
+      status: 'pending_review' as const,
+      serials: validSerials,
+      line_items: lineItemsForStorage,
+      has_line_items: lineItemsForStorage.length > 0,
+      notes: notes,
+      bill_to: manualInvoice.value.bill_to || null
+    }
+
+    const response = await api.post('/invoice-management', invoiceData)
+
+    showToast('Invoice created successfully', 'success')
+    showManualModal.value = false
+    resetManualInvoiceForm()
+    fetchInvoices()
+    fetchStats()
+  } catch (error: any) {
+    console.error('Error creating invoice:', error)
+    let errorMessage = 'Failed to create invoice'
+    if (axios.isAxiosError(error)) {
+      const status = error.response?.status
+      const data = error.response?.data
+      
+      if (status === 422 && data?.errors) {
+        const errors = data.errors
+        if (errors.invoice_number) {
+          errorMessage = `Invoice already exists: ${errors.invoice_number[0]}`
+        }
+      } else {
+        errorMessage = data?.message || `Request failed with status code ${status}`
+      }
+    } else if (error instanceof Error) {
+      errorMessage = error.message
+    }
+    showToast(errorMessage, 'error')
+  } finally {
+    submitting.value = false
+  }
+}
+
+function resetManualInvoiceForm() {
+  manualInvoice.value = {
+    invoice_number: '',
+    clinic_id: clinics.value.length > 0 ? clinics.value[0].clinic_id.toString() : '',
+    invoice_date: '',
+    due_date: '',
+    amount: 0,
+    bill_to: '',
+    products: [
+      {
+        name: '',
+        size: '',
+        unit_price: 0,
+        quantity: 1,
+        serials: ['']
+      }
+    ],
+    notes: ''
+  }
+}
+ 
+// Product management functions
+function addProduct() {
+  manualInvoice.value.products.push({
+    name: '',
+    size: '',
+    unit_price: 0,
+    quantity: 1,
+    serials: ['']
+  })
+}
+
+function calculateTotalAmount() {
+  return manualInvoice.value.products.reduce((total, product) => {
+    return total + product.unit_price;
+  }, 0);
+}
+
+function removeProduct(index: number) {
+  if (manualInvoice.value.products.length > 1) {
+    manualInvoice.value.products.splice(index, 1)
+  }
+}
+
+function addProductSerial(productIndex: number) {
+  manualInvoice.value.products[productIndex].serials.push('')
+}
+
+function removeProductSerial(productIndex: number, serialIndex: number) {
+  const product = manualInvoice.value.products[productIndex]
+  if (product.serials.length > 1) {
+    product.serials.splice(serialIndex, 1)
+  }
+}
+
+function viewInvoiceDetails(invoice: Invoice) {
+  selectedInvoice.value = invoice
+  showInvoiceModal.value = true
+}
+
+function markAsPaid(invoice: Invoice) {
+  invoiceToMarkPaid.value = invoice
+  paymentData.value = {
+    paid_amount: invoice.amount,
+    payment_method: '',
+    payment_reference: ''
+  }
+  showMarkPaidModal.value = true
+}
+
+async function confirmMarkAsPaid() {
+  if (!invoiceToMarkPaid.value || !paymentData.value.paid_amount) return
+
+  try {
+    const response = await api.post(`/invoice-management/${invoiceToMarkPaid.value.id}/status`, {
+      status: 'paid',
+      paid_amount: paymentData.value.paid_amount,
+      payment_method: paymentData.value.payment_method,
+      payment_reference: paymentData.value.payment_reference
+    })
+
+    showToast('Invoice marked as paid', 'success')
+    showMarkPaidModal.value = false
+    invoiceToMarkPaid.value = null
+    fetchInvoices()
+    fetchStats()
+  } catch (error) {
+    console.error('Error marking invoice as paid:', error)
+    showToast(error instanceof Error ? error.message : 'Failed to mark invoice as paid', 'error')
+  }
+}
+
+function reviewExtractedData(invoice: Invoice) {
+  invoiceUnderReview.value = JSON.parse(JSON.stringify(invoice))
+  showReviewModal.value = true
+}
+
+function linkToOrder(invoice: Invoice) {
+  selectedInvoice.value = invoice
+  showReviewModal.value = true
+}
+
+// Delete invoice function
+function deleteInvoice() {
+  if (!invoiceToDelete.value) return
+
+  // Show confirmation dialog
+  if (!confirm(`Are you sure you want to delete invoice ${invoiceToDelete.value.invoice_number}?`)) {
+    return
+  }
+
+  api.delete(`/invoice-management/${invoiceToDelete.value.id}`)
+    .then(() => {
+      showToast('Invoice deleted successfully', 'success')
+      showDeleteModal.value = false
+      invoiceToDelete.value = null
+      fetchInvoices()
+      fetchStats()
+    })
+    .catch(error => {
+      console.error('Error deleting invoice:', error)
+      showToast(error instanceof Error ? error.message : 'Failed to delete invoice', 'error')
+    })
+}
+
+// Line item management functions
+function addLineItem() {
+  if (extractedInvoiceData.value && extractedInvoiceData.value.line_items) {
+    extractedInvoiceData.value.line_items.push({
+      description: '',
+      size: '',
+      serial: '',
+      quantity: 1,
+      amount: 0
+    });
+  }
+}
+
+function resetLineItems() {
+  if (extractedInvoiceData.value) {
+    // Clear existing line items
+    extractedInvoiceData.value.line_items = [{
+      description: '',
+      size: '',
+      serial: '',
+      quantity: 1,
+      amount: 0
+    }];
+    
+    // Clear other fields for manual entry
+    extractedInvoiceData.value.invoice_number = '';
+    extractedInvoiceData.value.amount = 0;
+    extractedInvoiceData.value.invoice_date = '';
+    extractedInvoiceData.value.due_date = '';
+    extractedInvoiceData.value.serials = [];
+    extractedInvoiceData.value.vendor = '';
+    extractedInvoiceData.value.notes = '';
+    extractedInvoiceData.value.payment_terms = '';
+  }
+}
+
+function removeLineItem(index: number) {
+  if (extractedInvoiceData.value && extractedInvoiceData.value.line_items) {
+    extractedInvoiceData.value.line_items.splice(index, 1);
+  }
+}
+
+// Parse line items from notes
+function parseLineItems(notes: string) {
+  const lines = notes.split('\n');
+  const lineItems = [];
+  let inLineItemsSection = false;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    // Check for both formats: "Line Items:" and "Line Items :"
+    if (line.startsWith('Line Items:') || line.startsWith('Line Items :')) {
+      inLineItemsSection = true;
+      continue;
+    }
+
+    if (inLineItemsSection) {
+      // Look for product entries in the format:
+      // Product Name (Size)
+      // S/N: serial_number
+      // $price x quantity = $total
+      if (line.trim() !== '' && !line.startsWith('S/N: ') && !line.startsWith('$') && !line.startsWith('Raw Extracted Text')) {
+        // This is a product name line
+        // Try to match format with parentheses first: "Product Name (Size)"
+        let productNameMatch = line.match(/(.+)\s*\((.+)\)/);
+        let productName, productSize;
+
+        if (productNameMatch) {
+          // Format: "Product Name (Size)"
+          productName = productNameMatch[1].trim();
+          productSize = productNameMatch[2].trim();
+        } else {
+          // Format: "Product Name Size" (like "Amnio-Maxx Dual Layer Amnion Patch 2x2cm")
+          // Try to extract common size patterns
+          const sizePatterns = [/\s+(\d+x\d+cm)$/, /\s+(\d+cm)$/, /\s+(\d+x\d+)$/, /\s+(\d+\.\d+cm)$/, /\s+(\d+\.\d+x\d+\.\d+cm)$/];
+          let foundSize = false;
+
+          for (const pattern of sizePatterns) {
+            const match = line.match(pattern);
+            if (match) {
+              productSize = match[1];
+              productName = line.replace(pattern, '').trim();
+              foundSize = true;
+              break;
+            }
+          }
+
+          if (!foundSize) {
+            // No recognizable size pattern, treat entire line as product name
+            productName = line.trim();
+            productSize = '';
+          }
+        }
+
+        // Get the next lines for serial and pricing info
+        const serialLine = i + 1 < lines.length ? lines[i + 1] : '';
+        const pricingLine = i + 2 < lines.length ? lines[i + 2] : '';
+
+        let serials: string[] = [];
+        let unitPrice = 0;
+        let quantity = 0;
+        let total = 0;
+
+        // Parse serials
+        if (serialLine.startsWith('S/N: ')) {
+          serials.push(serialLine.replace('S/N: ', '').trim());
+          // Check for additional serials
+          let nextIndex = i + 2;
+          while (nextIndex < lines.length && lines[nextIndex].startsWith('S/N: ')) {
+            serials.push(lines[nextIndex].replace('S/N: ', '').trim());
+            nextIndex++;
+          }
+        }
+
+        // Parse pricing info
+        if (pricingLine.startsWith('$')) {
+          const pricingMatch = pricingLine.match(/\$(.+) x (.+) = \$(.+)/);
+          if (pricingMatch) {
+            unitPrice = parseFloat(pricingMatch[1]) || 0;
+            quantity = parseInt(pricingMatch[2]) || 0;
+            total = parseFloat(pricingMatch[3]) || 0;
+          }
+        }
+
+        lineItems.push({
+          name: productName,
+          size: productSize,
+          serials: serials,
+          unit_price: unitPrice,
+          quantity: quantity,
+          total: total
+        });
+
+        // Skip the processed lines
+        i += 2 + (serials.length > 1 ? serials.length - 1 : 0);
+      } else if (line.startsWith('Raw Extracted Text') || line.trim() === '') {
+        // Stop parsing when we hit the raw text section or an empty line that might indicate end of section
+        // Only break if we've already found some line items
+        if (lineItems.length > 0 && line.startsWith('Raw Extracted Text')) {
+          break;
+        }
+      }
+    }
+  }
+
+  return lineItems;
+}
+
+// Lifecycle
+onMounted(() => {
+  fetchClinics().then(() => {
+    fetchInvoices()
+    fetchStats()
+  })
 })
-</script> 
+</script>

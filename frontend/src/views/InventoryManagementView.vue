@@ -54,7 +54,7 @@
                         </div>
                         <div>
                             <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ getStatusCount('delivered')
-                            }}</p>
+                                }}</p>
                             <p class="text-sm text-gray-500 dark:text-gray-400">Available</p>
                         </div>
                     </div>
@@ -92,28 +92,28 @@
                                 <Package class="w-4 h-4 mr-2 text-blue-500" /> Delivered
                             </span>
                             <span class="font-semibold text-gray-900 dark:text-white">{{ getStatusCount('delivered')
-                            }}</span>
+                                }}</span>
                         </div>
                         <div class="flex items-center justify-between">
                             <span class="flex items-center text-sm text-gray-600 dark:text-gray-300">
                                 <Clock class="w-4 h-4 mr-2 text-yellow-500" /> Expected
                             </span>
                             <span class="font-semibold text-gray-900 dark:text-white">{{ getStatusCount('expected')
-                            }}</span>
+                                }}</span>
                         </div>
                         <div class="flex items-center justify-between">
                             <span class="flex items-center text-sm text-gray-600 dark:text-gray-300">
                                 <CheckCircle2 class="w-4 h-4 mr-2 text-green-500" /> Used
                             </span>
                             <span class="font-semibold text-gray-900 dark:text-white">{{ getStatusCount('used')
-                            }}</span>
+                                }}</span>
                         </div>
                         <div class="flex items-center justify-between">
                             <span class="flex items-center text-sm text-gray-600 dark:text-gray-300">
                                 <AlertTriangle class="w-4 h-4 mr-2 text-red-500" /> Expired
                             </span>
                             <span class="font-semibold text-gray-900 dark:text-white">{{ getStatusCount('expired')
-                            }}</span>
+                                }}</span>
                         </div>
                         <div class="flex items-center justify-between">
                             <span class="flex items-center text-sm text-gray-600 dark:text-gray-300">
@@ -127,21 +127,21 @@
                                 <CornerUpLeft class="w-4 h-4 mr-2 text-gray-500" /> Returned
                             </span>
                             <span class="font-semibold text-gray-900 dark:text-white">{{ getStatusCount('returned')
-                            }}</span>
+                                }}</span>
                         </div>
                         <div class="flex items-center justify-between">
                             <span class="flex items-center text-sm text-gray-600 dark:text-gray-300">
                                 <Package class="w-4 h-4 mr-2 text-indigo-500" /> Unused
                             </span>
                             <span class="font-semibold text-gray-900 dark:text-white">{{ getStatusCount('unused')
-                            }}</span>
+                                }}</span>
                         </div>
                         <div class="flex items-center justify-between">
                             <span class="flex items-center text-sm text-gray-600 dark:text-gray-300">
                                 <Repeat2 class="w-4 h-4 mr-2 text-orange-500" /> Reassigned
                             </span>
                             <span class="font-semibold text-gray-900 dark:text-white">{{ getStatusCount('reassigned')
-                            }}</span>
+                                }}</span>
                         </div>
                     </div>
                 </div>
@@ -271,7 +271,7 @@
                                 </td>
                                 <td class="px-6 py-5 whitespace-nowrap">
                                     <div class="text-sm text-gray-900 dark:text-white">{{ getClinicName(item.clinicId)
-                                        }}
+                                    }}
                                     </div>
                                 </td>
                                 <td class="px-6 py-5 whitespace-nowrap">
@@ -309,12 +309,12 @@
                                 </td>
                             </tr>
                             <tr v-if="filteredInventory.length === 0 && !tableLoader">
-                                <td colspan="7" class="text-center text-gray-400 py-12">
+                                <!-- <td colspan="7" class="text-center text-gray-400 py-12">
                                     <div class="flex flex-col items-center justify-center gap-2">
                                         <Package class="w-10 h-10 mb-1" />
                                         <span>No inventory items found.</span>
                                     </div>
-                                </td>
+                                </td> -->
                             </tr>
                         </template>
                     </tbody>
@@ -456,7 +456,8 @@
                             </div>
 
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Graft Size
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Graft
+                                    Size
                                     ID</label>
                                 <input v-model="extractedData.graftSizeId" type="text"
                                     class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
@@ -498,7 +499,7 @@
                             <div v-if="showRawOcrText"
                                 class="mt-2 p-3 bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600">
                                 <pre class="text-xs text-gray-700 dark:text-gray-300 whitespace-pre-wrap font-mono">{{
-                            rawOcrText }}</pre>
+                                    rawOcrText }}</pre>
                             </div>
                         </div>
                     </div>
@@ -698,7 +699,7 @@
                             <p class="text-xs text-gray-500 dark:text-gray-400">Patient Name</p>
                             <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ selectedItem.patientName
                                 || 'N/A'
-                                }}</p>
+                            }}</p>
                         </div>
                     </div>
 
@@ -727,7 +728,7 @@
                             <div v-if="selectedItem.quantity">
                                 <p class="text-xs text-gray-500 dark:text-gray-400">Quantity Used</p>
                                 <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ selectedItem.quantity
-                                    }}</p>
+                                }}</p>
                             </div>
                         </div>
                     </div>
@@ -738,8 +739,8 @@
                         <div class="flex items-center mb-2">
                             <div
                                 class="w-8 h-8 bg-amber-100 dark:bg-amber-900/30 rounded-lg flex items-center justify-center mr-2">
-                                <svg class="w-4 h-4 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
+                                <svg class="w-4 h-4 text-amber-600 dark:text-amber-400" fill="none"
+                                    stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                 </svg>
@@ -749,7 +750,9 @@
                             </h3>
                         </div>
                         <div>
-                            <p class="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{{ selectedItem.description }}</p>
+                            <p class="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{{
+                                selectedItem.description
+                                }}</p>
                         </div>
                     </div>
 
@@ -844,7 +847,7 @@
                                     <td class="px-6 py-4 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">{{
                                         getClinicianName(log.clinicianId) }}</td>
                                     <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{{ log.notes || 'N/A'
-                                    }}</td>
+                                        }}</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -852,21 +855,25 @@
                 </div>
             </div>
             <template #actions>
-                <div class="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700/50 border-t border-gray-200 dark:border-gray-600">
+                <div
+                    class="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700/50 border-t border-gray-200 dark:border-gray-600">
                     <div v-if="selectedItem" class="px-6 py-4">
                         <!-- Compact Status Bar with Actions -->
                         <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                             <!-- Current Status Badge -->
                             <div class="flex items-center gap-3">
                                 <span class="text-sm font-medium text-gray-600 dark:text-gray-400">Status:</span>
-                                <span :class="getStatusColor(selectedItem.status)" class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold shadow-sm">
+                                <span :class="getStatusColor(selectedItem.status)"
+                                    class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold shadow-sm">
                                     {{ formatStatusText(selectedItem.status) }}
                                 </span>
                                 <!-- Status Description Tooltip Button -->
-                                <button @click="showStatusInfo = !showStatusInfo" 
+                                <button @click="showStatusInfo = !showStatusInfo"
                                     class="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors">
-                                    <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" fill="none"
+                                        stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
                                 </button>
                             </div>
@@ -874,7 +881,8 @@
                             <!-- Quick Actions Dropdown -->
                             <div class="flex items-center gap-2">
                                 <!-- Primary Actions (Always Visible) -->
-                                <template v-for="action in getPrimaryActions(selectedItem.status).slice(0, 2)" :key="action.status">
+                                <template v-for="action in getPrimaryActions(selectedItem.status).slice(0, 2)"
+                                    :key="action.status">
                                     <button @click="handleStatusUpdate(selectedItem.id, action.status)"
                                         :class="action.class"
                                         class="inline-flex items-center px-3 py-2 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 text-xs font-medium">
@@ -884,39 +892,51 @@
                                 </template>
 
                                 <!-- More Actions Dropdown -->
-                                <div v-if="getSecondaryActions(selectedItem.status).length > 0 || getPrimaryActions(selectedItem.status).length > 2" 
+                                <div v-if="getSecondaryActions(selectedItem.status).length > 0 || getPrimaryActions(selectedItem.status).length > 2"
                                     class="relative">
                                     <button @click="showMoreActions = !showMoreActions"
                                         class="inline-flex items-center px-3 py-2 bg-white dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg shadow-sm hover:shadow-md hover:bg-gray-50 dark:hover:bg-gray-600 transition-all duration-200 text-xs font-medium">
-                                        <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                                        <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
                                         </svg>
                                         More Actions
                                     </button>
 
                                     <!-- Dropdown Menu -->
-                                    <div v-if="showMoreActions" 
-                                        @click.stop
+                                    <div v-if="showMoreActions" @click.stop
                                         class="absolute right-0 bottom-full mb-2 w-56 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-xl z-50 overflow-hidden">
                                         <!-- Remaining Primary Actions -->
-                                        <template v-for="action in getPrimaryActions(selectedItem.status).slice(2)" :key="'primary-' + action.status">
-                                            <button @click="handleStatusUpdate(selectedItem.id, action.status); showMoreActions = false"
+                                        <template v-for="action in getPrimaryActions(selectedItem.status).slice(2)"
+                                            :key="'primary-' + action.status">
+                                            <button
+                                                @click="handleStatusUpdate(selectedItem.id, action.status); showMoreActions = false"
                                                 class="w-full flex items-center px-4 py-2.5 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-700">
-                                                <component :is="action.icon" class="w-4 h-4 mr-3 text-green-600 dark:text-green-400" />
-                                                <span class="text-sm font-medium text-gray-900 dark:text-white">{{ action.label }}</span>
+                                                <component :is="action.icon"
+                                                    class="w-4 h-4 mr-3 text-green-600 dark:text-green-400" />
+                                                <span class="text-sm font-medium text-gray-900 dark:text-white">{{
+                                                    action.label }}</span>
                                             </button>
                                         </template>
 
                                         <!-- Secondary Actions -->
-                                        <div v-if="getSecondaryActions(selectedItem.status).length > 0" class="border-t-2 border-gray-200 dark:border-gray-600">
+                                        <div v-if="getSecondaryActions(selectedItem.status).length > 0"
+                                            class="border-t-2 border-gray-200 dark:border-gray-600">
                                             <div class="px-3 py-1.5 bg-gray-50 dark:bg-gray-700/50">
-                                                <span class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Other Actions</span>
+                                                <span
+                                                    class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Other
+                                                    Actions</span>
                                             </div>
-                                            <template v-for="action in getSecondaryActions(selectedItem.status)" :key="'secondary-' + action.status">
-                                                <button @click="handleStatusUpdate(selectedItem.id, action.status); showMoreActions = false"
+                                            <template v-for="action in getSecondaryActions(selectedItem.status)"
+                                                :key="'secondary-' + action.status">
+                                                <button
+                                                    @click="handleStatusUpdate(selectedItem.id, action.status); showMoreActions = false"
                                                     class="w-full flex items-center px-4 py-2.5 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-700 last:border-0">
-                                                    <component :is="action.icon" class="w-4 h-4 mr-3 text-gray-600 dark:text-gray-400" />
-                                                    <span class="text-sm text-gray-700 dark:text-gray-300">{{ action.label }}</span>
+                                                    <component :is="action.icon"
+                                                        class="w-4 h-4 mr-3 text-gray-600 dark:text-gray-400" />
+                                                    <span class="text-sm text-gray-700 dark:text-gray-300">{{
+                                                        action.label }}</span>
                                                 </button>
                                             </template>
                                         </div>
@@ -926,14 +946,19 @@
                         </div>
 
                         <!-- Status Info (Collapsible) -->
-                        <div v-if="showStatusInfo" class="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg">
+                        <div v-if="showStatusInfo"
+                            class="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg">
                             <div class="flex items-start">
-                                <svg class="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                <svg class="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5 mr-2 flex-shrink-0"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
                                 <div class="flex-1">
-                                    <p class="text-xs font-semibold text-blue-900 dark:text-blue-100">{{ getStatusDescription(selectedItem.status).title }}</p>
-                                    <p class="text-xs text-blue-700 dark:text-blue-300 mt-0.5">{{ getStatusDescription(selectedItem.status).description }}</p>
+                                    <p class="text-xs font-semibold text-blue-900 dark:text-blue-100">{{
+                                        getStatusDescription(selectedItem.status).title }}</p>
+                                    <p class="text-xs text-blue-700 dark:text-blue-300 mt-0.5">{{
+                                        getStatusDescription(selectedItem.status).description }}</p>
                                 </div>
                             </div>
                         </div>
@@ -1055,7 +1080,7 @@
                                 </svg>
                                 <span class="text-gray-900 dark:text-white font-medium">{{ editingItem.patientName ||
                                     'N/A'
-                                    }}</span>
+                                }}</span>
                                 <span class="ml-auto text-xs text-gray-500 dark:text-gray-400 italic">Read-only</span>
                             </div>
                         </div>
@@ -1524,7 +1549,7 @@ function getStatusDescription(status: string): { title: string; description: str
 
 function getPrimaryActions(currentStatus: string) {
     const actions: Array<{ status: string; label: string; icon: any; class: string }> = []
-    
+
     switch (currentStatus) {
         case 'expected':
             actions.push(
@@ -1550,13 +1575,13 @@ function getPrimaryActions(currentStatus: string) {
             )
             break
     }
-    
+
     return actions
 }
 
 function getSecondaryActions(currentStatus: string) {
     const actions: Array<{ status: string; label: string; icon: any; class: string }> = []
-    
+
     switch (currentStatus) {
         case 'expected':
             actions.push(
@@ -1600,7 +1625,7 @@ function getSecondaryActions(currentStatus: string) {
             // No actions available for expired items
             break
     }
-    
+
     return actions
 }
 

@@ -1,20 +1,15 @@
 <?php
-
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Clinic extends Model
 {
     use SoftDeletes;
-    protected $table = 'woundmed_clinics';
+    protected $table      = 'woundmed_clinics';
     protected $primaryKey = 'clinic_id';
-    public $timestamps = true;
+    public $timestamps    = true;
 
     protected $dates = ['deleted_at'];
 
@@ -32,8 +27,8 @@ class Clinic extends Model
     ];
 
     protected $casts = [
-        'isActive' => 'boolean',
-        'clinic_status' => 'boolean',
+        'isActive'               => 'boolean',
+        'clinic_status'          => 'boolean',
         'assigned_clinician_ids' => 'array',
     ];
 
@@ -70,7 +65,18 @@ class Clinic extends Model
     public function getAllClinicianIdsAttribute()
     {
         $pivotClinicians = $this->clinicians()->pluck('users.id')->toArray();
-        $jsonClinicians = $this->assigned_clinician_ids ?? [];
+        $jsonClinicians  = $this->assigned_clinician_ids ?? [];
         return array_unique(array_merge($pivotClinicians, $jsonClinicians));
+    }
+
+    // Only get active clinics by default
+    public function scopeActive($query)
+    {
+        return $query->where('clinic_status', 0);
+    }
+
+    public function invoices()
+    {
+        return $this->hasMany(Invoice::class, 'clinic_id', 'clinic_id');
     }
 }

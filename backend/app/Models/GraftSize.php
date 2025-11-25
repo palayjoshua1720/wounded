@@ -9,24 +9,20 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class GraftSize extends Model
 {
     use HasFactory, SoftDeletes;
-
     protected $table = 'woundmed_graft_sizes';
     protected $primaryKey = 'graft_size_id';
     public $timestamps = true;
     public $incrementing = true;
     protected $keyType = 'string';
-
     protected $fillable = [
         'graft_number',
-        'clinic_id',
         'brand_id',
         'size',
         'area',
         'price',
-        'stock',
+        'stock', // Ensure stock is fillable
         'graft_status',
     ];
-
     protected $casts = [
         'area' => 'decimal:2',
         'price' => 'decimal:2',
@@ -34,18 +30,17 @@ class GraftSize extends Model
         'graft_status' => 'integer',
     ];
 
-    public function clinic()
-    {
-        return $this->belongsTo(Clinic::class, 'clinic_id', 'clinic_id');
-    }
-
     public function brand()
     {
         return $this->belongsTo(Brand::class, 'brand_id', 'brand_id');
     }
-    
     public function orders()
     {
         return $this->hasMany(Orders::class, 'graft_id', 'graft_size_id');
+    }
+
+    public function getManufacturerAttribute()
+    {
+        return $this->brand->manufacturer;
     }
 }

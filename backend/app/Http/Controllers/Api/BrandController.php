@@ -11,9 +11,22 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use App\Traits\AuditLogger;
 
 class BrandController extends Controller
 {
+    use AuditLogger;
+
+    protected function getEntityName()
+    {
+        return 'woundmed_brands';
+    }
+
+    protected function getEntityType()
+    {
+        return 'brand';
+    }
+
     public function getAllBrands(Request $request)
     {
         $perPage = $request->query('per_page', 10);
@@ -30,6 +43,7 @@ class BrandController extends Controller
                     'size' => $size->size,
                     'area' => (float) $size->area,
                     'price' => (float) $size->price,
+                    'stock' => (int) $size->stock,
                     'graftStatus' => (int) $size->graft_status,
                 ];
             });
@@ -73,6 +87,7 @@ class BrandController extends Controller
             'graftSizes.*.size' => 'nullable|string|max:50',
             'graftSizes.*.area' => 'nullable|numeric|min:0',
             'graftSizes.*.price' => 'nullable|numeric|min:0',
+            'graftSizes.*.stock' => 'nullable|integer|min:0',
             'graftSizes.*.graftStatus' => 'nullable|in:0,1,2',
         ]);
 
@@ -106,6 +121,7 @@ class BrandController extends Controller
                         'size' => $size,
                         'area' => $area,
                         'price' => $price,
+                        'stock' => $sizeData['stock'] ?? 0,
                         'graftStatus' => $sizeData['graftStatus'] ?? 0,
                     ];
                 }
@@ -123,15 +139,21 @@ class BrandController extends Controller
             'brand_status' => $validated['brandStatus'],
         ]);
 
+        $this->logAudit($request, 'brand_create', "Brand created: {$validated['brandName']}", $brand->brand_id);
+
         // Create graft sizes linked to the new brand
         foreach ($graftSizesData as $sizeData) {
-            GraftSize::create([
+            $graftSize = GraftSize::create([
                 'brand_id' => $brand->brand_id,
                 'size' => $sizeData['size'],
                 'area' => $sizeData['area'],
                 'price' => $sizeData['price'],
+                'stock' => $sizeData['stock'] ?? 0,
                 'graft_status' => $sizeData['graftStatus'],
             ]);
+
+            // Log audit trail for graft size creation
+            $this->logAudit($request, 'graft_size_create', "Graft size created: {$sizeData['size']} for brand: {$validated['brandName']}", $graftSize->graft_size_id);
         }
 
         // Reload brand with relationships for response
@@ -144,6 +166,7 @@ class BrandController extends Controller
                 'size' => $size->size,
                 'area' => (float) $size->area,
                 'price' => (float) $size->price,
+                'stock' => (int) $size->stock,
                 'graftStatus' => (int) $size->graft_status,
             ];
         });
@@ -181,6 +204,7 @@ class BrandController extends Controller
             'graftSizes.*.size' => 'nullable|string|max:50',
             'graftSizes.*.area' => 'nullable|numeric|min:0',
             'graftSizes.*.price' => 'nullable|numeric|min:0',
+            'graftSizes.*.stock' => 'nullable|integer|min:0',
             'graftSizes.*.graftStatus' => 'nullable|in:0,1,2',
         ]);
 
@@ -210,27 +234,37 @@ class BrandController extends Controller
                         throw ValidationException::withMessages(["graftSizes.{$index}.price" => 'Price is required and must be >= 0 when other fields are provided.']);
                     }
                     $status = $sizeData['graftStatus'] ?? 0;
+                    $stock = $sizeData['stock'] ?? 0;
                     $sizeId = $sizeData['id'] ?? null;
                     if ($sizeId) {
                         // Update existing
                         $gs = GraftSize::where('graft_size_id', $sizeId)
                             ->where('brand_id', $id)
                             ->firstOrFail();
+                        $oldSize = $gs->size;
                         $gs->update([
                             'size' => $size,
                             'area' => $area,
                             'price' => $price,
+                            'stock' => $stock,
                             'graft_status' => $status,
                         ]);
+
+                        // Log audit trail for graft size update
+                        $this->logAudit($request, 'graft_size_update', "Graft size updated: {$oldSize} -> {$size} for brand ID: {$id}", $sizeId);
                     } else {
                         // Create new
-                        GraftSize::create([
+                        $graftSize = GraftSize::create([
                             'brand_id' => $id,
                             'size' => $size,
                             'area' => $area,
                             'price' => $price,
+                            'stock' => $stock,
                             'graft_status' => $status,
                         ]);
+
+                        // Log audit trail for graft size creation during brand update
+                        $this->logAudit($request, 'graft_size_create', "Graft size created: {$size} for brand ID: {$id}", $graftSize->graft_size_id);
                     }
                 } else {
                     // All empty: delete if existing
@@ -241,6 +275,8 @@ class BrandController extends Controller
                             ->first();
                         if ($gs) {
                             $gs->delete();
+                            // Log audit trail for graft size deletion
+                            $this->logAudit($request, 'graft_size_delete', "Graft size deleted: {$gs->size} for brand ID: {$id}", $sizeId);
                         }
                     }
                 }
@@ -248,6 +284,7 @@ class BrandController extends Controller
         }
 
         // Update brand
+        $oldBrandName = $brand->brand_name;
         $brand->update([
             'manufacturer_id' => $validated['manufacturerId'],
             'brand_name' => $validated['brandName'],
@@ -256,6 +293,9 @@ class BrandController extends Controller
             'description' => $validated['description'] ?? null,
             'brand_status' => $validated['brandStatus'],
         ]);
+
+        // Log audit trail for brand update
+        $this->logAudit($request, 'brand_update', "Brand updated: {$oldBrandName} -> {$validated['brandName']}", $id);
 
         // Reload for response
         $brand->load(['graftSizes', 'manufacturer']);
@@ -267,6 +307,7 @@ class BrandController extends Controller
                 'size' => $size->size,
                 'area' => (float) $size->area,
                 'price' => (float) $size->price,
+                'stock' => (int) $size->stock,
                 'graftStatus' => (int) $size->graft_status,
             ];
         });
@@ -311,6 +352,9 @@ class BrandController extends Controller
             $actionType = 'brand_deactivate';
         }
 
+        // Log successful toggle
+        $this->logAudit($request, $actionType, "Brand status toggled to {$statusText}: {$brand->brand_name} (from {$oldStatus})", $id);
+
         return response()->json([
             'message' => 'Brand status updated successfully',
             'data'    => [
@@ -326,7 +370,7 @@ class BrandController extends Controller
         $brand->delete(); // Soft delete
 
         // Log successful deletion
-        // $this->logAudit($request, 'brand_delete', "Brand deleted: {$name}", $id);
+        $this->logAudit($request, 'brand_delete', "Brand deleted: {$name}", $id);
 
         return response()->json([
             'message' => 'Brand deleted successfully',
@@ -342,7 +386,7 @@ class BrandController extends Controller
             $brand->brand_status = 2; // Archived
             $brand->save();
 
-            // $this->logAudit($request, 'brand_archive', "Brand archived: {$brand->brand_name} (from status {$oldStatus})", $id);
+            $this->logAudit($request, 'brand_archive', "Brand archived: {$brand->brand_name} (from status {$oldStatus})", $id);
         }
 
         return response()->json([
