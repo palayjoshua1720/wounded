@@ -38,15 +38,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/auth/profile/security/enable-tfa', [AuthController::class, 'enable_tfauth']);
     Route::post('/auth/profile/security/disable-tfauth', [AuthController::class, 'disable_tfauth']);
     Route::post('/auth/profile/security/update-tfauth', [AuthController::class, 'update_tfauth']);
-    Route::get('/invoices', [InvoiceController::class, 'index']);
-    Route::get('/invoices/stats', [InvoiceController::class, 'getStats']);
-    Route::get('/invoices/clinics', [InvoiceController::class, 'getClinics']);
-    Route::post('/invoices', [InvoiceController::class, 'store']);
-    Route::get('/invoices/{invoices}', [InvoiceController::class, 'show']);
-    Route::put('/invoices/{invoices}', [InvoiceController::class, 'update']);
-    Route::delete('/invoices/{invoices}', [InvoiceController::class, 'destroy']);
-    Route::post('/invoices/{invoices}/status', [InvoiceController::class, 'updateStatus']);
-    Route::post('/invoices/upload-pdf', [InvoiceController::class, 'uploadPdf']);
+    Route::get('/invoice-management', [InvoiceController::class, 'index']);
+    Route::get('/invoice-management/stats', [InvoiceController::class, 'getStats']);
+    Route::get('/invoice-management/clinics', [InvoiceController::class, 'getClinics']);
+    Route::post('/invoice-management', [InvoiceController::class, 'store']);
+    Route::get('/invoice-management/{invoices}', [InvoiceController::class, 'show']);
+    Route::put('/invoice-management/{invoices}', [InvoiceController::class, 'update']);
+    Route::delete('/invoice-management/{invoices}', [InvoiceController::class, 'destroy']);
+    Route::post('/invoice-management/{invoices}/status', [InvoiceController::class, 'updateStatus']);
+    Route::post('/invoice-management/upload-pdf', [InvoiceController::class, 'uploadPdf']);
+    Route::post('/invoice-management/sync-google-sheet', [InvoiceController::class, 'syncWithGoogleSheet']);
 
     // Clinicians
     Route::get('/management/users/clinician', [ClinicController::class, 'getAllClinicians']);

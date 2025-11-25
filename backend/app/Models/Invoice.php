@@ -18,6 +18,8 @@ class Invoice extends Model
         'paid_date',
         'order_id',
         'serials',
+        'line_items',
+        'has_line_items',
         'notes',
         'needs_review',
         'sync_status',
@@ -26,6 +28,7 @@ class Invoice extends Model
         'payment_method',
         'payment_reference',
         'pdf_path',
+        'bill_to',
     ];
 
     protected $casts = [
@@ -35,6 +38,8 @@ class Invoice extends Model
         'due_date'        => 'date',
         'paid_date'       => 'date',
         'serials'         => 'array',
+        'line_items'      => 'array',
+        'has_line_items'  => 'boolean',
         'needs_review'    => 'boolean',
         'partial_payment' => 'boolean',
     ];

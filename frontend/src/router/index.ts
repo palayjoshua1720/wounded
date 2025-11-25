@@ -350,7 +350,7 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 					'inventory',
 					'brand-management',
 					'graft-size',  
-					'invoices'
+					'invoice-management'
 				].includes(route.name as string)
 			}
 
@@ -383,7 +383,7 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 					case 'usage':
 						title = 'Usage Logging'
 						break
-					case 'invoices':
+					case 'invoice-management':
 						title = 'Invoices'
 						break
 					case 'ivr':

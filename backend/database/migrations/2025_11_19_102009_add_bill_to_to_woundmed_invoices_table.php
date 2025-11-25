@@ -11,11 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('woundmed_ivr', function (Blueprint $table) {
-            $table->string('ivr_number')
-                ->nullable()
-                ->after('ivr_id')
-                ->comment('e.g. #IVR-1, unique identifier for the IVR record');
+        Schema::table('woundmed_invoices', function (Blueprint $table) {
+            $table->text('bill_to')->nullable()->after('notes');
         });
     }
 
@@ -24,8 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('woundmed_ivr', function (Blueprint $table) {
-            $table->dropColumn('ivr_number');
+        Schema::table('woundmed_invoices', function (Blueprint $table) {
+            $table->dropColumn('bill_to');
         });
     }
 };
