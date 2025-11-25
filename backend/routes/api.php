@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\ForgotPassword;
 use App\Http\Controllers\Api\GraftSizeController;
 use App\Http\Controllers\Api\ResetPassword;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\InventoryController;
 
 
 // System Info
@@ -115,4 +116,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/management/order/update/{id}/updateorder', [OrderController::class, 'updateOrder']);
     Route::put('/management/order/delete/{id}/deleteorder', [OrderController::class, 'deleteOrder']);
     Route::put('/management/order/update/{id}/updateorderstatus', [OrderController::class, 'updateOrderStatus']);
+
+    // Inventory & Usage Logs
+    Route::get('/inventory/all', [InventoryController::class, 'getInventory']);
+    Route::get('/inventory/serial/{serialNumber}', [InventoryController::class, 'getInventoryBySerial']);
+    Route::get('/inventory/status/{status}', [InventoryController::class, 'getInventoryByStatus']);
+    Route::get('/inventory/search-patients', [InventoryController::class, 'searchPatients']);
+    Route::get('/inventory/graft-size/{graftSizeId}', [InventoryController::class, 'getGraftSize']);
+    Route::post('/inventory/usage-logs', [InventoryController::class, 'storeUsageLog']);
+    Route::put('/inventory/usage-logs/{id}', [InventoryController::class, 'updateUsageLog']);
+    Route::patch('/inventory/{id}/status', [InventoryController::class, 'updateInventoryStatus']);
+    Route::delete('/inventory/usage-logs/{id}', [InventoryController::class, 'deleteUsageLog']);
 });

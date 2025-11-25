@@ -23,6 +23,7 @@ class PatientInfo extends Model
         'user_id',
         'patient_name',
         'email',
+        'clinic_id',
     ];
 
     /**
@@ -33,6 +34,12 @@ class PatientInfo extends Model
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id', 'id');
+    }
+
+    // Patient belongs to a Clinic
+    public function clinic()
+    {
+        return $this->belongsTo(Clinic::class, 'clinic_id', 'clinic_id');
     }
 
     // Patient may have multiple IVR records

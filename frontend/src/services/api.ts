@@ -117,6 +117,10 @@ export const userService = {
         return api.get('/management/users/clinics');
     },
 
+    getClinicians(simple = true) {
+        return api.get('/management/users/clinician', { params: { simple } });
+    },
+
     getUser(id: string) {
         return api.get(`/users/${id}`);
     },
@@ -143,6 +147,107 @@ export const userService = {
 
     restoreUser(id: string) {
         return api.patch(`/users/${id}/restore`);
+    },
+};
+
+export const inventoryService = {
+    /**
+     * Get all inventory items from usage logs
+     */
+    getAllInventory() {
+        return api.get('/inventory/all');
+    },
+
+    /**
+     * Get inventory by serial number
+     */
+    getInventoryBySerial(serialNumber: string) {
+        return api.get(`/inventory/serial/${serialNumber}`);
+    },
+
+    /**
+     * Get inventory by status
+     */
+    getInventoryByStatus(status: string) {
+        return api.get(`/inventory/status/${status}`);
+    },
+
+    /**
+     * Create a new usage log
+     */
+    createUsageLog(data: any) {
+        return api.post('/inventory/usage-logs', data);
+    },
+
+    /**
+     * Update a usage log
+     */
+    updateUsageLog(id: string | number, data: any) {
+        return api.put(`/inventory/usage-logs/${id}`, data);
+    },
+
+    /**
+     * Delete a usage log
+     */
+    deleteUsageLog(id: string | number) {
+        return api.delete(`/inventory/usage-logs/${id}`);
+    },
+
+    /**
+     * Search for patients by name
+     */
+    searchPatients(query: string) {
+        return api.get('/inventory/search-patients', { params: { q: query } });
+    },
+
+    /**
+     * Get graft size details by ID
+     */
+    getGraftSize(graftSizeId: string | number) {
+        return api.get(`/inventory/graft-size/${graftSizeId}`);
+    },
+
+    /**
+     * Update inventory item status
+     */
+    updateInventoryStatus(id: string | number, logStatus: number) {
+        return api.patch(`/inventory/${id}/status`, { log_status: logStatus });
+    },
+};
+
+export const graftSizeService = {
+    /**
+     * Get all graft sizes (paginated)
+     */
+    getAllGraftSizes(params?: { page?: number; per_page?: number }) {
+        return api.get('/management/graft-sizes', { params });
+    },
+};
+
+export const orderService = {
+    /**
+     * Get all orders (paginated)
+     */
+    getAllOrders(params?: { page?: number; per_page?: number }) {
+        return api.get('/management/order/getorders', { params });
+    },
+};
+
+export const brandService = {
+    /**
+     * Get all brands (paginated)
+     */
+    getAllBrands(params?: { page?: number; per_page?: number }) {
+        return api.get('/management/brands', { params });
+    },
+};
+
+export const patientService = {
+    /**
+     * Get all patients
+     */
+    getAllPatients() {
+        return api.get('/management/patients/patientinfo');
     },
 };
 

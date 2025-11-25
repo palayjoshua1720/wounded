@@ -14,6 +14,7 @@ import NotificationCenterView from '@/views/NotificationCenterView.vue'
 import OrderManagementView from '@/views/OrderManagementView.vue'
 import ReportCenterView from '@/views/ReportCenterView.vue'
 import ReturnManagementView from '@/views/ReturnManagementView.vue'
+// import BUReturnManagementView from '@/views/BUReturnManagement.vue'
 import UsageLoggingView from '@/views/UsageLoggingView.vue'
 import UserManagementView from '@/views/UserManagementView.vue'
 import ClinicianManagementView from '@/views/ClinicianManagementView.vue'
@@ -27,7 +28,7 @@ import ResetPasswordView from '@/views/ResetPasswordView.vue'
 import SettingsView from '@/views/SettingsView.vue'
 import { ClipboardDocumentCheckIcon, Squares2X2Icon, SquaresPlusIcon, BuildingLibraryIcon, ClipboardDocumentListIcon, ShieldCheckIcon, BellIcon, ChartBarIcon, ArrowPathIcon, CalculatorIcon, CubeIcon, UsersIcon } from '@heroicons/vue/24/outline'
 import { pageLoader } from '@/composables/ui/usePageLoader'
-import { Factory, Package, PencilRuler, ShoppingCart} from 'lucide-vue-next'
+import { Factory, Package, PencilRuler, ShoppingCart } from 'lucide-vue-next'
 
 // Types
 interface NavigationItem {
@@ -69,14 +70,38 @@ const routes: RouteRecordRaw[] = [
 					icon: SquaresPlusIcon
 				}
 			},
+			// Dynamic user routes based on role
 			{
-				path: 'users',
-				name: 'users',
+				path: 'admin/users',
+				name: 'admin-users',
 				component: UserManagementView,
 				meta: {
 					requiresAuth: true,
 					title: 'All Users',
-					icon: UsersIcon
+					icon: UsersIcon,
+					role: 0
+				}
+			},
+			{
+				path: 'office-staff/users',
+				name: 'office-staff-users',
+				component: UserManagementView,
+				meta: {
+					requiresAuth: true,
+					title: 'All Users',
+					icon: UsersIcon,
+					role: 1
+				}
+			},
+			{
+				path: 'clinic/users',
+				name: 'clinic-users',
+				component: UserManagementView,
+				meta: {
+					requiresAuth: true,
+					title: 'All Users',
+					icon: UsersIcon,
+					role: 2
 				}
 			},
 			{
@@ -179,14 +204,49 @@ const routes: RouteRecordRaw[] = [
 					icon: PencilRuler
 				}
 			},
+			// Dynamic inventory routes based on role
 			{
-				path: 'inventory',
-				name: 'inventory',
+				path: 'admin/inventory',
+				name: 'admin-inventory',
 				component: InventoryManagementView,
 				meta: {
 					requiresAuth: true,
 					title: 'Inventory & Serials',
-					icon: CubeIcon
+					icon: CubeIcon,
+					role: 0
+				}
+			},
+			{
+				path: 'office-staff/inventory',
+				name: 'office-staff-inventory',
+				component: InventoryManagementView,
+				meta: {
+					requiresAuth: true,
+					title: 'Inventory & Serials',
+					icon: CubeIcon,
+					role: 1
+				}
+			},
+			{
+				path: 'manufacturer/inventory',
+				name: 'manufacturer-inventory',
+				component: InventoryManagementView,
+				meta: {
+					requiresAuth: true,
+					title: 'Inventory & Serials',
+					icon: CubeIcon,
+					role: 4
+				}
+			},
+			{
+				path: 'biller/inventory',
+				name: 'biller-inventory',
+				component: InventoryManagementView,
+				meta: {
+					requiresAuth: true,
+					title: 'Inventory & Serials',
+					icon: CubeIcon,
+					role: 5
 				}
 			},
 			{
@@ -206,7 +266,8 @@ const routes: RouteRecordRaw[] = [
 				meta: {
 					requiresAuth: true,
 					title: 'Return Management',
-					icon: ArrowPathIcon
+					icon: ArrowPathIcon,
+					role: 0
 				}
 			},
 			{
@@ -318,7 +379,10 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 		'admin-dashboard': [0, 1],
 		'clinic-dashboard': [0, 1, 2],
 		'clinic': [0, 1, 2],
-		'inventory': [0, 1],
+		'admin-inventory': [0],
+		'office-staff-inventory': [1],
+		'manufacturer-inventory': [4],
+		'biller-inventory': [5],
 		'invoice-management': [0, 1],
 		'ivr': [0, 1],
 		'notifications': [0, 1],
@@ -327,7 +391,9 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 		'reports': [0, 1],
 		'returns': [0, 1],
 		'usage': [0, 1],
-		'users': [0, 1],
+		'admin-users': [0],
+		'office-staff-users': [1],
+		'clinic-users': [2],
 		'smart-selector': [0, 1, 2, 3, 4, 5, 6],
 	}
 
@@ -340,22 +406,23 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 			if (role === 0) {
 				return [
 					'admin-dashboard',
-					'users',
+					'admin-users',
 					'user-clinic',
 					'user-clinicians',
 					'manufacturer-management',
 					'clinic-dashboard',
 					'ivr',
 					'order-management',
-					'inventory',
+					'admin-inventory',
 					'brand-management',
 					'graft-size',
-					'invoice-management'
+					'invoice-management',
+					'returns'
 				].includes(route.name as string)
 			}
 
 			if (role === 1) {
-				return ['admin-dashboard', 'users', 'user-clinic', 'manufacturer-management', 'inventory', 'invoice-management'].includes(route.name as string)
+				return ['admin-dashboard', 'office-staff-users', 'user-clinic', 'manufacturer-management', 'office-staff-inventory', 'invoice-management', 'returns'].includes(route.name as string)
 			}
 
 			if (role === 2) {

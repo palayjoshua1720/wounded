@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('woundmend_ivr', function (Blueprint $table) {
+        Schema::table('woundmed_ivr', function (Blueprint $table) {
             $table->string('ivr_number')
                 ->nullable()
                 ->after('ivr_id')
@@ -24,7 +24,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('woundmend_ivr', function (Blueprint $table) {
+        Schema::table('woundmed_ivr', function (Blueprint $table) {
             $table->dropColumn('ivr_number');
         });
     }

@@ -183,6 +183,8 @@
                         </tr>
                     </thead>
                     <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                        <TableLoader v-if="tableLoader" :colspan="5" />
+                        <template v-else>
                         <tr v-for="user in paginatedUsers" :key="user.id"
                             class="hover:bg-gray-50/70 dark:hover:bg-gray-700/50 transition-colors duration-150">
                             <td class="px-6 py-5 whitespace-nowrap">
@@ -248,12 +250,21 @@
                                 </div>
                             </td>
                         </tr>
+                        <tr v-if="filteredUsers.length === 0 && !tableLoader">
+                            <td colspan="5" class="text-center text-gray-400 py-12">
+                                <div class="flex flex-col items-center justify-center gap-2">
+                                    <Users class="w-10 h-10 mb-1" />
+                                    <span>No users found.</span>
+                                </div>
+                            </td>
+                        </tr>
+                        </template>
                     </tbody>
                 </table>
             </div>
 
             <!-- Empty State -->
-            <div v-if="filteredUsers.length === 0" class="text-center py-12">
+            <div v-if="filteredUsers.length === 0 && !tableLoader" class="text-center py-12">
                 <div
                     class="mx-auto h-16 w-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mb-4">
                     <Users class="h-8 w-8 text-gray-400 dark:text-gray-500" />
@@ -644,6 +655,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
 import BaseModal from '@/components/common/BaseModal.vue'
+import TableLoader from '@/components/ui/TableLoader.vue'
 import { userService } from '@/services/api'
 import { useAuthStore } from '@/stores/auth'
 import Swal from 'sweetalert2'
@@ -699,6 +711,7 @@ const authStore = useAuthStore()
 const searchTerm = ref('')
 const roleFilter = ref('all')
 const statusFilter = ref('all')
+const tableLoader = ref(false)
 const selectedUser = ref<User | null>(null)
 const associatedCliniciansData = ref<User[]>([])
 const showCreateForm = ref(false)
@@ -1313,6 +1326,8 @@ const roleToInt = (role: User['role']): number => {
 }
 
 const fetchUsers = async () => {
+    tableLoader.value = true
+    try {
     const params = {
         search: searchTerm.value || undefined,
         role: roleFilter.value === 'all' ? undefined : roleToInt(roleFilter.value as User['role']),
@@ -1340,6 +1355,11 @@ const fetchUsers = async () => {
     }))
     totalResults.value = Number(data.total ?? users.value.length)
     if (data.per_page) itemsPerPage.value = Number(data.per_page)
+    } catch (err) {
+        console.error('Failed to fetch users', err)
+    } finally {
+        tableLoader.value = false
+    }
 }
 
 const fetchUserStats = async () => {
