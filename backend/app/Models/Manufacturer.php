@@ -27,4 +27,14 @@ class Manufacturer extends Model
     protected $casts = [
         'manufacturer_status' => 'integer',
     ];
+
+    public function brands()
+    {
+        return $this->hasMany(Brand::class, 'manufacturer_id', 'manufacturer_id');
+    }
+
+    public function ivrs()
+    {
+        return $this->hasMany(IVR::class, 'manufacturer_id', 'manufacturer_id');
+    }
 }

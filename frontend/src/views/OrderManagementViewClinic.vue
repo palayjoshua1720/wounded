@@ -6,7 +6,7 @@
 				<h1 class="text-3xl font-bold text-gray-900 dark:text-white">Order Management</h1>
 				<p class="text-gray-600 dark:text-gray-400 max-w-2xl">View, organize, and track every order in one place.</p>
 			</div>
-			<button
+            <button
 				@click="
 					openCreateForm
 				"
@@ -38,8 +38,7 @@
 							<option value="active">Active</option>
 							<option value="inactive">Inactive</option>
 						</select>
-						<ChevronDown
-                            class="absolute right-3 top-3.5 h-4 w-4 text-gray-500 dark:text-gray-400 pointer-events-none" />
+						<ChevronDown class="absolute right-3 top-3.5 h-4 w-4 text-gray-500 dark:text-gray-400 pointer-events-none" />
 					</div>
 				</div>
 				<div class="relative">
@@ -53,14 +52,13 @@
 						<option value="25">25</option>
 						<option value="50">50</option>
 					</select>
-					<ChevronDown
-                            class="absolute right-3 top-3.5 h-4 w-4 text-gray-500 dark:text-gray-400 pointer-events-none" />
+					<ChevronDown class="absolute right-3 top-3.5 h-4 w-4 text-gray-500 dark:text-gray-400 pointer-events-none" />
 				</div>
 			</div>
 		</div>
 
 		<!-- Orders Table -->
-		<div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+		<div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
 			<div class="overflow-x-auto">
 				<table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
 					<thead class="bg-gray-50 dark:bg-gray-700">
@@ -98,7 +96,7 @@
 									</div>
 								</td>
 								<td class="px-6 py-4 whitespace-nowrap">
-									<div class="text-sm text-gray-900 dark:text-white">{{ formatDateTime(order.ordered_at) }}</div>
+									<div class="text-sm text-gray-900 dark:text-white">{{ formatDate(order.ordered_at) }}</div>
 								</td>
 								<td class="px-6 py-4 whitespace-nowrap">
 									<span :class="['inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs font-medium', getStatusColor(order.order_status)]">
@@ -113,9 +111,6 @@
 										</button>
 										<button @click="editOrder(order)" class="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300">
 											<SquarePen class="w-4 h-4" />
-										</button>
-										<button @click="confirmDelete(order)" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300">
-											<Trash2 class="w-4 h-4" />
 										</button>
 										<div class="inline-flex space-x-1">
 											<button v-if="order.order_status === 'submitted'" @click="updateOrderStatusNew(order, 'acknowledged')" class="px-2 py-1 text-xs bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400 rounded hover:bg-purple-200 dark:hover:bg-purple-900/30">Acknowledge?</button>
@@ -201,20 +196,13 @@
 									<p class="text-gray-900 dark:text-white">{{ selectedOrder.patient?.patient_name || 'Not specified' }}</p>
 								</div>
 							</div>
-							<div v-if="selectedOrder.manufacturer_name" class="flex items-center space-x-3">
-								<Factory class="w-5 h-5 text-gray-600" />
-								<div>
-									<p class="text-sm font-medium text-gray-700 dark:text-gray-300">Manufacturer</p>
-									<p class="text-gray-900 dark:text-white font-mono">{{ selectedOrder.manufacturer_name }}</p>
-								</div>
-							</div>
 						</div>
 						<div class="space-y-4">
 							<div class="flex items-center space-x-3">
 								<Calendar1 class="w-5 h-5 text-orange-600" />
 								<div>
 									<p class="text-sm font-medium text-gray-700 dark:text-gray-300">Order Date</p>
-									<p class="text-gray-900 dark:text-white">{{ formatDateTime(selectedOrder.ordered_at) }}</p>
+									<p class="text-gray-900 dark:text-white">{{ formatDate(selectedOrder.ordered_at) }}</p>
 								</div>
 							</div>
 							<div v-if="selectedOrder.tracking_num" class="flex items-center space-x-3">
@@ -222,13 +210,6 @@
 								<div>
 									<p class="text-sm font-medium text-gray-700 dark:text-gray-300">Tracking Number</p>
 									<p class="text-gray-900 dark:text-white font-mono">{{ selectedOrder.tracking_num }}</p>
-								</div>
-							</div>
-							<div v-if="selectedOrder.ivr_num" class="flex items-center space-x-3">
-								<ShieldCheck class="w-5 h-5 text-gray-600" />
-								<div>
-									<p class="text-sm font-medium text-gray-700 dark:text-gray-300">IVR</p>
-									<p class="text-gray-900 dark:text-white font-mono">{{ selectedOrder.ivr_num }}</p>
 								</div>
 							</div>
 						</div>
@@ -273,34 +254,39 @@
 							<p class="text-gray-700 dark:text-gray-200">{{ selectedOrder.notes }}</p>
 						</div>
 					</div>
+
 					<div class="border-t border-gray-200 pt-6">
 						<h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">
 							Update Status
 						</h3>
-						<div class="flex items-center justify-between w-full">
+
+						<div class="flex items-start justify-between w-full">
 							<div class="flex space-x-3">
-								<button
-									v-if="selectedOrder.order_status === 'submitted'"
-									@click="updateOrderStatusNew(selectedOrder.order_id, 'acknowledged')"
+								<button 
+									v-if="selectedOrder.order_status === 'submitted'" 
+									@click="updateOrderStatusNew(selectedOrder.order_id, 'acknowledged')" 
 									class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
 								>
 									Mark Acknowledged
 								</button>
-								<button
-									v-if="selectedOrder.order_status === 'acknowledged'"
-									@click="updateOrderStatusNew(selectedOrder.order_id, 'shipped')"
+
+								<button 
+									v-if="selectedOrder.order_status === 'acknowledged'" 
+									@click="updateOrderStatusNew(selectedOrder.order_id, 'shipped')" 
 									class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
 								>
 									Mark Shipped
 								</button>
-								<button
-									v-if="selectedOrder.order_status === 'shipped'"
-									@click="updateOrderStatusNew(selectedOrder.order_id, 'delivered')"
+
+								<button 
+									v-if="selectedOrder.order_status === 'shipped'" 
+									@click="updateOrderStatusNew(selectedOrder.order_id, 'delivered')" 
 									class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
 								>
 									Mark Delivered
 								</button>
-								<span
+
+								<span 
 									v-if="selectedOrder.order_status === 'delivered'"
 									class="bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400 px-3 py-1 rounded-full text-sm"
 								>
@@ -308,85 +294,38 @@
 								</span>
 							</div>
 
-							<!-- RIGHT: FOLLOW-UP BUTTON + COOLDOWN -->
+							<!-- RIGHT: OVERRIDE -->
 							<div class="flex items-center space-x-3">
-								<p
-									v-if="isFollowUpCooldown && selectedOrder.order_status === 'submitted'"
-									class="text-sm text-gray-600 dark:text-gray-300"
-								>
-									Follow-up available in {{ followUpHoursLeft }}h
-								</p>
-								<button
-									v-if="selectedOrder.order_status === 'submitted'"
-									:disabled="isFollowUpCooldown"
-									@click="sendFollowUp(selectedOrder)"
-									class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-1"
-								>
-									<Send class="w-5 h-5" />
-									Send Follow-Up Email?
-								</button>
-							</div>
-						</div>
-					</div>
-
-					<div class="border-t border-gray-200 pt-6">
-						<h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">
-							Override Status
-						</h3>
-
-						<div class="flex items-center justify-between w-full">
-							<div class="flex space-x-3 items-center">
-								
 								<select
 									v-model="overrideStatus"
 									class="w-56 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 
 									bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-200 
 									shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 
-									transition-all duration-150 cursor-pointer
-									disabled:opacity-50 disabled:cursor-not-allowed"
+									transition-all duration-150 cursor-pointer"
 								>
 									<option disabled value="">Select Status</option>
 
-									<option 
-										value="submitted"
-										:disabled="selectedOrder.order_status === 'submitted'"
-									>
-										Submitted
-									</option>
-
-									<option 
-										value="acknowledged"
-										:disabled="selectedOrder.order_status === 'acknowledged'"
-									>
-										Acknowledged
-									</option>
-
-									<option 
-										value="shipped"
-										:disabled="selectedOrder.order_status === 'shipped'"
-									>
-										Shipped
-									</option>
-
-									<option 
-										value="delivered"
-										:disabled="selectedOrder.order_status === 'delivered'"
-									>
-										Delivered
-									</option>
+									<option value="submitted" :disabled="selectedOrder.order_status === 'submitted'">Submitted</option>
+									<option value="acknowledged" :disabled="selectedOrder.order_status === 'acknowledged'">Acknowledged</option>
+									<option value="shipped" :disabled="selectedOrder.order_status === 'shipped'">Shipped</option>
+									<option value="delivered" :disabled="selectedOrder.order_status === 'delivered'">Delivered</option>
 								</select>
-
+								
 								<button
 									:disabled="!overrideStatus || overrideStatus === selectedOrder.order_status"
 									@click="applyOverride"
 									class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors 
-										disabled:opacity-50 disabled:cursor-not-allowed"
+									disabled:opacity-50 disabled:cursor-not-allowed"
 								>
 									Apply Override
 								</button>
+
 							</div>
+
 						</div>
+						
 					</div>
+
 				</div>
 			</template>
 			<template #actions>
@@ -408,7 +347,7 @@
 			</template>
 		</BaseModal>
 
-		<!-- Create/Edit Order Modal -->
+        <!-- Create/Edit Order Modal -->
 		<BaseModal v-model="showFormModal" :title="showCreateForm ? 'Create New Order' : 'Edit Order Details'">
 			<form @submit.prevent="handleCreateOrder" class="space-y-6">
 				<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -417,7 +356,9 @@
 						<label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Ordering Clinic <span class="text-red-500">*</span></label>
 						<select v-model="formData.clinicId" @change="onClinicChange" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
 							<option value="">Select Clinic</option>
-							<option v-for="clinic in clinics" :key="clinic.clinic_id" :value="clinic.clinic_id">{{ clinic.clinic_name }} [{{ clinic.clinic_code }}]</option>
+							<option v-if="myClinic" :value="myClinic.clinic_id">
+                                {{ myClinic.clinic_name }} [{{ myClinic.clinic_code }}]
+                            </option>
 						</select>
 					</div>
 					<!-- Clinician Selection -->
@@ -636,11 +577,10 @@ import Pagination from '../components/ui/Pagination.vue'
 import TableLoader from '../components/ui/TableLoader.vue'
 import {
     Search, Funnel, Eye, CircleCheck,
-	Truck, Box, TriangleAlert, CircleUser,
-	Calendar1, FileTextIcon, SquarePen,
-	PackagePlus, ShoppingCart, Trash2,
-	ChevronDown, Package, Send, ShieldCheck,
-	Factory
+	Truck, Box, CircleUser, Calendar1,
+	FileTextIcon, ShoppingCart, ChevronDown,
+	Package, PackagePlus, TriangleAlert,
+	SquarePen
 } from 'lucide-vue-next';
 import api from '@/services/api'
 import { toast } from 'vue3-toastify'
@@ -656,8 +596,7 @@ interface Order {
 	notes?: string;
 	items: OrderItem[];
 	tracking_num?: string;
-	ivr_num: string
-	manufacturer_name: string
+    manufacturer_name: string
 
 	clinic: Clinic
 	clinician: Clinician
@@ -696,7 +635,7 @@ interface Brand {
 	manufacturer?: {
 		manufacturer_id: string
 		manufacturer_name: string
-		primary_email: string | string[]
+        primary_email: string | string[]
 	}
 }
 
@@ -705,7 +644,7 @@ interface GraftSize {
 	size: string
 	area: string
 	price: number
-	stock: number
+    stock: number
 	graft_status: number
 	brand: Brand
 }
@@ -728,7 +667,7 @@ interface User {
 	id: number
 	first_name: string
 	last_name: string
-	brand: Brand[]
+    clinic: Clinic
 }
 
 type OrderItem = {
@@ -741,7 +680,7 @@ type OrderItem = {
 	asp: number;
 	totalAsp?: number;
 	deviceType?: string;
-	graftStock?: number
+    graftStock?: number
 }
 
 // 0-submitted | 1-acknowledged | 2-shipped | 3-delivered | 4-cancelled
@@ -755,14 +694,6 @@ const orderStatusMap: Record<OrderStatus, number> = {
 	shipped: 2,
 	delivered: 3,
 	cancelled: 4
-}
-
-const orderStatusReverseMap: Record<number, OrderStatus> = {
-	0: 'submitted',
-	1: 'acknowledged',
-	2: 'shipped',
-	3: 'delivered',
-	4: 'cancelled'
 }
 
 const tableLoader = ref(false);
@@ -779,6 +710,7 @@ const pagination = ref({
 	total: 0,
 })
 
+const currentUser = ref<User | null>(null)
 
 const searchTerm = ref('')
 const statusFilter = ref('all')
@@ -789,7 +721,6 @@ const showCreateForm = ref(false)
 const showEditForm = ref(false)
 const showFormModal = ref(false)
 const selectedOrderForEdit = ref<Order | null>(null)
-
 const previousIvrId = ref<string | number | null>(null)
 
 const formData = ref({
@@ -798,7 +729,7 @@ const formData = ref({
 	patientId: '',
 	ivrId: '',
 	brandId: '',
-	primary_email: '',
+    primary_email: '',
 	sizeId: '',
 	dateOfOrder: '',
 	status: 'submitted' as const,
@@ -814,13 +745,152 @@ const formData = ref({
 			asp: 0, 
 			totalAsp: 0,
 			deviceType: '',
-			graftStock: 0
+            graftStock: 0
 		}
 	],
 	manufacturerId: '',
 	trackingNumber: ''
-
 })
+
+const myClinic = computed(() => {
+    return currentUser.value?.clinic ?? null
+})
+
+function getBrandName(brandId: string) {
+	const brand = brands.value.find(b => b.brand_id == brandId)
+	return brand ? brand.brand_name : `Brand ${brandId}`
+}
+
+function getSizeName(graft_size: string | number) {
+	if (!graft_size) return "Unknown size"
+	const id = Number(graft_size)
+
+	const graftSize = graftSizes.value.find(g => g.graft_size_id == id)
+	return graftSize?.size ?? `Size ${graft_size}`
+}
+
+function onBrandChange(idx: number) {
+	const brand = selectedBrand(idx)
+	if (brand) {
+		formData.value.items[idx].asp = 0
+		formData.value.items[idx].sizeId = ''
+		formData.value.items[idx].graft_id = 0
+	} else {
+		formData.value.items[idx].asp = 0
+		formData.value.items[idx].sizeId = ''
+		formData.value.items[idx].graft_id = 0
+	}
+}
+
+function resetCreateForm() {
+	formData.value = {
+		clinicId: '',
+		clinicianId: '',
+		patientId: '',
+		ivrId: '',
+		brandId: '',
+        primary_email: '',
+		sizeId: '',
+		dateOfOrder: '',
+		status: 'submitted',
+		notes: '',
+		items: [{ 
+			id: Date.now().toString(), 
+			brandId: '', 
+			productType: 0 as const, 
+			sizeId: '', 
+			graft_id: 0,
+			quantity: 1, 
+			asp: 0, 
+			totalAsp: 0, 
+			deviceType: '',
+            graftStock: 0
+		}],
+		manufacturerId: '',
+		trackingNumber: ''
+	}
+}
+
+function closeForm() {
+	showFormModal.value = false
+	showCreateForm.value = false
+	showEditForm.value = false
+	selectedOrderForEdit.value = null
+	showOrderModal.value = false
+	resetCreateForm()
+}
+
+function showOrderDetails(order: Order) {
+	selectedOrder.value = order
+	showOrderModal.value = true
+	overrideStatus.value = order.order_status;
+}
+
+const filteredOrders = computed(() => {
+	const term = searchTerm.value.trim().toLowerCase();
+
+	return (orders.value ?? []).filter(order => {
+		const orderCode = order.order_code?.toLowerCase() || '';
+		const clinicCode = order.clinic?.clinic_code?.toLowerCase() || '';
+		const clinicName = order.clinic?.clinic_name?.toLowerCase() || '';
+		const patientName = order.patient?.patient_name?.toLowerCase() || '';
+
+		const matchesSearch =
+			term === '' ||
+			orderCode.includes(term) ||
+			clinicCode.includes(term) ||
+			clinicName.includes(term) ||
+			patientName.includes(term);
+
+		const matchesStatus =
+			statusFilter.value === 'all' ||
+			order.order_status === statusFilter.value;
+
+		return matchesSearch && matchesStatus;
+	});
+});
+
+const getStatusColor = (status: string) => {
+	switch (status) {
+		case 'delivered': return 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
+		case 'shipped': return 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400'
+		case 'acknowledged': return 'bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400'
+		case 'submitted': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'
+		case 'cancelled': return 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
+		default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400'
+	}
+}
+
+const getStatusIcon = (status: string) => {
+	switch (status) {
+		case 'delivered': return CircleCheck
+		case 'shipped': return Truck
+		case 'acknowledged': return Box
+		default: return null
+	}
+}
+
+const formatDate = (dateStr: string) => {
+	if (!dateStr) return null;
+	const date = new Date(dateStr)
+	return date.toLocaleDateString('en-US', {
+		year: 'numeric',
+		month: 'long',
+		day: 'numeric'
+	})
+}
+
+function openCreateForm() {
+	showCreateForm.value = true
+	showEditForm.value = false
+	selectedOrderForEdit.value = null
+	resetCreateForm()
+	showFormModal.value = true
+	previousIvrId.value = null
+
+	formData.value.clinicId = myClinic.value?.clinic_id.toString() || '';
+
+}
 
 const filteredPatients = computed(() => {
 	if (!formData.value.clinicId) return patients.value
@@ -829,6 +899,49 @@ const filteredPatients = computed(() => {
 		(p) => p.clinic_id === Number(formData.value.clinicId)
 	)
 })
+
+const filteredClinicians = computed(() => {
+	const selectedClinic = clinics.value.find(
+		(clinic) => clinic.clinic_id === Number(formData.value.clinicId)
+	)
+	return selectedClinic ? selectedClinic.clinicians : []
+})
+
+function selectedBrand(idx: number) {
+	const brandId = formData.value.items[idx].brandId
+	const brand = brands.value.find(b => b.brand_id == brandId)
+	return brand
+}
+
+function isQuantityValid(idx: number) {
+	const brand = selectedBrand(idx)
+	const qty = formData.value.items[idx].quantity
+	return !brand || qty <= brand.mue
+}
+
+function addOrderItem() {
+	formData.value.items.push({ 
+		id: Date.now().toString(), 
+		brandId: '', 
+		productType: 0 as const, 
+		sizeId: '', 
+		graft_id: 0,
+		quantity: 1, 
+		asp: 0, 
+		totalAsp: 0, 
+		deviceType: '',
+		graftStock: 0
+	})
+}
+
+function removeOrderItem(idx: number) {
+	if (formData.value.items.length > 1) formData.value.items.splice(idx, 1)
+}
+
+function onClinicChange() {
+	formData.value.clinicianId = ''
+	formData.value.patientId = ''
+}
 
 const selectedPatient = computed(() => {
 	const patient = patients.value.find(
@@ -849,10 +962,6 @@ const ivrBrands = computed(() => {
 	return selectedIVR.value?.manufacturer?.brands ?? []
 })
 
-const selectedPatientIVRs = computed(() => {
-	return selectedPatient.value?.ivrs ?? []
-})
-
 const isSelectedIVREligible = computed(() => {
 	return selectedIVR.value?.eligibility_status === 1
 })
@@ -868,6 +977,10 @@ function getEligibilityLabel(status?: number) {
 			return 'Pending'
 	}
 }
+
+const selectedPatientIVRs = computed(() => {
+	return selectedPatient.value?.ivrs ?? []
+})
 
 const isPatientEligible = computed(() => {
 	const patient = selectedPatient.value	
@@ -890,123 +1003,6 @@ const isPatientEligible = computed(() => {
 	const hasEligibleIVR = patient.ivrs.some((i) => i.eligibility_status === 1)	
 	return hasEligibleIVR
 })
-
-const filteredClinicians = computed(() => {
-	const selectedClinic = clinics.value.find(
-		(clinic) => clinic.clinic_id === Number(formData.value.clinicId)
-	)
-	return selectedClinic ? selectedClinic.clinicians : []
-})
-
-function selectedBrand(idx: number) {
-	const brandId = formData.value.items[idx].brandId
-	const brand = brands.value.find(b => b.brand_id == brandId)
-	return brand
-}
-
-function getBrandName(brandId: string) {
-	const brand = brands.value.find(b => b.brand_id == brandId)
-	return brand ? brand.brand_name : `Brand ${brandId}`
-}
-
-function getSizeName(graft_size: string | number) {
-	if (!graft_size) return "Unknown size"
-	const id = Number(graft_size)
-
-	const graftSize = graftSizes.value.find(g => g.graft_size_id == id)
-
-	return graftSize?.size ?? `Size ${graft_size}`
-}
-
-function onBrandChange(idx: number) {
-	const brand = selectedBrand(idx)
-	if (brand) {
-		formData.value.items[idx].asp = 0
-		formData.value.items[idx].sizeId = ''
-		formData.value.items[idx].graft_id = 0
-	} else {
-		formData.value.items[idx].asp = 0
-		formData.value.items[idx].sizeId = ''
-		formData.value.items[idx].graft_id = 0
-	}
-}
-
-function isQuantityValid(idx: number) {
-	const brand = selectedBrand(idx)
-	const qty = formData.value.items[idx].quantity
-	return !brand || qty <= brand.mue
-}
-
-function onClinicChange() {
-	formData.value.clinicianId = ''
-	formData.value.patientId = ''
-}
-
-function addOrderItem() {
-	formData.value.items.push({ 
-		id: Date.now().toString(), 
-		brandId: '', 
-		productType: 0 as const, 
-		sizeId: '', 
-		graft_id: 0,
-		quantity: 1, 
-		asp: 0, 
-		totalAsp: 0, 
-		deviceType: '',
-		graftStock: 0
-	})
-}
-
-function removeOrderItem(idx: number) {
-	if (formData.value.items.length > 1) formData.value.items.splice(idx, 1)
-}
-
-function resetOrderItems() {
-	formData.value.items = [
-		{
-			id: Date.now().toString(),
-			brandId: '',
-			productType: 0 as const,
-			sizeId: '',
-			graft_id: 0,
-			quantity: 1,
-			asp: 0,
-			totalAsp: 0,
-			deviceType: '',
-			graftStock: 0
-		}
-	]
-}
-
-function resetCreateForm() {
-	formData.value = {
-		clinicId: '',
-		clinicianId: '',
-		patientId: '',
-		brandId: '',
-		ivrId: '',
-		primary_email: '',
-		sizeId: '',
-		dateOfOrder: '',
-		status: 'submitted',
-		notes: '',
-		items: [{ 
-			id: Date.now().toString(), 
-			brandId: '', 
-			productType: 0 as const, 
-			sizeId: '', 
-			graft_id: 0,
-			quantity: 1, 
-			asp: 0, 
-			totalAsp: 0, 
-			deviceType: '',
-			graftStock: 0
-		}],
-		manufacturerId: '',
-		trackingNumber: ''
-	}
-	previousIvrId.value = null
-}
 
 async function handleCreateOrder() {
 	if (!formData.value.clinicId) {
@@ -1075,165 +1071,6 @@ async function handleCreateOrder() {
 	addNewOrder()
 }
 
-function openCreateForm() {
-	showCreateForm.value = true
-	showEditForm.value = false
-	selectedOrderForEdit.value = null
-	resetCreateForm()
-	showFormModal.value = true
-	previousIvrId.value = null
-}
-
-async function editOrder(order: Order) {
-	const { data } = await api.get(`/management/order/${order.order_id}/getorderbyid`);
-	const fullOrder = data.order;
-
-	selectedOrderForEdit.value = fullOrder;
-	showCreateForm.value = false;
-	showEditForm.value = true;
-
-	formData.value = {
-		clinicId: fullOrder.clinic?.clinic_id?.toString() || '',
-		clinicianId: fullOrder.clinician?.id?.toString() || '',
-		patientId: fullOrder.patient?.patient_id?.toString() || '',
-		brandId: '',
-		ivrId: fullOrder.ivr?.ivr_id?.toString() || '',
-		primary_email: '',
-		sizeId: '',
-		dateOfOrder: fullOrder.ordered_at
-			? new Date(fullOrder.ordered_at).toISOString().split('T')[0]
-			: '',
-		status: 'submitted',
-		notes: fullOrder.notes || '',
-		items: [],
-		manufacturerId: fullOrder.manufacturer_id?.toString() || '',
-		trackingNumber: fullOrder.tracking_num || ''
-	};
-
-	showFormModal.value = true;
-
-	await nextTick();
-	await new Promise(resolve => setTimeout(resolve, 50));
-
-	formData.value.items = fullOrder.items.map((item: any, idx: number) => ({
-		id: String(item.id ?? idx),
-		brandId: String(item.brandId ?? item.brand_id ?? ''),
-		productType: Number(item.productType ?? item.product_type ?? 0) as 0 | 1,
-		sizeId: String(item.sizeId ?? item.size_id ?? item.graft_id ?? ''),
-		graft_id: Number(item.graft_id ?? 0),
-		quantity: Number(item.quantity ?? 0),
-		asp: Number(item.asp ?? 0),
-		totalAsp: Number(item.asp ?? 0) * Number(item.quantity ?? 0),
-		deviceType: item.deviceType ?? item.device_type ?? '',
-		graftStock: Number(item.graftStock ?? 0)
-	}));
-}
-
-function closeForm() {
-	showFormModal.value = false
-	showCreateForm.value = false
-	showEditForm.value = false
-	selectedOrderForEdit.value = null
-	showOrderModal.value = false
-	resetCreateForm()
-}
-
-function showOrderDetails(order: Order) {
-	selectedOrder.value = order
-	showOrderModal.value = true
-	overrideStatus.value = order.order_status;
-}
-
-const filteredOrders = computed(() => {
-	const term = searchTerm.value.trim().toLowerCase();
-
-	return (orders.value ?? []).filter(order => {
-		const orderCode = order.order_code?.toLowerCase() || '';
-		const clinicCode = order.clinic?.clinic_code?.toLowerCase() || '';
-		const clinicName = order.clinic?.clinic_name?.toLowerCase() || '';
-		const patientName = order.patient?.patient_name?.toLowerCase() || '';
-		const status = order.order_status?.toLowerCase() || '';
-
-		const matchesSearch =
-			term === '' ||
-			orderCode.includes(term) ||
-			clinicCode.includes(term) ||
-			clinicName.includes(term) ||
-			patientName.includes(term);
-
-		const matchesStatus =
-			statusFilter.value === 'all' ||
-			order.order_status === statusFilter.value;
-
-		return matchesSearch && matchesStatus;
-	});
-});
-
-const getStatusColor = (status: string) => {
-	switch (status) {
-		case 'delivered': return 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
-		case 'shipped': return 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400'
-		case 'acknowledged': return 'bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400'
-		case 'submitted': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'
-		case 'cancelled': return 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
-		default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400'
-	}
-}
-const getStatusIcon = (status: string) => {
-	switch (status) {
-		case 'delivered': return CircleCheck
-		case 'shipped': return Truck
-		case 'acknowledged': return Box
-		default: return null
-	}
-}
-const formatDate = (dateStr: string) => {
-	if (!dateStr) return null;
-	const date = new Date(dateStr)
-	return date.toLocaleDateString('en-US', {
-		year: 'numeric',
-		month: 'long',
-		day: 'numeric'
-	})
-}
-
-const formatDateTime = (dateStr: string) => {
-	if (!dateStr) return '--';
-
-	const date = new Date(dateStr);
-
-	const month = date.toLocaleString('en-US', { month: 'short' }) + '.';
-	const formattedDate = `${month} ${date.getDate()}, ${date.getFullYear()}`;
-
-	const formattedTime = date.toLocaleTimeString('en-US', {
-		hour: 'numeric',
-		minute: '2-digit',
-		hour12: true
-	});
-
-	return `${formattedDate} [${formattedTime}]`;
-};
-
-const isFollowUpCooldown = computed(() => {
-	if (!selectedOrder.value?.followup_last_sent_at) return false;
-
-	const last = new Date(selectedOrder.value.followup_last_sent_at).getTime();
-	const now = Date.now();
-
-	const hours = (now - last) / (1000 * 60 * 60);
-	return hours < 24;
-});
-
-const followUpHoursLeft = computed(() => {
-	if (!selectedOrder.value?.followup_last_sent_at) return 0;
-
-	const last = new Date(selectedOrder.value.followup_last_sent_at).getTime();
-	const now = Date.now();
-
-	const hours = (now - last) / (1000 * 60 * 60);
-	return Math.max(0, Math.ceil(24 - hours));
-});
-
 function getSizesByBrand(brandId: string) {
 	const sizes = graftSizes.value.filter(gs => gs.brand.brand_id == brandId)
 	return sizes
@@ -1268,15 +1105,15 @@ function onSizeChange(idx: number) {
 }
 
 function graftStockCheck(graftId: number) {
-	const graft = graftSizes.value.find(g => g.graft_size_id === graftId)
-	return graft?.stock ?? 0
+    const graft = graftSizes.value.find(g => g.graft_size_id === graftId)
+    return graft?.stock ?? 0
 }
 
 async function getAllOrders(page = 1)
 {
 	tableLoader.value = true;
     try {
-        const { data } = await api.get(`/management/order/getorders?page=${page}&per_page=${itemsPerPage.value}`, {
+        const { data } = await api.get(`/management/manufacturer/order/getclinicorders?page=${page}&per_page=${itemsPerPage.value}`, {
             headers: {
                 Authorization: `Bearer ${localStorage.getItem('auth_token')}`
             }
@@ -1313,7 +1150,7 @@ async function getAllOrders(page = 1)
 				clinician: o.clinician,
 				patient: o.patient,
 				brand: o.brand,
-				ivr_num: o.ivr.ivr_number,
+                ivr_num: o.ivr.ivr_number,
 				manufacturer_name: o.ivr.manufacturer.manufacturer_name
 			} as Order
 		})
@@ -1324,8 +1161,10 @@ async function getAllOrders(page = 1)
             per_page: Number(data?.per_page ?? itemsPerPage.value),
             total: Number(data?.total ?? rows.length),
         }
-    } catch (error) {
+    } catch (error: any) {
 		orders.value = []
+		const backendMessage = error.response?.data?.message || 'Something went wrong';
+    	toast.error(backendMessage);
     } finally {
         tableLoader.value = false
     }
@@ -1388,6 +1227,20 @@ async function getAllGraftSizes() {
 	}
 }
 
+async function loadUser() {
+    try {
+        const { data } = await api.get('/auth/me-with-clinic', {
+            headers: {
+                Authorization: `Bearer ${localStorage.getItem('auth_token')}`
+            }
+        });
+
+        currentUser.value = data.user_data;
+    } catch {
+        currentUser.value = null;
+    }
+}
+
 async function addNewOrder(){
 	const payload = {
 		clinic_id: formData.value.clinicId,
@@ -1423,7 +1276,7 @@ async function addNewOrder(){
 	try {
 		if (showCreateForm.value) {
 			const { data } = await api.post(
-				'/management/order/add/neworder',
+				'/management/order/add/neworderbyclinic',
 				payload,
 				{
 					headers: {
@@ -1439,7 +1292,7 @@ async function addNewOrder(){
 			closeForm()
 		} else if (showEditForm.value) {
 			const { data } = await api.put(
-                `/management/order/update/${selectedOrderForEdit.value?.order_id}/updateorder`,
+                `/management/order/update/${selectedOrderForEdit.value?.order_id}/updateorderbyclinic`,
                 payload,
                 {
                     headers: {
@@ -1468,37 +1321,49 @@ async function addNewOrder(){
 	}
 }
 
-async function confirmDelete(order: Order){
-	const result = await Swal.fire({
-		title: "Are you sure?",
-		text: "This action cannot be undone.",
-		icon: "warning",
-		showCancelButton: true,
-		confirmButtonColor: "#3085d6",
-		cancelButtonColor: "#d33",
-		confirmButtonText: "Yes, delete it!"
-	});
-	
-	try {
-		if (result.isConfirmed && order) {
-			try {
-				await api.put(`/management/order/delete/${order.order_id}/deleteorder`)
-				toast.success('Order details deleted successfully!')
-				await getAllOrders()
-			} catch (error) {
-				toast.error('Failed to delete order details.')
-			}
-		}
-	} catch (error: any) {
-		if (error.response) {
-			const errorMessage = error.response.data?.message || error.response.data?.error || 'Server error occurred'
-			toast.error(`Failed to delete order: ${errorMessage}`)
-		} else if (error.request) {
-			toast.error('Network error: Unable to connect to server')
-		} else {
-			toast.error(`Error: ${error.message || 'Unknown error occurred'}`)
-		}
-	}
+async function editOrder(order: Order) {
+	const { data } = await api.get(`/management/order/${order.order_id}/getorderbyid`);
+	const fullOrder = data.order;
+
+	selectedOrderForEdit.value = fullOrder;
+	showCreateForm.value = false;
+	showEditForm.value = true;
+
+	formData.value = {
+		clinicId: fullOrder.clinic?.clinic_id?.toString() || '',
+		clinicianId: fullOrder.clinician?.id?.toString() || '',
+		patientId: fullOrder.patient?.patient_id?.toString() || '',
+		brandId: '',
+		ivrId: fullOrder.ivr?.ivr_id?.toString() || '',
+		primary_email: '',
+		sizeId: '',
+		dateOfOrder: fullOrder.ordered_at
+			? new Date(fullOrder.ordered_at).toISOString().split('T')[0]
+			: '',
+		status: 'submitted',
+		notes: fullOrder.notes || '',
+		items: [],
+		manufacturerId: fullOrder.manufacturer_id?.toString() || '',
+		trackingNumber: fullOrder.tracking_num || ''
+	};
+
+	showFormModal.value = true;
+
+	await nextTick();
+	await new Promise(resolve => setTimeout(resolve, 50));
+
+	formData.value.items = fullOrder.items.map((item: any, idx: number) => ({
+		id: String(item.id ?? idx),
+		brandId: String(item.brandId ?? item.brand_id ?? ''),
+		productType: Number(item.productType ?? item.product_type ?? 0) as 0 | 1,
+		sizeId: String(item.sizeId ?? item.size_id ?? item.graft_id ?? ''),
+		graft_id: Number(item.graft_id ?? 0),
+		quantity: Number(item.quantity ?? 0),
+		asp: Number(item.asp ?? 0),
+		totalAsp: Number(item.asp ?? 0) * Number(item.quantity ?? 0),
+		deviceType: item.deviceType ?? item.device_type ?? '',
+		graftStock: Number(item.graftStock ?? 0)
+	}));
 }
 
 async function updateOrderStatusNew(orderOrId: Order | number, newStatus: OrderStatus) {
@@ -1585,48 +1450,12 @@ async function applyOverride() {
 	}
 }
 
-async function sendFollowUp(order: Order){
-	try {
-		const result = await Swal.fire({
-			title: "Send Follow-Up Email?",
-			text: "This will notify the manufacturer again about this order.",
-			icon: "warning",
-			showCancelButton: true,
-			confirmButtonColor: "#4f46e5",
-			cancelButtonColor: "#d33",
-			confirmButtonText: "Send Follow-Up"
-		})
-
-		if (!result.isConfirmed) return
-
-		Swal.fire({
-			title: 'Sending Follow-Up',
-			text: 'Please wait while we send the follow-up notification to the manufacturer…',
-			allowOutsideClick: false,
-			allowEscapeKey: false,
-			showConfirmButton: false,
-			didOpen: () => {
-				Swal.showLoading()
-			}
-		})
-
-		const { data } = await api.post(`/management/order/update/${order.order_id}/followuporderstatus`, {})
-
-		Swal.close()
-		toast.success(data.message || "Follow-up email sent successfully!")
-		getAllOrders(1)
-
-	} catch (error: any) {
-		const msg = error.response?.data?.message || "Failed to send follow-up."
-		toast.error(msg)
-	}
-}
-
 onMounted(async () => {
     getAllOrders(1)
 	getAllClinics()
 	getAllPatients()
 	await getAllGraftSizes()
+	loadUser()
 })
 
 watch(itemsPerPage, () => {
@@ -1639,54 +1468,6 @@ watch(() => formData.value.items, (items) => {
 	})
 }, { deep: true })
 
-watch(() => formData.value.ivrId, (newVal, oldVal) => {
-	previousIvrId.value = oldVal
-})
-
-watch(
-	() => formData.value.ivrId,
-	async (newVal, oldVal) => {
-		if (!formData.value.patientId) return
-		if (!oldVal || oldVal === '') return
-		if (newVal === oldVal) return
-
-		if (newVal === oldVal) return
-
-		const result = await Swal.fire({
-			title: 'Change IVR?',
-			text: 'Changing the IVR will reset all order items. Do you want to continue?',
-			icon: 'warning',
-			showCancelButton: true,
-			confirmButtonColor: '#3085d6',
-			cancelButtonColor: '#d33',
-			confirmButtonText: 'Yes, reset items',
-			cancelButtonText: 'Cancel'
-		})
-
-		if (result.isConfirmed) {
-			resetOrderItems()
-		} else {
-			formData.value.ivrId = previousIvrId.value
-				? String(previousIvrId.value)
-				: ''
-		}
-
-		Swal.close()
-
-		previousIvrId.value = formData.value.ivrId
-	}
-)
-
-watch(() => formData.value.ivrId, () => {
-	formData.value.items.forEach(item => {
-		item.brandId = ''
-		item.sizeId = ''
-		item.quantity = 1
-		item.asp = 0,
-		item.graftStock = 0
-	})
-})
-
 watch(() => formData.value.ivrId, () => {
 	if (!selectedIVR.value) return
 
@@ -1698,6 +1479,11 @@ watch(() => formData.value.ivrId, () => {
 			`This IVR is ${getEligibilityLabel(selectedIVR.value.eligibility_status)}. Ordering is disabled.`
 		)
 	}
-
 })
+
+watch(myClinic, (val) => {
+    if (val && !formData.value.clinicId) {
+        formData.value.clinicId = val.clinic_id.toString();
+    }
+});
 </script>
