@@ -124,6 +124,16 @@ const routes: RouteRecordRaw[] = [
 				}
 			},
 			{
+				path: 'ivr-management',
+				name: 'ivr-management',
+				component: IVRManagementView,
+				meta: {
+					requiresAuth: true,
+					title: 'IVR',
+					icon: ShieldCheckIcon
+				}
+			},
+			{
 				path: 'order-management',
 				name: 'order-management',
 				component: OrderManagementView,
@@ -184,16 +194,6 @@ const routes: RouteRecordRaw[] = [
 					requiresAuth: true,
 					title: 'Invoices & Payments',
 					icon: ClipboardDocumentListIcon
-				}
-			},
-			{
-				path: 'ivr-management',
-				name: 'ivr-management',
-				component: IVRManagementView,
-				meta: {
-					requiresAuth: true,
-					title: 'IVR',
-					icon: ShieldCheckIcon
 				}
 			},
 			{
@@ -352,11 +352,11 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 
 	const routeRoles: Record<string, number[]> = {
 		'admin-dashboard': [0, 1],
-		'clinic-dashboard': [0, 1, 2],
+		'clinic-dashboard': [2],
 		'clinic-management': [0, 1, 2],
 		'inventory': [0, 1],
 		'invoice-management': [0, 1],
-		'ivr-management': [0, 1],
+		'ivr-management': [0, 1, 4],
 		'notifications': [0, 1],
 		'order-management': [0, 1],
 		'manufacturer/order-management': [4],
@@ -379,9 +379,9 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 					'admin-dashboard',
 					'users',
 					'clinic-management',
-					'user-clinicians',
+					// 'user-clinicians',
 					'manufacturer-management',
-					'clinic-dashboard',
+					// 'clinic-dashboard',
 					'ivr-management',
 					'order-management',
 					'inventory',
@@ -392,16 +392,32 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 			}
 
 			if (role === 1) {
-				return ['admin-dashboard', 'users', 'clinic-management', 'manufacturer-management', 'inventory', 'invoice-management'].includes(route.name as string)
+				return [
+					'admin-dashboard',
+					'users',
+					'clinic-management',
+					'manufacturer-management',
+					'inventory',
+					'invoice-management'
+				].includes(route.name as string)
 			}
 
 			if (role === 2) {
-				return ['clinic-dashboard', 'user-clinicians', 'clinic-management', 'clinic/order-management'].includes(route.name as string)
+				return [
+					'clinic-dashboard',
+					'user-clinicians',
+					// 'clinic-management',
+					'clinic/order-management'
+				].includes(route.name as string)
 			}
 
 			// manufacturer
 			if (role === 4) {
-				return ['manufacturer/order-management'].includes(route.name as string)
+				return [
+					'manufacturer/order-management',
+					'ivr-management',
+					'invoice-management',
+				].includes(route.name as string)
 			}
 
 			const allowedRoles = routeRoles[route.name as string]

@@ -173,6 +173,7 @@ class IVRRequestController extends Controller
                 'patient_id' => 'required|int|max:255',
                 'brand_id' => 'nullable|int|max:255',
                 'manufacturer_id' => 'required|int|max:255',
+                'eligibility_status' => 'nullable|int|max:255',
                 'notes' => 'required|string',
                 'filepath' => 'nullable|file|mimes:pdf,doc,docx|max:10240',
                 'remove_existing_file' => 'nullable|boolean',
@@ -202,6 +203,7 @@ class IVRRequestController extends Controller
             $ivr->manufacturer_id = $validated['manufacturer_id'];
             $ivr->patient_id = $validated['patient_id'];
             $ivr->description = $validated['notes'];
+            $ivr->eligibility_status = $validated['eligibility_status'];
             // $ivr->verified_at = now();
             // $ivr->timestamp = now();
 

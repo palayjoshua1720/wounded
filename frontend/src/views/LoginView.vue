@@ -193,12 +193,12 @@
                         <span class="text-xs text-gray-500 dark:text-gray-400 mt-2">Switch to a saved account for quick access</span>
                     </div> -->
                     <div class="my-6 border-t border-gray-200 dark:border-gray-700"></div>
-                    <div class="text-center mb-4">
+                    <!-- <div class="text-center mb-4">
                         <span class="text-sm text-gray-600 dark:text-gray-400">Need access to the system?</span>
                         <div>
                             <a href="#" class="text-blue-600 hover:underline dark:text-blue-400">Contact your system administrator</a>
                         </div>
-                    </div>
+                    </div> -->
                     <div class="space-y-3">
                         <div class="flex items-center p-4 bg-green-50 dark:bg-green-900/20 rounded border border-green-200 dark:border-green-700">
                             <CircleCheck class="w-12 h-12 text-green-500 mr-3 mt-1" />

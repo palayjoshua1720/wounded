@@ -427,6 +427,24 @@
 							</option>
 						</select>
 					</div>
+					<div v-if="showEditForm">
+						<label class="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+							<ShieldCheck class="w-5 h-5 text-green-600" />
+							<span>IVR Status<span class="text-red-500">*</span></span>
+						</label>
+						<select
+							v-model="formData.eligibility_status"
+							class="mt-1 w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl 
+								focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 
+								text-gray-900 dark:text-white transition-all duration-200"
+						>
+							<option disabled value="">-- Select Eligibility Status --</option>
+
+							<option value="0">Pending</option>
+							<option value="1">Eligible</option>
+							<option value="2">Not Eligible</option>
+						</select>
+					</div>
 				</div>
 
 				<transition name="fade-slide">
@@ -627,7 +645,7 @@ import {
 	Package, NotebookPen, FilePlus2,
 	Hospital, Calendar, CircleCheckBig,
 	Archive, ArchiveRestore, FilePenLine,
-	CloudUpload, FileText, X,
+	CloudUpload, FileText, X, ShieldCheck,
 	ChevronDown, FileXIcon, CircleCheck
 } from 'lucide-vue-next'
 import api from '../services/api'
