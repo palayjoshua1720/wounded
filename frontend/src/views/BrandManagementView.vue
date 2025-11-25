@@ -5,16 +5,10 @@
 			<div>
 				<h1 class="text-2xl font-bold text-gray-900 dark:text-white">Brand Management</h1>
 			</div>
-
-			<button
-				@click="
-					selectedBrand = null; 
-					showCreateForm = true
-				"
-				class="flex items-center px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
-			>
-				<PackagePlus class="w-4 h-4 mr-2" />
-				Add Brand
+			<button @click="selectedBrand = null; showCreateForm = true"
+				class="flex items-center px-5 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg group">
+				<PackagePlus class="w-5 h-5 mr-2 group-hover:scale-110 transition-transform" />
+				New Brand
 			</button>
 		</div>
 
@@ -326,7 +320,7 @@
 									<Trash2 class="w-4 h-4" />
 								</button>
 							</div>
-							<div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+							<div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
 								<div>
 									<label class="block text-sm font-medium text-gray-600 dark:text-gray-400">Size (e.g., 2cm x 2cm)</label>
 									<div class="relative">
@@ -362,6 +356,20 @@
 										type="number"
 										step="0.01"
 										placeholder="0.00"
+										class="mt-1 block w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg 
+												focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+										/>
+									</div>
+								</div>
+								<div>
+									<label class="block text-sm font-medium text-gray-600 dark:text-gray-400">Stock</label>
+									<div class="relative">
+										<Package class="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+										<input
+										v-model.number="graftSize.stock"
+										type="number"
+										min="0"
+										placeholder="0"
 										class="mt-1 block w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg 
 												focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
 										/>
@@ -537,6 +545,9 @@
 												<span class="flex items-center">
 													Price: <span class="ml-1 font-medium text-gray-700 dark:text-gray-300">{{ size.price ? `$${size.price.toFixed(2)}` : 'N/A' }}</span>
 												</span>
+												<span class="flex items-center">
+													Stock: <span class="ml-1 font-medium text-gray-700 dark:text-gray-300">{{ size.stock || 0 }}</span>
+												</span>
 											</div>
 										</div>
 										
@@ -596,6 +607,7 @@ interface GraftSize {
   area: number | null
   price: number | null
   graftStatus?: number  // Optional: 0=Active, 1=Inactive, 2=Archive
+  stock?: number  // Added stock field
 }
 
 interface SimpleManufacturer {
@@ -645,7 +657,7 @@ const formData = ref({
   manufacturerId: null as number | null,
   mue: null as number | null,
   description: '',
-  graftSizes: [{ size: '', area: null, price: null }] as GraftSize[]
+  graftSizes: [{ size: '', area: null, price: null, stock: 0 }] as GraftSize[]  // Added stock field with default value
 })
 
 const manufacturerOptions = computed(() => {
@@ -694,6 +706,7 @@ async function getAllBrands(page = 1) {
         size: s.size,
         area: s.area,
         price: s.price,
+        stock: s.stock || 0,  // Added stock field
         graftStatus: s.graftStatus || 0  // Default active
       })),
       createdAt: b.createdAt,
@@ -726,6 +739,7 @@ function editBrand(b: Brand) {
 			size: s.size,
 			area: s.area,
 			price: s.price,
+			stock: s.stock || 0,
 			graftStatus: s.graftStatus || 0
 			}))
 		: [{ size: '', area: null, price: null }]
@@ -734,7 +748,7 @@ function editBrand(b: Brand) {
 }
 
 function addGraftSize() {
-  formData.value.graftSizes.push({ size: '', area: null, price: null })
+  formData.value.graftSizes.push({ size: '', area: null, price: null, stock: 0 })  // Added stock field with default value
 }
 
 function removeGraftSize(index: number) {

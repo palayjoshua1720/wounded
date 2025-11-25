@@ -27,7 +27,7 @@ import ResetPasswordView from '@/views/ResetPasswordView.vue'
 import SettingsView from '@/views/SettingsView.vue'
 import { ClipboardDocumentCheckIcon, Squares2X2Icon, SquaresPlusIcon, BuildingLibraryIcon, ClipboardDocumentListIcon, ShieldCheckIcon, BellIcon, ChartBarIcon, ArrowPathIcon, CalculatorIcon, CubeIcon, UsersIcon } from '@heroicons/vue/24/outline'
 import { pageLoader } from '@/composables/ui/usePageLoader'
-import { Factory, Package, PencilRuler, ShoppingCart} from 'lucide-vue-next'
+import { Factory, Package, PencilRuler, ShoppingCart } from 'lucide-vue-next'
 
 // Types
 interface NavigationItem {
@@ -333,38 +333,34 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 
 	return layoutRoute.children
 		.filter(route => {
-			// if (role === 0) {
-			// 	return true
-			// }
-
+			// Admin
 			if (role === 0) {
-				return [
-					'admin-dashboard',
-					'users',
-					'user-clinic',
-					'user-clinicians',
-					'manufacturer-management',
-					'clinic-dashboard',
-					'ivr',
-					'order-management',
-					'inventory',
-					'brand-management',
-					'graft-size',
-					'invoice-management'
-				].includes(route.name as string)
+				return ['admin-dashboard', 'users', 'user-clinic', 'user-clinicians', 'manufacturer-management', 'clinic-dashboard', 'ivr', 'order-management', 'inventory', 'brand-management', 'graft-size', 'invoice-management'].includes(route.name as string)
 			}
 
+			// Office Staff
 			if (role === 1) {
 				return ['admin-dashboard', 'users', 'user-clinic', 'manufacturer-management', 'inventory', 'invoice-management'].includes(route.name as string)
 			}
 
+			// Clinics
 			if (role === 2) {
 				return ['clinic-dashboard', 'user-clinicians', 'user-clinic'].includes(route.name as string)
 			}
 
-			// manufacturer
+			// Clinician
+			if (role === 3) {
+				return ['clinic-dashboard'].includes(route.name as string)
+			}
+
+			// Manufacturer
 			if (role === 4) {
 				return ['manufacturer/order-management'].includes(route.name as string)
+			}
+
+			// Biller
+			if (role === 5) {
+				return [''].includes(route.name as string)
 			}
 
 			const allowedRoles = routeRoles[route.name as string]
