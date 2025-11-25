@@ -1,52 +1,49 @@
 <template>
 	<div class="space-y-6">
 		<!-- Header and Create Order -->
-		<div class="flex items-center justify-between">
-			<div>
-				<h1 class="text-2xl font-bold text-gray-900 dark:text-white">Order Management</h1>
-				<p class="text-gray-600 dark:text-gray-400">View, organize, and track every order in one place.</p>
+		<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+			<div class="space-y-2">
+				<h1 class="text-3xl font-bold text-gray-900 dark:text-white">Order Management</h1>
+				<p class="text-gray-600 dark:text-gray-400 max-w-2xl">View, organize, and track every order in one place.</p>
 			</div>
 		</div>
 
 		<!-- Filters -->
-		<div class="bg-white px-6 py-4 border-b border-gray-200 dark:border-gray-600 mb-2 shadow-sm">
-			<div class="flex items-center justify-between">
-				<h2 class="text-xl font-semibold text-gray-900 dark:text-white">Order Records</h2>
-				<div class="flex items-center space-x-4">
+		<div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+			<div class="flex flex-col lg:flex-row gap-6">
+				<div class="flex-1">
 					<div class="relative">
-						<Search class="absolute left-3 top-3 h-4 w-4 text-gray-400 dark:text-gray-500" />
-						<input
-							v-model="searchTerm"
-							type="text"
-							placeholder="Search Clinics..."
-							class="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-						/>
+						<Search class="absolute left-4 top-3.5 h-5 w-5 text-gray-400 dark:text-gray-500" />
+						<input v-model="searchTerm" type="text" placeholder="Search Order..."
+							class="w-full pl-12 pr-4 py-3.5 border-0 bg-gray-50 dark:bg-gray-700/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200" />
 					</div>
-					<div class="flex items-center space-x-2">
-						<Funnel class="w-4 h-4 text-gray-500 dark:text-gray-400" />
+				</div>
+				<div class="flex flex-col sm:flex-row gap-4">
+					<div class="relative">
+						<Funnel class="absolute left-3 top-3.5 h-4 w-4 text-gray-500 dark:text-gray-400" />
 						<select
 						v-model="statusFilter"
-						class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+						class="pl-10 pr-8 py-3.5 border-0 bg-gray-50 dark:bg-gray-700/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-gray-700 text-gray-900 dark:text-white appearance-none transition-all duration-200"
 						>
 							<option value="all">All Status</option>
 							<option value="active">Active</option>
 							<option value="inactive">Inactive</option>
 						</select>
+						<ChevronDown class="absolute right-3 top-3.5 h-4 w-4 text-gray-500 dark:text-gray-400 pointer-events-none" />
 					</div>
-					<div class="flex items-center space-x-2">
-						<label for="per-page" class="text-sm text-gray-700 dark:text-gray-300">Rows:</label>
-						<select
-							id="per-page"
-							v-model="itemsPerPage"
-							class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded 
-								focus:ring-2 focus:ring-blue-500 focus:border-transparent 
-								bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-						>
-							<option value="10">10</option>
-							<option value="25">25</option>
-							<option value="50">50</option>
-						</select>
-					</div>
+				</div>
+				<div class="relative">
+					<label for="per-page" class="text-sm text-gray-700 dark:text-gray-300">Rows:</label>
+					<select
+						id="per-page"
+						v-model="itemsPerPage"
+						class="pl-4 pr-8 py-3.5 border-0 bg-gray-50 dark:bg-gray-700/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-gray-700 text-gray-900 dark:text-white appearance-none transition-all duration-200"
+					>
+						<option value="10">10</option>
+						<option value="25">25</option>
+						<option value="50">50</option>
+					</select>
+					<ChevronDown class="absolute right-3 top-3.5 h-4 w-4 text-gray-500 dark:text-gray-400 pointer-events-none" />
 				</div>
 			</div>
 		</div>
@@ -104,18 +101,10 @@
 											<Eye class="w-4 h-4" />
 										</button>
 										<div class="inline-flex space-x-1">
-											<button v-if="order.order_status === 'submitted'" @click="updateOrderStatusNew(order, 'acknowledged')" class="px-2 py-1 text-xs bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400 rounded hover:bg-purple-200 dark:hover:bg-purple-900/30">Acknowledge</button>
-											<button v-if="order.order_status === 'acknowledged'" @click="updateOrderStatusNew(order, 'shipped')" class="px-2 py-1 text-xs bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400 rounded hover:bg-blue-200 dark:hover:bg-blue-900/30">Ship</button>
-											<button v-if="order.order_status === 'shipped'" @click="updateOrderStatusNew(order, 'delivered')" class="px-2 py-1 text-xs bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400 rounded hover:bg-green-200 dark:hover:bg-green-900/30">Deliver</button>
+											<button v-if="order.order_status === 'submitted'" @click="updateOrderStatusNew(order, 'acknowledged')" class="px-2 py-1 text-xs bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400 rounded hover:bg-purple-200 dark:hover:bg-purple-900/30">Acknowledge?</button>
+											<button v-if="order.order_status === 'acknowledged'" @click="updateOrderStatusNew(order, 'shipped')" class="px-2 py-1 text-xs bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400 rounded hover:bg-blue-200 dark:hover:bg-blue-900/30">Ready to Ship?</button>
+											<button v-if="order.order_status === 'shipped'" @click="updateOrderStatusNew(order, 'delivered')" class="px-2 py-1 text-xs bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400 rounded hover:bg-green-200 dark:hover:bg-green-900/30">Ready to Deliver?</button>
 										</div>
-									</div>
-								</td>
-							</tr>
-							<tr v-if="filteredOrders.length === 0">
-								<td colspan="7" class="text-center py-8 text-gray-400 dark:text-gray-500">
-									<div class="flex flex-col items-center justify-center gap-2">
-										<ShoppingCart class="w-10 h-10 mb-1" />
-										<span>No orders found.</span>
 									</div>
 								</td>
 							</tr>
@@ -123,18 +112,54 @@
 					</tbody>
 				</table>
 			</div>
-		</div>
 
-		<template v-if="!tableLoader">
-			<Pagination :pagination="pagination" @update:page="getAllOrders" />
-		</template>
+			<div v-if="filteredOrders.length === 0 && !tableLoader" class="text-center py-12">
+				<div
+                    class="mx-auto h-16 w-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mb-4">
+                    <ShoppingCart class="h-8 w-8 text-gray-400 dark:text-gray-500" />
+                </div>
+                <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-1">No orders found</h3>
+                <p class="text-gray-500 dark:text-gray-400 max-w-md mx-auto">Try adjusting your search or filter to find
+                    what you're looking for.</p>
+			</div>
+
+			<template v-if="!tableLoader">
+				<Pagination :pagination="pagination" @update:page="getAllOrders" />
+			</template>
+		</div>
 
 		<!-- View Order Modal -->
 		<BaseModal v-model="showOrderModal" title="Order Details">
 			<template v-if="selectedOrder">
-				<div>
-					{{ selectedOrder.order_code }}
+				<div
+					class="flex items-center bg-gradient-to-r from-blue-50 to-indigo-50 
+					dark:from-blue-900/20 dark:to-indigo-900/20 
+					p-4 rounded-xl border border-blue-100 dark:border-blue-800 shadow-sm"
+				>
+					<div class="p-3 bg-blue-600 text-white rounded-lg shadow-md mr-3">
+						<Package class="w-6 h-6" />
+					</div>
+
+					<div class="flex-1 flex flex-col">
+						<p class="text-sm text-gray-700 dark:text-gray-300">
+							Code:
+							<span class="font-semibold text-blue-700 dark:text-blue-300">
+								{{ selectedOrder.order_code }}
+							</span>
+						</p>
+
+						<span
+							:class="[
+								'mt-1 w-fit inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap',
+								getStatusColor(selectedOrder.order_status),
+							]"
+						>
+							<CircleCheck class="w-4 h-4" />
+							{{ selectedOrder.order_status.charAt(0).toUpperCase() + selectedOrder.order_status.slice(1) }}
+						</span>
+					</div>
 				</div>
+
 				<div class="space-y-6 p-6">
 					<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 						<div class="space-y-4">
@@ -166,15 +191,6 @@
 								<div>
 									<p class="text-sm font-medium text-gray-700 dark:text-gray-300">Order Date</p>
 									<p class="text-gray-900 dark:text-white">{{ formatDate(selectedOrder.ordered_at) }}</p>
-								</div>
-							</div>
-							<div class="flex items-center space-x-3">
-								<CircleCheck class="w-5 h-5 text-indigo-600" />
-								<div>
-									<p class="text-sm font-medium text-gray-700 dark:text-gray-300">Status</p>
-									<span :class="['inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium', getStatusColor(selectedOrder.order_status)]">
-										{{ selectedOrder.order_status.charAt(0).toUpperCase() + selectedOrder.order_status.slice(1) }}
-									</span>
 								</div>
 							</div>
 							<div v-if="selectedOrder.tracking_num" class="flex items-center space-x-3">
@@ -226,6 +242,8 @@
 							<p class="text-gray-700 dark:text-gray-200">{{ selectedOrder.notes }}</p>
 						</div>
 					</div>
+
+					
 					<div class="border-t border-gray-200 pt-6">
 						<h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Update Status</h3>
 						<div class="flex space-x-3">
@@ -247,16 +265,10 @@ import BaseModal from '@/components/common/BaseModal.vue'
 import Pagination from '../components/ui/Pagination.vue'
 import TableLoader from '../components/ui/TableLoader.vue'
 import {
-    Search,
-    Funnel,
-    Eye,
-	CircleCheck,
-	Truck,
-	Box,
-	CircleUser,
-	Calendar1,
-	FileTextIcon,
-	ShoppingCart,
+    Search, Funnel, Eye, CircleCheck,
+	Truck, Box, CircleUser, Calendar1,
+	FileTextIcon, ShoppingCart, ChevronDown,
+	Package, 
 } from 'lucide-vue-next';
 import api from '@/services/api'
 import { toast } from 'vue3-toastify'
@@ -267,6 +279,7 @@ interface Order {
 	order_id: number;
 	order_code: string
 	ordered_at: string;
+	followup_last_sent_at: string
 	order_status: OrderStatus;
 	notes?: string;
 	items: OrderItem[];
@@ -514,7 +527,7 @@ async function getAllOrders(page = 1)
 {
 	tableLoader.value = true;
     try {
-        const { data } = await api.get(`/management/order/getorders?page=${page}&per_page=${itemsPerPage.value}`, {
+        const { data } = await api.get(`/management/manufacturer/order/getmanufacturerorders?page=${page}&per_page=${itemsPerPage.value}`, {
             headers: {
                 Authorization: `Bearer ${localStorage.getItem('auth_token')}`
             }
@@ -542,6 +555,7 @@ async function getAllOrders(page = 1)
 				order_id: Number(o.order_id ?? 0),
 				order_code: String(o.order_code ?? ''),
 				ordered_at: String(o.ordered_at ?? o.created_at ?? ''),
+				followup_last_sent_at: String(o.followup_last_sent_at ?? o.followup_last_sent_at ?? ''),
 				order_status: (['submitted','acknowledged','shipped','delivered','cancelled'][Number(o.order_status ?? 0)] ?? 'submitted') as OrderStatus,
 				notes: o.notes ?? '',
 				items,
@@ -559,8 +573,10 @@ async function getAllOrders(page = 1)
             per_page: Number(data?.per_page ?? itemsPerPage.value),
             total: Number(data?.total ?? rows.length),
         }
-    } catch (error) {
+    } catch (error: any) {
 		orders.value = []
+		const backendMessage = error.response?.data?.message || 'Something went wrong';
+    	toast.error(backendMessage);
     } finally {
         tableLoader.value = false
     }

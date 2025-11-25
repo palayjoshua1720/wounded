@@ -34,4 +34,9 @@ class Manufacturer extends Model
     {
         return $this->hasMany(Brand::class, 'manufacturer_id', 'manufacturer_id');
     }
+
+    public function ivrs()
+    {
+        return $this->hasMany(IVR::class, 'manufacturer_id', 'manufacturer_id');
+    }
 }

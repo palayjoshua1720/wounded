@@ -27,6 +27,7 @@ Route::get('/version', function (Request $request) {
 //  ############## FORGOT PASSWORD #####################
 Route::post('/forgot-password', [ForgotPassword::class, 'sendResetLink']);
 Route::post('/reset-password', [ResetPassword::class, 'reset']);
+Route::post('/magic-order-auth', [OrderController::class, 'validateMagicLink']);
 
 // Sample Routes
 Route::get('/sample', [SampleController::class, 'index']);
@@ -79,13 +80,15 @@ Route::middleware('auth:sanctum')->group(function () {
     // IVR
     Route::get('/management/ivr/ivrrequests', [IVRRequestController::class, 'getAllIVRRequests']);
     Route::get('/management/ivr/getbrands', [IVRRequestController::class, 'getAllBrands']);
+    Route::get('/management/manufacturer/getmanufacturers', [IVRRequestController::class, 'getAllManufacturers']);
     Route::get('/management/ivr/getclinics', [IVRRequestController::class, 'getAllClinic']);
     Route::get('/management/patients/patientinfo', [IVRRequestController::class, 'getAllPatientInfo']);
     Route::post('/management/add/newivrrequest', [IVRRequestController::class, 'addIVRRequest']);
-    Route::put('/management/update/{id}/updateivrrequest', [IVRRequestController::class, 'updateIVRRequest']);
+    Route::post('/management/update/{id}/updateivrrequest', [IVRRequestController::class, 'updateIVRRequest']);
     Route::put('/management/delete/{id}/deleteivrrequest', [IVRRequestController::class, 'deleteIVRRequest']);
     Route::put('/management/archive/{id}/archiveivrrequest', [IVRRequestController::class, 'archiveIVRRequest']);
     Route::put('/management/archive/{id}/unarchiveivrrequest', [IVRRequestController::class, 'unarchiveIVRRequest']);
+    Route::get('/management/ivr/download/{id}/downloadivrform', [IVRRequestController::class, 'downloadIVRForm']);
 
     // Brand
     Route::get('/management/brands', [BrandController::class, 'getAllBrands']);
@@ -109,6 +112,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Order
     Route::get('/management/order/getorders', [OrderController::class, 'getAllOrders']);
+    Route::get('/management/order/{id}/getorderbyid', [OrderController::class, 'getAllOrdersById']);
     Route::get('/management/order/getclinics', [OrderController::class, 'getAllClinics']);
     Route::get('/management/order/getbrands', [OrderController::class, 'getAllPatients']);
     Route::get('/management/order/getgraftsizes', [OrderController::class, 'getAllGraftSizes']);
@@ -118,4 +122,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/management/order/update/{id}/updateorder', [OrderController::class, 'updateOrder']);
     Route::put('/management/order/delete/{id}/deleteorder', [OrderController::class, 'deleteOrder']);
     Route::put('/management/order/update/{id}/updateorderstatus', [OrderController::class, 'updateOrderStatus']);
+    Route::put('/management/magicorder/update/{id}/updateorderstatus', [OrderController::class, 'updateMagicOrderStatus']);
+    Route::post('/management/order/update/{id}/followuporderstatus', [OrderController::class, 'followUpOrder']);
+
+    Route::get('/management/manufacturer/order/getmanufacturerorders', [OrderController::class, 'getAllOrdersByManufacturers']);
+
+    Route::get('/management/manufacturer/order/getclinicorders', [OrderController::class, 'getAllOrdersByClinics']);
+    Route::get('/auth/me-with-clinic', [OrderController::class, 'userWithClinic']);
+    Route::post('/management/order/add/neworderbyclinic', [OrderController::class, 'addNewOrderByClinic']);
+    Route::put('/management/order/update/{id}/updateorderbyclinic', [OrderController::class, 'updateOrderByClinic']);
+
 });

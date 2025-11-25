@@ -20,11 +20,15 @@ import ClinicianManagementView from '@/views/ClinicianManagementView.vue'
 import ClinicManagementView from '@/views/ClinicManagementView.vue'
 import ManufacturerManagementView from '@/views/ManufacturerManagementView.vue'
 import OrderManagementviewManufacturer from '@/views/OrderManagementviewManufacturer.vue'
+import OrderManagementViewClinic from '@/views/OrderManagementViewClinic.vue'
 import BrandManagementView from '@/views/BrandManagementView.vue'
 import ProfileView from '@/views/ProfileView.vue'
 import ChangeAccountView from '@/views/ChangeAccountView.vue'
 import ResetPasswordView from '@/views/ResetPasswordView.vue'
 import SettingsView from '@/views/SettingsView.vue'
+import OrderMagicLinkView from '@/views/OrderMagicLinkView.vue'
+import InvalidMagicLinkView from '@/views/InvalidMagicLinkView.vue'
+
 import { ClipboardDocumentCheckIcon, Squares2X2Icon, SquaresPlusIcon, BuildingLibraryIcon, ClipboardDocumentListIcon, ShieldCheckIcon, BellIcon, ChartBarIcon, ArrowPathIcon, CalculatorIcon, CubeIcon, UsersIcon } from '@heroicons/vue/24/outline'
 import { pageLoader } from '@/composables/ui/usePageLoader'
 import { Factory, Package, PencilRuler, ShoppingCart } from 'lucide-vue-next'
@@ -90,8 +94,8 @@ const routes: RouteRecordRaw[] = [
 				}
 			},
 			{
-				path: 'user-clinic',
-				name: 'user-clinic',
+				path: 'clinic-management',
+				name: 'clinic-management',
 				component: ClinicManagementView,
 				meta: {
 					requiresAuth: true,
@@ -120,6 +124,16 @@ const routes: RouteRecordRaw[] = [
 				}
 			},
 			{
+				path: 'ivr-management',
+				name: 'ivr-management',
+				component: IVRManagementView,
+				meta: {
+					requiresAuth: true,
+					title: 'IVR',
+					icon: ShieldCheckIcon
+				}
+			},
+			{
 				path: 'order-management',
 				name: 'order-management',
 				component: OrderManagementView,
@@ -130,9 +144,32 @@ const routes: RouteRecordRaw[] = [
 				}
 			},
 			{
+				path: 'woundmed-order',
+				name: 'woundmed-order',
+				component: OrderMagicLinkView,
+				meta: {
+					requiresAuth: false,
+					title: 'Order Details',
+					icon: ShoppingCart,
+					hideSidebar: true,
+					hideHeader: true,
+					disableLayoutPadding: true,
+				}
+			},
+			{
 				path: 'manufacturer/order-management',
 				name: 'manufacturer/order-management',
 				component: OrderManagementviewManufacturer,
+				meta: {
+					requiresAuth: true,
+					title: 'Orders',
+					icon: ShoppingCart
+				}
+			},
+			{
+				path: 'clinic/order-management',
+				name: 'clinic/order-management',
+				component: OrderManagementViewClinic,
 				meta: {
 					requiresAuth: true,
 					title: 'Orders',
@@ -157,16 +194,6 @@ const routes: RouteRecordRaw[] = [
 					requiresAuth: true,
 					title: 'Invoices & Payments',
 					icon: ClipboardDocumentListIcon
-				}
-			},
-			{
-				path: 'ivr',
-				name: 'ivr',
-				component: IVRManagementView,
-				meta: {
-					requiresAuth: true,
-					title: 'IVR',
-					icon: ShieldCheckIcon
 				}
 			},
 			{
@@ -297,6 +324,15 @@ const routes: RouteRecordRaw[] = [
 			requiresAuth: false,
 			title: 'Not Found'
 		}
+	},
+	{
+		path: '/:pathMatch(.*)*',
+		name: 'not-found-link',
+		component: InvalidMagicLinkView,
+		meta: {
+			requiresAuth: false,
+			title: 'Not Found'
+		}
 	}
 ]
 
@@ -316,14 +352,15 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 
 	const routeRoles: Record<string, number[]> = {
 		'admin-dashboard': [0, 1],
-		'clinic-dashboard': [0, 1, 2],
-		'clinic': [0, 1, 2],
+		'clinic-dashboard': [2],
+		'clinic-management': [0, 1, 2],
 		'inventory': [0, 1],
 		'invoice-management': [0, 1],
-		'ivr': [0, 1],
+		'ivr-management': [0, 1, 4],
 		'notifications': [0, 1],
 		'order-management': [0, 1],
 		'manufacturer/order-management': [4],
+		'clinic/order-management': [2],
 		'reports': [0, 1],
 		'returns': [0, 1],
 		'usage': [0, 1],
@@ -335,17 +372,42 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 		.filter(route => {
 			// Admin
 			if (role === 0) {
-				return ['admin-dashboard', 'users', 'user-clinic', 'user-clinicians', 'manufacturer-management', 'clinic-dashboard', 'ivr', 'order-management', 'inventory', 'brand-management', 'graft-size', 'invoice-management'].includes(route.name as string)
+				return [
+					'admin-dashboard',
+					'users',
+					'clinic-management',
+					// 'user-clinicians',
+					'manufacturer-management',
+					// 'clinic-dashboard',
+					'ivr-management',
+					'order-management',
+					'inventory',
+					'brand-management',
+					'graft-size',
+					'invoice-management'
+				].includes(route.name as string)
 			}
 
 			// Office Staff
 			if (role === 1) {
-				return ['admin-dashboard', 'users', 'user-clinic', 'manufacturer-management', 'inventory', 'invoice-management'].includes(route.name as string)
+				return [
+					'admin-dashboard',
+					'users',
+					'clinic-management',
+					'manufacturer-management',
+					'inventory',
+					'invoice-management'
+				].includes(route.name as string)
 			}
 
 			// Clinics
 			if (role === 2) {
-				return ['clinic-dashboard', 'user-clinicians', 'user-clinic'].includes(route.name as string)
+				return [
+					'clinic-dashboard',
+					'user-clinicians',
+					// 'clinic-management',
+					'clinic/order-management'
+				].includes(route.name as string)
 			}
 
 			// Clinician
@@ -355,7 +417,11 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 
 			// Manufacturer
 			if (role === 4) {
-				return ['manufacturer/order-management'].includes(route.name as string)
+				return [
+					'manufacturer/order-management',
+					'ivr-management',
+					'invoice-management',
+				].includes(route.name as string)
 			}
 
 			// Biller

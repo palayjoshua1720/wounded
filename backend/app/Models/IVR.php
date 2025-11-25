@@ -24,6 +24,7 @@ class IVR extends Model
         'brand_id',
         'manufacturer_id',
         'patient_id',
+        'filepath',
         'description',
         'eligibility_status',
         'ivr_status',
@@ -38,16 +39,16 @@ class IVR extends Model
         return $this->belongsTo(Clinic::class, 'clinic_id', 'clinic_id');
     }
 
-    // Brand relation
-    public function brand()
-    {
-        return $this->belongsTo(Brand::class, 'brand_id', 'brand_id');
-    }
-
     // Manufacturer relation
     public function manufacturer()
     {
         return $this->belongsTo(Manufacturer::class, 'manufacturer_id', 'manufacturer_id');
+    }
+
+    // Brand relation
+    public function brand()
+    {
+        return $this->belongsTo(Brand::class, 'brand_id', 'brand_id');
     }
 
     // Patient relation
