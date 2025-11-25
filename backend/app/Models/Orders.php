@@ -20,16 +20,20 @@ class Orders extends Model
         'clinic_id',
         'user_id',
         'patient_id',
+        'ivr_id',
+        'manufacturer_id',
         'tracking_num',
         'items',
         'order_status',
         'notes',
         'ordered_at',
+        'followup_last_sent_at',
     ];
 
     protected $casts = [
         'items' => 'array',
         'ordered_at' => 'datetime',
+        'followup_last_sent_at' => 'datetime',
     ];
 
     # Relationships
@@ -61,5 +65,10 @@ class Orders extends Model
     public function ivr()
     {
         return $this->belongsTo(Ivr::class, 'ivr_id', 'ivr_id');
+    }
+
+    public function manufacturer()
+    {
+        return $this->belongsTo(Manufacturer::class, 'manufacturer_id', 'manufacturer_id');
     }
 }

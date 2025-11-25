@@ -42,7 +42,7 @@ return new class extends Migration
             $table->unsignedBigInteger('ivr_id')->nullable();
             $table->string('tracking_num')->nullable(); // ex. TRK00001
             $table->json('items'); // array of item details
-            $table->tinyInteger('order_status')->default(0); 
+            $table->tinyInteger('order_status')->default(0);
             // 0 - Submitted, 1 - Acknowledged, 2 - Shipped, 3 - Delivered
             $table->text('notes')->nullable();
             $table->timestamp('ordered_at')->nullable();
@@ -80,7 +80,6 @@ return new class extends Migration
                 ->on('woundmed_ivr')
                 ->onDelete('set null');
         });
-
     }
 
     /**

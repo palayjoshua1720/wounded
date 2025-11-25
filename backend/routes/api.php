@@ -26,6 +26,7 @@ Route::get('/version', function (Request $request) {
 //  ############## FORGOT PASSWORD #####################
 Route::post('/forgot-password', [ForgotPassword::class, 'sendResetLink']);
 Route::post('/reset-password', [ResetPassword::class, 'reset']);
+Route::post('/magic-order-auth', [OrderController::class, 'validateMagicLink']);
 
 // Sample Routes
 Route::get('/sample', [SampleController::class, 'index']);
@@ -88,13 +89,15 @@ Route::middleware('auth:sanctum')->group(function () {
     // IVR
     Route::get('/management/ivr/ivrrequests', [IVRRequestController::class, 'getAllIVRRequests']);
     Route::get('/management/ivr/getbrands', [IVRRequestController::class, 'getAllBrands']);
+    Route::get('/management/manufacturer/getmanufacturers', [IVRRequestController::class, 'getAllManufacturers']);
     Route::get('/management/ivr/getclinics', [IVRRequestController::class, 'getAllClinic']);
     Route::get('/management/patients/patientinfo', [IVRRequestController::class, 'getAllPatientInfo']);
     Route::post('/management/add/newivrrequest', [IVRRequestController::class, 'addIVRRequest']);
-    Route::put('/management/update/{id}/updateivrrequest', [IVRRequestController::class, 'updateIVRRequest']);
+    Route::post('/management/update/{id}/updateivrrequest', [IVRRequestController::class, 'updateIVRRequest']);
     Route::put('/management/delete/{id}/deleteivrrequest', [IVRRequestController::class, 'deleteIVRRequest']);
     Route::put('/management/archive/{id}/archiveivrrequest', [IVRRequestController::class, 'archiveIVRRequest']);
     Route::put('/management/archive/{id}/unarchiveivrrequest', [IVRRequestController::class, 'unarchiveIVRRequest']);
+    Route::get('/management/ivr/download/{id}/downloadivrform', [IVRRequestController::class, 'downloadIVRForm']);
 
      // Brand
     Route::get('/management/brands', [BrandController::class, 'getAllBrands']);
@@ -104,21 +107,26 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/management/brands/{id}/toggle', [BrandController::class, 'toggleBrandStatus']);
     Route::delete('/management/brands/{id}', [BrandController::class, 'deleteBrand']);
 
-    // Graft Size
+    // Graft Size 
     Route::get('/management/graft-sizes', [GraftSizeController::class, 'getAllGraftSizes']);
     Route::post('/management/graft-sizes', [GraftSizeController::class, 'addNewGraftSize']);
-    // Route::post('/management/graft-sizes/{id}', [GraftSizeController::class, 'updateGraftSize']);
-    // Route::get('/management/graft-sizes/{id}/archive', [GraftSizeController::class, 'archiveGraftSize']);
-    // Route::get('/management/graft-sizes/{id}/unarchive', [GraftSizeController::class, 'unarchiveGraftSize']);
-    // Route::delete('/management/graft-sizes/{id}', [GraftSizeController::class, 'deleteGraftSize']);
-    
+    Route::put('/management/update/{id}/updategraftsize', [GraftSizeController::class, 'updateGraftSize']);
+    Route::put('/management/archive/{id}/archivegraftsize', [GraftSizeController::class, 'archiveGraftSize']);
+    Route::put('/management/archive/{id}/unarchivegraftsize', [GraftSizeController::class, 'unarchiveGraftSize']);
+    Route::put('/management/delete/{id}/deletegraftsize', [GraftSizeController::class, 'deleteGraftSize']);
+    Route::put('/management/deactivate/{id}/deactivategraftsize', [GraftSizeController::class, 'toggleInactiveGraftSize']);
+    Route::put('/management/activate/{id}/activategraftsize', [GraftSizeController::class, 'activateGraftSize']);
+    Route::get('/management/graft-sizes/stats', [GraftSizeController::class, 'getGraftStats']);
+    Route::get('/management/graft-sizes/getAllBrands', [GraftSizeController::class, 'getAllBrands']);
+
     // Order
     Route::get('/management/order/getorders', [OrderController::class, 'getAllOrders']);
+    Route::get('/management/order/{id}/getorderbyid', [OrderController::class, 'getAllOrdersById']);
     Route::get('/management/order/getclinics', [OrderController::class, 'getAllClinics']);
     Route::get('/management/order/getbrands', [OrderController::class, 'getAllPatients']);
     Route::get('/management/order/getgraftsizes', [OrderController::class, 'getAllGraftSizes']);
     Route::get('/management/order/users/getpatients', [OrderController::class, 'getAllPatients']);
-    
+
     Route::post('/management/order/add/neworder', [OrderController::class, 'addNewOrder']);
     Route::put('/management/order/update/{id}/updateorder', [OrderController::class, 'updateOrder']);
     Route::put('/management/order/delete/{id}/deleteorder', [OrderController::class, 'deleteOrder']);
