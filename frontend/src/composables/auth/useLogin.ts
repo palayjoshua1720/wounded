@@ -139,16 +139,18 @@ export function useLogin() {
 	}
 
 	function redirectBasedOnRole(role: number) {
-		if (role === 0 || role === 1) {
-			router.push('/admin-dashboard')
-		} else if (role === 2) {
-			router.push('/clinic-dashboard')
-		} else if (role === 4) {
-			router.push('/manufacturer/order-management')
-		} else {
-			router.push('/')
-		}
-	}
+        if (role === 0 || role === 1) {
+            router.push('/admin-dashboard')
+        } else if (role === 2 || role === 3) {
+            router.push('/clinic-dashboard')
+        } else if (role === 4) {
+            router.push('/manufacturer/order-management')
+        } else if (role === 5) {
+            router.push('/ivr-management')
+        } else {
+            router.push('/')
+        }
+    }
 
 	function saveData(user: any, token: string) {
 		authStore.user = user
