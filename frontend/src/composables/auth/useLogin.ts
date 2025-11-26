@@ -40,7 +40,7 @@ export function useLogin() {
 	const tempUser = ref<any>(null)
 
 	const handleLogin = async () => {
-		
+
 		try {
 			loading.value = true
 			error.value = ''
@@ -61,7 +61,7 @@ export function useLogin() {
 			if (user.tfa_enabled) {
 				tempUser.value = user
 				tempToken.value = token
-				
+
 				continue2FA.value = true
 				proceedLogin.value = false
 			} else {
@@ -70,7 +70,7 @@ export function useLogin() {
 				proceedLogin.value = true
 				redirectBasedOnRole(user.user_role)
 			}
-		
+
 		} catch (err: unknown) {
 			if (axios.isAxiosError(err) && err.response?.data) {
 				const message = (err.response.data as { message?: string }).message
@@ -93,14 +93,14 @@ export function useLogin() {
 		} catch (error) {
 			console.error('Logout failed:', error)
 		}
-			pageLoader.value = false
+		pageLoader.value = false
 	}
 
 	async function handleSecurity() {
 		loading2FA.value = true
 		const pin = pinBoxes.value.join('');
-    	console.log('PIN:', pin, pin.length, pinBoxes.value);
-		
+		console.log('PIN:', pin, pin.length, pinBoxes.value);
+
 		if (pin.length !== 4 || !/^\d{4}$/.test(pin)) {
 			toast.error('Please enter your 4-digit 2FA PIN.');
 			loading2FA.value = false;
@@ -141,10 +141,12 @@ export function useLogin() {
 	function redirectBasedOnRole(role: number) {
 		if (role === 0 || role === 1) {
 			router.push('/admin-dashboard')
-		} else if (role === 2) {
+		} else if (role === 2 || role === 3) {
 			router.push('/clinic-dashboard')
 		} else if (role === 4) {
 			router.push('/manufacturer/order-management')
+		} else if (role === 5) {
+			router.push('/ivr-management')
 		} else {
 			router.push('/')
 		}

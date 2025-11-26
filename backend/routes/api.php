@@ -6,8 +6,8 @@ use App\Http\Controllers\Api\ForgotPassword;
 use App\Http\Controllers\Api\InvoiceController;
 use App\Http\Controllers\Api\IVRRequestController;
 use App\Http\Controllers\Api\ManufacturerController;
-use App\Http\Controllers\Api\BrandController; 
-use App\Http\Controllers\Api\OrderController; 
+use App\Http\Controllers\Api\BrandController;
+use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\GraftSizeController;
 use App\Http\Controllers\Api\ResetPassword;
 use App\Http\Controllers\Api\UserController;
@@ -101,7 +101,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/management/archive/{id}/unarchiveivrrequest', [IVRRequestController::class, 'unarchiveIVRRequest']);
     Route::get('/management/ivr/download/{id}/downloadivrform', [IVRRequestController::class, 'downloadIVRForm']);
 
-     // Brand
+    // Brand
     Route::get('/management/brands', [BrandController::class, 'getAllBrands']);
     Route::post('/management/brands', [BrandController::class, 'addBrand']);
     Route::post('management/brands/{id}', [BrandController::class, 'updateBrand']);
@@ -133,6 +133,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/management/order/update/{id}/updateorder', [OrderController::class, 'updateOrder']);
     Route::put('/management/order/delete/{id}/deleteorder', [OrderController::class, 'deleteOrder']);
     Route::put('/management/order/update/{id}/updateorderstatus', [OrderController::class, 'updateOrderStatus']);
+    Route::put('/management/magicorder/update/{id}/updateorderstatus', [OrderController::class, 'updateMagicOrderStatus']);
+    Route::post('/management/order/update/{id}/followuporderstatus', [OrderController::class, 'followUpOrder']);
+
+    Route::get('/management/manufacturer/order/getmanufacturerorders', [OrderController::class, 'getAllOrdersByManufacturers']);
+
+    Route::get('/management/manufacturer/order/getclinicorders', [OrderController::class, 'getAllOrdersByClinics']);
+    Route::get('/auth/me-with-clinic', [OrderController::class, 'userWithClinic']);
+    Route::post('/management/order/add/neworderbyclinic', [OrderController::class, 'addNewOrderByClinic']);
+    Route::put('/management/order/update/{id}/updateorderbyclinic', [OrderController::class, 'updateOrderByClinic']);
 
     // Inventory & Usage Logs
     Route::get('/inventory/all', [InventoryController::class, 'getInventory']);

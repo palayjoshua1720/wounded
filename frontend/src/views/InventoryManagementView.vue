@@ -1992,7 +1992,9 @@ function parseOCRText(text: string) {
     const patientPattern = /(?:patient|patient name|name)[:\s]*([A-Za-z\s.'-]{2,50})/i;
     const woundPattern = /(?:wound|site|location)[:\s]*([A-Za-z\s.'-]{2,50})/i;
     const clinicianPattern = /(?:clinician|doctor|physician)[:\s]*([A-Za-z\s.'-]{2,50})/i;
-    const expiryPattern = /(?:expiry|exp|expires)[:\s]*([\d/.\-]{4,})/i;
+    // const expiryPattern = /(?:expiry|exp|expires)[:\s]*([\d/.\-]{4,})/i;
+    const expiryPattern = /(?:expiry|exp|expires)[:\s]*([.\d/ -]{4,})/i;
+
     const graftSizePattern = /(?:size|graft size)[:\s]*([\d\s\w\W]{2,30})/i;
     const clinicPattern = /(?:clinic)[:\s]*([A-Za-z\s.'-]{2,50})/i;
 
