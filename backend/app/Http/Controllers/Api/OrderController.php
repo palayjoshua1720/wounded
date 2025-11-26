@@ -395,7 +395,7 @@ class OrderController extends Controller
         if (!is_null($token->used_at)) {
             return response()->json([
                 'success' => false,
-                'message' => 'This magic link has already been used.'
+                'message' => 'This access link has already been used.'
             ], 400);
         }
 
@@ -446,7 +446,7 @@ class OrderController extends Controller
         if (!is_null($tokenRecord->used_at)) {
             return response()->json([
                 'success' => false,
-                'message' => 'This magic link has already been used.'
+                'message' => 'This access link has already been used.'
             ], 400);
         }
 

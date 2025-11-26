@@ -1152,7 +1152,7 @@ const filteredOrders = computed(() => {
 		const clinicCode = order.clinic?.clinic_code?.toLowerCase() || '';
 		const clinicName = order.clinic?.clinic_name?.toLowerCase() || '';
 		const patientName = order.patient?.patient_name?.toLowerCase() || '';
-		const status = order.order_status?.toLowerCase() || '';
+		const orderStatus = order.order_status?.toLowerCase() || '';
 
 		const matchesSearch =
 			term === '' ||
@@ -1163,7 +1163,7 @@ const filteredOrders = computed(() => {
 
 		const matchesStatus =
 			statusFilter.value === 'all' ||
-			order.order_status === statusFilter.value;
+			orderStatus === statusFilter.value;
 
 		return matchesSearch && matchesStatus;
 	});
@@ -1304,7 +1304,7 @@ async function getAllOrders(page = 1)
 				order_id: Number(o.order_id ?? 0),
 				order_code: String(o.order_code ?? ''),
 				ordered_at: String(o.ordered_at ?? o.created_at ?? ''),
-				followup_last_sent_at: String(o.followup_last_sent_at ?? o.followup_last_sent_at ?? ''),
+				followup_last_sent_at: String(o.followup_last_sent_at ?? ''),
 				order_status: (['submitted','acknowledged','shipped','delivered','cancelled'][Number(o.order_status ?? 0)] ?? 'submitted') as OrderStatus,
 				notes: o.notes ?? '',
 				items,
@@ -1313,16 +1313,16 @@ async function getAllOrders(page = 1)
 				clinician: o.clinician,
 				patient: o.patient,
 				brand: o.brand,
-				ivr_num: o.ivr.ivr_number,
-				manufacturer_name: o.ivr.manufacturer.manufacturer_name
+				ivr_num: o?.ivr?.ivr_number ?? '',
+				manufacturer_name: o?.ivr?.manufacturer.manufacturer_name ?? ''
 			} as Order
 		})
 
 		pagination.value = {
-            current_page: Number(data?.current_page ?? 1),
-            last_page: Number(data?.last_page ?? 1),
-            per_page: Number(data?.per_page ?? itemsPerPage.value),
-            total: Number(data?.total ?? rows.length),
+            current_page: Number(data?.meta?.current_page ?? 1),
+            last_page: Number(data?.meta?.last_page ?? 1),
+            per_page: Number(data?.meta?.per_page ?? itemsPerPage.value),
+            total: Number(data?.meta?.total ?? rows.length),
         }
     } catch (error) {
 		orders.value = []

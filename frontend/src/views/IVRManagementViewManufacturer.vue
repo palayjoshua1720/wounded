@@ -6,18 +6,6 @@
 				<h1 class="text-2xl font-bold text-gray-900 dark:text-white">IVR Management</h1>
 				<p class="text-gray-600 dark:text-gray-400">Manage insurance verification requests</p>
 			</div>
-
-			<button
-				@click="
-					clearForm()
-					selectedIvrRequest = null; 
-					showCreateForm = true
-				"
-				class="flex items-center px-5 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg group"
-			>
-				<FilePlus2 class="w-5 h-5 mr-2" />
-				New IVR Request
-			</button>
 		</div>
 
 		<!-- Filters -->
@@ -151,7 +139,7 @@
 									>
 										<Eye class="w-5 h-4" />
 									</button>
-									<button
+									<!-- <button
 									@click="editIVR(ivr)"
 									class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"
 									title="Edit User"
@@ -176,7 +164,7 @@
 											:is="ivr.ivr_status === 1 ? ArchiveRestore : Archive"
 											class="w-4 h-4"
 										/>
-									</button>
+									</button> -->
 								</td>
 							</tr>
 						</template>
@@ -353,10 +341,6 @@
 							<p class="text-sm text-gray-500 dark:text-gray-400 font-medium">Preview not available for this file type</p>
 							<p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Download to view the file</p>
 						</div>
-					</div>
-
-					<div>
-						
 					</div>
 				</div>
 			</template>

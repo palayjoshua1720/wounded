@@ -14,6 +14,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Storage;
+use App\Services\EmailService;
+use App\Template\IVRRequestNotificationEmail;
+use App\Helpers\IVRHelper;
 
 class IVRRequestController extends Controller
 {
@@ -135,9 +138,10 @@ class IVRRequestController extends Controller
             ]);
 
             $path = $request->file('filepath')->store('ivr', 'public');
+            $ivrNumber = '#IVR-' . strtoupper(uniqid());
 
             $newIVR = IVR::create([
-                'ivr_number' => '#IVR-' . strtoupper(uniqid()),
+                'ivr_number' => $ivrNumber,
                 'clinic_id' => $request['clinic_id'] ?? null,
                 'brand_id' => $validated['brand_id'] ?? null,
                 'manufacturer_id' => $validated['manufacturer_id'] ?? null,
@@ -148,6 +152,48 @@ class IVRRequestController extends Controller
                 'submitted_at' => now(),
                 'timestamp' => now(),
             ]);
+
+            $token = Str::random(64);
+
+            DB::table('magic_tokens')->insert([
+                'ivr_id'          => $newIVR->ivr_id,
+                'manufacturer_id' => $validated['manufacturer_id'],
+                'token'           => hash('sha256', $token),
+                'expires_at'      => now()->addDays(60),
+                'created_at'      => now(),
+            ]);
+
+            $email = $request->primary_email;
+            $ivrUrl = config('app.frontend_url')
+                . '/woundmed-ivr-request?token=' . $token
+                . '&ivr_id=' . $newIVR->ivr_id;
+
+            $emailBody = IVRRequestNotificationEmail::getTemplate([
+                'ivr_number'        => $ivrNumber,
+                'patient_name'      => IVRHelper::getPatientName($validated['patient_id']),
+                'clinic_name'       => IVRHelper::getClinicName($request['clinic_id']),
+                'brand_name'        => IVRHelper::getManufacturerName($validated['manufacturer_id']),
+                'manufacturer_name' => IVRHelper::getManufacturerName($validated['manufacturer_id']),
+                'eligibility_label'  => 'Pending',
+                'file_url'          => $path,
+                'ivr_link'      => $ivrUrl
+            ]);
+
+            $emailService = new EmailService();
+
+            $params = [
+                'to'        => $email,
+                'from'      => 'noreply@woundmed.com',
+                'from_name' => 'WoundMed IVR',
+                'subject'   => "New IVR Request: {$ivrNumber}",
+                'body'      => $emailBody,
+            ];
+
+            $response = $emailService->send_email(
+                $params,
+                'IVR Request',
+                'IVR Request'
+            );
 
             return response()->json([
                 'success' => true,
@@ -204,10 +250,12 @@ class IVRRequestController extends Controller
             $ivr->patient_id = $validated['patient_id'];
             $ivr->description = $validated['notes'];
             $ivr->eligibility_status = $validated['eligibility_status'];
-            // $ivr->verified_at = now();
-            // $ivr->timestamp = now();
 
             $ivr->save();
+
+            if($request[isExternal] && $request[isExternal] == 1){
+                
+            }
 
             return response()->json([
                 'success' => true,
@@ -270,5 +318,107 @@ class IVRRequestController extends Controller
             ->latest('audit_log_id')
             ->first();
         return $last?->row_hash ?? null;
+    }
+
+    // magic links
+    public function validateMagicLinkIVR(Request $request)
+    {
+
+        $tokenPlain = $request->input('token');
+        $ivrId    = $request->input('ivr_id');
+
+        $token = DB::table('magic_tokens')
+            ->where('ivr_id', $ivrId)
+            ->where('token', hash('sha256', $tokenPlain))
+            ->first();
+
+        if (!$token) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid magic link.'
+            ], 400);
+        }
+
+        # Check if already used
+        if (!is_null($token->used_at)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This access link has already been used.'
+            ], 400);
+        }
+
+        if ($token->expires_at < now()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This magic link has expired.'
+            ], 400);
+        }
+
+        # VALID
+        $ivrRequests = IVR::with([
+            'clinic',
+            'brand.manufacturer',
+            'manufacturer',
+            'patient'
+        ])
+        ->where('ivr_id', $ivrId)
+        ->first();
+
+        return response()->json([
+            'success' => true,
+            'ivr_data'   => $ivrRequests
+        ]);
+    }
+
+    public function updateMagicIVRStatus(Request $request, $ivrId)
+    {
+        $validated = $request->validate([
+        'eligibility_status' => 'required|integer|min:0|max:4',
+        'token'              => 'required|string'
+        ]);
+
+        $ivr = IVR::findOrFail($ivrId);
+
+        $ivr->update([
+            'eligibility_status' => $validated['eligibility_status']
+        ]);
+
+        # Validate magic token first
+        $tokenRecord = DB::table('magic_tokens')
+            ->where('ivr_id', $ivrId)
+            ->where('token', hash('sha256', $validated['token']))
+            ->first();
+
+        if (!$tokenRecord) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid magic link.'
+            ], 400);
+        }
+
+        # If already used (expired)
+        if (!is_null($tokenRecord->used_at)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This access link has already been used.'
+            ], 400);
+        }
+
+        # Update IVR status
+        $ivr = IVR::findOrFail($ivrId);
+        $ivr->update([
+            'eligibility_status' => $validated['eligibility_status']
+        ]);
+
+        if ((int) $validated['eligibility_status'] === 1) {
+            DB::table('magic_tokens')
+                ->where('ivr_id', $ivrId)
+                ->update(['used_at' => now()]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'IVR status updated successfully.',
+        ]);
     }
 }

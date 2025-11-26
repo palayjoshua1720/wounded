@@ -280,7 +280,7 @@
                     </div>
                 </div>
                 <!-- Logo Upload Section (NEW: Dedicated field for logo upload) -->
-                <div>
+                <!-- <div>
                     <div class="flex items-center gap-2 mb-2">
                         <Image class="w-5 h-5 text-green-500" />
                         <h3 class="text-md font-semibold text-gray-900 dark:text-gray-100">Manufacturer Logo (Optional)</h3>
@@ -309,7 +309,6 @@
                         <p class="text-xs text-gray-500 dark:text-gray-400">JPEG, PNG, GIF (max. 2MB)</p>
                         </label>
                     </div>
-                    <!-- Logo Preview -->
                     <div v-if="selectedLogoFile" class="mt-2 flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
                         <Image class="w-4 h-4 text-gray-400" />
                         <span>Selected: <span class="font-medium">{{ selectedLogoFile.name }}</span></span>
@@ -319,7 +318,7 @@
                         <span>Current: <img :src="formData.logoUrl" class="w-6 h-6 rounded object-cover inline ml-1" /> {{ formData.logoUrl.split('/').pop() }}</span>
                         <button @click="removeCurrentLogo" class="ml-2 text-red-500 hover:text-red-700 text-xs">Remove</button>
                     </div>
-                </div>
+                </div> -->
                 <!-- Contact Information -->
                 <div>
                     <div class="flex items-center gap-2 mb-2">

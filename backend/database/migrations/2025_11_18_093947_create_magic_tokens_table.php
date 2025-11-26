@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('magic_tokens', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('manufacturer_id');
-            $table->unsignedBigInteger('order_id');
+            $table->unsignedBigInteger('manufacturer_id')->nullable();
+            $table->unsignedBigInteger('order_id')->nullable();
             $table->string('token')->unique();
             $table->timestamp('expires_at');
             $table->timestamps();
