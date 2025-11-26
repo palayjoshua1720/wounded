@@ -4,53 +4,55 @@
 		<div class="flex items-center justify-between">
 			<div>
 				<h1 class="text-2xl font-bold text-gray-900 dark:text-white">Brand Management</h1>
+				<p class="text-gray-600 dark:text-gray-400">View and manage brands — mirror the manufacturer layout for consistency.</p>
 			</div>
 			<button @click="selectedBrand = null; showCreateForm = true"
 				class="flex items-center px-5 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg group">
-				<PackagePlus class="w-5 h-5 mr-2 group-hover:scale-110 transition-transform" />
+				<PackagePlus class="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" />
 				New Brand
 			</button>
 		</div>
-
-		<!-- Filters -->
-		<div class="bg-white px-6 py-4 border-b border-gray-200 dark:border-gray-600 mb-2 shadow-sm">
-			<div class="flex items-center justify-between">
-				<h2 class="text-xl font-semibold text-gray-900 dark:text-white">Brand Management</h2>
-				<div class="flex items-center space-x-4">
+		<!-- Filters (match Manufacturer style) -->
+		<div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+			<div class="flex flex-col lg:flex-row gap-6">
+				<div class="flex-1">
 					<div class="relative">
-						<Search class="absolute left-3 top-3 h-5 w-5 text-gray-400 dark:text-gray-500" />
+						<Search class="absolute left-4 top-3.5 h-5 w-5 text-gray-400 dark:text-gray-500" />
 						<input
 							v-model="searchTerm"
 							type="text"
 							placeholder="Search Brand..."
-							class="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+							class="w-full pl-12 pr-4 py-3.5 border-0 bg-gray-50 dark:bg-gray-700/50 rounded-xl focus:ring-2 focus:ring-green-500 focus:bg-white dark:focus:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200"
 						/>
+						<ChevronDown class="absolute right-3 top-3.5 h-4 w-4 text-gray-500 dark:text-gray-400 pointer-events-none" />
 					</div>
-					<div class="flex items-center space-x-2">
-						<Funnel class="w-4 h-4 text-gray-500 dark:text-gray-400" />
+				</div>
+				<div class="flex flex-col sm:flex-row gap-4">
+					<div class="relative">
+						<Funnel class="absolute left-3 top-3.5 h-4 w-4 text-gray-500 dark:text-gray-400" />
 						<select
-						v-model="statusFilter"
-						class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+							v-model="statusFilter"
+							class="pl-10 pr-8 py-3.5 border-0 bg-gray-50 dark:bg-gray-700/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-gray-700 text-gray-900 dark:text-white appearance-none transition-all duration-200"
 						>
 							<option value="all">All Status</option>
 							<option value="active">Active</option>
 							<option value="inactive">Inactive</option>
 							<option value="archive">Archived</option>
 						</select>
+						<ChevronDown class="absolute right-3 top-3.5 h-4 w-4 text-gray-500 dark:text-gray-400 pointer-events-none" />
 					</div>
-					<div class="flex items-center space-x-2">
+					<div class="relative">
 						<label for="per-page" class="text-sm text-gray-700 dark:text-gray-300">Rows:</label>
 						<select
 							id="per-page"
 							v-model="itemsPerPage"
-							class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded 
-								focus:ring-2 focus:ring-green-500 focus:border-transparent 
-								bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+							class="pl-4 pr-8 py-3.5 border-0 bg-gray-50 dark:bg-gray-700/50 rounded-xl focus:ring-2 focus:ring-green-500 focus:bg-white dark:focus:bg-gray-700 text-gray-900 dark:text-white appearance-none transition-all duration-200"
 						>
 							<option value="10">10</option>
 							<option value="25">25</option>
 							<option value="50">50</option>
 						</select>
+						<ChevronDown class="absolute right-3 top-3.5 h-4 w-4 text-gray-500 dark:text-gray-400 pointer-events-none" />
 					</div>
 				</div>
 			</div>

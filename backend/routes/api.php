@@ -6,8 +6,8 @@ use App\Http\Controllers\Api\ForgotPassword;
 use App\Http\Controllers\Api\InvoiceController;
 use App\Http\Controllers\Api\IVRRequestController;
 use App\Http\Controllers\Api\ManufacturerController;
-use App\Http\Controllers\Api\BrandController; 
-use App\Http\Controllers\Api\OrderController; 
+use App\Http\Controllers\Api\BrandController;
+use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\GraftSizeController;
 use App\Http\Controllers\Api\ResetPassword;
 use App\Http\Controllers\Api\UserController;
@@ -103,7 +103,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/management/archive/{id}/unarchiveivrrequest', [IVRRequestController::class, 'unarchiveIVRRequest']);
     Route::get('/management/ivr/download/{id}/downloadivrform', [IVRRequestController::class, 'downloadIVRForm']);
 
-     // Brand
+    // Brand
     Route::get('/management/brands', [BrandController::class, 'getAllBrands']);
     Route::post('/management/brands', [BrandController::class, 'addBrand']);
     Route::post('management/brands/{id}', [BrandController::class, 'updateBrand']);

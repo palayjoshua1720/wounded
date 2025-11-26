@@ -5,7 +5,7 @@
             <div class="space-y-2">
                 <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Graft Sizes Management</h1>
                 <p class="text-gray-600 dark:text-gray-400 max-w-2xl">Manage graft sizes, their stock levels, and availability
-                    in one centralized dashboard</p>
+                    in one streamlined interface</p>
             </div>
             <div class="flex items-center gap-4">
                 <button @click="showStats = !showStats"
@@ -84,7 +84,7 @@
                         </div>
                     </div>
                     <p v-if="stats.brands.length > 6" class="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
-                        Showing top 6 brands. {{ stats.brands.length - 6 }} more...
+                        Showing top 6 brands. {{ stats.brands.length - 6 }} more not shown.
                     </p>
                 </div>
             </div>
@@ -287,7 +287,7 @@
                                         {{ selectedGraftRequest.size }}
                                     </h2>
                                     <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                                        Area: {{ selectedGraftRequest.area ? `${selectedGraftRequest.area} cm²` : 'N/A' }} • 
+                                        Area: {{ selectedGraftRequest.area ? `${selectedGraftRequest.area} cm²` : 'N/A' }} •
                                         Price: ${{ selectedGraftRequest.price ? selectedGraftRequest.price.toFixed(2) : 'N/A' }}
                                     </p>
                                 </div>
@@ -303,7 +303,6 @@
                             </div>
                         </div>
                     </div>
-
                     <!-- Core Details Grid -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="space-y-4">
@@ -339,7 +338,6 @@
                             </div>
                         </div>
                     </div>
-
                     <!-- Dates -->
                     <div class="mt-4 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                         <div class="flex flex-col md:flex-row text-center">
@@ -369,14 +367,13 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Brand<span
                                 class="text-red-500 ml-1">*</span></label>
-                       <select v-model="formData.brand_id" :disabled="!showCreateForm" required
+                        <select v-model="formData.brand_id" required
                             class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white appearance-none transition-all duration-200">
                             <option disabled value="">Select a Brand</option>
                             <option
-                                v-for="brand in brandData"
-                                :key="brand.brand_id"
-                                :value="brand.brand_id"
-                                :selected="showEditForm && formData.brand_id === brand.brand_id">
+                                    v-for="brand in brandData"
+                                    :key="brand.brand_id"
+                                    :value="brand.brand_id">
                                 {{ brand.manufacturer?.manufacturer_name || 'Unknown Manufacturer' }} - {{ brand.brand_name }}
                             </option>
                         </select>
@@ -494,8 +491,9 @@
         </BaseModal>
     </div>
 </template>
+
 <script setup lang="ts">
-import { ref, computed, onMounted, watch, nextTick } from 'vue'
+import { ref, computed, onMounted, watch, nextTick, onUnmounted } from 'vue'
 import axios from 'axios'
 import BaseModal from '@/components/common/BaseModal.vue'
 import TableLoader from '@/components/ui/TableLoader.vue'
@@ -508,6 +506,7 @@ import api from '@/services/api'
 import { toast } from 'vue3-toastify'
 import 'vue3-toastify/dist/index.css'
 import Swal from 'sweetalert2'
+
 interface GraftSize {
     id?: string
     size: string
@@ -515,6 +514,7 @@ interface GraftSize {
     price: number | null
     stock: number
 }
+
 interface GraftRequest {
     graft_size_id: string
     brand_id: string
@@ -535,6 +535,7 @@ interface GraftRequest {
         manufacturer_name: string
     }
 }
+
 interface Brand {
     brand_id: string
     brand_name: string
@@ -543,6 +544,7 @@ interface Brand {
         manufacturer_name: string
     }
 }
+
 const graftRequest = ref<GraftRequest[]>([])
 const brandData = ref<Brand[]>([])
 const itemsPerPage = ref(10)
@@ -572,16 +574,20 @@ const serverStats = ref({
     brands: [] as { id: string; name: string; count: number }[]
 })
 const stats = computed(() => serverStats.value)
+const statsPollingInterval = ref<number | null>(null)
 const isLowStock = (stock: number) => stock < 10 // Threshold: Customize as needed
+
 function addGraftSize() {
     formData.value.graftSizes.push({ size: '', area: null, price: null, stock: 0, id: undefined })
 }
+
 function removeGraftSize(index: number) {
     formData.value.graftSizes.splice(index, 1)
     if (formData.value.graftSizes.length === 0) {
         formData.value.graftSizes.push({ size: '', area: null, price: null, stock: 0, id: undefined })
     }
 }
+
 async function editGraft(graft: GraftRequest) {
     selectedGraftRequest.value = graft
     showCreateForm.value = false
@@ -591,18 +597,21 @@ async function editGraft(graft: GraftRequest) {
     formData.value = {
         brand_id: brandId,
         graftSizes: [{
-        id: graft.graft_size_id,
-        size: graft.size,
-        area: graft.area ?? null,
-        price: graft.price ?? null,
-        stock: graft.stock
+            id: graft.graft_size_id,
+            size: graft.size,
+            area: graft.area ?? null,
+            price: graft.price ?? null,
+            stock: graft.stock
         }]
     }
     // Optional: Validate brand exists in brandData
     if (!brandData.value.some(b => b.brand_id === brandId)) {
-        toast.warning('Brand not found in list. Please refresh.')
+        toast.warning('Brand not found in list. Please refresh or check Brand Management.')
+        // Fallback: Set to empty to prompt selection
+        formData.value.brand_id = ''
     }
 }
+
 async function confirmDelete(graft: GraftRequest) {
     try {
         const result = await Swal.fire({
@@ -631,6 +640,7 @@ async function confirmDelete(graft: GraftRequest) {
         toast.error('Failed to delete Graft.')
     }
 }
+
 async function confirmToggleStatus(graft: GraftRequest) {
     const isActive = graft.graft_status === 0
     const action = isActive ? 'deactivate' : 'activate'
@@ -668,6 +678,7 @@ async function confirmToggleStatus(graft: GraftRequest) {
         toast.error(`Failed to ${action} Graft.`)
     }
 }
+
 async function confirmArchive(graft: GraftRequest) {
     try {
         const isArchived = graft.graft_status === 2;
@@ -705,6 +716,7 @@ async function confirmArchive(graft: GraftRequest) {
         toast.error(`Failed to ${graft.graft_status === 2 ? 'unarchive' : 'archive'} Graft.`)
     }
 }
+
 async function handleSubmitForm() {
     try {
         if (showCreateForm.value) {
@@ -739,16 +751,23 @@ async function handleSubmitForm() {
                 toast.error('Size is required.')
                 return
             }
+
+            // Track original brand for comparison
+            const originalBrandId = selectedGraftRequest.value?.brand_id || ''
+
             const payload = {
+                brand_id: formData.value.brand_id || originalBrandId, // Include brand_id (send empty if unchanged, but backend handles 'sometimes')
                 size: graftSize.size,
                 area: graftSize.area ?? 0,
                 price: graftSize.price ?? 0,
                 stock: graftSize.stock ?? 0,
             }
+
             const { data } = await api.put(
                 `/management/update/${selectedGraftRequest.value?.graft_size_id}/updategraftsize`,
                 payload
             )
+
             toast.success(data.message || 'Graft Size Updated Successfully!')
             await getAllGraftRequests()
             await fetchGraftStats()
@@ -771,18 +790,21 @@ async function handleSubmitForm() {
         }
     }
 }
+
 function closeForm() {
     showCreateForm.value = false
     showEditForm.value = false
     selectedGraftRequest.value = null
     clearForm()
 }
+
 function clearForm(){
     formData.value = {
         brand_id: '',
         graftSizes: [{ size: '', area: null, price: null, stock: 0, id: undefined }]
     }
 }
+
 const filteredGraftRequest = computed(() => {
     return graftRequest.value.filter(graft => {
         const brandName = graft.brand?.brand_name || ''
@@ -800,14 +822,17 @@ const filteredGraftRequest = computed(() => {
         return matchesSearch && matchesStatus
     })
 })
+
 const totalPages = computed(() => {
     return Math.max(1, Math.ceil(totalResults.value / itemsPerPage.value))
 })
+
 const paginatedGrafts = computed(() => {
     const start = (currentPage.value - 1) * itemsPerPage.value
     const end = start + itemsPerPage.value
     return filteredGraftRequest.value.slice(start, end)
 })
+
 const paginationNumbers = computed(() => {
     const pages = []
     const siblingCount = 1
@@ -834,22 +859,27 @@ const paginationNumbers = computed(() => {
     pages.push(total)
     return pages
 })
+
 function goToPage(page: number) {
     currentPage.value = page
 }
+
 function previousPage() {
     if (currentPage.value > 1) {
         currentPage.value--
     }
 }
+
 function nextPage() {
     if (currentPage.value < totalPages.value) {
         currentPage.value++
     }
 }
+
 const getStatusColor = (status: number) => {
     return graftStatus[status]?.classes || 'bg-gray-50 text-gray-700 dark:bg-gray-900/20 dark:text-gray-400'
 }
+
 const getStatusIcon = (status: number) => {
     switch (status) {
         case 0: return CheckCircle2
@@ -858,11 +888,13 @@ const getStatusIcon = (status: number) => {
         default: return XCircle
     }
 }
+
 const formatDate = (dateStr: string | null) => {
-    return dateStr && dateStr !== 'N/A' 
+    return dateStr && dateStr !== 'N/A'
         ? new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
         : 'N/A'
 }
+
 const showFormModal = computed({
     get: () => showCreateForm.value || showEditForm.value,
     set: (value: boolean) => {
@@ -871,6 +903,7 @@ const showFormModal = computed({
         }
     }
 })
+
 const showDetailsModal = computed({
     get: () => selectedGraftRequest.value !== null && !showEditForm.value,
     set: (value: boolean) => {
@@ -880,6 +913,7 @@ const showDetailsModal = computed({
         }
     }
 })
+
 async function fetchGraftStats() {
     try {
         const { data } = await api.get('/management/graft-sizes/stats', {
@@ -902,6 +936,35 @@ async function fetchGraftStats() {
         console.error('Failed to fetch graft stats', err)
     }
 }
+
+function startStatsPolling() {
+    if (statsPollingInterval.value) return; // Already running
+    
+    statsPollingInterval.value = setInterval(() => {
+        fetchGraftStats();
+    }, 30000); // Poll every 30 seconds
+}
+
+function stopStatsPolling() {
+    if (statsPollingInterval.value) {
+        clearInterval(statsPollingInterval.value);
+        statsPollingInterval.value = null;
+    }
+}
+
+watch(showStats, (newVal) => {
+    if (newVal) {
+        fetchGraftStats(); // Immediate refresh on show
+        startStatsPolling(); // Start polling
+    } else {
+        stopStatsPolling(); // Stop to save resources
+    }
+});
+
+onUnmounted(() => {
+    stopStatsPolling();
+});
+
 async function getAllBrands(){
     tableLoader.value = true
     try {
@@ -911,12 +974,12 @@ async function getAllBrands(){
             }
         })
         brandData.value = (data.brand_data || data.brands || data.data || []).map((brand: any) => ({
-        brand_id: brand.brand_id,
-        brand_name: brand.brand_name,
-        manufacturer: brand.manufacturer ? {
-            manufacturer_id: brand.manufacturer.manufacturer_id,
-            manufacturer_name: brand.manufacturer.manufacturer_name
-        } : undefined
+            brand_id: brand.brand_id,
+            brand_name: brand.brand_name,
+            manufacturer: brand.manufacturer ? {
+                manufacturer_id: brand.manufacturer.manufacturer_id,
+                manufacturer_name: brand.manufacturer.manufacturer_name
+            } : undefined
         }))
         if (brandData.value.length === 0) {
             toast.warning('No brands available. Create some in Brand Management.')
@@ -929,6 +992,7 @@ async function getAllBrands(){
         tableLoader.value = false
     }
 }
+
 async function getAllGraftRequests(page = 1) {
     tableLoader.value = true
     try {
@@ -961,6 +1025,7 @@ async function getAllGraftRequests(page = 1) {
         tableLoader.value = false
     }
 }
+
 onMounted(async () => {
     await Promise.all([
         getAllBrands(),
@@ -968,14 +1033,17 @@ onMounted(async () => {
         fetchGraftStats()
     ])
 })
+
 watch([searchTerm, statusFilter, itemsPerPage], () => {
     currentPage.value = 1
     getAllGraftRequests(1)
 })
+
 watch(currentPage, () => {
     getAllGraftRequests(currentPage.value)
 })
 </script>
+
 <style scoped>
 @keyframes ping-slow {
     0% { transform: scale(1); opacity: 0.3; }

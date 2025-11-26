@@ -34,7 +34,7 @@ import InvalidMagicLinkView from '@/views/InvalidMagicLinkView.vue'
 
 import { ClipboardDocumentCheckIcon, Squares2X2Icon, SquaresPlusIcon, BuildingLibraryIcon, ClipboardDocumentListIcon, ShieldCheckIcon, BellIcon, ChartBarIcon, ArrowPathIcon, CalculatorIcon, CubeIcon, UsersIcon } from '@heroicons/vue/24/outline'
 import { pageLoader } from '@/composables/ui/usePageLoader'
-import { Factory, Package, PencilRuler, ShoppingCart  } from 'lucide-vue-next'
+import { Factory, Package, PencilRuler, ShoppingCart } from 'lucide-vue-next'
 
 // Types
 interface NavigationItem {
@@ -438,14 +438,14 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 
 	const routeRoles: Record<string, number[]> = {
 		'admin-dashboard': [0, 1],
-		'clinic-dashboard': [0, 1, 2],
+		'clinic-dashboard': [2, 3],
 		'clinic': [0, 1, 2],
 		'admin-inventory': [0],
 		'office-staff-inventory': [1],
 		'manufacturer-inventory': [4],
 		'biller-inventory': [5],
-		'invoice-management': [0, 1],
-		'ivr-management': [0, 1, 2, 4],
+		'invoice-management': [0, 1, 2],
+		'ivr-management': [0, 1, 2, 2, 4],
 		'notifications': [0, 1],
 		'order-management': [0, 1],
 		'manufacturer/order-management': [4],
@@ -482,7 +482,18 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 
 			// Office Staff
 			if (role === 1) {
-				return ['admin-dashboard', 'office-staff-users', 'clinic-management', 'manufacturer-management', 'office-staff-inventory', 'invoice-management'].includes(route.name as string)
+				return [
+					'admin-dashboard',
+					'office-staff-users',
+					'clinic-management',
+					'manufacturer-management',
+					'ivr-management',
+					'order-management',
+					'office-staff-inventory',
+					'brand-management',
+					'graft-size',
+					'invoice-management'
+				].includes(route.name as string)
 			}
 
 			// Clinics
@@ -494,12 +505,19 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 					'clinic/order-management',
 					'ivr-management',
 					'invoice-management',
+					'graft-size',
 				].includes(route.name as string)
 			}
 
 			// Clinician
 			if (role === 3) {
-				return ['clinic-dashboard'].includes(route.name as string)
+				return [
+					// 'clinic-dashboard',
+					'clinic/order-management',
+					'ivr-management',
+					'invoice-management',
+					'graft-size',
+				].includes(route.name as string)
 			}
 
 			// Manufacturer
@@ -513,7 +531,7 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 
 			// Biller
 			if (role === 5) {
-				return [''].includes(route.name as string)
+				return ['ivr-management', 'invoice-management'].includes(route.name as string)
 			}
 
 			const allowedRoles = routeRoles[route.name as string]

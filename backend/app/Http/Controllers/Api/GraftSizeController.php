@@ -11,6 +11,7 @@ use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 use App\Traits\AuditLogger;
+use Illuminate\Support\Arr;
 
 class GraftSizeController extends Controller
 {
@@ -173,16 +174,28 @@ class GraftSizeController extends Controller
     public function updateGraftSize(Request $request, $id)
     {
         $graft = GraftSize::findOrFail($id);
+        $oldBrandId = $graft->brand_id;
+        $oldSize = $graft->size;
+
         $validated = $request->validate([
+            'brand_id' => ['sometimes', 'integer', 'exists:woundmed_brands,brand_id'], // Optional, but validated if present
             'size' => ['required', 'string', 'max:255'],
             'area' => ['required', 'numeric', 'min:0'],
             'price' => ['required', 'numeric', 'min:0'],
             'stock' => ['required', 'integer', 'min:0'],
         ]);
-        $oldSize = $graft->size;
-        $graft->update($validated);
+
+        // Update brand_id if provided and changed
+        if (isset($validated['brand_id']) && $validated['brand_id'] !== $oldBrandId) {
+            $graft->brand_id = $validated['brand_id'];
+        }
+
+        // Update other fields, excluding brand_id (already handled above)
+        $graft->update(Arr::except($validated, ['brand_id']));
+
         $graft->load(['brand.manufacturer']);
-        // Fixed: Null checks and consistent formatting
+
+        // Format response (unchanged)
         $brand = $graft->brand ?? null;
         $manufacturer = $brand?->manufacturer ?? null;
         $formatted = [
@@ -192,7 +205,7 @@ class GraftSizeController extends Controller
             'area' => (float) ($graft->area ?? 0),
             'price' => (float) ($graft->price ?? 0),
             'stock' => (int) $graft->stock,
-            'graft_status' => (int) $graft->graft_status, // Preserves current status (0/1/2)
+            'graft_status' => (int) $graft->graft_status,
             'created_at' => $graft->created_at?->toDateTimeString() ?? now()->toDateTimeString(),
             'updated_at' => $graft->updated_at?->toDateTimeString() ?? 'N/A',
             'brand' => [
@@ -204,8 +217,17 @@ class GraftSizeController extends Controller
                 'manufacturer_name' => $manufacturer?->manufacturer_name ?? 'N/A',
             ],
         ];
-        // Log audit trail
-        $this->logAudit($request, 'graft_size_update', "Graft size updated: {$oldSize} -> {$graft->size}", $id);
+
+        // Enhanced audit log for brand change
+        $changes = [];
+        if (isset($validated['brand_id']) && $validated['brand_id'] !== $oldBrandId) {
+            $oldBrand = Brand::find($oldBrandId);
+            $newBrand = Brand::find($validated['brand_id']);
+            $changes[] = "Brand changed: {$oldBrand?->brand_name} -> {$newBrand?->brand_name}";
+        }
+        $changes[] = "Size updated: {$oldSize} -> {$graft->size}";
+        $this->logAudit($request, 'graft_size_update', implode('; ', $changes), $id);
+
         return response()->json([
             'message' => 'Graft size updated successfully',
             'data' => $formatted
@@ -298,9 +320,10 @@ class GraftSizeController extends Controller
         $active = GraftSize::where('graft_status', 0)->count();
         $inactive = GraftSize::where('graft_status', 1)->count();
         $archived = GraftSize::where('graft_status', 2)->count();
+
         // Top 10 brands by count (with manufacturer)
         $brands = GraftSize::selectRaw('woundmed_brands.brand_id, woundmed_brands.brand_name, COUNT(*) as count')
-            ->leftJoin('woundmed_brands', 'graft_sizes.brand_id', '=', 'woundmed_brands.brand_id')
+            ->leftJoin('woundmed_brands', 'woundmed_graft_sizes.brand_id', '=', 'woundmed_brands.brand_id')  // Fixed table name
             ->groupBy('woundmed_brands.brand_id', 'woundmed_brands.brand_name')
             ->orderByDesc('count')
             ->limit(10)
@@ -313,9 +336,6 @@ class GraftSizeController extends Controller
                 ];
             });
 
-        echo '<pre>';
-        print_r($brands);
-        exit();
         return response()->json([
             'total' => $total,
             'active' => $active,

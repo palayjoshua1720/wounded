@@ -85,7 +85,7 @@ class ManufacturerController extends Controller
             'contactPerson'     => 'required|string|max:255',
             'contactNumber'     => 'required|string|max:20',
             'ivrForm'           => 'required|file|mimes:pdf,doc,docx|max:10240', // 10MB max
-            'logo'              => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Optional logo, 2MB max
+            'logo'              => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'manufacturerStatus' => 'required|in:0,1,2',
         ]);
 
@@ -186,7 +186,7 @@ class ManufacturerController extends Controller
             'contactPerson'     => 'required|string|max:255',
             'contactNumber'     => 'required|string|max:20',
             'ivrForm'           => 'nullable|file|mimes:pdf,doc,docx|max:10240',
-            'logo'              => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Optional logo
+            'logo'              => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'manufacturerStatus' => 'required|in:0,1,2',
         ]);
 
@@ -263,9 +263,11 @@ class ManufacturerController extends Controller
     public function downloadIVRForm($id)
     {
         $manufacturer = Manufacturer::findOrFail($id);
+
         if (!$manufacturer->filepath || !Storage::disk('private')->exists($manufacturer->filepath)) {
             return response()->json(['error' => 'File not found'], 404);
         }
+
         $filename = basename($manufacturer->filepath);
         return Storage::disk('private')->download($manufacturer->filepath, $filename);
     }
