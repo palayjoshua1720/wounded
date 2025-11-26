@@ -482,7 +482,18 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 
 			// Office Staff
 			if (role === 1) {
-				return ['admin-dashboard', 'office-staff-users', 'clinic-management', 'manufacturer-management', 'office-staff-inventory', 'invoice-management'].includes(route.name as string)
+				return [
+					'admin-dashboard',
+					'office-staff-users',
+					'clinic-management',
+					'manufacturer-management',
+					'ivr-management',
+					'order-management',
+					'office-staff-inventory',
+					'brand-management',
+					'graft-size',
+					'invoice-management'
+				].includes(route.name as string)
 			}
 
 			// Clinics
@@ -491,13 +502,22 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 					'clinic-dashboard',
 					'user-clinicians',
 					// 'clinic-management',
-					'clinic/order-management'
+					'clinic/order-management',
+					'ivr-management',
+					'invoice-management',
+					'graft-size',
 				].includes(route.name as string)
 			}
 
 			// Clinician
 			if (role === 3) {
-				return ['clinic-dashboard'].includes(route.name as string)
+				return [
+					'clinic-dashboard',
+					'clinic/order-management',
+					'ivr-management',
+					'invoice-management',
+					'graft-size',
+				].includes(route.name as string)
 			}
 
 			// Manufacturer

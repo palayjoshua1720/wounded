@@ -131,6 +131,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/management/order/getgraftsizes', [OrderController::class, 'getAllGraftSizes']);
     Route::get('/management/order/users/getpatients', [OrderController::class, 'getAllPatients']);
  
+ 
     Route::post('/management/order/add/neworder', [OrderController::class, 'addNewOrder']);
     Route::put('/management/order/update/{id}/updateorder', [OrderController::class, 'updateOrder']);
     Route::put('/management/order/delete/{id}/deleteorder', [OrderController::class, 'deleteOrder']);
