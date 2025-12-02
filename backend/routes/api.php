@@ -31,6 +31,10 @@ Route::post('/reset-password', [ResetPassword::class, 'reset']);
 Route::post('/magic-order-auth', [OrderController::class, 'validateMagicLink']);
 Route::post('/magic-ivr-auth', [IVRRequestController::class, 'validateMagicLinkIVR']);
 
+// Public API Call - for magic links
+Route::get('/management/public/order/getgraftsizes', [OrderController::class, 'getAllGraftSizes']);
+Route::put('/management/public/magicorder/update/{id}/updateorderstatus', [OrderController::class, 'updateMagicOrderStatus']);
+
 // Sample Routes
 Route::get('/sample', [SampleController::class, 'index']);
 Route::post('/auth/login', [AuthController::class, 'login']);
@@ -96,7 +100,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/management/ivr/getclinics', [IVRRequestController::class, 'getAllClinic']);
     Route::get('/management/patients/patientinfo', [IVRRequestController::class, 'getAllPatientInfo']);
     Route::post('/management/add/newivrrequest', [IVRRequestController::class, 'addIVRRequest']);
-    Route::post('/management/update/{id}/updateivrrequest', [IVRRequestController::class, 'updateIVRRequest']);
+    Route::post('/management/update/{id}/updateivr', [IVRRequestController::class, 'updateIVRRequest']);
+    Route::put('/management/update/{id}/updateivreligiblity', [IVRRequestController::class, 'updateEligibilityStatus']);
     Route::post('/management/update/{id}/updateivrrequest', [IVRRequestController::class, 'updateMagicIVRStatus']);
     Route::put('/management/delete/{id}/deleteivrrequest', [IVRRequestController::class, 'deleteIVRRequest']);
     Route::put('/management/archive/{id}/archiveivrrequest', [IVRRequestController::class, 'archiveIVRRequest']);

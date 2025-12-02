@@ -17,19 +17,17 @@ class Clinic extends Model
         'clinic_name',
         'email',
         'clinic_code',
-        'clinic_public_code',
+        'clinic_public_id',
         'contact_person',
         'clinic_status',
         'phone',
         'address',
-        'assigned_clinician_ids',
-        'clinic_status',
+        'logo',
     ];
 
     protected $casts = [
         'isActive'               => 'boolean',
-        'clinic_status'          => 'boolean',
-        'assigned_clinician_ids' => 'array',
+        'clinic_status'          => 'integer',
     ];
 
     protected static function boot()

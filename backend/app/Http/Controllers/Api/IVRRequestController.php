@@ -148,7 +148,7 @@ class IVRRequestController extends Controller
                 'patient_id' => $validated['patient_id'] ?? null,
                 'filepath' => $path,
                 'description' => $validated['notes'] ?? null,
-                'eligibility_status' => $request['eligibility_status'] ?? 0,
+                'eligibility_status' => 0,
                 'submitted_at' => now(),
                 'timestamp' => now(),
             ]);
@@ -203,7 +203,7 @@ class IVRRequestController extends Controller
         } catch (ValidationException $th) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to create IVR: ' . $th->getMessage(),
+                'message' => 'Failed to create IVR Request: ' . $th->getMessage(),
             ], 500);
         }
     }
@@ -253,13 +253,9 @@ class IVRRequestController extends Controller
 
             $ivr->save();
 
-            if($request[isExternal] && $request[isExternal] == 1){
-                
-            }
-
             return response()->json([
                 'success' => true,
-                'message' => 'Order details updated successfully!',
+                'message' => 'IVR details updated successfully!',
             ]);
         } catch (ValidationException $th) {
             return response()->json([
@@ -267,6 +263,35 @@ class IVRRequestController extends Controller
                 'message' => 'Failed to update IVR: ' . $th->getMessage(),
             ], 500);
         }
+    }
+
+    public function updateEligibilityStatus(Request $request, $id)
+    {
+        $ip = $request->server('HTTP_X_FORWARDED_FOR') ?? $request->server('REMOTE_ADDR');
+        $tempPassword = Str::random(12);
+        $prevHash = $this->getLastRowHash();
+
+        try {
+            $validated = $request->validate([
+                'eligibility_status' => 'required|int|max:255',
+            ]);
+
+            $ivr = IVR::findOrFail($id);
+
+            $ivr->eligibility_status = $validated['eligibility_status'];
+
+            $ivr->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'IVR eligibility status updated successfully!',
+            ]);
+        } catch (ValidationException $th) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update IVR eligibility status: ' . $th->getMessage(),
+            ], 500);
+        } 
     }
 
     public function deleteIVRRequest(Request $request, $id)

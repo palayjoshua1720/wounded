@@ -70,8 +70,15 @@
 							v-for="order in filteredOrders"
 							:key="order.order_id"
 							class="hover:bg-gray-50 dark:hover:bg-gray-700">
-								<td class="px-6 py-4 whitespace-nowrap">
-									<div class="text-sm font-medium text-gray-900 dark:text-white">#{{ order.order_code }}</div>
+								<td class="px-6 py-3 whitespace-nowrap">
+									<div class="flex items-center">
+										<div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+											<BaggageClaim class="w-5 h-5 text-green-600" />
+										</div>
+										<div class="ml-4">
+											<div class="text-sm text-gray-900 dark:text-white">{{ order.order_code }}</div>
+										</div>
+									</div>
 								</td>
 								<td class="px-6 py-4 whitespace-nowrap">
 									<div class="text-sm text-gray-900 dark:text-white">{{ order.clinic?.clinic_name }}</div>
@@ -268,7 +275,7 @@ import {
     Search, Funnel, Eye, CircleCheck,
 	Truck, Box, CircleUser, Calendar1,
 	FileTextIcon, ShoppingCart, ChevronDown,
-	Package, 
+	Package, BaggageClaim
 } from 'lucide-vue-next';
 import api from '@/services/api'
 import { toast } from 'vue3-toastify'

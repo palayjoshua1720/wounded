@@ -10,7 +10,10 @@
 				<div class="flex items-start justify-between mb-4">
 					<div>
 						<div class="flex items-center gap-3">
-							<div class="p-2 bg-green-100 rounded-lg">
+							<div v-if="user.logo" class="w-14 h-14 rounded-lg overflow-hidden bg-gray-100">
+                                <img :src="user.logo" :alt="`${user.name} logo`" class="w-full h-full object-cover border" />
+                            </div>
+							<div v-else class="p-2 bg-green-100 rounded-lg">
 								<Hospital class="w-5 h-5 text-green-600" />
 							</div>
 
@@ -23,14 +26,15 @@
 										'inline-flex px-2 py-1 text-xs rounded-full w-fit',
 										user.isActive === 1
 											? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
-											: 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
+											: user.isActive === 2
+												? 'bg-yellow-100 text-yellow-600 hover:text-yellow-900 dark:bg-yellow-900/20 dark:text-yellow-400 dark:hover:text-yellow-300'
+												: 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
 									]"
 								>
 									{{ userStatus[user.isActive]?.label || 'Unknown' }}
 								</span>
 							</div>
 						</div>
-
 					</div>
 					<div class="flex items-center space-x-2">
 						<button @click="$emit('view-clinic', user)" class="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300">
@@ -71,7 +75,7 @@
 					</div>
 				</div>
 				<div class="space-y-2 text-sm text-gray-600 dark:text-gray-400">
-					<div class="flex items-center gap-2">
+					<div v-if="user.address" class="flex items-center gap-2">
 						<MapPin class="w-4 h-4" />
 						<span>{{ user.address }}</span>
 					</div>
@@ -123,20 +127,10 @@
 import ContentLoader from '@/components/ui/ContentLoader.vue'
 import Pagination from '@/components/ui/Pagination.vue'
 import {
-	Eye,
-	SquarePen,
-	CircleCheck,
-	CircleX,
-	Trash2,
-	Hospital,
-	MapPin,
-	Phone,
-	Mail,
-	CalendarPlus,
-	IdCard,
-	IdCardLanyard,
-	Archive,
-	ArchiveRestore,
+	Eye, SquarePen, CircleCheck, CircleX,
+	Trash2, Hospital, MapPin, Phone,
+	Mail, CalendarPlus, IdCard, IdCardLanyard,
+	Archive, ArchiveRestore,
 } from 'lucide-vue-next'
 
 interface Clinician {
@@ -158,6 +152,7 @@ interface User {
 	createdAt: string
 	address: string
 	clinicianId: string
+	logo?: string | null
 	assigned_clinician_ids: Clinician[]
 }
 

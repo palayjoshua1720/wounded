@@ -420,14 +420,26 @@ class OrderController extends Controller
     public function updateMagicOrderStatus(Request $request, $orderId)
     {
         $validated = $request->validate([
-            'order_status' => 'required|integer|min:0|max:4',
-            'token'        => 'required|string'
+            'order_status'  => 'required|integer|min:0|max:4',
+            'order_number'  => 'required_if:order_status,1|string|max:255',
+            'tracking_code' => 'required_if:order_status,2|string|max:255',
+            'token'         => 'required|string',
         ]);
 
         $order = Orders::findOrFail($orderId);
-        $order->update([
-            'order_status' => $validated['order_status']
-        ]);
+        $dataToUpdate = [
+            'order_status' => $validated['order_status'],
+        ];
+
+        if ($request->filled('order_number')) {
+            $dataToUpdate['order_number'] = $request->order_number;
+        }
+
+        if ($request->filled('tracking_code')) {
+            $dataToUpdate['tracking_code'] = $request->tracking_code;
+        }
+
+        $order->update($dataToUpdate);
 
         # Validate magic token first
         $tokenRecord = DB::table('magic_tokens')
@@ -636,7 +648,7 @@ class OrderController extends Controller
         $user = Auth::user();
         $perPage = $request->query('per_page', 10);
 
-        if (!$user || $user->user_role !== 2) {
+        if (!$user || !in_array($user->user_role, [2, 3])) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized. Only clinics can access this.',

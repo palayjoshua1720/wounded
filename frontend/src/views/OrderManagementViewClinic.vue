@@ -79,8 +79,15 @@
 							v-for="order in filteredOrders"
 							:key="order.order_id"
 							class="hover:bg-gray-50 dark:hover:bg-gray-700">
-								<td class="px-6 py-4 whitespace-nowrap">
-									<div class="text-sm font-medium text-gray-900 dark:text-white">#{{ order.order_code }}</div>
+								<td class="px-6 py-3 whitespace-nowrap">
+									<div class="flex items-center">
+										<div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+											<BaggageClaim class="w-5 h-5 text-green-600" />
+										</div>
+										<div class="ml-4">
+											<div class="text-sm text-gray-900 dark:text-white">{{ order.order_code }}</div>
+										</div>
+									</div>
 								</td>
 								<td class="px-6 py-4 whitespace-nowrap">
 									<div class="text-sm text-gray-900 dark:text-white">{{ order.clinic?.clinic_name }}</div>
@@ -580,7 +587,7 @@ import {
 	Truck, Box, CircleUser, Calendar1,
 	FileTextIcon, ShoppingCart, ChevronDown,
 	Package, PackagePlus, TriangleAlert,
-	SquarePen
+	SquarePen, BaggageClaim
 } from 'lucide-vue-next';
 import api from '@/services/api'
 import { toast } from 'vue3-toastify'
@@ -1150,16 +1157,16 @@ async function getAllOrders(page = 1)
 				clinician: o.clinician,
 				patient: o.patient,
 				brand: o.brand,
-                ivr_num: o.ivr.ivr_number,
-				manufacturer_name: o.ivr.manufacturer.manufacturer_name
+                ivr_num: o.ivr?.ivr_number ?? '',
+				manufacturer_name: o.ivr?.manufacturer?.manufacturer_name ?? '',
 			} as Order
 		})
 
 		pagination.value = {
-            current_page: Number(data?.current_page ?? 1),
-            last_page: Number(data?.last_page ?? 1),
-            per_page: Number(data?.per_page ?? itemsPerPage.value),
-            total: Number(data?.total ?? rows.length),
+            current_page: Number(data?.meta.current_page ?? 1),
+            last_page: Number(data?.meta.last_page ?? 1),
+            per_page: Number(data?.meta.per_page ?? itemsPerPage.value),
+            total: Number(data?.meta.total ?? rows.length),
         }
     } catch (error: any) {
 		orders.value = []

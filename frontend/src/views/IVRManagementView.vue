@@ -145,7 +145,10 @@
 								</td> -->
 								<td class="px-6 py-3 whitespace-nowrap text-sm font-medium space-x-2">
 									<button
-									@click="selectedIvrRequest = ivr; showUserDetailsModal = true"
+									@click="
+										selectedIvrRequest = ivr;
+										showIvrDetails(ivr)
+									"
 									class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
 									title="View Details"
 									>
@@ -355,9 +358,65 @@
 						</div>
 					</div>
 
-					<div>
-						
+					<div class="border-t border-gray-200 pt-6">
+						<label class="text-lg font-medium text-gray-900 dark:text-white mb-4">
+							<span>Override Eligibility Status</span>
+						</label>
+						<div class="flex items-center gap-3 w-full">
+							<div class="flex space-x-3 items-center">
+								<select
+									:key="selectedIvrRequest.eligibility_status"
+									v-model="overrideStatus"
+									class="w-56 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 
+									bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-200 
+									shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 
+									transition-all duration-150 cursor-pointer
+									disabled:opacity-50 disabled:cursor-not-allowed"
+								>
+									<option disabled value="">-- Select Eligibility Status --</option>
+
+									<option
+										value="0"
+										:disabled="selectedIvrRequest.eligibility_status === 0"
+									>
+										Pending
+									</option>
+									<option
+										value="1"
+										:disabled="selectedIvrRequest.eligibility_status === 1"
+									>
+										Eligible
+									</option>
+									<option
+										value="2"
+										:disabled="selectedIvrRequest.eligibility_status === 2"
+									>
+										Not Eligible
+									</option>
+								</select>
+							</div>
+							<button
+								:disabled="!overrideStatus || overrideStatus === selectedIvrRequest.eligibility_status"
+								@click="applyOverride"
+								class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors 
+									disabled:opacity-50 disabled:cursor-not-allowed"
+							>
+								Apply Override
+							</button>
+						</div>
 					</div>
+				</div>
+			</template>
+			<template #actions>
+				<!-- Actions -->
+				<div class="p-4 flex items-center gap-2">
+					<button
+						type="button"
+						@click="closeForm"
+						class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+					>
+						Cancel
+					</button>
 				</div>
 			</template>
 		</BaseModal>
@@ -437,6 +496,7 @@
 							<span>IVR Status<span class="text-red-500">*</span></span>
 						</label>
 						<select
+							:key="formData.eligibility_status"
 							v-model="formData.eligibility_status"
 							class="mt-1 w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl 
 								focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 
@@ -722,12 +782,15 @@ interface Manufacturer {
 	manufacturer_name: string
 	filepath: string
 	primary_email?: string
+	eligibility_status: number
 }
 
 interface Clinic {
 	clinic_id: string
 	clinic_name: string
 }
+
+const overrideStatus = ref<number>(0);
 
 const ivrRequest = ref<IVRRequest[]>([])
 const brandData = ref<Brand[]>([])
@@ -782,7 +845,7 @@ const formData = ref({
 	patient_id: '',
 	description: '',
 	status: '',
-	eligibility_status: '',
+	eligibility_status: 0,
 	filepath: '',
 	ivr_status: 0
 })
@@ -794,13 +857,14 @@ function handleToggleStatus(id: string) {
 	}
 }
 
+function showIvrDetails(ivr: IVRRequest){
+	showUserDetailsModal.value = true
+	formData.value.eligibility_status = ivr.eligibility_status
+}
+
 async function editIVR(ivr: IVRRequest) {
 	selectedIvrRequest.value = ivr
-	showCreateForm.value = false
-	showUserDetailsModal.value = false
-	showEditForm.value = true
 
-	await nextTick();
 	formData.value = {
 		patient_id: ivr.patient_id,
 		clinic_id: ivr.clinic_id,
@@ -808,11 +872,17 @@ async function editIVR(ivr: IVRRequest) {
 		description: ivr.description,
 		status: ivr.ivr_status.toString(),
 		manufacturer_id: ivr.manufacturer?.manufacturer_id || '',
-		eligibility_status: ivr.eligibility_status.toString(),
+		eligibility_status: ivr.eligibility_status,
 		filepath: ivr.filepath || '',
 		ivr_status:ivr.ivr_status || 0,
 		primary_email: '',
 	}
+	
+	await nextTick();
+
+	showCreateForm.value = false
+	showUserDetailsModal.value = false
+	showEditForm.value = true
 }
 
 async function confirmDelete(ivr: IVRRequest) {	
@@ -890,11 +960,14 @@ async function handleSubmitForm() {
 		payload.append('notes', formData.value.description)
 		payload.append('clinic_id', formData.value.clinic_id)
 		payload.append('manufacturer_id', formData.value.manufacturer_id)
-		payload.append('eligibility_status', formData.value.eligibility_status)
+		payload.append('eligibility_status', formData.value.eligibility_status.toString())
 		payload.append('primary_email', formData.value.primary_email)
 
 		if (selectedFile.value) {
 			payload.append('filepath', selectedFile.value)
+		} else {
+			toast.error('IVR Information Required.')
+			return;
 		}
 
 		Swal.fire({
@@ -926,7 +999,7 @@ async function handleSubmitForm() {
 			closeForm()
 		} else if (showEditForm.value) {
 			const { data } = await api.post(
-                `/management/update/${selectedIvrRequest.value?.ivr_id}/updateivrrequest`,
+                `/management/update/${selectedIvrRequest.value?.ivr_id}/updateivr`,
                 payload,
                 {
                     headers: {
@@ -936,12 +1009,14 @@ async function handleSubmitForm() {
                 }
          	)
 
+			Swal.close()
 			toast.success(data.message || 'IVR Request Updated Successfully!')
 			await getAllIVRRequests()
 			resetFileState()
 		}
 		closeForm()
 	} catch (err: unknown) {
+		Swal.close()
 		if (axios.isAxiosError(err)) {
 			const status = err.response?.status
 			const data = err.response?.data
@@ -957,6 +1032,44 @@ async function handleSubmitForm() {
 		} else {
 			toast.error("Something went wrong")
 		}
+	}
+}
+
+async function applyOverride() {
+	if (!overrideStatus.value) return;
+
+	const statusNumber = {
+			0: 'Pending',
+			1: 'Eligible',
+			2: 'Not Eligible',
+		}[overrideStatus.value];
+	
+	const result = await Swal.fire({
+		title: "Override Eligiblity Status?",
+		text: `Set status to "${statusNumber}"`,
+		icon: "warning",
+		showCancelButton: true,
+		confirmButtonText: "Yes, override",
+		cancelButtonText: "Cancel",
+		confirmButtonColor: "#d33"
+	});
+
+	if (!result.isConfirmed) return;
+
+	try {
+
+		await api.put(
+			`/management/update/${selectedIvrRequest.value?.ivr_id}/updateivreligiblity`,
+			{ eligibility_status: overrideStatus.value }
+		);
+
+		toast.success("Order status overridden successfully!");
+		overrideStatus.value = 0;
+		await getAllIVRRequests(1);
+		closeForm();
+	} catch (error) {
+		console.error(error);
+		toast.error("Failed to override status.");
 	}
 }
 
@@ -977,7 +1090,7 @@ function clearForm(){
 		patient_id: '',
 		description: '',
 		status: '',
-		eligibility_status: '',
+		eligibility_status: 0,
 		filepath: '',
 		ivr_status: 0,
 	}
@@ -1281,6 +1394,18 @@ watch(selectedManufacturer, (manufacturer) => {
 		formData.value.manufacturer_id = manufacturer.manufacturer_id
 		formData.value.primary_email = manufacturer.primary_email ?? ''
 		console.log(formData.value.primary_email);
+		formData.value.brand_id = selectedIvrRequest.value?.brand_id ?? '';
+		
+	} else {
+		formData.value.manufacturer_id = ''
+	}
+})
+watch(selectedManufacturer, (manufacturer) => {
+	if (manufacturer) {
+		formData.value.manufacturer_id = manufacturer.manufacturer_id
+		formData.value.primary_email = manufacturer.primary_email ?? ''
+		console.log(formData.value.primary_email);
+		formData.value.brand_id = selectedIvrRequest.value?.brand_id ?? '';
 		
 	} else {
 		formData.value.manufacturer_id = ''
@@ -1293,14 +1418,15 @@ watch(selectedPatient, (patient) => {
 
 	if (clinic) {
 		formData.value.clinic_id = clinic.clinic_id;
+		
 	} else {
 		formData.value.clinic_id = '';
 	}
 
 	if (ivr && typeof ivr.eligibility_status === 'number') {
-		formData.value.eligibility_status = ivr.eligibility_status.toString();
+		formData.value.eligibility_status = ivr.eligibility_status;
 	} else {
-		formData.value.eligibility_status = '';
+		formData.value.eligibility_status = 0;
 	}
 });
 
@@ -1323,10 +1449,15 @@ watch(itemsPerPage, () => {
     getAllClinics(1)
 })
 
-watch(() => formData.value.brand_id, () => {
-	if (!selectedIvrRequest.value) return
+watch(
+	() => selectedIvrRequest.value,
+	(newVal) => {
+		if (!newVal || isCreateMode.value) return;
 
-})
+		formData.value.brand_id = newVal.brand_id?.toString() || '';
+	},
+	{ immediate: true }
+);
 </script>
 
 <style scoped>

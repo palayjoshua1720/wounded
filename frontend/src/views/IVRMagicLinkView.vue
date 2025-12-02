@@ -4,7 +4,7 @@
         <div v-if="loading" class="flex items-center justify-center">
             <div class="text-center">
                 <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                <p class="text-gray-600">Validating access link...</p>
+                <p class="text-gray-600">Validating IVR access link...</p>
             </div>
         </div>
 
@@ -167,7 +167,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import {
     FileText, User, ClipboardCheck, FileDown, ReceiptText
 } from 'lucide-vue-next';
@@ -218,6 +218,7 @@ interface PatientInfo {
 }
 
 const route = useRoute();
+const router = useRouter();
 
 const loading = ref(true);
 const isAuthorized = ref(false);
@@ -244,6 +245,7 @@ async function accessMagicLink() {
         isAuthorized.value = true;
     } catch (error: any) {
         console.error('Magic link error:', error);
+        router.replace({ name: "not-found-link" });
         errorMessage.value = error.response?.data?.message || 'Invalid or expired magic link.';
     } finally {
         loading.value = false;
@@ -314,20 +316,67 @@ async function submitEligibility() {
     
     isSubmitting.value = true;
     try {
-        let result: any;
-
         const newStatus = parseInt(eligibilityStatus.value);
+        let result: any = { isConfirmed: true };
 
         if (newStatus === 1) {
-            result = await Swal.fire({
-                title: "Updating IVR: " + ivr.value.ivr_number,
-                text: "You won't be able to revert this!",
+            const stepOne = await Swal.fire({
+                title: "Mark as Eligible?",
+                html: `
+                    Updating IVR: <strong>${ivr.value.ivr_number}</strong><br/><br/>
+                    Are you sure you want to set the eligibility status to <strong>Eligible</strong>?
+                `,
                 icon: "warning",
                 showCancelButton: true,
-                confirmButtonColor: "#3085d6",
-                cancelButtonColor: "#d33",
-                confirmButtonText: "Yes, update it!"
+                confirmButtonText: "Continue",
+                cancelButtonText: "Cancel",
             });
+
+            if (!stepOne.isConfirmed) {
+                isSubmitting.value = false;
+                return;
+            }
+
+            // Step 2: irreversible confirmation
+            result = await Swal.fire({
+                title: "Final Confirmation",
+                html: `
+                    <p>
+                        This action will set the status to <strong>Eligible</strong>, and the link will no longer be accessible.
+                    </p>
+                    <p class="text-red-600 mt-2">This cannot be undone.</p>
+                `,
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#d33",
+                confirmButtonText: "Yes, update now (3)",
+                cancelButtonText: "Cancel",
+                allowOutsideClick: false,
+                didOpen: () => {
+                    const confirmBtn = Swal.getConfirmButton();
+                    let seconds = 3;
+
+                    if (!confirmBtn) return;
+
+                    confirmBtn.disabled = true;
+
+                    const interval = setInterval(() => {
+                        seconds--;
+                        confirmBtn.textContent = `Yes, update now (${seconds})`;
+
+                        if (seconds <= 0) {
+                            clearInterval(interval);
+                            confirmBtn.disabled = false;
+                            confirmBtn.textContent = "Yes, update now";
+                        }
+                    }, 1000);
+                }
+            });
+
+            if (!result.isConfirmed) {
+                isSubmitting.value = false;
+                return;
+            }
         } else {
             result = { isConfirmed: true };
         }

@@ -17,12 +17,14 @@ class Orders extends Model
 
     protected $fillable = [
         'order_code',
+        'order_number',
         'clinic_id',
         'user_id',
         'patient_id',
         'ivr_id',
         'manufacturer_id',
         'tracking_num',
+        'tracking_code',
         'items',
         'order_status',
         'notes',

@@ -4,19 +4,18 @@
         <div v-if="loading" class="flex items-center justify-center">
             <div class="text-center">
                 <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                <p class="text-gray-600">Validating access link...</p>
+                <p class="text-gray-600">Validating order access link...</p>
             </div>
         </div>
 
         <!-- Authorized -->
         <div v-else-if="isAuthorized && displayOrder" class="max-w-8xl mx-auto">
-            <!-- Header -->
             <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
                 <div class="flex items-start justify-between mb-4">
                     <div>
                         <h1 class="text-3xl font-bold text-gray-900 mb-2 inline-flex items-center gap-1">
                             <ReceiptText class="w-6 h-6" />
-                            Order Details
+                            Order Details ({{ displayOrder.orderCode }})
                         </h1>
                         <p class="text-gray-600">WoundMed System - New Order Notification</p>
                     </div>
@@ -28,19 +27,80 @@
 
                 <!-- Order Code + Tracking -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-                    <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-                        <FileText />
+                    <div v-if="displayOrder.statusLabel == 'submitted'" class="p-3 bg-gray-50 rounded-xl dark:bg-gray-800">
+                        <div class="flex items-center gap-2 mb-2">
+                            <FileText class="w-6 h-6 text-gray-900 dark:text-gray-300" />
+                            <label class="text-sm text-gray-600 dark:text-gray-300 font-medium">
+                                Order Number
+                            </label>
+                        </div>
+                        <input
+                            v-model="formData.order_number"
+                            type="text"
+                            class="w-full px-2 py-2 border border-gray-300 dark:border-gray-600 
+                                rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent 
+                                bg-white dark:bg-gray-700 text-gray-900 dark:text-white 
+                                transition-all duration-200"
+                            placeholder="Enter tracking code here"
+                            required
+                        >
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                            Input the internal order number assigned by your manufacturer. This confirms the order before acknowledgment.
+                        </p>
+                    </div>
+                    <div v-else class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl dark:bg-gray-800">
+                        <FileText class="w-6 h-6 text-gray-700 dark:text-gray-300" />
                         <div>
-                            <p class="text-xs text-gray-500 font-medium">Order Code</p>
-                            <p class="text-sm font-semibold text-gray-900">{{ displayOrder.orderCode }}</p>
+                            <p class="text-sm text-gray-500 font-medium">Order Number</p>
+                            <p class="text-md font-semibold text-gray-900 dark:text-white">
+                                {{ order?.order_number }}
+                            </p>
                         </div>
                     </div>
+                    <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl dark:bg-gray-800">
+                        <Truck class="w-6 h-6 text-gray-700 dark:text-gray-300" />
+                        <div>
+                            <p class="text-sm text-gray-500 font-medium">Tracking Number</p>
+                            <p class="text-md font-semibold text-gray-900 dark:text-white">
+                                {{ displayOrder.trackingNumber }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
 
+                <div v-if="displayOrder.statusLabel == 'acknowledged'" class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                    <div class="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                        <div class="flex items-center gap-2 mb-2">
+                            <Container class="w-6 h-6 text-gray-900 dark:text-gray-300" />
+                            <label class="text-sm text-gray-600 dark:text-gray-300 font-medium">
+                                Tracking Code
+                            </label>
+                        </div>
+
+                        <input
+                            v-model="formData.tracking_code"
+                            type="text"
+                            class="w-full px-2 py-2 border border-gray-300 dark:border-gray-600 
+                                rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent 
+                                bg-white dark:bg-gray-700 text-gray-900 dark:text-white 
+                                transition-all duration-200"
+                            placeholder="Enter tracking code here"
+                            required
+                        >
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                            Enter the shipping or tracking number provided by the courier (e.g., FedEx, UPS, USPS).
+                        </p>
+                    </div>
+                </div>
+
+                <div v-if="displayOrder.statusLabel == 'shipped' || displayOrder.statusLabel == 'delivered'" class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
                     <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
                         <Truck />
                         <div>
-                            <p class="text-xs text-gray-500 font-medium">Tracking Number</p>
-                            <p class="text-sm font-semibold text-gray-900">{{ displayOrder.trackingNumber }}</p>
+                            <p class="text-sm text-gray-500 font-medium">Tracking Code</p>
+                            <p class="text-md font-semibold text-gray-900">
+                                {{ order?.tracking_code }}
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -169,7 +229,7 @@ import {
     FileText, Truck, CircleCheckBig,
     BadgeCheck, TruckElectric, PackageCheck,
     PackageX, ReceiptText, ShoppingBag,
-    ShoppingCart, 
+    ShoppingCart, Container
 } from 'lucide-vue-next';
 import api from "@/services/api";
 import { toast } from 'vue3-toastify'
@@ -179,11 +239,13 @@ import Swal from 'sweetalert2'
 interface Order {
 	order_id: number;
 	order_code: string;
+	order_number: string;
 	ordered_at: string;
 	order_status: OrderStatus;
 	notes?: string;
 	items: OrderItem[];
 	tracking_num?: string;
+    tracking_code?: string;
 
 	clinic?: Clinic;
 	clinician?: Clinician;
@@ -289,6 +351,7 @@ interface DisplayOrder {
     createdAt: string;
     items: DisplayOrderItem[];
     totalAmount: number;
+    trackingCode?: string;
 }
 
 type OrderStatus = 'submitted' | 'acknowledged' | 'shipped' | 'delivered' | 'cancelled'
@@ -312,12 +375,17 @@ const brands = ref<Brand[]>([])
 const token = route.query.token as string;
 const orderId = route.query.order_id as string;
 
+const formData = ref({
+    tracking_code: '',
+    order_number: '',
+})
+
 /** Validate magic link */
 async function accessMagicLink() {
     try {
         const { data } = await api.post("/magic-order-auth", { token, order_id: orderId });
 
-        order.value = transformOrderResponse(data.order);
+        order.value = transformOrderResponse(data.order);        
         isAuthorized.value = true;
     } catch (error) {
         router.replace({ name: "not-found-link" });
@@ -329,7 +397,7 @@ async function accessMagicLink() {
 
 async function getAllGraftSizes() {
 	try {
-		const { data } = await api.get(`/management/order/getgraftsizes`, {
+		const { data } = await api.get(`/management/public/order/getgraftsizes`, {
 			headers: {
 				Authorization: `Bearer ${localStorage.getItem('auth_token')}`
 			}
@@ -357,6 +425,7 @@ function transformOrderResponse(raw: any): Order {
         return {
             order_id: 0,
             order_code: '',
+            order_number: '',
             ordered_at: '',
             order_status: 'submitted',
             items: []
@@ -366,6 +435,7 @@ function transformOrderResponse(raw: any): Order {
     return {
         order_id: Number(raw.order_id ?? raw.id ?? 0),
         order_code: String(raw.order_code ?? ''),
+        order_number: String(raw.order_number ?? ''),
         ordered_at: String(raw.ordered_at ?? raw.created_at ?? ''),
         order_status: mapOrderStatus(raw.order_status),
         notes: raw.notes ?? '',
@@ -374,7 +444,8 @@ function transformOrderResponse(raw: any): Order {
         clinic: raw.clinic,
         clinician: raw.clinician,
         patient: raw.patient,
-        manufacturer: raw.manufacturer
+        manufacturer: raw.manufacturer,
+        tracking_code: raw.tracking_code ?? raw.trackingCode ?? '',
     }
 }
 
@@ -443,7 +514,9 @@ const displayOrder = computed<DisplayOrder | null>(() => {
     return {
         orderId: current.order_id || 0,
         orderCode: current.order_code || '—',
+        orderNumber: current.order_number || '—',
         trackingNumber: current.tracking_num || '—',
+        trackingCode: current.tracking_code || '-',
         statusLabel: current.order_status,
         manufacturer: current.manufacturer?.manufacturer_name || '—',
         orderingClinic: current.clinic?.clinic_name || '—',
@@ -560,6 +633,64 @@ const orderActionConfig = computed<ActionConfig | null>(() => {
 async function handleAction(newStatus: OrderStatus) {
     if (!order.value) return;
 
+    const payload = new FormData()
+    const statusNumber = orderStatusMap[newStatus];
+
+    payload.append('order_status', statusNumber.toString());
+    payload.append('token', token);
+
+    if (statusNumber === 1) {        
+        if (!formData.value.order_number) {
+            Swal.fire({
+                icon: 'error',
+                title: "Order Number Required",
+                html: `
+                    <p class="text-gray-700">
+                        To proceed with <strong>acknowledging this order</strong>,
+                        you must enter the manufacturer's internal order number.
+                    </p>
+                    <p class="mt-2 text-xs text-red-500">
+                        Example: PO-12345, SO-98765.
+                    </p>
+                `,
+                confirmButtonText: "Okay, I'll enter it",
+                confirmButtonColor: "#d33",
+                allowOutsideClick: false,
+                allowEscapeKey: true,
+            });
+            return;
+        }
+
+        payload.append('order_number', formData.value.order_number);
+    } else if (statusNumber === 2) {
+        if (!formData.value.tracking_code) {
+            Swal.fire({
+                icon: 'error',
+                title: "Tracking Code Required",
+                html: `
+                    <p class="text-gray-700">
+                        To proceed with <strong>marking this order as Shipped</strong>,
+                        you must enter a valid tracking code from the courier.
+                    </p>
+                    <p class="mt-2 text-xs text-red-500">
+                        Example: FedEx, UPS, USPS tracking numbers.
+                    </p>
+                `,
+                confirmButtonText: "Okay, I'll enter it",
+                confirmButtonColor: "#d33",
+                allowOutsideClick: false,
+                allowEscapeKey: true,
+            });
+            return;
+        }
+
+        payload.append('tracking_code', formData.value.tracking_code);
+    } else {
+        if (formData.value.tracking_code) {
+            payload.append('tracking_code', formData.value.tracking_code);
+        }
+    }
+
     const result = await Swal.fire({
         title: "Are you sure?",
         text: "This action cannot be undone.",
@@ -584,21 +715,18 @@ async function handleAction(newStatus: OrderStatus) {
 	})
 
     try {
-        const statusNumber = orderStatusMap[newStatus];
 
-        await api.put(`/management/magicorder/update/${order.value.order_id}/updateorderstatus`, {
-            order_status: statusNumber,
-            token
+        await api.put(`/management/public/magicorder/update/${order.value.order_id}/updateorderstatus`,
+            payload, {
         });
 
         Swal.close()
         order.value.order_status = newStatus;
         toast.success('Status has been updated successfully.')
-
-    } catch (error) {
-        console.error(error);
+        accessMagicLink()
+    } catch (error: any) {
         Swal.close()
-        toast.error('Failed to update order status.')
+        toast.error(Object.values(error.response.data.errors).flat().join(', '));
     }
 }
 

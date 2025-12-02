@@ -447,7 +447,7 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 		'invoice-management': [0, 1, 2],
 		'ivr-management': [0, 1, 2, 4],
 		'notifications': [0, 1],
-		'order-management': [0, 1],
+		'order-management': [0, 1, 2, 3],
 		'manufacturer/order-management': [4],
 		'manufacturer/ivr-management': [4],
 		'clinic/order-management': [2],
@@ -526,6 +526,7 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 					'manufacturer/order-management',
 					'manufacturer/ivr-management',
 					'invoice-management',
+					'office-staff-inventory',
 				].includes(route.name as string)
 			}
 
@@ -576,6 +577,12 @@ router.beforeEach(async (to, from, next) => {
 	const authStore = useAuthStore()
 	const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
 
+	// allow access publicly - dili na need lag-en
+	if (to.name === 'woundmed-order' || to.name === 'woundmed-ivr-request') {
+        next();
+        return;
+    }
+
 	const Admin = 0;
 	const OfficeStaff = 1;
 	const Clinics = 2;
@@ -601,7 +608,7 @@ router.beforeEach(async (to, from, next) => {
 		}
 
 		// Clinic Dashboard access → Admin + OfficeStaff + Clinics
-		if (to.name === 'clinic-dashboard' && role !== Admin && role !== OfficeStaff && role !== Clinics) {
+		if (to.name === 'clinic-dashboard' && ![Admin, OfficeStaff, Clinics, Clinician].includes(role)) {
 			next({ name: 'admin-dashboard' })
 			return
 		}
@@ -616,7 +623,7 @@ router.beforeEach(async (to, from, next) => {
 	// If authenticated and going to login page
 	if (to.name === 'login' && authStore.isAuthenticated) {
 		const role = authStore.user?.user_role ?? parseInt(localStorage.getItem('user_role') || '-1')
-		if (role === Clinics) {
+		if (role === Clinics || role === Clinician) {
 			next({ name: 'clinic-dashboard' })
 		} else {
 			next({ name: 'admin-dashboard' })

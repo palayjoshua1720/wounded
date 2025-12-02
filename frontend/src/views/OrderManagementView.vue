@@ -81,8 +81,15 @@
 							v-for="order in filteredOrders"
 							:key="order.order_id"
 							class="hover:bg-gray-50 dark:hover:bg-gray-700">
-								<td class="px-6 py-4 whitespace-nowrap">
-									<div class="text-sm font-medium text-gray-900 dark:text-white">#{{ order.order_code }}</div>
+								<td class="px-6 py-3 whitespace-nowrap">
+									<div class="flex items-center">
+										<div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+											<BaggageClaim class="w-5 h-5 text-green-600" />
+										</div>
+										<div class="ml-4">
+											<div class="text-sm text-gray-900 dark:text-white">{{ order.order_code }}</div>
+										</div>
+									</div>
 								</td>
 								<td class="px-6 py-4 whitespace-nowrap">
 									<div class="text-sm text-gray-900 dark:text-white">{{ order.clinic?.clinic_name }}</div>
@@ -205,7 +212,7 @@
 								<Factory class="w-5 h-5 text-gray-600" />
 								<div>
 									<p class="text-sm font-medium text-gray-700 dark:text-gray-300">Manufacturer</p>
-									<p class="text-gray-900 dark:text-white font-mono">{{ selectedOrder.manufacturer_name }}</p>
+									<p class="text-gray-900 dark:text-white">{{ selectedOrder.manufacturer_name }}</p>
 								</div>
 							</div>
 						</div>
@@ -221,20 +228,34 @@
 								<Truck class="w-5 h-5 text-gray-600" />
 								<div>
 									<p class="text-sm font-medium text-gray-700 dark:text-gray-300">Tracking Number</p>
-									<p class="text-gray-900 dark:text-white font-mono">{{ selectedOrder.tracking_num }}</p>
+									<p class="text-gray-900 dark:text-white">{{ selectedOrder.tracking_num }}</p>
 								</div>
 							</div>
 							<div v-if="selectedOrder.ivr_num" class="flex items-center space-x-3">
 								<ShieldCheck class="w-5 h-5 text-gray-600" />
 								<div>
 									<p class="text-sm font-medium text-gray-700 dark:text-gray-300">IVR</p>
-									<p class="text-gray-900 dark:text-white font-mono">{{ selectedOrder.ivr_num }}</p>
+									<p class="text-gray-900 dark:text-white">{{ selectedOrder.ivr_num }}</p>
+								</div>
+							</div>
+							<div v-if="selectedOrder.order_number" class="flex items-center space-x-3">
+								<FileText class="w-5 h-5 text-gray-600" />
+								<div>
+									<p class="text-sm font-medium text-gray-700 dark:text-gray-300">Order Number</p>
+									<p class="text-gray-900 dark:text-white">{{ selectedOrder.order_number }}</p>
+								</div>
+							</div>
+							<div v-if="selectedOrder.tracking_code" class="flex items-center space-x-3">
+								<TruckElectric class="w-5 h-5 text-gray-600" />
+								<div>
+									<p class="text-sm font-medium text-gray-700 dark:text-gray-300">Tracking Code</p>
+									<p class="text-gray-900 dark:text-white">{{ selectedOrder.tracking_code }}</p>
 								</div>
 							</div>
 						</div>
 					</div>
 					<div>
-						<h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Order Items</h3>
+						<h3 class="text-lg font-medium border-t text-gray-900 dark:text-white mb-4">Order Items</h3>
 						<div class="overflow-x-auto">
 							<table class="w-full">
 								<thead class="bg-gray-50 dark:bg-gray-700">
@@ -336,7 +357,6 @@
 
 						<div class="flex items-center justify-between w-full">
 							<div class="flex space-x-3 items-center">
-								
 								<select
 									v-model="overrideStatus"
 									class="w-56 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 
@@ -396,13 +416,6 @@
 					@click="closeForm"
 					class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
 						Cancel
-					</button>
-					<button
-					type="button"
-					@click="handleCreateOrder"
-					class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-					>
-						{{ showCreateForm ? 'Submit Order' : 'Update Order' }}
 					</button>
 				</div>
 			</template>
@@ -640,7 +653,8 @@ import {
 	Calendar1, FileTextIcon, SquarePen,
 	PackagePlus, ShoppingCart, Trash2,
 	ChevronDown, Package, Send, ShieldCheck,
-	Factory
+	Factory, TruckElectric,
+	FileText, BaggageClaim
 } from 'lucide-vue-next';
 import api from '@/services/api'
 import { toast } from 'vue3-toastify'
@@ -650,12 +664,14 @@ import Swal from 'sweetalert2'
 interface Order {
 	order_id: number;
 	order_code: string
+	order_number: string
 	ordered_at: string;
 	followup_last_sent_at: string
 	order_status: OrderStatus;
 	notes?: string;
 	items: OrderItem[];
 	tracking_num?: string;
+	tracking_code?: string;
 	ivr_num: string
 	manufacturer_name: string
 
@@ -1309,6 +1325,8 @@ async function getAllOrders(page = 1)
 				notes: o.notes ?? '',
 				items,
 				tracking_num: o.tracking_num ?? '',
+				order_number: o.order_number ?? '',
+				tracking_code: o.tracking_code ?? '',
 				clinic: o.clinic,
 				clinician: o.clinician,
 				patient: o.patient,
@@ -1542,10 +1560,7 @@ async function updateOrderStatusNew(orderOrId: Order | number, newStatus: OrderS
 	}
 }
 
-async function applyOverride() {
-	console.log('overrideStatus.value: ' + overrideStatus.value);
-	console.log('selectedOrder.value?.order_id: ' + selectedOrder.value?.order_id);
-	
+async function applyOverride() {	
 	if (!overrideStatus.value) return;
 
 	const result = await Swal.fire({

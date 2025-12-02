@@ -41,16 +41,6 @@ class IVRRequestNotificationEmail
                         <strong>Eligibility Status:</strong> ' . $eligibilityLabel . '
                     </p>
 
-                    ' . ($fileUrl ? '
-                        <div style="margin: 20px 0;">
-                            <a href="' . $fileUrl . '" 
-                                style="display: inline-block; padding: 12px 20px; background: #16a34a; color: #ffffff;
-                                    text-decoration: none; border-radius: 6px; font-weight: bold;">
-                                Download Attached IVR File
-                            </a>
-                        </div>
-                    ' : '') . '
-
                     <!-- MAGIC LINK BUTTON -->
                     <div style="margin: 25px 0;">
                         <a href="' . $ivrLink . '" 

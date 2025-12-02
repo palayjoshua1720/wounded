@@ -30,7 +30,7 @@ return new class extends Migration
         Schema::create('woundmed_ivr', function (Blueprint $table) {
             $table->bigIncrements('ivr_id');
             $table->unsignedBigInteger('clinic_id');
-            $table->unsignedBigInteger('brand_id');
+            $table->unsignedBigInteger('brand_id')->nullable();
             $table->unsignedBigInteger('manufacturer_id');
             $table->unsignedBigInteger('patient_id');
             $table->text('description')->nullable();
