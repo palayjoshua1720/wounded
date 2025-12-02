@@ -50,10 +50,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/invoice-management/stats', [InvoiceController::class, 'getStats']);
     Route::get('/invoice-management/clinics', [InvoiceController::class, 'getClinics']);
     Route::post('/invoice-management', [InvoiceController::class, 'store']);
-    Route::get('/invoice-management/{invoices}', [InvoiceController::class, 'show']);
-    Route::put('/invoice-management/{invoices}', [InvoiceController::class, 'update']);
-    Route::delete('/invoice-management/{invoices}', [InvoiceController::class, 'destroy']);
-    Route::post('/invoice-management/{invoices}/status', [InvoiceController::class, 'updateStatus']);
+    Route::get('/invoice-management/{invoice}', [InvoiceController::class, 'show']);
+    Route::put('/invoice-management/{invoice}', [InvoiceController::class, 'update']);
+    Route::delete('/invoice-management/{invoice}', [InvoiceController::class, 'destroy']);
+    Route::post('/invoice-management/{invoice}/status', [InvoiceController::class, 'updateStatus']);
     Route::post('/invoice-management/upload-pdf', [InvoiceController::class, 'uploadPdf']);
     Route::post('/invoice-management/sync-google-sheet', [InvoiceController::class, 'syncWithGoogleSheet']);
 

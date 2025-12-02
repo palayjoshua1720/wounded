@@ -119,6 +119,14 @@
                   class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">
                   <Eye class="w-4 h-4" />
                 </button>
+                <button @click="editInvoice(invoice)"
+                  class="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300">
+                  <Edit class="w-4 h-4" />
+                </button>
+                <button @click="confirmDeleteInvoice(invoice)"
+                  class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300">
+                  <Trash2 class="w-4 h-4" />
+                </button>
               </td>
             </tr>
           </tbody>
@@ -759,40 +767,83 @@
     </template>
   </BaseModal>
 
-  <!-- Delete Invoice Modal -->
-  <BaseModal v-model="showDeleteModal" title="Delete Invoice">
-    <div v-if="invoiceToDelete" class="space-y-4">
-      <div class="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg">
-        <p class="text-sm text-red-800 dark:text-red-300">
-          Are you sure you want to delete <strong>{{ invoiceToDelete.invoice_number }}</strong>?
-        </p>
+
+
+  <!-- Edit Invoice Modal -->
+  <BaseModal v-model="showEditModal" title="Edit Invoice" size="lg">
+    <form @submit.prevent="handleEditInvoiceSubmit" class="space-y-6">
+      <div v-if="invoiceToEdit" class="space-y-4">
+        <!-- Invoice Details -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Invoice Number</label>
+            <input v-model="invoiceToEdit.invoice_number"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              placeholder="Invoice Number" />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Clinic</label>
+            <select v-model="invoiceToEdit.clinic_id"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+              <option value="">Select Clinic</option>
+              <option v-for="clinic in clinics" :key="clinic.clinic_id" :value="clinic.clinic_id">
+                {{ clinicDisplayName(clinic) }}
+              </option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Amount</label>
+            <input v-model.number="invoiceToEdit.amount" type="number" step="0.01"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              placeholder="Amount" />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Invoice Date</label>
+            <input v-model="invoiceToEdit.invoice_date" type="date"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Due Date</label>
+            <input v-model="invoiceToEdit.due_date" type="date"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+          </div>
+
+          <div v-if="invoiceToEdit.bill_to">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Bill To</label>
+            <input v-model="invoiceToEdit.bill_to"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              placeholder="Bill To" />
+          </div>
+        </div>
+
+        <!-- Notes -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes</label>
+          <textarea v-model="invoiceToEdit.notes" rows="3"
+            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            placeholder="Additional notes"></textarea>
+        </div>
       </div>
 
-      <div class="flex gap-2">
-        <button @click="showDeleteModal = false"
+      <div class="flex justify-end gap-2 pt-4">
+        <button type="button" @click="showEditModal = false"
           class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
           Cancel
         </button>
-        <button @click="deleteInvoice" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
-          Delete Invoice
+        <button type="submit" :disabled="submitting"
+          class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed">
+          <RefreshCw v-if="submitting" class="w-4 h-4 mr-2 inline animate-spin" />
+          <span v-else>Update Invoice</span>
         </button>
       </div>
-    </div>
+    </form>
   </BaseModal>
 
-  <!-- Toast Notifications -->
-  <div class="fixed top-4 right-4 space-y-2 z-50">
-    <div v-for="toast in toasts" :key="toast.id" :class="`p-4 rounded-lg shadow-lg border-l-4 ${toast.type === 'success' ? 'bg-green-50 border-green-500 text-green-800 dark:bg-green-900/20 dark:text-green-300' :
-      toast.type === 'error' ? 'bg-red-50 border-red-500 text-red-800 dark:bg-red-900/20 dark:text-red-300' :
-        'bg-blue-50 border-blue-500 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300'
-      }`">
-      <div class="flex items-center">
-        <CheckCircle v-if="toast.type === 'success'" class="w-5 h-5 mr-2" />
-        <AlertTriangle v-else class="w-5 h-5 mr-2" />
-        <span class="font-medium">{{ toast.message }}</span>
-      </div>
-    </div>
-  </div>
+
 </template>
 
 <script setup lang="ts">
@@ -800,6 +851,7 @@ import { ref, computed, onMounted, nextTick, watch } from 'vue'
 import BaseModal from '@/components/common/BaseModal.vue'
 import api from '@/services/api'
 import axios from 'axios'
+import Swal from 'sweetalert2'
 import {
   Upload,
   Search,
@@ -814,7 +866,9 @@ import {
   Eye,
   X,
   CheckCircle,
-  Info
+  Info,
+  Edit,
+  Trash2
 } from 'lucide-vue-next'
 
 // Updated Types for woundmed_clinics
@@ -882,11 +936,7 @@ interface Stats {
   overdue_amount: number
 }
 
-interface Toast {
-  id: number
-  type: 'success' | 'error' | 'info'
-  message: string
-}
+
 
 interface Product {
   name: string
@@ -932,7 +982,7 @@ const showInvoiceModal = ref(false)
 const showMarkPaidModal = ref(false)
 const showReviewModal = ref(false)
 const showPdfReviewModal = ref(false)
-const showDeleteModal = ref(false)
+const showEditModal = ref(false)
 
 // Selected data
 const selectedInvoice = ref<Invoice | null>(null)
@@ -940,6 +990,7 @@ const invoiceUnderReview = ref<Invoice | null>(null)
 const invoiceToMarkPaid = ref<Invoice | null>(null)
 const extractedInvoiceData = ref<any>(null)
 const invoiceToDelete = ref<Invoice | null>(null)
+const invoiceToEdit = ref<Invoice | null>(null)
 
 // Upload state
 const uploadedFiles = ref<File[]>([])
@@ -978,7 +1029,6 @@ const paymentData = ref({
 })
 
 // Notifications
-const toasts = ref<Toast[]>([])
 
 // Computed properties
 const hasFilesForProcessing = computed(() => uploadedFiles.value.length > 0)
@@ -989,12 +1039,20 @@ const clinicDisplayName = (clinic: Clinic) => {
 }
 
 // Methods
-function showToast(message: string, type: Toast['type'] = 'info') {
-  const id = Date.now()
-  toasts.value.push({ id, type, message })
-  setTimeout(() => {
-    toasts.value = toasts.value.filter(toast => toast.id !== id)
-  }, 5000)
+function showAlert(message: string, type: 'success' | 'error' | 'warning' | 'info' = 'info', duration: number = 2000) {
+  const icon = type === 'success' ? 'success' : 
+               type === 'error' ? 'error' : 
+               type === 'warning' ? 'warning' : 'info';
+  
+  Swal.fire({
+    text: message,
+    icon: icon,
+    toast: true,
+    position: 'top-end',
+    showConfirmButton: false,
+    timer: duration,
+    timerProgressBar: true
+  });
 }
 
 async function fetchInvoices() {
@@ -1021,7 +1079,7 @@ async function fetchInvoices() {
     }
   } catch (error) {
     console.error('Error fetching invoices:', error)
-    showToast('Failed to load invoices', 'error')
+    showAlert('Failed to load invoices', 'error')
   } finally {
     loading.value = false
   }
@@ -1047,7 +1105,7 @@ async function fetchClinics() {
     }
   } catch (error) {
     console.error('Error fetching clinics:', error)
-    showToast('Failed to load clinics', 'error')
+    showAlert('Failed to load clinics', 'error')
   }
 }
 
@@ -1058,16 +1116,6 @@ function formatDate(dateString: string) {
     day: 'numeric'
   })
 }
-
-// Debounced search
-// let searchTimeout: NodeJS.Timeout
-// function debouncedFetchInvoices() {
-//   clearTimeout(searchTimeout)
-//   searchTimeout = setTimeout(() => {
-//     filters.value.page = 1
-//     fetchInvoices()
-//   }, 500)
-// }
 
 function changePage(page: number) {
   if (page < 1 || page > (pagination.value?.last_page || 1)) return
@@ -1091,7 +1139,7 @@ function handleDrop(event: DragEvent) {
     console.log('Files dropped:', event.dataTransfer?.files);
   } catch (error) {
     console.error('Error handling file drop:', error);
-    showToast('Failed to handle file drop', 'error');
+    showAlert('Failed to handle file drop', 'error');
   }
 }
 
@@ -1099,6 +1147,75 @@ function removeUploadedFile(index: number) {
   uploadedFiles.value.splice(index, 1)
   if (uploadedFiles.value.length === 0) {
     extractionPreview.value = null
+  }
+}
+
+function editInvoice(invoice: Invoice) {
+  // Create a deep copy of the invoice to edit
+  invoiceToEdit.value = JSON.parse(JSON.stringify(invoice))
+  showEditModal.value = true
+}
+
+async function confirmDeleteInvoice(invoice: Invoice) {
+  invoiceToDelete.value = invoice
+  
+  // Show Swal confirmation dialog directly
+  const result = await Swal.fire({
+    title: 'Are you sure?',
+    text: `Are you sure you want to delete invoice ${invoice.invoice_number}? This action cannot be undone.`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    confirmButtonText: 'Yes, delete it!'
+  })
+
+  if (result.isConfirmed) {
+    deleteInvoice()
+  } else {
+    invoiceToDelete.value = null
+  }
+}
+
+async function handleEditInvoiceSubmit() {
+  if (!invoiceToEdit.value) return
+
+  submitting.value = true
+  try {
+    const response = await api.put(`/invoice-management/${invoiceToEdit.value.id}`, invoiceToEdit.value)
+    
+    showAlert('Invoice updated successfully', 'success')
+    showEditModal.value = false
+    
+    // Update the invoice in the list
+    const index = invoices.value.findIndex(inv => inv.id === invoiceToEdit.value!.id)
+    if (index !== -1) {
+      invoices.value[index] = response.data.invoice
+    }
+    
+    // Refresh stats
+    fetchStats()
+  } catch (error: any) {
+    console.error('Error updating invoice:', error)
+    let errorMessage = 'Failed to update invoice'
+    if (axios.isAxiosError(error)) {
+      const status = error.response?.status
+      const data = error.response?.data
+      
+      if (status === 422 && data?.errors) {
+        const errors = data.errors
+        if (errors.invoice_number) {
+          errorMessage = `Invoice number error: ${errors.invoice_number[0]}`
+        }
+      } else {
+        errorMessage = data?.message || `Request failed with status code ${status}`
+      }
+    } else if (error instanceof Error) {
+      errorMessage = error.message
+    }
+    showAlert(errorMessage, 'error')
+  } finally {
+    submitting.value = false
   }
 }
 
@@ -1168,7 +1285,7 @@ function simulateOcrExtraction(file: File) {
 
         // If we have a fallback source, show a warning to the user
         if (extractedInvoiceData.value.source && extractedInvoiceData.value.source === 'fallback') {
-          showToast('PDF extraction failed. Please manually enter invoice details.', 'error');
+          showAlert('PDF extraction failed. Please manually enter invoice details.', 'error');
         }
 
         // Show review modal instead of automatically creating invoice
@@ -1200,7 +1317,7 @@ function simulateOcrExtraction(file: File) {
       } else if (error instanceof Error) {
         errorMessage = error.message
       }
-      showToast(errorMessage, 'error')
+      showAlert(errorMessage, 'error')
     } finally {
       uploading.value = false
     }
@@ -1289,7 +1406,7 @@ function simulateOcrExtraction(file: File) {
 
       const response = await api.post('/invoice-management', invoiceData)
 
-      showToast('Invoice created successfully', 'success')
+      showAlert('Invoice created successfully', 'success')
       showPdfReviewModal.value = false
       extractedInvoiceData.value = null
       fetchInvoices()
@@ -1312,7 +1429,7 @@ function simulateOcrExtraction(file: File) {
       } else if (error instanceof Error) {
         errorMessage = error.message
       }
-      showToast(errorMessage, 'error')
+      showAlert(errorMessage, 'error')
     } finally {
       submitting.value = false
     }
@@ -1379,7 +1496,7 @@ function simulateOcrExtraction(file: File) {
 
       const response = await api.post('/invoice-management', invoiceData)
 
-      showToast('Invoice created successfully', 'success')
+      showAlert('Invoice created successfully', 'success')
       showManualModal.value = false
       resetManualInvoiceForm()
       fetchInvoices()
@@ -1402,7 +1519,7 @@ function simulateOcrExtraction(file: File) {
       } else if (error instanceof Error) {
         errorMessage = error.message
       }
-      showToast(errorMessage, 'error')
+      showAlert(errorMessage, 'error')
     } finally {
       submitting.value = false
     }
@@ -1489,14 +1606,14 @@ function simulateOcrExtraction(file: File) {
         payment_reference: paymentData.value.payment_reference
       })
 
-      showToast('Invoice marked as paid', 'success')
+      showAlert('Invoice marked as paid', 'success')
       showMarkPaidModal.value = false
       invoiceToMarkPaid.value = null
       fetchInvoices()
       fetchStats()
     } catch (error) {
       console.error('Error marking invoice as paid:', error)
-      showToast(error instanceof Error ? error.message : 'Failed to mark invoice as paid', 'error')
+      showAlert(error instanceof Error ? error.message : 'Failed to mark invoice as paid', 'error')
     }
   }
 
@@ -1514,22 +1631,20 @@ function simulateOcrExtraction(file: File) {
   function deleteInvoice() {
     if (!invoiceToDelete.value) return
 
-    // Show confirmation dialog
-    if (!confirm(`Are you sure you want to delete invoice ${invoiceToDelete.value.invoice_number}?`)) {
-      return
-    }
-
     api.delete(`/invoice-management/${invoiceToDelete.value.id}`)
       .then(() => {
-        showToast('Invoice deleted successfully', 'success')
-        showDeleteModal.value = false
+        showAlert('Invoice deleted successfully', 'success')
+        // Remove the deleted invoice from the invoices array
+        invoices.value = invoices.value.filter(invoice => invoice.id !== invoiceToDelete.value!.id)
         invoiceToDelete.value = null
-        fetchInvoices()
         fetchStats()
       })
       .catch(error => {
         console.error('Error deleting invoice:', error)
-        showToast(error instanceof Error ? error.message : 'Failed to delete invoice', 'error')
+        if (axios.isAxiosError(error)) {
+          console.error('Axios error details:', error.response?.data, error.response?.status);
+        }
+        showAlert(error instanceof Error ? error.message : 'Failed to delete invoice', 'error')
       })
   }
 
