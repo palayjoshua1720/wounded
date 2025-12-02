@@ -87,7 +87,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/users/{user}/restore', [UserController::class, 'restore']);
 
     // Route::get('/manufacturers/{id}/ivr-form', [ManufacturerController::class, 'downloadForm']);
-    Route::put('/management/facilities/clinics/{clinicId}/update', [ClinicController::class, 'updateClinic']);
+    Route::post('/management/facilities/clinics/{clinicId}/update', [ClinicController::class, 'updateClinic']);
     Route::put('/management/facilities/clinics/{clinicId}/updatestatus', [ClinicController::class, 'updateClinicStatus']);
     Route::put('/management/facilities/clinics/{clinicId}/deleteclinic', [ClinicController::class, 'deleteClinic']);
     Route::put('/management/facilities/clinics/{clinicId}/archiveclinic', [ClinicController::class, 'archiveClinic']);

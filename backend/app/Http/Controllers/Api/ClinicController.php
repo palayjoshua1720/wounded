@@ -7,6 +7,7 @@ use App\Models\Clinic;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -340,12 +341,15 @@ class ClinicController extends Controller
 
     public function updateClinic(Request $request, $clinicId)
     {
+        $isActive = filter_var($request->input('isActive'), FILTER_VALIDATE_BOOLEAN);
+        $isActive = $isActive ? 1 : 0;
+
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:woundmed_users,email,' . $clinicId . ',clinic_id',
-            'contactPerson' => 'required|string',
+            'name' => 'nullable|string|max:255',
+            'email' => 'nullable|email|unique:woundmed_users,email,' . $clinicId . ',clinic_id',
+            'contactPerson' => 'nullable|string',
             'publicId' => 'nullable|string|max:20',
-            'isActive' => 'boolean',
+            // 'isActive' => 'boolean',
             'phone' => 'nullable|string|max:20',
             'address' => 'nullable|string|max:20',
             'assigned_clinicians_id' => 'nullable|array',
@@ -354,6 +358,16 @@ class ClinicController extends Controller
 
         $clinic = Clinic::findOrFail($clinicId);
 
+        $logoPath = $clinic->logo;
+
+        if ($request->hasFile('logo')) {
+            if ($clinic->logo && Storage::disk('public')->exists($clinic->logo)) {
+                Storage::disk('public')->delete($clinic->logo);
+            }
+
+            $logoPath = $request->file('logo')->store('clinics/logos', 'public');
+        }
+
         $clinic->update([
             'clinic_name' => $validated['name'],
             'email' => $validated['email'],
@@ -361,7 +375,9 @@ class ClinicController extends Controller
             'contact_person' => $validated['contactPerson'],
             'phone' => $validated['phone'],
             'address' => $validated['address'],
-            'clinic_status' => $request->boolean('isActive'),
+            // 'clinic_status' => $request->boolean('isActive'),
+            'clinic_status' => $isActive,
+            'logo' => $logoPath,
         ]);
 
         if (!empty($validated['assigned_clinicians_id'])) {

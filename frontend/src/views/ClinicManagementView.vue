@@ -837,12 +837,12 @@ async function handleSubmitForm() {
 			await getAllClinics()
 
 		} else if (showEditForm.value && selectedUser.value) {
-			const { data } = await api.put(
+			const { data } = await api.post(
                 `/management/facilities/clinics/${selectedUser.value.id}/update`,
                 form,
                 {
                     headers: {
-                        'Content-Type': 'application/json',
+                        'Content-Type': 'multipart/form-data',
                         'Accept': 'application/json',
                     }
                 }
