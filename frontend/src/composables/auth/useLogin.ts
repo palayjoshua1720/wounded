@@ -139,10 +139,14 @@ export function useLogin() {
 	}
 
 	function redirectBasedOnRole(role: number) {
-		if (role === 0 || role === 1) {
-			router.push('/admin-dashboard')
-		} else if (role === 2 || role === 3) {
-			router.push('/clinic-dashboard')
+		if (role === 0) {
+			router.push('/admin/dashboard')
+		} else if (role === 1) {
+			router.push('/office-staff/dashboard')
+		} else if (role === 2) {
+			router.push('/clinic/dashboard')
+		} else if (role === 3) {
+			router.push('/clinician/dashboard')
 		} else if (role === 4) {
 			router.push('/manufacturer/ivr-management')
 		} else if (role === 5) {

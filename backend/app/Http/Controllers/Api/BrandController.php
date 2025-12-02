@@ -48,6 +48,8 @@ class BrandController extends Controller
                 ];
             });
 
+            $logoUrl = $brand->logo ? asset('storage/' . $brand->logo) : null; // Added logo URL
+
             return [
                 'id' => (string) $brand->brand_id,
                 'brandName' => $brand->brand_name,
@@ -58,6 +60,7 @@ class BrandController extends Controller
                 'manufacturerId' => $brand->manufacturer_id ? (int) $brand->manufacturer_id : null,
                 'manufacturerName' => $brand->manufacturer ? $brand->manufacturer->manufacturer_name : null,
                 'graftSizes' => $formattedGraftSizes,
+                'logoUrl' => $logoUrl, // Added logo URL to response
                 'createdAt' => $brand->created_at,
                 'updatedAt' => $brand->updated_at,
             ];
@@ -89,6 +92,7 @@ class BrandController extends Controller
             'graftSizes.*.price' => 'nullable|numeric|min:0',
             'graftSizes.*.stock' => 'nullable|integer|min:0',
             'graftSizes.*.graftStatus' => 'nullable|in:0,1,2',
+            'logo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048', // Added logo validation
         ]);
 
         // Parse and validate graftSizes conditionally
@@ -129,6 +133,12 @@ class BrandController extends Controller
             }
         }
 
+        // Handle logo upload (public storage for easy access)
+        $logoPath = null;
+        if ($request->hasFile('logo')) {
+            $logoPath = $request->file('logo')->store('brands/logos', 'public');
+        }
+
         // Create the brand first
         $brand = Brand::create([
             'manufacturer_id' => $validated['manufacturerId'],
@@ -137,6 +147,7 @@ class BrandController extends Controller
             'mue' => $validated['mue'],
             'description' => $validated['description'] ?? null,
             'brand_status' => $validated['brandStatus'],
+            'logo' => $logoPath, // Added logo
         ]);
 
         $this->logAudit($request, 'brand_create', "Brand created: {$validated['brandName']}", $brand->brand_id);
@@ -171,6 +182,8 @@ class BrandController extends Controller
             ];
         });
 
+        $logoUrl = $brand->logo ? asset('storage/' . $brand->logo) : null; // Added logo URL
+
         return response()->json([
             'message' => 'Brand created successfully',
             'data' => [
@@ -182,8 +195,9 @@ class BrandController extends Controller
                 'brandStatus' => (int) $brand->brand_status,
                 'productType' => $brand->product_type == 0 ? 'Graft' : 'Device',
                 'graftSizes' => $formattedGraftSizes,
+                'logoUrl' => $logoUrl, // Added logo URL to response
                 'createdAt' => $brand->created_at,
-                'updatedAt' => $brand->updated_at,
+                // 'updatedAt' => $brand->updated_at,
             ],
         ], 201);
     }
@@ -206,6 +220,7 @@ class BrandController extends Controller
             'graftSizes.*.price' => 'nullable|numeric|min:0',
             'graftSizes.*.stock' => 'nullable|integer|min:0',
             'graftSizes.*.graftStatus' => 'nullable|in:0,1,2',
+            'logo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048', // Added logo validation
         ]);
 
         // Parse and validate graftSizes conditionally
@@ -283,6 +298,16 @@ class BrandController extends Controller
             }
         }
 
+        // Handle logo update if provided
+        if ($request->hasFile('logo')) {
+            // Delete old logo if exists
+            if ($brand->logo && Storage::disk('public')->exists($brand->logo)) {
+                Storage::disk('public')->delete($brand->logo);
+            }
+            $logoPath = $request->file('logo')->store('brands/logos', 'public');
+            $brand->logo = $logoPath;
+        }
+
         // Update brand
         $oldBrandName = $brand->brand_name;
         $brand->update([
@@ -312,6 +337,8 @@ class BrandController extends Controller
             ];
         });
 
+        $logoUrl = $brand->logo ? asset('storage/' . $brand->logo) : null; // Added logo URL
+
         return response()->json([
             'message' => 'Brand updated successfully',
             'data' => [
@@ -323,7 +350,8 @@ class BrandController extends Controller
                 'brandStatus' => (int) $brand->brand_status,
                 'productType' => $brand->product_type == 0 ? 'Graft' : 'Device',
                 'graftSizes' => $formattedGraftSizes,
-                'createdAt' => $brand->created_at,
+                'logoUrl' => $logoUrl, // Added logo URL to response
+                // 'createdAt' => $brand->created_at,
                 'updatedAt' => $brand->updated_at,
             ],
         ]);
@@ -367,6 +395,12 @@ class BrandController extends Controller
     {
         $brand = Brand::findOrFail($id);
         $name = $brand->brand_name; // Capture before delete
+
+        // Delete logo if exists
+        if ($brand->logo && Storage::disk('public')->exists($brand->logo)) {
+            Storage::disk('public')->delete($brand->logo);
+        }
+
         $brand->delete(); // Soft delete
 
         // Log successful deletion

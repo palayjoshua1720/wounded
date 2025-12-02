@@ -28,6 +28,7 @@ class Brand extends Model
         'brand_status',
         'filepath',
         'graft_sizes',
+        'logo',
     ];
 
     protected $casts = [
