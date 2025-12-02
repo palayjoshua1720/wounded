@@ -1,3 +1,4 @@
+Manufacturer View [11-28]
 <template>
     <div class="space-y-6">
         <!-- Header -->

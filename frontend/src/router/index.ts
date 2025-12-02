@@ -14,7 +14,6 @@ import NotificationCenterView from '@/views/NotificationCenterView.vue'
 import OrderManagementView from '@/views/OrderManagementView.vue'
 import ReportCenterView from '@/views/ReportCenterView.vue'
 import ReturnManagementView from '@/views/ReturnManagementView.vue'
-// import BUReturnManagementView from '@/views/BUReturnManagement.vue'
 import UsageLoggingView from '@/views/UsageLoggingView.vue'
 import UserManagementView from '@/views/UserManagementView.vue'
 import ClinicianManagementView from '@/views/ClinicianManagementView.vue'
@@ -31,10 +30,10 @@ import SettingsView from '@/views/SettingsView.vue'
 import OrderMagicLinkView from '@/views/OrderMagicLinkView.vue'
 import IVRMagicLinkView from '@/views/IVRMagicLinkView.vue'
 import InvalidMagicLinkView from '@/views/InvalidMagicLinkView.vue'
-
-import { ClipboardDocumentCheckIcon, Squares2X2Icon, SquaresPlusIcon, BuildingLibraryIcon, ClipboardDocumentListIcon, ShieldCheckIcon, BellIcon, ChartBarIcon, ArrowPathIcon, CalculatorIcon, CubeIcon, UsersIcon } from '@heroicons/vue/24/outline'
 import { pageLoader } from '@/composables/ui/usePageLoader'
-import { Factory, Package, PencilRuler, ShoppingCart } from 'lucide-vue-next' 
+
+// Icons
+import { LayoutDashboard, UsersRound, Hospital, Factory, Package, ShieldCheck, ShoppingCart, ClipboardList, PencilRuler, ScanBarcode, BellRing, ChartColumn, CircleUserRound, Calculator, RotateCcw } from 'lucide-vue-next'
 
 // Types
 interface NavigationItem {
@@ -56,27 +55,48 @@ const routes: RouteRecordRaw[] = [
 		component: AppLayout,
 		meta: { requiresAuth: true },
 		children: [
+			// Dashboards
 			{
-				path: 'admin-dashboard',
+				path: 'admin/dashboard',
 				name: 'admin-dashboard',
 				component: AdminDashboardView,
 				meta: {
 					requiresAuth: true,
 					title: 'Dashboard',
-					icon: Squares2X2Icon
+					icon: LayoutDashboard
 				}
 			},
 			{
-				path: 'clinic-dashboard',
+				path: 'office-staff/dashboard',
+				name: 'office-staff-dashboard',
+				component: AdminDashboardView,
+				meta: {
+					requiresAuth: true,
+					title: 'Dashboard',
+					icon: LayoutDashboard
+				}
+			},
+			{
+				path: 'clinic/dashboard',
 				name: 'clinic-dashboard',
 				component: ClinicDashboardView,
 				meta: {
 					requiresAuth: true,
-					title: 'Clinic Dashboard',
-					icon: SquaresPlusIcon
+					title: 'Dashboard',
+					icon: LayoutDashboard
 				}
 			},
-			// Dynamic user routes based on role
+			{
+				path: 'clinician/dashboard',
+				name: 'clinician-dashboard',
+				component: ClinicDashboardView,
+				meta: {
+					requiresAuth: true,
+					title: 'Dashboard',
+					icon: LayoutDashboard
+				}
+			},
+			// User Management
 			{
 				path: 'admin/users',
 				name: 'admin-users',
@@ -84,7 +104,7 @@ const routes: RouteRecordRaw[] = [
 				meta: {
 					requiresAuth: true,
 					title: 'All Users',
-					icon: UsersIcon,
+					icon: UsersRound,
 					role: 0
 				}
 			},
@@ -95,10 +115,11 @@ const routes: RouteRecordRaw[] = [
 				meta: {
 					requiresAuth: true,
 					title: 'All Users',
-					icon: UsersIcon,
+					icon: UsersRound,
 					role: 1
 				}
 			},
+			// TEMPORARY - WILL FINALIZE LATER
 			{
 				path: 'clinic/users',
 				name: 'clinic-users',
@@ -106,7 +127,7 @@ const routes: RouteRecordRaw[] = [
 				meta: {
 					requiresAuth: true,
 					title: 'All Users',
-					icon: UsersIcon,
+					icon: UsersRound,
 					role: 2
 				}
 			},
@@ -117,9 +138,11 @@ const routes: RouteRecordRaw[] = [
 				meta: {
 					requiresAuth: true,
 					title: 'Clinicians',
-					icon: UsersIcon
+					icon: UsersRound
 				}
 			},
+			// *****
+			// Clinic/Manufacture/Brand/Graft Size Managements
 			{
 				path: 'clinic-management',
 				name: 'clinic-management',
@@ -127,7 +150,7 @@ const routes: RouteRecordRaw[] = [
 				meta: {
 					requiresAuth: true,
 					title: 'Clinics',
-					icon: BuildingLibraryIcon
+					icon: Hospital
 				}
 			},
 			{
@@ -151,23 +174,74 @@ const routes: RouteRecordRaw[] = [
 				}
 			},
 			{
-				path: 'ivr-management',
-				name: 'ivr-management',
+				path: 'graft-size-management',
+				name: 'graft-size-management',
+				component: GraftSizeManagementView,
+				meta: {
+					requiresAuth: true,
+					title: 'Graft Size',
+					icon: PencilRuler
+				}
+			},
+			// IVR Management
+			{
+				path: 'admin/ivr-management',
+				name: 'admin-ivr-management',
 				component: IVRManagementView,
 				meta: {
 					requiresAuth: true,
 					title: 'IVR',
-					icon: ShieldCheckIcon
+					icon: ShieldCheck
+				}
+			},
+			{
+				path: 'office-staff/ivr-management',
+				name: 'office-staff-ivr-management',
+				component: IVRManagementView,
+				meta: {
+					requiresAuth: true,
+					title: 'IVR',
+					icon: ShieldCheck
+				}
+			},
+			{
+				path: 'clinic/ivr-management',
+				name: 'clinic-ivr-management',
+				component: IVRManagementView,
+				meta: {
+					requiresAuth: true,
+					title: 'IVR',
+					icon: ShieldCheck
+				}
+			},
+			{
+				path: 'clinician/ivr-management',
+				name: 'clinician-ivr-management',
+				component: IVRManagementView,
+				meta: {
+					requiresAuth: true,
+					title: 'IVR',
+					icon: ShieldCheck
 				}
 			},
 			{
 				path: 'manufacturer/ivr-management',
-				name: 'manufacturer/ivr-management',
+				name: 'manufacturer-ivr-management',
 				component: IVRManagementViewManufacturer,
 				meta: {
 					requiresAuth: true,
 					title: 'IVR',
-					icon: ShieldCheckIcon
+					icon: ShieldCheck
+				}
+			},
+			{
+				path: 'biller/ivr-management',
+				name: 'biller-ivr-management',
+				component: IVRManagementViewManufacturer,
+				meta: {
+					requiresAuth: true,
+					title: 'IVR',
+					icon: ShieldCheck
 				}
 			},
 			{
@@ -183,10 +257,51 @@ const routes: RouteRecordRaw[] = [
 					disableLayoutPadding: true,
 				}
 			},
+			// Order Management
 			{
-				path: 'order-management',
-				name: 'order-management',
+				path: 'admin/order-management',
+				name: 'admin-order-management',
 				component: OrderManagementView,
+				meta: {
+					requiresAuth: true,
+					title: 'Orders',
+					icon: ShoppingCart
+				}
+			},
+			{
+				path: 'office-staff/order-management',
+				name: 'office-staff-order-management',
+				component: OrderManagementView,
+				meta: {
+					requiresAuth: true,
+					title: 'Orders',
+					icon: ShoppingCart
+				}
+			},
+			{
+				path: 'clinic/order-management',
+				name: 'clinic/order-management',
+				component: OrderManagementViewClinic,
+				meta: {
+					requiresAuth: true,
+					title: 'Orders',
+					icon: ShoppingCart
+				}
+			},
+			{
+				path: 'clinician/order-management',
+				name: 'clinician-order-management',
+				component: OrderManagementViewClinic,
+				meta: {
+					requiresAuth: true,
+					title: 'Orders',
+					icon: ShoppingCart
+				}
+			},
+			{
+				path: 'manufacturer/order-management',
+				name: 'manufacturer/order-management',
+				component: OrderManagementviewManufacturer,
 				meta: {
 					requiresAuth: true,
 					title: 'Orders',
@@ -206,57 +321,68 @@ const routes: RouteRecordRaw[] = [
 					disableLayoutPadding: true,
 				}
 			},
+			// Invoice Management
 			{
-				path: 'manufacturer/order-management',
-				name: 'manufacturer/order-management',
-				component: OrderManagementviewManufacturer,
-				meta: {
-					requiresAuth: true,
-					title: 'Orders',
-					icon: ShoppingCart
-				}
-			},
-			{
-				path: 'clinic/order-management',
-				name: 'clinic/order-management',
-				component: OrderManagementViewClinic,
-				meta: {
-					requiresAuth: true,
-					title: 'Orders',
-					icon: ShoppingCart
-				}
-			},
-			{
-				path: 'usage',
-				name: 'usage',
-				component: UsageLoggingView,
-				meta: {
-					requiresAuth: true,
-					title: 'Graft Usage',
-					icon: ClipboardDocumentCheckIcon
-				}
-			},
-			{
-				path: 'invoice-management',
-				name: 'invoice-management',
+				path: 'admin/invoice-management',
+				name: 'admin-invoice-management',
 				component: InvoiceManagementView,
 				meta: {
 					requiresAuth: true,
 					title: 'Invoices & Payments',
-					icon: ClipboardDocumentListIcon
+					icon: ClipboardList
 				}
 			},
 			{
-				path: 'graft-size',
-				name: 'graft-size',
-				component: GraftSizeManagementView,
+				path: 'office-staff/invoice-management',
+				name: 'office-staff-invoice-management',
+				component: InvoiceManagementView,
 				meta: {
 					requiresAuth: true,
-					title: 'Graft Size',
-					icon: PencilRuler
+					title: 'Invoices & Payments',
+					icon: ClipboardList
 				}
 			},
-			// Dynamic inventory routes based on role
+			{
+				path: 'clinic/invoice-management',
+				name: 'clinic-invoice-management',
+				component: InvoiceManagementView,
+				meta: {
+					requiresAuth: true,
+					title: 'Invoices & Payments',
+					icon: ClipboardList
+				}
+			},
+			{
+				path: 'clinician/invoice-management',
+				name: 'clinician-invoice-management',
+				component: InvoiceManagementView,
+				meta: {
+					requiresAuth: true,
+					title: 'Invoices & Payments',
+					icon: ClipboardList
+				}
+			},
+			{
+				path: 'manufacturer/invoice-management',
+				name: 'manufacturer-invoice-management',
+				component: InvoiceManagementView,
+				meta: {
+					requiresAuth: true,
+					title: 'Invoices & Payments',
+					icon: ClipboardList
+				}
+			},
+			{
+				path: 'biller/invoice-management',
+				name: 'biller-invoice-management',
+				component: InvoiceManagementView,
+				meta: {
+					requiresAuth: true,
+					title: 'Invoices & Payments',
+					icon: ClipboardList
+				}
+			},
+			// Inventory Management
 			{
 				path: 'admin/inventory',
 				name: 'admin-inventory',
@@ -264,7 +390,7 @@ const routes: RouteRecordRaw[] = [
 				meta: {
 					requiresAuth: true,
 					title: 'Inventory & Serials',
-					icon: CubeIcon,
+					icon: ScanBarcode,
 					role: 0
 				}
 			},
@@ -275,7 +401,7 @@ const routes: RouteRecordRaw[] = [
 				meta: {
 					requiresAuth: true,
 					title: 'Inventory & Serials',
-					icon: CubeIcon,
+					icon: ScanBarcode,
 					role: 1
 				}
 			},
@@ -286,7 +412,7 @@ const routes: RouteRecordRaw[] = [
 				meta: {
 					requiresAuth: true,
 					title: 'Inventory & Serials',
-					icon: CubeIcon,
+					icon: ScanBarcode,
 					role: 4
 				}
 			},
@@ -297,20 +423,12 @@ const routes: RouteRecordRaw[] = [
 				meta: {
 					requiresAuth: true,
 					title: 'Inventory & Serials',
-					icon: CubeIcon,
+					icon: ScanBarcode,
 					role: 5
 				}
 			},
-			{
-				path: 'notifications',
-				name: 'notifications',
-				component: NotificationCenterView,
-				meta: {
-					requiresAuth: true,
-					title: 'Notifications',
-					icon: BellIcon
-				}
-			},
+			// Others --- Change if needed
+			// Return Management
 			{
 				path: 'returns',
 				name: 'returns',
@@ -318,18 +436,19 @@ const routes: RouteRecordRaw[] = [
 				meta: {
 					requiresAuth: true,
 					title: 'Return Management',
-					icon: ArrowPathIcon,
+					icon: RotateCcw,
 					role: 0
 				}
 			},
+			// Usage Log Management
 			{
-				path: 'profile',
-				name: 'profile',
-				component: ProfileView,
+				path: 'usage',
+				name: 'usage',
+				component: UsageLoggingView,
 				meta: {
 					requiresAuth: true,
-					title: 'Profile',
-					icon: UsersIcon
+					title: 'Graft Usage',
+					icon: ClipboardList
 				}
 			},
 			{
@@ -339,7 +458,7 @@ const routes: RouteRecordRaw[] = [
 				meta: {
 					requiresAuth: true,
 					title: 'Smart Size Calculator',
-					icon: CalculatorIcon // You may need to import this icon at the top
+					icon: Calculator
 				}
 			},
 			{
@@ -349,7 +468,27 @@ const routes: RouteRecordRaw[] = [
 				meta: {
 					requiresAuth: true,
 					title: 'Reports',
-					icon: ChartBarIcon
+					icon: ChartColumn
+				}
+			},
+			{
+				path: 'notifications',
+				name: 'notifications',
+				component: NotificationCenterView,
+				meta: {
+					requiresAuth: true,
+					title: 'Notifications',
+					icon: BellRing
+				}
+			},
+			{
+				path: 'profile',
+				name: 'profile',
+				component: ProfileView,
+				meta: {
+					requiresAuth: true,
+					title: 'Profile',
+					icon: CircleUserRound
 				}
 			},
 		]
@@ -437,27 +576,59 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 	const role = authStore.user?.user_role ?? 0
 
 	const routeRoles: Record<string, number[]> = {
-		'admin-dashboard': [0, 1],
-		'clinic-dashboard': [2, 3],
-		'clinic': [0, 1, 2],
+		// Dashboard
+		'admin-dashboard': [0],
+		'office-staff-dashboard': [1],
+		'clinic-dashboard': [2],
+		'clinician-dashboard': [3],
+		// User Management
+		'admin-users': [0],
+		'office-staff-users': [1],
+		'clinic-users': [2],
+		// Clinic/Manufacturers/Brands/Graft Size Management
+		'clinic-management': [0, 1],
+		'manufacturer-management': [0, 1],
+		'brand-management': [0, 1],
+		'graft-size-management': [0, 1],
+		// IVR Management
+		'admin-ivr-management': [0],
+		'office-staff-ivr-management': [1],
+		'clinic-ivr-management': [2],
+		'clinician-ivr-management': [3],
+		'manufacturer-ivr-management': [4],
+		'biller-ivr-management': [5],
+		// Order Management
+		'admin-order-management': [0],
+		'office-staff-order-management': [1],
+		'clinic-order-management': [2],
+		'clinician-order-management': [3],
+		'manufacturer-order-management': [4],
+		// Invoice Management
+		'admin-invoice-management': [0],
+		'office-staff-invoice-management': [1],
+		'clinic-invoice-management': [2],
+		'clinician-invoice-management': [3],
+		'manufacturer-invoice-management': [4],
+		'biller-invoice-management': [5],
+		// Inventory Management
 		'admin-inventory': [0],
 		'office-staff-inventory': [1],
 		'manufacturer-inventory': [4],
 		'biller-inventory': [5],
 		'invoice-management': [0, 1, 2],
 		'ivr-management': [0, 1, 2, 4],
-		'notifications': [0, 1],
 		'order-management': [0, 1, 2, 3],
 		'manufacturer/order-management': [4],
 		'manufacturer/ivr-management': [4],
 		'clinic/order-management': [2],
-		'reports': [0, 1],
-		'returns': [0, 1],
-		'usage': [0, 1],
-		'admin-users': [0],
-		'office-staff-users': [1],
-		'clinic-users': [2],
-		'smart-selector': [0, 1, 2, 3, 4, 5, 6],
+
+		// Other Management
+		'returns': [],
+		'usage': [],
+		'smart-selector': [],
+		'reports': [],
+		'notifications': [0, 1],
+		'profile': [],
 	}
 
 	return layoutRoute.children
@@ -468,31 +639,29 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 					'admin-dashboard',
 					'admin-users',
 					'clinic-management',
-					// 'user-clinicians',
 					'manufacturer-management',
-					// 'clinic-dashboard',
-					'ivr-management',
-					'order-management',
-					'admin-inventory',
 					'brand-management',
-					'graft-size',
-					'invoice-management'
+					'graft-size-management',
+					'admin-ivr-management',
+					'admin-order-management',
+					'admin-invoice-management',
+					'admin-inventory',
 				].includes(route.name as string)
 			}
 
 			// Office Staff
 			if (role === 1) {
 				return [
-					'admin-dashboard',
+					'office-staff-dashboard',
 					'office-staff-users',
 					'clinic-management',
 					'manufacturer-management',
-					'ivr-management',
-					'order-management',
-					'office-staff-inventory',
 					'brand-management',
-					'graft-size',
-					'invoice-management'
+					'graft-size-management',
+					'office-staff-ivr-management',
+					'office-staff-order-management',
+					'office-staff-invoice-management',
+					'office-staff-inventory'
 				].includes(route.name as string)
 			}
 
@@ -500,40 +669,40 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 			if (role === 2) {
 				return [
 					'clinic-dashboard',
-					'user-clinicians',
-					// 'clinic-management',
-					'clinic/order-management',
-					'ivr-management',
-					'invoice-management',
-					'graft-size',
+					'clinic-users',
+					'clinic-ivr-management',
+					'clinic-order-management',
+					'clinic-invoice-management'
 				].includes(route.name as string)
 			}
 
 			// Clinician
 			if (role === 3) {
 				return [
-					'clinic-dashboard',
-					'clinic/order-management',
-					'ivr-management',
-					'invoice-management',
-					'graft-size',
+					'clinician-dashboard',
+					'clinician-ivr-management',
+					'clinician-order-management',
+					'clinician-invoice-management'
 				].includes(route.name as string)
 			}
 
 			// Manufacturer
 			if (role === 4) {
 				return [
-					'manufacturer/order-management',
-					'manufacturer/ivr-management',
-					'invoice-management',
-					'office-staff-inventory',
+					'manufacturer-ivr-management',
+					'manufacturer-order-management',
+					'manufacturer-invoice-management',
+					'office-staff-inventory'
 				].includes(route.name as string)
 			}
 
 			// Biller
-            if (role === 5) {
-                return ['ivr-management', 'invoice-management'].includes(route.name as string)
-            }
+			if (role === 5) {
+				return [
+					'biller-ivr-management',
+					'biller-invoice-management',
+				].includes(route.name as string)
+			}
 
 			const allowedRoles = routeRoles[route.name as string]
 			return allowedRoles?.includes(role) ?? false
@@ -579,9 +748,9 @@ router.beforeEach(async (to, from, next) => {
 
 	// allow access publicly - dili na need lag-en
 	if (to.name === 'woundmed-order' || to.name === 'woundmed-ivr-request') {
-        next();
-        return;
-    }
+		next();
+		return;
+	}
 
 	const Admin = 0;
 	const OfficeStaff = 1;
