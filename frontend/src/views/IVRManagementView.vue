@@ -1293,6 +1293,8 @@ watch(selectedPatient, (patient) => {
 
 	if (clinic) {
 		formData.value.clinic_id = clinic.clinic_id;
+		console.log(formData.value.clinic_id);
+		
 	} else {
 		formData.value.clinic_id = '';
 	}

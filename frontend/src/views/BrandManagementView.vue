@@ -72,8 +72,11 @@
 			<div class="flex items-start justify-between mb-4">
 				<div>
 					<div class="flex items-center gap-3">
-					<!-- Icon -->
-					<div class="p-2 bg-green-100 rounded-lg">
+					<!-- Logo or Icon -->
+					<div v-if="brand.logoUrl" class="w-12 h-12 rounded-lg overflow-hidden bg-gray-100">
+						<img :src="brand.logoUrl" :alt="`${brand.brandName} logo`" class="w-full h-full object-cover" />
+					</div>
+					<div v-else class="p-2 bg-green-100 rounded-lg">
 						<Package class="w-5 h-5 text-green-600" />
 					</div>
 
@@ -283,6 +286,47 @@
                             <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Maximum units allowed per day per patient</p>
                         </div>
 
+						<!-- Logo Upload Section -->
+						<div class="sm:col-span-2">
+							<div class="flex items-center gap-2 mb-2">
+								<Image class="w-5 h-5 text-green-500" />
+								<h3 class="text-md font-semibold text-gray-900 dark:text-gray-100">Brand Logo (Optional)</h3>
+							</div>
+							<div
+								class="mt-1 flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer
+									bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition"
+								@drop="handleLogoDrop"
+								@dragover="allowLogoDrop"
+							>
+								<input
+									id="logo-upload"
+									type="file"
+									accept="image/png,image/jpeg,image/jpg"
+									class="hidden"
+									@change="handleLogoChange"
+								/>
+								<label for="logo-upload" class="flex flex-col items-center justify-center text-center cursor-pointer">
+									<svg class="w-10 h-10 mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+											d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6h.1a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+									</svg>
+									<p class="mb-2 text-sm text-gray-500 dark:text-gray-400">
+										<span class="font-semibold">Click to upload</span> or drag and drop
+									</p>
+									<p class="text-xs text-gray-500 dark:text-gray-400">JPEG, JPG, or PNG (max. 2MB)</p>
+								</label>
+							</div>
+							<div v-if="selectedLogoFile" class="mt-2 flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+								<Image class="w-4 h-4 text-gray-400" />
+								<span>Selected: <span class="font-medium">{{ selectedLogoFile.name }}</span></span>
+							</div>
+							<div v-else-if="formData.logoUrl" class="mt-2 flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+								<Image class="w-4 h-4 text-gray-400" />
+								<span>Current: <img :src="formData.logoUrl" class="w-6 h-6 rounded object-cover inline ml-1" /> {{ formData.logoUrl.split('/').pop() }}</span>
+								<button @click="removeCurrentLogo" class="ml-2 text-red-500 hover:text-red-700 text-xs">Remove</button>
+							</div>
+						</div>
+
                         <div class="sm:col-span-2">
 							<label class="block text-sm font-medium text-gray-600 dark:text-gray-400">Description (Optional)</label>
 							<div class="relative">
@@ -410,6 +454,164 @@
 			</form>
 		</BaseModal>
 
+		<!-- Logo Cropper Modal -->
+        <BaseModal v-model="showLogoCropModal" title="Crop Logo" max-width="520px">
+        <div class="p-6 space-y-6">
+            <!-- Instructions -->
+            <div class="text-center">
+                <p class="text-sm text-gray-600 dark:text-gray-400">
+                    Adjust your logo to fit perfectly. Drag to reposition and use the zoom controls below.
+                </p>
+            </div>
+
+            <!-- Crop Area Container -->
+            <div class="relative mx-auto w-full max-w-[320px] aspect-square bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded-2xl overflow-hidden shadow-lg border border-gray-200 dark:border-gray-700">
+                <!-- Canvas Container with subtle grid background -->
+                <div class="absolute inset-0 opacity-20">
+                    <div class="w-full h-full bg-grid-pattern bg-[length:20px_20px]"></div>
+                </div>
+                
+                <canvas
+                    ref="logoCanvas"
+                    @mousedown="logoStartPan"
+                    @mousemove="logoHandlePan"
+                    @mouseup="logoEndPan"
+                    @mouseleave="logoEndPan"
+                    @wheel="logoHandleZoom"
+                    @touchstart="logoStartTouchPan"
+                    @touchmove="logoHandleTouchPan"
+                    @touchend="logoEndTouchPan"
+                    @touchcancel="logoEndTouchPan"
+                    class="absolute inset-0 w-full h-full touch-none cursor-grab active:cursor-grabbing select-none transition-transform duration-150"
+                    :class="{ 'cursor-grabbing': logoIsPanning }"
+                ></canvas>
+
+                <!-- Circular Crop Overlay with modern design -->
+                <div class="absolute inset-0 pointer-events-none">
+                    <!-- Outer shadow/mask -->
+                    <div class="absolute inset-0 bg-black/30 backdrop-blur-[1px]"></div>
+                    
+                    <!-- Circular crop window -->
+                    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4/5 h-4/5">
+                        <!-- Border with glow effect -->
+                        <div class="absolute inset-0 border-2 border-white/80 rounded-full shadow-[0_0_0_1px_rgba(255,255,255,0.3),0_0_20px_rgba(0,0,0,0.2)]"></div>
+                        
+                        <!-- Corner indicators -->
+                        <div class="absolute -top-1 -left-1 w-3 h-3 border-t-2 border-l-2 border-white rounded-tl"></div>
+                        <div class="absolute -top-1 -right-1 w-3 h-3 border-t-2 border-r-2 border-white rounded-tr"></div>
+                        <div class="absolute -bottom-1 -left-1 w-3 h-3 border-b-2 border-l-2 border-white rounded-bl"></div>
+                        <div class="absolute -bottom-1 -right-1 w-3 h-3 border-b-2 border-r-2 border-white rounded-br"></div>
+                    </div>
+
+                    <!-- Help text -->
+                    <div class="absolute bottom-4 left-1/2 -translate-x-1/2">
+                        <div class="flex items-center gap-2 px-3 py-1.5 bg-black/60 backdrop-blur-sm rounded-full">
+                            <svg class="w-3 h-3 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4"/>
+                            </svg>
+                            <span class="text-xs text-white/80 font-medium">Drag to move • Scroll to zoom</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Controls Section -->
+            <div class="space-y-6">
+                <!-- Zoom Controls -->
+                <div class="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <label class="text-sm font-semibold text-gray-700 dark:text-gray-300">Zoom Level</label>
+                        <span class="text-sm font-mono font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded">
+                            {{ Math.round(logoScale * 100) }}%
+                        </span>
+                    </div>
+                    
+                    <div class="flex items-center gap-4">
+                        <button 
+                            @click="logoZoomOut"
+                            :disabled="logoScale <= 0.5"
+                            class="flex items-center justify-center w-10 h-10 rounded-xl bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200 shadow-sm hover:shadow"
+                        >
+                            <svg class="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/>
+                            </svg>
+                        </button>
+                        
+                        <div class="flex-1 relative">
+                            <input
+                                type="range"
+                                min="0.5"
+                                max="3"
+                                step="0.1"
+                                v-model="logoScale"
+                                @input="drawLogoCanvas"
+                                class="w-full h-2 bg-gradient-to-r from-blue-500 via-blue-400 to-blue-300 rounded-lg appearance-none cursor-pointer slider-thumb"
+                            />
+                            <div class="absolute inset-0 flex justify-between items-center pointer-events-none px-1">
+                                <span class="text-xs text-gray-500">50%</span>
+                                <span class="text-xs text-gray-500">300%</span>
+                            </div>
+                        </div>
+                        
+                        <button 
+                            @click="logoZoomIn"
+                            :disabled="logoScale >= 3"
+                            class="flex items-center justify-center w-10 h-10 rounded-xl bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200 shadow-sm hover:shadow"
+                        >
+                            <svg class="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex flex-wrap gap-3 justify-center">
+                    <button
+                        @click="logoResetPosition"
+                        class="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-600 transition-all duration-200 shadow-sm hover:shadow"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                        </svg>
+                        Reset View
+                    </button>
+                    
+                    <button
+                        @click="logoSelectNewImage"
+                        class="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-all duration-200 shadow-sm hover:shadow"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                        Change Image
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <template #actions>
+            <div class="flex justify-end gap-3 px-6 pb-6 border-t border-gray-200 dark:border-gray-700 pt-6">
+                <button
+                    @click="logoCancelCrop"
+                    class="px-6 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-600 transition-all duration-200 shadow-sm hover:shadow"
+                >
+                    Cancel
+                </button>
+                <button
+                    @click="logoConfirmCrop"
+                    class="flex items-center gap-2 px-6 py-2.5 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl hover:from-blue-700 hover:to-indigo-700 shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-[1.02]"
+                >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    Apply Crop
+                </button>
+            </div>
+        </template>
+        </BaseModal>
+
 		<!-- Show Brand Details -->
 		<BaseModal v-model="showBrandDetailsModal" title="Brand Details">
 			<template v-if="viewBrand">
@@ -417,8 +619,12 @@
 					
 					<div class="flex items-start justify-between">
 						<div class="flex items-center space-x-4">
-							<div class="w-12 h-12 bg-blue-50 dark:bg-blue-900/30 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg">
-								<PackageOpen class="w-6 h-6 text-blue-600 dark:text-blue-400" />
+							<!-- Logo or Icon in Details -->
+							<div v-if="viewBrand.logoUrl" class="w-16 h-16 rounded-full overflow-hidden bg-gray-100">
+								<img :src="viewBrand.logoUrl" :alt="`${viewBrand.brandName} logo`" class="w-full h-full object-cover" />
+							</div>
+							<div v-else class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+								<PackageOpen class="w-8 h-8 text-green-500" />
 							</div>
 							<div>
 								<h2 class="text-2xl font-bold text-gray-900 dark:text-white">
@@ -596,7 +802,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import BaseModal from '@/components/common/BaseModal.vue'
 import Pagination from '@/components/ui/Pagination.vue'
 import ContentLoader from '@/components/ui/ContentLoader.vue'
-import { Package, PackagePlus, Eye, SquarePen, Trash2, Archive, CircleCheck, CircleX, Factory, TriangleAlert, Hash, RulerDimensionLine, Diameter, DollarSign, PencilRuler, Plus, Search, Funnel, Globe, Ruler, PackageOpen, PackageSearch, ChevronDown } from 'lucide-vue-next'
+import { Package, PackagePlus, Eye, SquarePen, Trash2, Archive, CircleCheck, CircleX, Factory, TriangleAlert, Hash, RulerDimensionLine, Diameter, DollarSign, PencilRuler, Plus, Search, Funnel, Globe, Ruler, PackageOpen, PackageSearch, ChevronDown, Image } from 'lucide-vue-next'
 import api from '@/services/api'
 import axios from "axios";
 
@@ -624,6 +830,7 @@ interface Brand {
   manufacturerId?: number
   manufacturerName?: string
   mue?: number | null
+  logoUrl?: string | null
   description?: string
   graftSizes: GraftSize[]
   createdAt: string
@@ -658,6 +865,7 @@ const formData = ref({
   brandStatus: 0,
   manufacturerId: null as number | null,
   mue: null as number | null,
+  logoUrl: '',
   description: '',
   graftSizes: [{ size: '', area: null, price: null, stock: 0 }] as GraftSize[]  // Added stock field with default value
 })
@@ -702,6 +910,7 @@ async function getAllBrands(page = 1) {
       manufacturerId: b.manufacturerId ?? null,
       manufacturerName: b.manufacturerName,
       mue: b.mue ?? null,
+      logoUrl: b.logoUrl,
       description: b.description,
      graftSizes: (b.graftSizes || []).map((s: any) => ({
         id: s.id,                        // graft_size_id
@@ -734,6 +943,7 @@ function editBrand(b: Brand) {
 		brandStatus: b.brandStatus ?? 0,
 		manufacturerId: b.manufacturerId ?? null,
 		mue: b.mue ?? null,
+		logoUrl: b.logoUrl || '',
 		description: b.description || '',
 		graftSizes: b.graftSizes.length > 0 
 		? b.graftSizes.map((s: GraftSize) => ({  // Preserve id/graftStatus
@@ -770,6 +980,13 @@ async function handleSubmitForm() {
     form.append('manufacturerId', (formData.value.manufacturerId ?? '').toString())
     form.append('mue', formData.value.mue ? formData.value.mue.toString() : '')
     form.append('description', formData.value.description || '')
+	if (selectedLogoFile.value) {  // Append logo file
+      form.append('logo', selectedLogoFile.value)
+    }
+    // Pass removal flags so backend can delete existing files when requested
+    if (removeLogoFlag.value) {
+        form.append('remove_logo', '1')
+    }
 
     // Append graft sizes as JSON
    form.append('graftSizes', JSON.stringify(formData.value.graftSizes))
@@ -902,9 +1119,11 @@ function closeForm() {
     brandStatus: 0, 
     manufacturerId: null,
     mue: null,
+	logoUrl: '', 
     description: '',
     graftSizes: [{ size: '', area: null, price: null }]
   }
+  selectedLogoFile.value = null
 }
 
 // search & filter
@@ -929,6 +1148,259 @@ function handleFileChange(event: any) { selectedFile.value = event.target.files[
 function handleDrop(event: any) { event.preventDefault(); selectedFile.value = event.dataTransfer.files[0] }
 function allowDrop(event: any) { event.preventDefault() }
 
+// Logo file handling (NEW)
+const selectedLogoFile = ref<File | null>(null)
+const logoObjectUrl = ref<string | null>(null)
+const removeLogoFlag = ref(false)
+
+// Only allow PNG and JPEG/JPG for logos
+const allowedLogoTypes = ['image/png','image/jpeg','image/jpg']
+
+function revokeLogoObjectUrl() {
+    if (logoObjectUrl.value && logoObjectUrl.value.startsWith('blob:')) {
+        URL.revokeObjectURL(logoObjectUrl.value)
+    }
+    logoObjectUrl.value = null
+}
+
+function validateLogoFile(file: File): Promise<boolean> {
+    return new Promise((resolve) => {
+        if (!file) return resolve(false)
+        if (!allowedLogoTypes.includes(file.type)) {
+            toast.error('Unsupported logo format. Use PNG or JPEG/JPG.')
+            return resolve(false)
+        }
+        // We allow any dimensions; provide a client-side crop step after selection
+        resolve(true)
+    })
+}
+
+// When user selects a logo, validate then open cropper modal
+async function handleLogoChange(event: any) {
+    const file: File | undefined = event.target?.files?.[0]
+    if (!file) return
+    const ok = await validateLogoFile(file)
+    if (!ok) return
+    openLogoCropper(file)
+}
+
+async function handleLogoDrop(event: any) {
+    event.preventDefault()
+    const file: File | undefined = event.dataTransfer?.files?.[0]
+    if (!file) return
+    const ok = await validateLogoFile(file)
+    if (!ok) return
+    openLogoCropper(file)
+}
+
+function allowLogoDrop(event: any) { event.preventDefault() }
+
+// --- Logo cropper (profile-style canvas editor) ---
+const showLogoCropModal = ref(false)
+const logoImageSrc = ref<string | null>(null)
+const logoCanvas = ref<HTMLCanvasElement | null>(null)
+const logoSelectedImage = ref<HTMLImageElement | null>(null)
+const logoScale = ref(1)
+const logoOffsetX = ref(0)
+const logoOffsetY = ref(0)
+const logoIsPanning = ref(false)
+const logoLastPanPoint = ref({ x: 0, y: 0 })
+const logoLastTouchDistance = ref(0)
+let logoPendingFile: File | null = null
+
+function openLogoCropper(file: File) {
+    logoPendingFile = file
+    revokeLogoObjectUrl()
+    logoImageSrc.value = URL.createObjectURL(file)
+    logoScale.value = 1
+    logoOffsetX.value = 0
+    logoOffsetY.value = 0
+    showLogoCropModal.value = true
+    // when modal opens, load image into an HTMLImageElement and draw
+    setTimeout(async () => {
+        if (!logoImageSrc.value) return
+        const img = document.createElement('img') as HTMLImageElement
+        img.src = logoImageSrc.value
+        await new Promise((res, rej) => { img.onload = res; img.onerror = rej })
+        logoSelectedImage.value = img
+        // await nextTick()
+        drawLogoCanvas()
+    }, 50)
+}
+
+function drawLogoCanvas() {
+    if (!logoCanvas.value || !logoSelectedImage.value) return
+    const canvasEl = logoCanvas.value
+    const ctx = canvasEl.getContext('2d')
+    if (!ctx) return
+
+    const rect = canvasEl.getBoundingClientRect()
+    const size = Math.floor(Math.min(rect.width, rect.height))
+    canvasEl.width = size
+    canvasEl.height = size
+
+    ctx.clearRect(0, 0, size, size)
+    ctx.fillStyle = '#ffffff'
+    ctx.fillRect(0, 0, size, size)
+
+    const img = logoSelectedImage.value
+    const imgAspect = img.naturalWidth / img.naturalHeight
+    const canvasAspect = 1
+
+    let drawWidth: number, drawHeight: number
+    if (imgAspect > canvasAspect) {
+        drawWidth = size
+        drawHeight = size / imgAspect
+    } else {
+        drawHeight = size
+        drawWidth = size * imgAspect
+    }
+
+    drawWidth *= logoScale.value
+    drawHeight *= logoScale.value
+
+    const x = (size - drawWidth) / 2 + logoOffsetX.value
+    const y = (size - drawHeight) / 2 + logoOffsetY.value
+
+    // square clip (full-canvas square) and border
+    ctx.save()
+    ctx.beginPath()
+    ctx.rect(0, 0, size, size)
+    ctx.clip()
+    ctx.drawImage(img, x, y, drawWidth, drawHeight)
+    ctx.restore()
+}
+
+// Zoom controls
+function logoZoomIn() {
+    logoScale.value = Math.min(3, logoScale.value + 0.1)
+    drawLogoCanvas()
+}
+function logoZoomOut() {
+    logoScale.value = Math.max(0.5, logoScale.value - 0.1)
+    drawLogoCanvas()
+}
+function logoHandleZoom(event: WheelEvent) {
+    event.preventDefault()
+    const delta = event.deltaY > 0 ? -0.05 : 0.05
+    logoScale.value = Math.max(0.5, Math.min(3, logoScale.value + delta))
+    drawLogoCanvas()
+}
+
+// Pan controls
+function logoStartPan(event: MouseEvent) {
+    logoIsPanning.value = true
+    logoLastPanPoint.value = { x: event.clientX, y: event.clientY }
+}
+function logoHandlePan(event: MouseEvent) {
+    if (!logoIsPanning.value) return
+    const deltaX = event.clientX - logoLastPanPoint.value.x
+    const deltaY = event.clientY - logoLastPanPoint.value.y
+    logoOffsetX.value += deltaX
+    logoOffsetY.value += deltaY
+    logoLastPanPoint.value = { x: event.clientX, y: event.clientY }
+    drawLogoCanvas()
+}
+function logoEndPan() { logoIsPanning.value = false }
+
+// Touch pan/zoom
+function getTouchDistance(touches: TouchList): number {
+    if (touches.length < 2) return 0
+    const t1 = touches[0], t2 = touches[1]
+    const dx = t1.clientX - t2.clientX
+    const dy = t1.clientY - t2.clientY
+    return Math.sqrt(dx*dx + dy*dy)
+}
+function logoStartTouchPan(event: TouchEvent) {
+    event.preventDefault()
+    if (event.touches.length === 1) {
+        logoIsPanning.value = true
+        const t = event.touches[0]
+        logoLastPanPoint.value = { x: t.clientX, y: t.clientY }
+    } else if (event.touches.length === 2) {
+        logoIsPanning.value = false
+        logoLastTouchDistance.value = getTouchDistance(event.touches)
+    }
+}
+function logoHandleTouchPan(event: TouchEvent) {
+    event.preventDefault()
+    if (event.touches.length === 1 && logoIsPanning.value) {
+        const t = event.touches[0]
+        const dx = t.clientX - logoLastPanPoint.value.x
+        const dy = t.clientY - logoLastPanPoint.value.y
+        logoOffsetX.value += dx
+        logoOffsetY.value += dy
+        logoLastPanPoint.value = { x: t.clientX, y: t.clientY }
+        drawLogoCanvas()
+    } else if (event.touches.length === 2) {
+        const dist = getTouchDistance(event.touches)
+        if (logoLastTouchDistance.value > 0) {
+            const delta = (dist - logoLastTouchDistance.value) * 0.01
+            logoScale.value = Math.max(0.5, Math.min(3, logoScale.value + delta))
+            drawLogoCanvas()
+        }
+        logoLastTouchDistance.value = dist
+    }
+}
+function logoEndTouchPan() { logoIsPanning.value = false; logoLastTouchDistance.value = 0 }
+
+function logoResetPosition() {
+    logoScale.value = 1
+    logoOffsetX.value = 0
+    logoOffsetY.value = 0
+    drawLogoCanvas()
+}
+
+function logoSelectNewImage() {
+    // clear current, allow user to pick new file
+    logoSelectedImage.value = null
+    logoImageSrc.value = null
+    logoPendingFile = null
+    // trigger the hidden file input used for logo (re-use logo-upload)
+    const input = document.getElementById('logo-upload') as HTMLInputElement | null
+    if (input) input.click()
+}
+
+async function logoConfirmCrop() {
+    if (!logoCanvas.value || !logoSelectedImage.value || !logoPendingFile) return
+    const canvasEl = logoCanvas.value
+    canvasEl.toBlob((blob) => {
+        if (!blob) return
+        const newFile = new File([blob], logoPendingFile!.name, { type: blob.type })
+        selectedLogoFile.value = newFile
+        revokeLogoObjectUrl()
+        logoObjectUrl.value = URL.createObjectURL(newFile)
+        formData.value.logoUrl = logoObjectUrl.value
+        removeLogoFlag.value = false
+        showLogoCropModal.value = false
+        if (logoImageSrc.value && logoImageSrc.value.startsWith('blob:')) URL.revokeObjectURL(logoImageSrc.value)
+        logoImageSrc.value = null
+        logoSelectedImage.value = null
+        logoPendingFile = null
+    }, 'image/png')
+}
+
+function logoCancelCrop() {
+    showLogoCropModal.value = false
+    if (logoImageSrc.value && logoImageSrc.value.startsWith('blob:')) URL.revokeObjectURL(logoImageSrc.value)
+    logoImageSrc.value = null
+    logoSelectedImage.value = null
+    logoPendingFile = null
+}
+
+function removeCurrentLogo() {
+    removeLogoFlag.value = true
+    selectedLogoFile.value = null
+    formData.value.logoUrl = ''
+    revokeLogoObjectUrl()
+}
+
+// cleanup object URLs on unmount
+import { onUnmounted } from 'vue'
+onUnmounted(() => {
+    revokeLogoObjectUrl()
+})
+
 // modal binding
 const showFormModal = computed({
   get: () => showCreateForm.value || showEditForm.value,
@@ -949,3 +1421,64 @@ watch(showFormModal, (val) => {
 })
 
 </script>
+<style scoped>
+/* Custom grid pattern for the background */
+.bg-grid-pattern {
+    background-image: 
+        linear-gradient(rgba(0,0,0,0.1) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,0,0,0.1) 1px, transparent 1px);
+}
+
+/* Enhanced range slider styling */
+input[type="range"].slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    background: linear-gradient(to right, #3b82f6 0%, #3b82f6 calc((var(--value, 50) - 50) * 100 / 250), #e5e7eb calc((var(--value, 50) - 50) * 100 / 250), #e5e7eb 100%);
+    border-radius: 10px;
+    height: 6px;
+}
+
+input[type="range"].slider-thumb::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    background: #3b82f6;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+    transition: all 0.2s ease;
+}
+
+input[type="range"].slider-thumb::-webkit-slider-thumb:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.6);
+}
+
+input[type="range"].slider-thumb::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    background: #3b82f6;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+    transition: all 0.2s ease;
+    border: none;
+}
+
+input[type="range"].slider-thumb::-moz-range-thumb:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.6);
+}
+
+/* Smooth transitions for all interactive elements */
+button {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+canvas {
+    transition: transform 0.15s ease;
+}
+</style>
