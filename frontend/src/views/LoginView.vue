@@ -7,7 +7,7 @@
                     <div class="flex items-center mb-8">
                         <div className="bg-white rounded p-3 mr-3 flex items-center justify-center">
                             <img
-                            src="/main-logo.webp" 
+                            src="main-logo.webp"
                             alt="Main Logo" 
                             className="w-20 h-20 object-contain" 
                             />

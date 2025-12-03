@@ -50,14 +50,20 @@ class Clinic extends Model
         });
     }
 
+    // public function clinicians()
+    // {
+    //     return $this->belongsToMany(
+    //         User::class,
+    //         'woundmed_clinic_clinician',
+    //         'clinic_id',
+    //         'clinician_id'
+    //     );
+    // }
+
     public function clinicians()
     {
-        return $this->belongsToMany(
-            User::class,
-            'woundmed_clinic_clinician',
-            'clinic_id',
-            'clinician_id'
-        );
+        return $this->hasMany(User::class, 'clinic_id', 'clinic_id')
+                    ->where('user_role', 3); // 3 = Clinician role
     }
 
     public function getAllClinicianIdsAttribute()
