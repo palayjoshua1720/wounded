@@ -39,12 +39,12 @@
 			<div class="bg-white dark:bg-gray-800 p-6 rounded shadow-sm border border-gray-200 dark:border-gray-700">
 				<div class="flex items-center justify-between mb-4">
 					<h3 class="text-lg font-semibold text-gray-900 dark:text-white">Recent Activity</h3>
-					<router-link
+					<!-- <router-link
 						to="/notifications"
 						class="text-xs text-blue-600 dark:text-blue-300 hover:underline font-light"
 					>
 						View All
-					</router-link>
+					</router-link> -->
 				</div>
 				<div class="space-y-4">
 					<div

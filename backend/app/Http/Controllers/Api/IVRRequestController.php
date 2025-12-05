@@ -33,16 +33,16 @@ class IVRRequestController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate($perPage);
 
-        $ivrRequests->getCollection()->transform(function ($ivr) {
+        // $ivrRequests->getCollection()->transform(function ($ivr) {
 
-            if ($ivr->filepath) {
-                $fileName = basename($ivr->filepath);
+        //     if ($ivr->filepath) {
+        //         $fileName = basename($ivr->filepath);
 
-                $ivr->filepath = url('/storage/ivr/' . $fileName);
-            }
+        //         $ivr->filepath = url('/storage/ivr/' . $fileName);
+        //     }
 
-            return $ivr;
-        });
+        //     return $ivr;
+        // });
 
         return response()->json([
             'data' => $ivrRequests->items(),
@@ -124,11 +124,6 @@ class IVRRequestController extends Controller
 
     public function addIVRRequest(Request $request)
     {
-        echo '<pre>';
-        print_r($request->all());
-        echo '<br>';
-        echo '</pre>';
-        exit;
         $ip = $request->server('HTTP_X_FORWARDED_FOR') ?? $request->server('REMOTE_ADDR');
         $tempPassword = Str::random(12);
         $prevHash = $this->getLastRowHash();
@@ -140,7 +135,13 @@ class IVRRequestController extends Controller
                 'filepath' => 'required|file|mimes:pdf,doc,docx|max:10240',
                 'notes' => 'nullable|string',
             ]);
-            $path = $request->file('filepath')->store('ivr', 'public');
+            // $path = $request->file('filepath')->store('ivr', 'public');
+            $path = null;
+            if ($request->hasFile('filepath')) {
+                $filename = time().'.'.$request->file('filepath')->getClientOriginalExtension();
+                $path = $request->file('filepath')->storeAs('ivr', $filename, 'private');
+            }
+            
             $ivrNumber = '#IVR-' . strtoupper(uniqid());
             $newIVR = IVR::create([
                 'ivr_number' => $ivrNumber,
@@ -522,5 +523,20 @@ class IVRRequestController extends Controller
             'success' => true,
             'message' => 'IVR status updated successfully.',
         ]);
+    }
+
+    // live ivr file streaming
+    public function viewIVRFile($filename)
+    {
+        $path = "ivr/" . $filename;
+
+        if (!Storage::disk('private')->exists($path)) {
+            return abort(404, 'File not found.');
+        }
+
+        $file = Storage::disk('private')->get($path);
+        $mime = Storage::disk('private')->mimeType($path);
+
+        return response($file, 200)->header('Content-Type', $mime);
     }
 }

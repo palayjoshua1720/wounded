@@ -226,6 +226,18 @@
 			<!-- Main Content -->
 			<main class="py-6">
 				<div class="mx-auto px-4 sm:px-6 lg:px-8">
+					<div class="w-full bg-yellow-50 border-l-4 border-yellow-500 p-4 mb-6">
+						<div class="flex items-center">
+							<div class="flex-shrink-0">
+								<TriangleAlert class="h-6 w-6 text-yellow-600" />
+							</div>
+							<div class="ml-3">
+								<p class="text-sm font-medium text-yellow-900">
+								Development Notice: This system is currently under active development. Some features may be incomplete or unavailable.
+								</p>
+							</div>
+						</div>
+					</div>
 					<router-view></router-view>
 				</div>
 			</main>
@@ -253,10 +265,9 @@ import Sidebar from './Sidebar.vue'
 import PageLoader from '@/components/ui/PageLoader.vue'
 import NotificationModal from '@/components/notifications/NotificationModal.vue'
 import {
-    RefreshCcw,
-    Settings,
-    BellRing,
-	LogOut
+    RefreshCcw, Settings, BellRing, LogOut,
+	TriangleAlert,
+	TriangleAlertIcon
 } from 'lucide-vue-next';
 
 const route = useRoute()
