@@ -8,6 +8,12 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      # Set Vue environment variables HERE for build time
+      VUE_APP_TITLE: "WOUNDMED INC."
+      VUE_APP_API_URL: "https://woundmed.on-aptible.com"
+      VUE_APP_BASE_URL: "https://woundmed.on-aptible.com"
+      
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -19,12 +25,26 @@ jobs:
 
       - name: Build Vue.js Frontend
         working-directory: ./frontend
+        env:
+          # Pass the variables again explicitly to the Vue build step
+          VUE_APP_TITLE: ${{ env.VUE_APP_TITLE }}
+          VUE_APP_API_URL: ${{ env.VUE_APP_API_URL }}
+          VUE_APP_BASE_URL: ${{ env.VUE_APP_BASE_URL }}
         run: |
+          echo "Building Vue.js with environment variables:"
+          echo "VUE_APP_TITLE: $VUE_APP_TITLE"
+          echo "VUE_APP_API_URL: $VUE_APP_API_URL"
+          echo "VUE_APP_BASE_URL: $VUE_APP_BASE_URL"
+          
           npm ci
           npm run build
+          
           # Copy to Laravel public directory
           mkdir -p ../backend/public
           cp -r dist/* ../backend/public/
+          
+          # Verify build
+          ls -la ../backend/public/
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -35,6 +55,9 @@ jobs:
 
       - name: Prepare Laravel Backend
         working-directory: ./backend
+        env:
+          # Optional: Set APP_KEY for Laravel build if needed
+          APP_KEY: ${{ secrets.APP_KEY }}
         run: |
           composer install --no-dev --optimize-autoloader --no-interaction
           php artisan storage:link
@@ -48,4 +71,10 @@ jobs:
           environment: woundmed_environment
           username: ${{ secrets.APTIBLE_USERNAME }}
           password: ${{ secrets.APTIBLE_PASSWORD }}
-          # No env needed here - using Aptible Environment Variables
+          # Runtime environment variables (for Aptible)
+          env: |
+            # These are for runtime in Aptible
+            VUE_APP_TITLE=WOUNDMED INC.
+            VUE_APP_API_URL=https://woundmed.on-aptible.com
+            VUE_APP_BASE_URL=https://woundmed.on-aptible.com
+            # Add other runtime variables from your Aptible Environment Variables
