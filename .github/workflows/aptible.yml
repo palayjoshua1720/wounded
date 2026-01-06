@@ -1,4 +1,4 @@
-name: aptible
+name: Deploy to Aptible
 
 on:
   push:
@@ -9,14 +9,43 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-    - name: Deploy to Aptible
-      uses: aptible/aptible-deploy-action@v4
-      with:
-        type: git
-        app: woundmed
-        environment: woundmed_environment
-        username: ${{ secrets.APTIBLE_USERNAME }}
-        password: ${{ secrets.APTIBLE_PASSWORD }}
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Build Vue.js Frontend
+        working-directory: ./frontend
+        run: |
+          npm ci
+          npm run build
+          # Copy to Laravel public directory
+          mkdir -p ../backend/public
+          cp -r dist/* ../backend/public/
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, zip, exif, pcntl, gd, mysql, pdo_mysql
+          coverage: none
+
+      - name: Prepare Laravel Backend
+        working-directory: ./backend
+        run: |
+          composer install --no-dev --optimize-autoloader --no-interaction
+          php artisan storage:link
+          php artisan optimize:clear
+
+      - name: Deploy to Aptible
+        uses: aptible/aptible-deploy-action@v4
+        with:
+          type: git
+          app: woundmed
+          environment: woundmed_environment
+          username: ${{ secrets.APTIBLE_USERNAME }}
+          password: ${{ secrets.APTIBLE_PASSWORD }}
+          # No env needed here - using Aptible Environment Variables
