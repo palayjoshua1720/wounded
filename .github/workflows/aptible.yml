@@ -2,7 +2,7 @@ name: aptible
 
 on:
   push:
-    branches: [juswa-backup-branch]
+    branches: [main]
   workflow_dispatch: {}
 
 jobs:
