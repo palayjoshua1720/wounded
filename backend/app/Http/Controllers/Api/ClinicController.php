@@ -30,14 +30,14 @@ class ClinicController extends Controller
                 'status',
                 'timestamp'
             )
-            ->whereIn('entity_type', ['clinician', 'authentication'])
+            // Removed restrictive entity_type filter so all recent audit logs are returned
             ->orderBy('timestamp', 'desc')
             ->limit(10);
 
         $logs = $query->get();
 
         return response()->json([
-            'message' => 'Clinician activity fetched successfully',
+            'message' => 'Activity fetched successfully',
             'data' => $logs
         ]);
     }
