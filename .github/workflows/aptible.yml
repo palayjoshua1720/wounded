@@ -18,5 +18,5 @@ jobs:
         type: git
         app: woundmed
         environment: woundmed_environment
-        username: ${{ secrets.jospalay@proweaver.email }}
-        password: ${{ secrets.M_$%-CS7ut-fvEm }}
+        username: ${{ secrets.APTIBLE_USERNAME }}
+        password: ${{ secrets.APTIBLE_PASSWORD }}
