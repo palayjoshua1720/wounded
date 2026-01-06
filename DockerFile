@@ -1,33 +1,59 @@
-FROM php:8.2-fpm
+# Build stage for Vue.js
+FROM node:18-alpine as frontend-build
 
-# System dependencies
+WORKDIR /app/frontend
+COPY frontend/package*.json ./
+RUN npm install
+COPY frontend/ .
+RUN npm run build
+
+# Build stage for Laravel
+FROM composer:2 as backend-build
+
+WORKDIR /app/backend
+COPY backend/composer.json backend/composer.lock ./
+RUN composer install --no-dev --no-scripts --no-autoloader
+
+# Final stage
+FROM php:8.2-apache
+
+# Install PHP extensions and dependencies
 RUN apt-get update && apt-get install -y \
-    git \
+    libzip-dev \
+    zip \
     unzip \
     libpng-dev \
     libonig-dev \
     libxml2-dev \
-    zip \
-    curl \
-    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
+    && docker-php-ext-install pdo_mysql zip gd mbstring exif pcntl bcmath
 
-# Install Composer
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+# Copy Composer from build stage
+COPY --from=backend-build /usr/bin/composer /usr/bin/composer
 
 # Set working directory
-WORKDIR /app
+WORKDIR /var/www/html
 
-# Copy backend only
-COPY backend/ /app
+# Copy Laravel files
+COPY backend/ .
+COPY --from=frontend-build /app/frontend/dist ./public/
 
-# Install PHP dependencies
+# Copy built Vue assets to Laravel public directory
+COPY --from=frontend-build /app/frontend/dist ./public/
+
+# Install Composer dependencies
 RUN composer install --no-dev --optimize-autoloader
 
-# Permissions
-RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache
+# Set permissions
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 755 /var/www/html/storage \
+    && chmod -R 755 /var/www/html/bootstrap/cache
+
+# Configure Apache
+RUN a2enmod rewrite
+COPY backend/.htaccess ./.htaccess
+COPY backend/apache-config.conf /etc/apache2/sites-available/000-default.conf
 
 # Expose port
-EXPOSE 8080
+EXPOSE 80
 
-# Start Laravel
-CMD php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=8080
+CMD ["apache2-foreground"]

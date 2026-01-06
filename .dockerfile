@@ -1,7 +1,9 @@
-.git
-.github
-frontend/node_modules
-backend/vendor
-backend/storage/logs
+node_modules/
+vendor/
+.git/
+.dockerignore
+Dockerfile*
+docker-compose*
 .env
-node_modules
+.gitignore
+README.md
