@@ -39,8 +39,8 @@ RUN apt-get update && apt-get install -y \
     libxml2-dev \
     && docker-php-ext-install pdo_mysql zip gd mbstring exif pcntl bcmath
 
-# Copy Composer from build stage
-COPY --from=backend-build /usr/bin/composer /usr/bin/composer
+# Copy Composer from build stage (installed to /usr/local/bin in backend-build)
+COPY --from=backend-build /usr/local/bin/composer /usr/local/bin/composer
 
 # Set working directory
 WORKDIR /var/www/html
