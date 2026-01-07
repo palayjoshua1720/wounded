@@ -37,16 +37,26 @@ jobs:
           echo "VUE_APP_TITLE: $VUE_APP_TITLE"
           echo "VUE_APP_API_URL: $VUE_APP_API_URL"
           echo "VUE_APP_BASE_URL: $VUE_APP_BASE_URL"
-          
+
+          # Print node/npm versions
+          node -v
+          npm -v
+
+          # Be verbose so logs show npm install/build output
+          set -x
           npm ci
           npm run build
-          
-          # Copy to Laravel public directory
+
+          # Show dist contents explicitly
+          echo "DIST LISTING:" 
+          ls -la dist || true
+
+          # Copy to Laravel public directory and show result
           mkdir -p ../backend/public
-          cp -r dist/* ../backend/public/
-          
-          # Verify build
-          ls -la ../backend/public/
+          cp -r dist/* ../backend/public/ || true
+          echo "PUBLIC LISTING AFTER COPY:" 
+          ls -la ../backend/public/ || true
+          set +x
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
