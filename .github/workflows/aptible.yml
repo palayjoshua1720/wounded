@@ -17,6 +17,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -77,7 +79,7 @@ jobs:
           username: ${{ secrets.APTIBLE_USERNAME }}
           password: ${{ secrets.APTIBLE_PASSWORD }}
           # Runtime environment variables (for Aptible)
-          env: |
+          config_variables: |
             # These are for runtime in Aptible
             VUE_APP_TITLE=WOUNDMED INC.
             VUE_APP_API_URL=https://woundmed.on-aptible.com
