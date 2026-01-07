@@ -80,7 +80,7 @@ jobs:
           password: ${{ secrets.APTIBLE_PASSWORD }}
           # Runtime environment variables (for Aptible)
           config_variables: |
-            VUE_APP_TITLE=WOUNDMED INC.
+            VUE_APP_TITLE="WOUNDMED INC."
             VUE_APP_API_URL=https://woundmed.on-aptible.com
             VUE_APP_BASE_URL=https://woundmed.on-aptible.com
             VUE_APP_THEME_COLOR="#ffffff"
