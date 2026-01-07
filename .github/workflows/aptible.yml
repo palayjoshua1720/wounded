@@ -85,5 +85,4 @@ jobs:
             VUE_APP_BASE_URL=https://woundmed.on-aptible.com
             VUE_APP_THEME_COLOR="#ffffff"
             VUE_APP_DESCRIPTION="A Resource for Wound Specialist"
-          # Push the main branch on to Aptible so a deployment is triggered
-          git_remote: aptible
+          # Let the Aptible action configure the remote so git push uses the correct URL
