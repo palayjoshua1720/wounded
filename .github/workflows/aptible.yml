@@ -9,7 +9,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     env:
-      # Set Vue environment variables HERE for build time
+      # Set VUE environment variables HERE for build time
       VUE_APP_TITLE: "WOUNDMED INC."
       VUE_APP_API_URL: "https://woundmed.on-aptible.com"
       VUE_APP_BASE_URL: "https://woundmed.on-aptible.com"
