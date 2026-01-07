@@ -86,4 +86,4 @@ jobs:
             VUE_APP_THEME_COLOR="#ffffff"
             VUE_APP_DESCRIPTION="A Resource for Wound Specialist"
           # Push the main branch on to Aptible so a deployment is triggered
-          git_remote: main
+          git_remote: aptible
