@@ -60,6 +60,7 @@ jobs:
           APP_KEY: ${{ secrets.APP_KEY }}
           # Prevent CI from attempting DB-backed cache/session/queue during composer scripts
           CACHE_DRIVER: file
+          CACHE_STORE: file
           SESSION_DRIVER: file
           QUEUE_CONNECTION: sync
         run: |
