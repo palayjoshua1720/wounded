@@ -58,6 +58,10 @@ jobs:
         env:
           # Optional: Set APP_KEY for Laravel build if needed
           APP_KEY: ${{ secrets.APP_KEY }}
+          # Prevent CI from attempting DB-backed cache/session/queue during composer scripts
+          CACHE_DRIVER: file
+          SESSION_DRIVER: file
+          QUEUE_CONNECTION: sync
         run: |
           composer install --no-dev --optimize-autoloader --no-interaction
           php artisan storage:link
