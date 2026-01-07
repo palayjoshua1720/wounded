@@ -77,4 +77,6 @@ jobs:
             VUE_APP_TITLE=WOUNDMED INC.
             VUE_APP_API_URL=https://woundmed.on-aptible.com
             VUE_APP_BASE_URL=https://woundmed.on-aptible.com
+            VUE_APP_THEME_COLOR=#ffffff
+            VUE_APP_DESCRIPTION="A Resource for Wound Specialist"
             # Add other runtime variables from your Aptible Environment Variables
