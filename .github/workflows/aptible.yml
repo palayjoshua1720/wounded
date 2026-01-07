@@ -80,10 +80,10 @@ jobs:
           password: ${{ secrets.APTIBLE_PASSWORD }}
           # Runtime environment variables (for Aptible)
           config_variables: |
-            # These are for runtime in Aptible
             VUE_APP_TITLE=WOUNDMED INC.
             VUE_APP_API_URL=https://woundmed.on-aptible.com
             VUE_APP_BASE_URL=https://woundmed.on-aptible.com
-            VUE_APP_THEME_COLOR=#ffffff
+            VUE_APP_THEME_COLOR="#ffffff"
             VUE_APP_DESCRIPTION="A Resource for Wound Specialist"
-            # Add other runtime variables from your Aptible Environment Variables
+          # Push the main branch on to Aptible so a deployment is triggered
+          git_remote: main
