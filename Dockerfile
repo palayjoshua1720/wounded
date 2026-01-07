@@ -7,12 +7,24 @@ RUN npm install
 COPY frontend/ .
 RUN npm run build
 
-# Build stage for Laravel
-FROM composer:2 as backend-build
+# Build stage for Laravel (use PHP 8.2 so Composer respects lockfile PHP constraints)
+FROM php:8.2-cli as backend-build
 
 WORKDIR /app/backend
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    zip \
+    unzip \
+    git \
+    curl \
+    libzip-dev \
+    && docker-php-ext-install zip pdo_mysql && rm -rf /var/lib/apt/lists/*
+
+# Install Composer
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \
+    && composer --version
+
 COPY backend/composer.json backend/composer.lock ./
-RUN composer install --no-dev --no-scripts --no-autoloader
+RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist --no-interaction
 
 # Final stage
 FROM php:8.2-apache
