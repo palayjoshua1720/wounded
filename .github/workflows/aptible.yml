@@ -70,7 +70,7 @@ jobs:
         env:
           # Optional: Set APP_KEY for Laravel build if needed
           APP_KEY: ${{ secrets.APP_KEY }}
-          # Prevent CI from attempting DB-backed cache/session/queue during composer scripts
+          # Prevent CI from attempting DB-backed cache/session/queue during composer script
           CACHE_DRIVER: file
           CACHE_STORE: file
           SESSION_DRIVER: file
