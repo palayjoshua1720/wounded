@@ -37,8 +37,10 @@ jobs:
 
       - name: Install Aptible CLI
         run: |
-          curl -o aptible-cli.deb -L https://aptible-cli.s3.amazonaws.com/aptible-cli_latest.deb
-          sudo dpkg -i aptible-cli.deb
+          curl -o aptible-toolbelt.deb -L https://omnibus-aptible-toolbelt.s3.amazonaws.com/aptible/omnibus-aptible-toolbelt/latest/aptible-toolbelt_latest_debian-9_amd64.deb
+          sudo dpkg -i aptible-toolbelt.deb
+          rm aptible-toolbelt.deb  # Optional cleanup
+          aptible version  # Verify installation
 
       - name: Deploy to Aptible
         run: |
