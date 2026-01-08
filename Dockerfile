@@ -62,7 +62,7 @@ RUN chown -R www-data:www-data /var/www/html \
 
 # Configure Apache
 RUN a2enmod rewrite
-COPY backend/.htaccess ./.htaccess
+COPY backend/.htaccess ./public/.htaccess
 COPY backend/apache-config.conf /etc/apache2/sites-available/000-default.conf
 
 # Expose port
