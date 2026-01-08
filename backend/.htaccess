@@ -9,18 +9,19 @@
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
-    # Redirect Trailing Slashes If Not A Folder...
-    RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteRule ^(.*)/$ /$1 [L,R=301]
+    # If the request matches an existing file or directory, serve it
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
 
-    # Send Requests To Front Controller
-    RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteRule ^ index.php [L]
+    # Route API requests to Laravel front controller
+    RewriteRule ^api(/.*)?$ index.php [L,QSA]
+
+    # Everything else should serve the SPA entrypoint (index.html)
+    RewriteRule ^ index.html [L]
 </IfModule>
 
 <IfModule !mod_rewrite.c>
-    # If mod_rewrite is not available, deny access to front-controller.php for security
     <FilesMatch "^(index\.php)$">
         Require all granted
     </FilesMatch>

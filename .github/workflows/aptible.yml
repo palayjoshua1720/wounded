@@ -54,6 +54,13 @@ jobs:
           # Copy to Laravel public directory and show result
           mkdir -p ../backend/public
           cp -r dist/* ../backend/public/ || true
+          # Commit built frontend into backend/public so Aptible's git deploy includes the files
+          pushd ..
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git add backend/public
+          git commit -m "ci: add built frontend (dist)" || true
+          popd
           echo "PUBLIC LISTING AFTER COPY:" 
           ls -la ../backend/public/ || true
           set +x
