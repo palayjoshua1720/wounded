@@ -12,9 +12,6 @@ jobs:
       contents: read
       packages: write
     env:
-      VUE_APP_TITLE: "WOUNDMED INC."
-      VUE_APP_API_URL: "https://woundmed.on-aptible.com"
-      VUE_APP_BASE_URL: "https://woundmed.on-aptible.com"
       IMAGE_TAG: ghcr.io/${{ github.repository }}:latest
 
     steps:
@@ -46,7 +43,9 @@ jobs:
       - name: Deploy to Aptible
         run: |
           aptible login --email="${{ secrets.APTIBLE_USERNAME }}" --password="${{ secrets.APTIBLE_PASSWORD }}"
-          aptible deploy --app woundmed --docker-img ${{ env.IMAGE_TAG }} --git-detach  # Remove --git-detach after first successful run
-        env:
-          APTIBLE_PRIVATE_REGISTRY_USERNAME: ${{ github.actor }}
-          APTIBLE_PRIVATE_REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+          aptible deploy --app woundmed \
+            --docker-image ${{ env.IMAGE_TAG }} \
+            --private-registry-username ${{ github.actor }} \
+            --private-registry-password ${{ secrets.GITHUB_TOKEN }} \
+            # Remove the line below after the FIRST successful automatic deploy
+            --git-detach
