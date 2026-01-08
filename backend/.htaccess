@@ -14,8 +14,9 @@
     RewriteCond %{REQUEST_FILENAME} -d
     RewriteRule ^ - [L]
 
-    # Route API requests to Laravel front controller
-    RewriteRule ^api(/.*)?$ index.php [L,QSA]
+    # For API requests that reach this point, forward to Laravel's index.php
+    RewriteCond %{REQUEST_URI} ^/api/
+    RewriteRule ^(.*)$ ../index.php [QSA,L]
 
     # Everything else should serve the SPA entrypoint (index.html)
     RewriteRule ^ index.html [L]
