@@ -9,6 +9,10 @@
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
+    # Serve static assets directly (prevent SPA fallback for asset requests)
+    # This ensures requests for CSS/JS/images/etc are not rewritten to index.html
+    RewriteRule \.(css|js|png|jpg|jpeg|gif|svg|ico|json|webmanifest|woff2|woff|ttf)$ - [L,NC]
+
     # If the request matches an existing file or directory, serve it
     RewriteCond %{REQUEST_FILENAME} -f [OR]
     RewriteCond %{REQUEST_FILENAME} -d
