@@ -126,7 +126,7 @@ import { useUser } from '@/composables/auth/useUser'
 import { useSession } from '@/composables/auth/useSession'
 import { useActivity } from '@/composables/ui/useActivity'
 
-const appTitle = computed(() => process.env.VUE_APP_TITLE || 'SP Team Template')
+const appTitle = computed(() => process.env.VUE_APP_TITLE || 'WOUNDMED INC.')
 
 useTitle(`${appTitle.value} - Home`)
 

@@ -73,7 +73,7 @@ import { useTitle } from '@/composables/ui/useTitle'
 import { useColorScheme } from '@/composables/ui/useColorScheme'
 import { onMounted, computed } from 'vue'
 
-const appTitle = computed(() => process.env.VUE_APP_TITLE || 'SP Team Template')
+const appTitle = computed(() => process.env.VUE_APP_TITLE || 'WOUNDMED INC.')
 
 useTitle(`${appTitle.value} - Server Error`)
 

@@ -114,7 +114,7 @@ const route = useRoute()
 const router = useRouter()
 
 // Computed Properties
-const appTitle = computed(() => process.env.VUE_APP_TITLE || 'SP Team Template')
+const appTitle = computed(() => process.env.VUE_APP_TITLE || 'WOUNDMED INC.')
 // Note: Home and About are hidden from the sidebar by filtering in getNavigationItems in the router.
 const navigation = computed(() => getNavigationItems([...router.options.routes]))
 

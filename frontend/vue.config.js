@@ -42,7 +42,7 @@ module.exports = defineConfig({
     },
   },
   pwa: {
-    name: process.env.VUE_APP_TITLE || 'SP Team Template',
+    name: process.env.VUE_APP_TITLE || 'WOUNDMED INC.',
     themeColor: '#ffffff',
     background_color: '#ffffff',
     display: 'standalone',
