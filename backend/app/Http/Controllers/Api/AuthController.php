@@ -10,9 +10,22 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash as LaravelHash;
+use App\Traits\AuditLogger;
 
 class AuthController extends Controller
 {
+    use AuditLogger;
+
+    protected function getEntityName()
+    {
+        return 'woundmed_users';
+    }
+
+    protected function getEntityType()
+    {
+        return 'user';
+    }
+
     public function login(Request $request)
     {
         $request->validate([
@@ -20,27 +33,11 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        $ip = $request->server('HTTP_X_FORWARDED_FOR') ?? $request->server('REMOTE_ADDR');
         $user = User::where('email', $request->email)->first();
-        $prevHash = $this->getLastRowHash();
 
         if (! $user) {
-            $log = [
-                'user_id' => null,
-                'attempted_identifier' => $request->email,
-                'ip_address'=> $ip,
-                'action_type' => 'login',
-                'action_message' => 'login failed',
-                'entity_id' => null,
-                'entity' => 'woundmed_users',
-                'entity_type' => 'authentication',
-                'status' => 1,
-                'timestamp' => now(),
-            ];
-            $log['prev_hash'] = $prevHash;
-            $log['row_hash'] = $this->generateRowHash($log, $prevHash);
 
-            DB::table('woundmed_audit_logs')->insert($log);
+            $this->logAudit($request, 'authentication', "login failed", null, 1, $request->email);
 
             return response()->json([
                 'message' => 'The provided credentials are incorrect.',
@@ -48,22 +45,8 @@ class AuthController extends Controller
         }
 
         if (! Hash::check($request->password, $user->password)) {
-            $log = [
-                'user_id' => $user->id,
-                'attempted_identifier' => $request->email,
-                'ip_address'=> $ip,
-                'action_type' => 'login',
-                'action_message' => 'login failed',
-                'entity_id' => $user?->id,
-                'entity' => 'woundmed_users',
-                'entity_type' => 'authentication',
-                'status' => 1,
-                'timestamp' => now(),
-            ];
-            $log['prev_hash'] = $prevHash;
-            $log['row_hash'] = $this->generateRowHash($log, $prevHash);
 
-            DB::table('woundmed_audit_logs')->insert($log);
+            $this->logAudit($request, 'authentication', "login failed", $user->id, 1);
 
             return response()->json([
                 'message' => 'The provided credentials are incorrect.',
@@ -73,24 +56,14 @@ class AuthController extends Controller
         $user->last_logged_in = now();
         $user->save();
 
-        $token = $user->createToken('auth_token')->plainTextToken;
+        // $token = $user->createToken('auth_token')->plainTextToken;
+        $token = $user->createToken(
+            'auth_token',
+            ['*'],
+            now()->addHours(4)
+        )->plainTextToken;
 
-        $log = [
-            'user_id' => $user->id,
-            'attempted_identifier' => null,
-            'ip_address'=> $ip,
-            'action_type' => 'login',
-            'action_message' => 'login success',
-            'entity_id' => $user->id,
-            'entity' => 'woundmed_users',
-            'entity_type' => 'authentication',
-            'status' => 0,
-            'timestamp' => now(),
-        ];
-        $log['prev_hash'] = $prevHash;
-        $log['row_hash'] = $this->generateRowHash($log, $prevHash);
-
-        DB::table('woundmed_audit_logs')->insert($log);
+        $this->logAudit($request, 'authentication', "login success", $user->id);
 
         return response()->json([
             'user' => $user,
@@ -121,6 +94,8 @@ class AuthController extends Controller
         $user->tfa_secret = $request->pin;
         $user->save();
 
+        $this->logAudit($request, 'security', "2FA enabled", $user->id);
+
         return response()->json([
             'message' => 'Two-Factor Authentication is now enabled.',
             'tfa_enabled' => $user->tfa_enabled
@@ -146,6 +121,8 @@ class AuthController extends Controller
         $user->tfa_secret = null;
         $user->save();
 
+        $this->logAudit($request, 'security', "2FA disabled", $user->id);
+
         return response()->json([
             'message' => 'Two-Factor Authentication has been disabled.'
         ]);
@@ -167,6 +144,8 @@ class AuthController extends Controller
         $user->tfa_secret = $request->pin;
         $user->save();
 
+        $this->logAudit($request, 'security', "2FA updated", $user->id);
+
         return response()->json([
             'message' => 'Your 2FA PIN has been successfully updated.'
         ]);
@@ -185,9 +164,7 @@ class AuthController extends Controller
             'email' => 'required|email',
         ]);
 
-        $ip = $request->server('HTTP_X_FORWARDED_FOR') ?? $request->server('REMOTE_ADDR');
         $user = User::where('email', $request->email)->first();
-        $prevHash = $this->getLastRowHash();
 
         if (!$user) {
             return response()->json([
@@ -202,44 +179,15 @@ class AuthController extends Controller
         }
 
         if ($user->tfa_secret !== $request->pinBoxes) {
-            $log = [
-                'user_id' => $user->id,
-                'attempted_identifier' => null,
-                'ip_address'=> $ip,
-                'action_type' => 'login',
-                'action_message' => 'Invalid 2FA code',
-                'entity_id' => $user->id,
-                'entity' => 'woundmed_users',
-                'entity_type' => 'authentication',
-                'status' => 1,
-                'timestamp' => now(),
-            ];
-            $log['prev_hash'] = $prevHash;
-            $log['row_hash'] = $this->generateRowHash($log, $prevHash);
 
-            DB::table('woundmed_audit_logs')->insert($log);
+            $this->logAudit($request, 'authentication-2fa', "Invalid 2FA code", $user->id, 1);
 
             return response()->json([
                 'message' => 'Invalid 2FA code.'
             ], 401);
         }
 
-        $log = [
-            'user_id' => $user->id,
-            'attempted_identifier' => null,
-            'ip_address'=> $ip,
-            'action_type' => 'login',
-            'action_message' => '2FA verification successful',
-            'entity_id' => $user->id,
-            'entity' => 'woundmed_users',
-            'entity_type' => 'authentication',
-            'status' => 0,
-            'timestamp' => now(),
-        ];
-        $log['prev_hash'] = $prevHash;
-        $log['row_hash'] = $this->generateRowHash($log, $prevHash);
-
-        DB::table('woundmed_audit_logs')->insert($log);
+        $this->logAudit($request, 'authentication-2fa', "2FA verification successful", $user->id);
 
         # Passed 2FA
         return response()->json([
@@ -257,45 +205,13 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        $ip = $request->server('HTTP_X_FORWARDED_FOR') ?? $request->server('REMOTE_ADDR');
         $user = $request->user();
-        $prevHash = $this->getLastRowHash();
 
-        $log = [
-            'user_id' => $user->id,
-            'attempted_identifier' => null,
-            'ip_address'=> $ip,
-            'action_type' => 'logout',
-            'action_message' => 'logout',
-            'entity_id' => $user->id,
-            'entity' => 'woundmed_users',
-            'entity_type' => 'authentication',
-            'status' => 0,
-            'timestamp' => now(),
-        ];
-        $log['prev_hash'] = $prevHash;
-        $log['row_hash'] = $this->generateRowHash($log, $prevHash);
-
-        DB::table('woundmed_audit_logs')->insert($log);
+        $this->logAudit($request, 'authentication', "logout", $user->id);
 
         $request->user()->currentAccessToken()->delete();
 
         return response()->json(['message' => 'Logged out successfully.']);
-    }
-
-    private function generateRowHash(array $data, $prevHash = null)
-    {
-        $string = json_encode($data) . $prevHash;
-        return hash('sha256', $string);
-    }
-
-    private function getLastRowHash()
-    {
-        $last = DB::table('woundmed_audit_logs')
-            ->select('row_hash')
-            ->latest('audit_log_id')
-            ->first();
-        return $last?->row_hash ?? null;
     }
 
     # future use

@@ -12,19 +12,19 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('woundmed_usage_log', function (Blueprint $table) {
-            $table->id(); 
+            $table->id('graft_log_id'); 
 
             // Foreign Keys
             $table->unsignedBigInteger('patient_id');
-            $table->unsignedBigInteger('logged_by'); // clinician user
-            $table->unsignedBigInteger('graft_size_id');
+            $table->unsignedBigInteger('logged_by'); 
+            $table->unsignedBigInteger('graft_size_id')->nullable();
 
             // Core Fields
             $table->string('serial_number')->unique();
             $table->date('date_of_service');
             $table->date('expired_at')->nullable();
-            $table->string('filepath')->nullable(); // for sticker
-            $table->string('wound_part'); // location to apply
+            $table->string('filepath')->nullable();
+            $table->string('wound_part'); 
 
             // Status & Description
             $table->tinyInteger('log_status')
@@ -39,11 +39,11 @@ return new class extends Migration
             // Foreign Key Constraints
             $table->foreign('patient_id')
                   ->references('patient_id')
-                  ->on('woundmed_patients')
+                  ->on('woundmed_patient_info')
                   ->onDelete('cascade');
 
             $table->foreign('logged_by')
-                  ->references('user_id')
+                  ->references('id')
                   ->on('woundmed_users')
                   ->onDelete('cascade');
 

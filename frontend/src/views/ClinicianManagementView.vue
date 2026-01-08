@@ -2,8 +2,8 @@
 	<div class="space-y-6">
 		<!-- Header -->
 		<div class="flex items-center justify-between">
-			<div>
-				<h1 class="text-2xl font-bold text-gray-900 dark:text-white">Clinician Management</h1>
+			<div class="space-y-2">
+				<h1 class="text-3xl font-bold text-gray-900 dark:text-white">Clinician Management</h1>
 				<p class="text-gray-600 dark:text-gray-400">Manage clinician accounts, roles, and access permissions</p>
 			</div>
 
@@ -12,7 +12,7 @@
 					selectedUser = null; 
 					showCreateForm = true
 				"
-				class="flex items-center px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+				class="flex items-center px-5 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg group"
 			>
 				<UserPlus class="w-4 h-4 mr-2" />
 				Add Clinician
@@ -20,47 +20,49 @@
 		</div>
 
 		<!-- Filters -->
-		<div class="flex flex-col sm:flex-row gap-4 bg-white dark:bg-gray-800 p-4 rounded shadow-sm border border-gray-200 dark:border-gray-700">
-			<div class="flex-1">
-				<div class="relative">
-					<Search class="absolute left-3 top-3 h-5 w-5 text-gray-400 dark:text-gray-500" />
-					<input
-						v-model="searchTerm"
-						type="text"
-						placeholder="Search Clinicians..."
-						class="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-					/>
+		<div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+			<div class="flex flex-col lg:flex-row gap-6">
+				<div class="flex-1">
+					<div class="relative">
+						<Search class="absolute left-4 top-3.5 h-5 w-5 text-gray-400 dark:text-gray-500" />
+						<input v-model="searchTerm" type="text" placeholder="Search Clinicians..."
+							class="w-full pl-12 pr-4 py-3.5 border-0 bg-gray-50 dark:bg-gray-700/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200" />
+					</div>
 				</div>
-			</div>
-			<div class="flex items-center space-x-2">
-				<Funnel class="w-4 h-4 text-gray-500 dark:text-gray-400" />
-				<select
-				v-model="statusFilter"
-				class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-				>
-					<option value="all">All Status</option>
-					<option value="active">Active</option>
-					<option value="inactive">Inactive</option>
-				</select>
-			</div>
-			<div class="flex items-center space-x-2">
-				<label for="per-page" class="text-sm text-gray-700 dark:text-gray-300">Rows:</label>
-				<select
-					id="per-page"
-					v-model="itemsPerPage"
-					class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded 
-						focus:ring-2 focus:ring-green-500 focus:border-transparent 
-						bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-				>
-					<option value="10">10</option>
-					<option value="25">25</option>
-					<option value="50">50</option>
-				</select>
+				<div class="flex flex-col sm:flex-row gap-4">
+					<div class="relative">
+						<Funnel class="absolute left-3 top-3.5 h-4 w-4 text-gray-500 dark:text-gray-400" />
+						<select
+						v-model="statusFilter"
+						class="pl-10 pr-8 py-3.5 border-0 bg-gray-50 dark:bg-gray-700/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-gray-700 text-gray-900 dark:text-white appearance-none transition-all duration-200"
+						>
+							<option value="all">All Status</option>
+							<option value="active">Active</option>
+							<option value="inactive">Inactive</option>
+						</select>
+						<ChevronDown
+                            class="absolute right-3 top-3.5 h-4 w-4 text-gray-500 dark:text-gray-400 pointer-events-none" />
+					</div>
+				</div>
+				<div class="relative">
+					<label for="per-page" class="text-sm text-gray-700 dark:text-gray-300">Rows:</label>
+					<select
+						id="per-page"
+						v-model="itemsPerPage"
+						class="pl-4 pr-8 py-3.5 border-0 bg-gray-50 dark:bg-gray-700/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-gray-700 text-gray-900 dark:text-white appearance-none transition-all duration-200"
+					>
+						<option value="10">10</option>
+						<option value="25">25</option>
+						<option value="50">50</option>
+					</select>
+					<ChevronDown
+                            class="absolute right-3 top-3.5 h-4 w-4 text-gray-500 dark:text-gray-400 pointer-events-none" />
+				</div>
 			</div>
 		</div>
 
 		<!-- Users Table -->
-		<div class="bg-white dark:bg-gray-800 rounded shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+		<div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
 			<div class="overflow-x-auto">
 				<table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
 					<thead class="bg-gray-50 dark:bg-gray-700">
@@ -95,8 +97,8 @@
 							>
 								<td class="px-6 py-3 whitespace-nowrap">
 									<div class="flex items-center">
-										<div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-											<userProfile class="w-5 h-5 text-green-600" />
+										<div class="flex-shrink-0 h-10 w-10 bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-lg flex items-center justify-center text-blue-600 dark:text-blue-400 font-medium text-sm">
+											{{ getUserInitials(user) }}
 										</div>
 										<div class="ml-4">
 											<div class="text-sm text-gray-900 dark:text-white">{{ user.name }}</div>
@@ -152,23 +154,25 @@
 									</button>
 								</td>
 							</tr>
-							<tr v-if="filteredUsers.length === 0 && !tableLoader">
-								<td colspan="7" class="text-center text-gray-400 py-6">
-									<div class="flex flex-col items-center justify-center gap-2">
-										<Users class="w-10 h-10 mb-1" />
-										<span>No clinicians found.</span>
-									</div>
-								</td>
-							</tr>
 						</template>
 					</tbody>
 				</table>
 			</div>
-		</div>
 
-		<template v-if="!tableLoader">
-			<Pagination :pagination="pagination" @update:page="getAllClinicians" />
-		</template>
+			<div v-if="filteredUsers.length === 1 && !tableLoader" class="text-center py-12">
+				<div
+                    class="mx-auto h-16 w-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mb-4">
+                    <Users class="h-8 w-8 text-gray-400 dark:text-gray-500" />
+                </div>
+                <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-1">No clinicians found.</h3>
+                <p class="text-gray-500 dark:text-gray-400 max-w-md mx-auto">Try adjusting your search or filter to find
+                    what you're looking for.</p>
+			</div>
+
+			<template v-if="!tableLoader">
+				<Pagination :pagination="pagination" @update:page="getAllClinicians" />
+			</template>
+		</div>
 
 		<!-- User Details Modal -->
 		<BaseModal v-model="showUserDetailsModal" title="User Details">
@@ -225,7 +229,7 @@
 		</BaseModal>
 
 		<!-- Create/Edit User Form Modal -->
-		<BaseModal v-model="showFormModal" :title="showCreateForm ? 'Add new Clinician' : 'Edit Clinic'">
+		<BaseModal v-model="showFormModal" :title="showCreateForm ? 'Add new Clinician' : 'Edit Clinician'">
 			<form @submit.prevent="handleSubmitForm" class="space-y-4">
 				<div class="grid grid-cols-3 gap-4">
 					<div>
@@ -349,7 +353,6 @@ import axios from 'axios'
 import BaseModal from '../components/common/BaseModal.vue'
 import Pagination from '../components/ui/Pagination.vue'
 import TableLoader from '../components/ui/TableLoader.vue'
-import ContentLoader from '../components/ui/ContentLoader.vue'
 import {
     UserPlus,
 	Funnel,
@@ -361,7 +364,8 @@ import {
 	Phone,
 	User as userProfile,
 	UserCheck,
-	UserX
+	UserX,
+	ChevronDown
 } from 'lucide-vue-next'
 import api from '../services/api'
 import { toast } from 'vue3-toastify'
@@ -606,6 +610,21 @@ async function getAllClinicians(page = 1) {
     } finally {
         tableLoader.value = false
     }
+}
+
+const getUserInitials = (user: any) => {
+	if (!user || !user.name) return ""
+
+	const parts = user.name.trim().split(" ")
+
+	if (parts.length === 1) {
+		return parts[0].substring(0, 2).toUpperCase()
+	}
+	
+	const firstInitial = parts[0].charAt(0)
+	const lastInitial = parts[parts.length - 1].charAt(0)
+
+	return `${firstInitial}${lastInitial}`.toUpperCase()
 }
 
 onMounted(async () => {

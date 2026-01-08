@@ -125,10 +125,18 @@
 
 								<div>
 									<p class="text-sm font-medium text-gray-900 dark:text-white">
-									{{ log.action_type }} - {{ log.action_message }}
+									{{ humanizeActionType(log.action_type) }}
+									<br>
+									<span class="text-sm text-gray-700 dark:text-gray-200">
+										{{ parseActionMessage(log.action_message).text }}
+									</span>
+									<br v-if="parseActionMessage(log.action_message).value">
+									<span v-if="parseActionMessage(log.action_message).value" class="inline-flex items-center py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200">
+										{{ parseActionMessage(log.action_message).value }}
+									</span>
 									</p>
 									<p class="text-sm text-gray-600 dark:text-gray-400">
-									{{ log.entity_type }} (IP: {{ log.ip_address }})
+									{{ humanizeActionType(log.entity_type) }} <span class="text-gray-400">(IP: {{ log.ip_address }})</span>
 									</p>
 									<p class="text-xs text-gray-600 dark:text-gray-400">
 									{{ timeAgo(log.timestamp) }}
@@ -296,6 +304,60 @@ const formatDate = (dateStr: string) => {
 		month: 'long',
 		day: 'numeric'
 	})
+}
+
+function humanizeActionType(type: string | null | undefined) {
+	if (!type) return ''
+	return type
+		.toString()
+		.replace(/_/g, ' ')
+		.replace(/\b\w/g, (m) => m.toUpperCase())
+}
+
+function parseActionMessage(msg: string | null | undefined) {
+	if (!msg) return { text: '', value: null }
+
+	// Helper map for eligibility codes
+	const eligMap: Record<string, string> = {
+		'0': 'Pending',
+		'1': 'Eligible',
+		'2': 'Not Eligible',
+	}
+
+	// If message contains a colon, use the last segment as value
+	if (msg.includes(':')) {
+		const parts = msg.split(':')
+		const text = parts.slice(0, parts.length - 1).join(':').trim()
+		let value = parts[parts.length - 1].trim()
+
+		// map eligibility numeric values when applicable
+		if (/^\d$/.test(value) && /elig/i.test(msg)) {
+			value = eligMap[value] ?? value
+		}
+
+		if (value === '' || value === '0') return { text, value: null }
+
+		return { text, value }
+	}
+
+	// Try to detect trailing IVR token like "#IVR-..." or trailing single-digit eligibility codes (e.g., "Updated2")
+	const ivrMatch = msg.match(/(.*?)(#?IVR-[A-F0-9-]+)$/i)
+	if (ivrMatch) {
+		const text = ivrMatch[1].trim()
+		const value = ivrMatch[2].trim()
+		return { text, value }
+	}
+
+	const eligMatch = msg.match(/^(.*?)(?:\s|-|:)?([012])$/)
+	if (eligMatch) {
+		const text = eligMatch[1].trim()
+		const code = eligMatch[2]
+		const value = eligMap[code] ?? code
+		return { text, value }
+	}
+
+	// Fallback: return full message as text, no value
+	return { text: msg.trim(), value: null }
 }
 
 function timeAgo(timestamp: string | number | Date): string {

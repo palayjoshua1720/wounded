@@ -7,11 +7,13 @@ use App\Models\Clinic;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class ClinicController extends Controller
 {
+    
     public function getAllActivity(Request $request)
     {
         $query = DB::table('woundmed_audit_logs')
@@ -28,14 +30,14 @@ class ClinicController extends Controller
                 'status',
                 'timestamp'
             )
-            ->whereIn('entity_type', ['clinician', 'authentication'])
+            // Removed restrictive entity_type filter so all recent audit logs are returned
             ->orderBy('timestamp', 'desc')
             ->limit(10);
 
         $logs = $query->get();
 
         return response()->json([
-            'message' => 'Clinician activity fetched successfully',
+            'message' => 'Activity fetched successfully',
             'data' => $logs
         ]);
     }
@@ -51,7 +53,7 @@ class ClinicController extends Controller
         if ($simple) {
             $clinicians = $query
                 ->select('u.id', DB::raw("CONCAT(u.first_name, ' ', IFNULL(u.middle_name, ''), ' ', u.last_name) as name"), 'u.user_role')
-                ->orderBy('u.created_at')
+                ->orderBy('u.created_at', 'desc')
                 ->get();
 
             return response()->json($clinicians);
@@ -80,7 +82,7 @@ class ClinicController extends Controller
                 'u.phone',
                 'u.user_status',
                 'u.last_logged_in',
-                'u.created_at'
+                'u.created_at',
             )
             ->orderBy('u.created_at', 'desc')
             ->paginate($perPage);
@@ -96,6 +98,7 @@ class ClinicController extends Controller
                 'name'      => $fullname,
                 'phone'     => $user->phone,
                 'role'      => 'Clinician',
+                // 'clinicPubId' => $user->clinic_public_id,
                 'clinicIds' => $user->clinic_ids ? explode(',', $user->clinic_ids) : [],
                 'isActive'  => $user->user_status,
                 'lastLogin' => $user->last_logged_in,
@@ -113,7 +116,6 @@ class ClinicController extends Controller
             ]
         ]);
     }
-
 
     public function addClinician(Request $request)
     {
@@ -227,8 +229,17 @@ class ClinicController extends Controller
         $perPage = $request->query('per_page', 9);
 
         $clinics = DB::table('woundmed_clinics')
-            ->where('clinic_status', 0)
+            // ->where('clinic_status', 0)
+            ->whereNull('deleted_at')
             ->paginate($perPage);
+        
+        $clinics->getCollection()->transform(function ($clinic) {
+            if ($clinic->logo) {
+                $logoName = basename($clinic->logo);
+                $clinic->logo = url('/storage/clinics/logos/' . $logoName);
+            }
+            return $clinic;
+        });
 
         $formattedClinics = $clinics->map(function ($clinic) {
             $clinicians = DB::table('woundmed_clinic_clinician as cc')
@@ -253,7 +264,7 @@ class ClinicController extends Controller
             return [
                 'id'            => (string) $clinic->clinic_id,
                 'clinicId'      => (string) $clinic->clinic_code,
-                'clinicPubId'   => (string) $clinic->clinic_public_id,
+                'clinicPubId'   => $clinic->clinic_public_id,
                 'name'          => $clinic->clinic_name,
                 'email'         => $clinic->email,
                 'contactPerson' => $clinic->contact_person ?? null,
@@ -263,6 +274,7 @@ class ClinicController extends Controller
                 'createdAt'     => $clinic->created_at,
                 'updatedAt'     => $clinic->updated_at,
                 'clinicians'    => $clinicians,
+                'logo'          => $clinic->logo ?? null,
                 'assigned_clinician_ids'    => $clinicians,
             ];
         });
@@ -280,6 +292,9 @@ class ClinicController extends Controller
 
     public function addClinic(Request $request)
     {
+        $isActive = filter_var($request->input('isActive'), FILTER_VALIDATE_BOOLEAN);
+        $isActive = $isActive ? 1 : 0;
+        
         $ip = $request->server('HTTP_X_FORWARDED_FOR') ?? $request->server('REMOTE_ADDR');
         $tempPassword = Str::random(12);
         $prevHash = $this->getLastRowHash();
@@ -289,22 +304,28 @@ class ClinicController extends Controller
             'email' => 'required|email|unique:woundmed_users,email',
             'contactPerson' => 'required|string',
             'publicId' => 'nullable|string|max:20',
-            'isActive' => 'boolean',
             'phone' => 'nullable|string|max:20',
             'address' => 'nullable|string|max:20',
-            'assigned_clinicians_id' => 'nullable|array',
-            'assigned_clinicians_id.*' => 'integer|exists:woundmed_users,id',
         ]);
+
+        // Handle logo upload (public storage for easy access)
+        $logoPath = null;
+        if ($request->hasFile('logo')) {
+            $logoPath = $request->file('logo')->store('clinics/logos', 'public');
+        }
+
+        $clinicCode = 'CL-' . strtoupper(uniqid());
 
         $clinic = Clinic::create([
             'clinic_name' => $validated['name'],
+            'clinic_code' => $clinicCode,
             'email' => $validated['email'],
             'clinic_public_id' => $validated['publicId'],
             'contact_person' => $validated['contactPerson'],
             'phone' => $validated['phone'],
             'address' => $validated['address'],
-            'clinic_status' => $request->boolean('isActive'),
-            'assigned_clinician_ids' => $validated['assigned_clinicians_id'],
+            'clinic_status' => $isActive,
+            'logo' => $logoPath,
             'created_at' => now(),
         ]);
 
@@ -315,6 +336,122 @@ class ClinicController extends Controller
         return response()->json([
             'message' => 'Clinic created successfully',
             'data' => $clinic,
+        ]);
+    }
+
+    public function updateClinic(Request $request, $clinicId)
+    {
+        $isActive = filter_var($request->input('isActive'), FILTER_VALIDATE_BOOLEAN);
+        $isActive = $isActive ? 1 : 0;
+
+        $validated = $request->validate([
+            'name' => 'nullable|string|max:255',
+            'email' => 'nullable|email|unique:woundmed_users,email,' . $clinicId . ',clinic_id',
+            'contactPerson' => 'nullable|string',
+            'publicId' => 'nullable|string|max:20',
+            // 'isActive' => 'boolean',
+            'phone' => 'nullable|string|max:20',
+            'address' => 'nullable|string|max:20',
+            'assigned_clinicians_id' => 'nullable|array',
+            'assigned_clinicians_id.*' => 'integer|exists:woundmed_users,id',
+        ]);
+
+        $clinic = Clinic::findOrFail($clinicId);
+
+        $logoPath = $clinic->logo;
+
+        if ($request->hasFile('logo')) {
+            if ($clinic->logo && Storage::disk('public')->exists($clinic->logo)) {
+                Storage::disk('public')->delete($clinic->logo);
+            }
+
+            $logoPath = $request->file('logo')->store('clinics/logos', 'public');
+        }
+
+        $clinic->update([
+            'clinic_name' => $validated['name'],
+            'email' => $validated['email'],
+            'clinic_public_id' => $validated['publicId'],
+            'contact_person' => $validated['contactPerson'],
+            'phone' => $validated['phone'],
+            'address' => $validated['address'],
+            // 'clinic_status' => $request->boolean('isActive'),
+            'clinic_status' => $isActive,
+            'logo' => $logoPath,
+        ]);
+
+        if (!empty($validated['assigned_clinicians_id'])) {
+            $clinic->clinicians()->sync($validated['assigned_clinicians_id']);
+        }
+
+        return response()->json([
+            'message' => 'Clinic updated successfully',
+            'data' => $clinic,
+        ]);
+    }
+
+    public function updateClinicStatus(Request $request, $clinicId)
+    {
+        $clinic = Clinic::findOrFail($clinicId);
+
+        if ($clinic->clinic_status == 0) {
+            $clinic->clinic_status = 1;
+        } elseif ($clinic->clinic_status == 1) {
+            $clinic->clinic_status = 0;
+        }
+
+        $clinic->save();
+
+        return response()->json([
+            'success' => true,
+            'status' => $clinic->clinic_status,
+            'isActive' => $clinic->clinic_status == 0,
+            'label'   => $clinic->clinic_status == 0 ? 'Active' : ($clinic->clinic_status == 1 ? 'Inactive' : 'Archived'),
+        ]);
+
+    }
+
+    public function deleteClinic(Request $request, $clinicId)
+    {
+        $clinic = Clinic::findOrFail($clinicId);
+        $clinic->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Clinic deleted successfully',
+        ]);
+    }
+
+    public function archiveClinic(Request $request, $clinicId)
+    {
+        try {
+            $clinic = Clinic::findOrFail($clinicId);
+            $clinic->clinic_status = 2;
+            if (!$clinic->save()) {
+                \Log::error('Clinic save failed', $clinic->toArray());
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Clinic archived successfully',
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to archive clinic: ' . $th->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function unarchiveClinic(Request $request, $clinicId)
+    {
+        $clinic = Clinic::findOrFail($clinicId);
+        $clinic->clinic_status = 0;
+        $clinic->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Clinic unarchived successfully',
         ]);
     }
 

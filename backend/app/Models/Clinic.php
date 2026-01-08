@@ -1,36 +1,33 @@
 <?php
-
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Clinic extends Model
 {
-    protected $table = 'woundmed_clinics';
-    protected $primaryKey = 'id';
-    public $timestamps = true;
+    use SoftDeletes;
+    protected $table      = 'woundmed_clinics';
+    protected $primaryKey = 'clinic_id';
+    public $timestamps    = true;
+
+    protected $dates = ['deleted_at'];
 
     protected $fillable = [
         'clinic_name',
         'email',
         'clinic_code',
-        'clinic_public_code',
+        'clinic_public_id',
         'contact_person',
         'clinic_status',
         'phone',
         'address',
-        'assigned_clinician_ids',
-        'clinic_status',
+        'logo',
     ];
 
     protected $casts = [
-        'isActive' => 'boolean',
-        'clinic_status' => 'boolean',
-        'assigned_clinician_ids' => 'array',
+        'isActive'               => 'boolean',
+        'clinic_status'          => 'integer',
     ];
 
     protected static function boot()
@@ -53,13 +50,37 @@ class Clinic extends Model
         });
     }
 
+    // public function clinicians()
+    // {
+    //     return $this->belongsToMany(
+    //         User::class,
+    //         'woundmed_clinic_clinician',
+    //         'clinic_id',
+    //         'clinician_id'
+    //     );
+    // }
+
     public function clinicians()
     {
-        return $this->belongsToMany(
-            User::class,
-            'woundmed_clinic_clinician',
-            'clinic_id',
-            'clinician_id'
-        );
-    }  
+        return $this->hasMany(User::class, 'clinic_id', 'clinic_id')
+                    ->where('user_role', 3); // 3 = Clinician role
+    }
+
+    public function getAllClinicianIdsAttribute()
+    {
+        $pivotClinicians = $this->clinicians()->pluck('users.id')->toArray();
+        $jsonClinicians  = $this->assigned_clinician_ids ?? [];
+        return array_unique(array_merge($pivotClinicians, $jsonClinicians));
+    }
+
+    // Only get active clinics by default
+    public function scopeActive($query)
+    {
+        return $query->where('clinic_status', 0);
+    }
+
+    public function invoices()
+    {
+        return $this->hasMany(Invoice::class, 'clinic_id', 'clinic_id');
+    }
 }

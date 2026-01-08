@@ -7,7 +7,7 @@
                     <div class="flex items-center mb-8">
                         <div className="bg-white rounded p-3 mr-3 flex items-center justify-center">
                             <img
-                            src="/main-logo.webp" 
+                            src="main-logo.webp"
                             alt="Main Logo" 
                             className="w-20 h-20 object-contain" 
                             />
@@ -26,10 +26,10 @@
                         </div>
                     </div>
                     <ul class="space-y-6">
-                        <li class="flex items-center text-lg">
+                        <!-- <li class="flex items-center text-lg">
                             <CircleCheckBig class="w-5 h-5 text-green-300 mr-2" />
                             Real-time inventory tracking
-                        </li>
+                        </li> -->
                         <li class="flex items-center text-lg">
                             <CircleCheckBig class="w-5 h-5 text-green-300 mr-2" />
                             Automated ordering workflows
@@ -183,7 +183,7 @@
                             </button>
                         </form>
                     </div>
-                    <div v-if="hasSavedAccounts" class="my-6 flex flex-col items-center">
+                    <!-- <div v-if="hasSavedAccounts" class="my-6 flex flex-col items-center">
                         <button @click="goToSwitchAccount" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded font-medium transition-colors">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
@@ -191,14 +191,14 @@
                             Switch Account
                         </button>
                         <span class="text-xs text-gray-500 dark:text-gray-400 mt-2">Switch to a saved account for quick access</span>
-                    </div>
+                    </div> -->
                     <div class="my-6 border-t border-gray-200 dark:border-gray-700"></div>
-                    <div class="text-center mb-4">
+                    <!-- <div class="text-center mb-4">
                         <span class="text-sm text-gray-600 dark:text-gray-400">Need access to the system?</span>
                         <div>
                             <a href="#" class="text-blue-600 hover:underline dark:text-blue-400">Contact your system administrator</a>
                         </div>
-                    </div>
+                    </div> -->
                     <div class="space-y-3">
                         <div class="flex items-center p-4 bg-green-50 dark:bg-green-900/20 rounded border border-green-200 dark:border-green-700">
                             <CircleCheck class="w-12 h-12 text-green-500 mr-3 mt-1" />

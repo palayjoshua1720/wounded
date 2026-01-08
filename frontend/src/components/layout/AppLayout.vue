@@ -2,11 +2,14 @@
 	<PageLoader :visible="pageLoader" />
 	<div class="min-h-screen bg-gray-100 dark:bg-gray-900">
 		<!-- Sidebar -->
-		<Sidebar v-model:isOpen="isSidebarOpen" />
+		<Sidebar 
+			v-if="!$route.meta.hideSidebar"
+			v-model:isOpen="isSidebarOpen"
+		/>
 		
-		<div class="lg:pl-64">
+		<div :class="headerWrapperClass">
 			<!-- Header -->
-			<header class="sticky top-0 z-10 flex h-16 flex-shrink-0 bg-white dark:bg-gray-800 shadow">
+			<header v-if="!$route.meta.hideHeader" class="sticky top-0 z-10 flex h-16 flex-shrink-0 bg-white dark:bg-gray-800 shadow">
 				<!-- Mobile Menu Button -->
 				<button
 				type="button"
@@ -39,7 +42,7 @@
 					<!-- User Profile Section -->
 					<div class="ml-auto mr-4 flex items-center md:ml-6 space-x-4">
 						<!-- Notification Icon -->
-						<div class="relative">
+						<!-- <div class="relative">
 							<button
 								type="button"
 								class="relative p-2 text-gray-400 hover:text-gray-500 dark:text-gray-300 dark:hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 rounded-full"
@@ -47,7 +50,6 @@
 							>
 								<span class="sr-only">View notifications</span>
 								<BellRing class="h-6 w-6" />
-								<!-- Notification Badge -->
 								<span
 								v-if="notificationCount > 0"
 								class="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-xs text-white flex items-center justify-center"
@@ -56,7 +58,6 @@
 								</span>
 							</button>
 
-							<!-- Notification Dropdown -->
 							<div
 								v-if="isNotificationsOpen"
 								class="absolute right-0 z-10 mt-2 w-80 origin-top-right rounded-md bg-white dark:bg-gray-800 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
@@ -147,7 +148,7 @@
 									</button>
 								</div>
 							</div>
-						</div>
+						</div> -->
 
 						<div class="relative ml-3">
 							<!-- Profile Button -->
@@ -172,7 +173,10 @@
 							>
 								<!-- User Info -->
 								<div class="px-4 py-2 text-sm text-gray-700 dark:text-gray-200">
-									<p class="font-medium truncate" :title="currentUser?.name">{{ currentUser?.first_name + ' ' + currentUser?.middle_name +  ' ' + currentUser?.last_name }}</p>
+									<p class="font-medium truncate" :title="currentUser?.name">
+										{{ currentUser?.first_name + ' ' + currentUser?.middle_name +  ' ' + currentUser?.last_name }}
+									</p>
+									<span class="text-xs">({{ getUserRoleLabel(currentUser?.user_role) }})</span>
 									<p class="text-gray-500 dark:text-gray-400 truncate" :title="currentUser?.email">{{ currentUser?.email }}</p>
 								</div>
 								<div class="border-t border-gray-100 dark:border-gray-700"></div>
@@ -190,7 +194,7 @@
 								</button>
 								
 								<!-- Change Account Option -->
-								<button
+								<!-- <button
 								type="button"
 								class="block w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:bg-gray-100 dark:focus:bg-gray-700"
 								@click="goToChangeAccount"
@@ -199,7 +203,7 @@
 										<RefreshCcw class="mr-3 h-5 w-5 text-gray-400 flex-shrink-0" />
 										<span class="truncate">Change Account</span>
 									</div>
-								</button>
+								</button> -->
 
 								<!-- Logout Button -->
 								<button
@@ -222,6 +226,18 @@
 			<!-- Main Content -->
 			<main class="py-6">
 				<div class="mx-auto px-4 sm:px-6 lg:px-8">
+					<div class="w-full bg-yellow-50 border-l-4 border-yellow-500 p-4 mb-6">
+						<div class="flex items-center">
+							<div class="flex-shrink-0">
+								<TriangleAlert class="h-6 w-6 text-yellow-600" />
+							</div>
+							<div class="ml-3">
+								<p class="text-sm font-medium text-yellow-900">
+								Development Notice: This system is currently under active development. Some features may be incomplete or unavailable.
+								</p>
+							</div>
+						</div>
+					</div>
 					<router-view></router-view>
 				</div>
 			</main>
@@ -238,7 +254,7 @@
 <script setup lang="ts">
 // Imports
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useThemeStore } from '@/stores/theme'
 import { useClickOutside } from '@/composables/ui/useClickOutside'
@@ -249,11 +265,18 @@ import Sidebar from './Sidebar.vue'
 import PageLoader from '@/components/ui/PageLoader.vue'
 import NotificationModal from '@/components/notifications/NotificationModal.vue'
 import {
-    RefreshCcw,
-    Settings,
-    BellRing,
-	LogOut
+    RefreshCcw, Settings, BellRing, LogOut,
+	TriangleAlert,
+	TriangleAlertIcon
 } from 'lucide-vue-next';
+
+const route = useRoute()
+
+const headerWrapperClass = computed(() => {
+	return route.meta.disableHeaderPadding || route.meta.hideSidebar
+		? ''
+		: 'lg:pl-64'
+})
 
 // Store Instances
 const router = useRouter()
@@ -305,6 +328,18 @@ const notifications = ref([
     route: '/notifications'
   }
 ])
+
+function getUserRoleLabel(role?: number): string {
+    switch (role) {
+        case 0: return "Admin";
+        case 1: return "Office Staff";
+        case 2: return "Clinic";
+        case 3: return "Clinician";
+        case 4: return "Manufacturer";
+        case 5: return "Biller";
+        default: return "Unknown Role";
+    }
+}
 
 // Computed Properties
 const currentUser = computed(() => authStore.currentUser)
