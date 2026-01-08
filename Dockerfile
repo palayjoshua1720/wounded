@@ -6,8 +6,8 @@ RUN npm ci
 COPY frontend/ .
 RUN npm run build
 
-# Stage 2: Composer dependencies (use PHP 8.2 to match runtime and avoid req conflicts)
-FROM composer:2.2 AS backend-build  # Older tag from ~2022-2023 era, runs PHP ~8.1-8.2
+# Stage 2: Composer dependencies (use Composer 2.x tag with PHP 8.2 to match runtime)
+FROM composer:2 AS backend-build
 WORKDIR /app/backend
 COPY backend/composer.json backend/composer.lock ./
 RUN composer install --no-dev --no-scripts --no-autoloader --optimize-autoloader
@@ -24,7 +24,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Enable rewrite module
 RUN a2enmod rewrite
 
-# Set DocumentRoot to public (best practice, eliminates most .htaccess needs)
+# Set DocumentRoot to public (best practice)
 ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
 RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
