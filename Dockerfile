@@ -6,14 +6,14 @@ RUN npm ci
 COPY frontend/ .
 RUN npm run build
 
-# Stage 2: Composer dependencies
-FROM composer:latest AS backend-build
+# Stage 2: Composer dependencies (use PHP 8.2 to match runtime and avoid req conflicts)
+FROM composer:2.2 AS backend-build  # Older tag from ~2022-2023 era, runs PHP ~8.1-8.2
 WORKDIR /app/backend
 COPY backend/composer.json backend/composer.lock ./
 RUN composer install --no-dev --no-scripts --no-autoloader --optimize-autoloader
 
-# Stage 3: Final production image (pinned to PHP 8.2)
-FROM php:8.2.27-apache AS final
+# Stage 3: Final production image
+FROM php:8.2-apache AS final
 
 # Install system dependencies and PHP extensions
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -24,12 +24,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Enable rewrite module
 RUN a2enmod rewrite
 
-# Set DocumentRoot to public (cleaner than .htaccess)
+# Set DocumentRoot to public (best practice, eliminates most .htaccess needs)
 ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
 RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
 
-# Copy Composer
+# Copy Composer binary
 COPY --from=backend-build /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
