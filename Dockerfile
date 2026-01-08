@@ -1,71 +1,79 @@
-# Build stage for Vue.js
-FROM node:18-alpine as frontend-build
-
+# Stage 1: Build Vue.js frontend
+FROM node:18-alpine AS frontend-build
 WORKDIR /app/frontend
 COPY frontend/package*.json ./
-RUN npm install
+RUN npm ci
 COPY frontend/ .
 RUN npm run build
 
-# Build stage for Laravel (use PHP 8.2 so Composer respects lockfile PHP constraints)
-FROM php:8.2-cli as backend-build
-
+# Stage 2: Composer dependencies (cached layer)
+FROM composer:latest AS backend-build
 WORKDIR /app/backend
+COPY backend/composer.json backend/composer.lock ./
+RUN composer install --no-dev --no-scripts --no-autoloader --optimize-autoloader
+
+# Stage 3: Final production image
+FROM php:8.2-apache AS final
+
+# Install system dependencies and PHP extensions required/recommended for Laravel
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    zip \
-    unzip \
     git \
     curl \
-    libzip-dev \
-    && docker-php-ext-install zip pdo_mysql && rm -rf /var/lib/apt/lists/*
-
-# Install Composer
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \
-    && composer --version
-
-COPY backend/composer.json backend/composer.lock ./
-RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist --no-interaction
-
-# Final stage
-FROM php:8.2-apache
-
-# Install PHP extensions and dependencies
-RUN apt-get update && apt-get install -y \
-    libzip-dev \
-    zip \
-    unzip \
     libpng-dev \
     libonig-dev \
     libxml2-dev \
-    && docker-php-ext-install pdo_mysql zip gd mbstring exif pcntl bcmath
+    libzip-dev \
+    zip \
+    unzip \
+    && docker-php-ext-install -j$(nproc) \
+        pdo_mysql \
+        mbstring \
+        exif \
+        pcntl \
+        bcmath \
+        gd \
+        zip \
+        fileinfo \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
-# Copy Composer from build stage (installed to /usr/local/bin in backend-build)
-COPY --from=backend-build /usr/local/bin/composer /usr/local/bin/composer
+# Enable Apache rewrite module (needed for Laravel pretty URLs)
+RUN a2enmod rewrite
+
+# Set Apache DocumentRoot to Laravel's public folder (best practice)
+ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
+RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
+RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
+
+# Copy Composer binary
+COPY --from=backend-build /usr/bin/composer /usr/bin/composer
 
 # Set working directory
 WORKDIR /var/www/html
 
-# Copy Laravel files
+# Copy Laravel backend code
 COPY backend/ .
-COPY --from=frontend-build /app/frontend/dist ./public/
 
-# Copy built Vue assets to Laravel public directory
-COPY --from=frontend-build /app/frontend/dist ./public/
+# Copy full Composer dependencies from build stage
+COPY --from=backend-build /app/backend/vendor ./vendor
 
-# Install Composer dependencies
-RUN composer install --no-dev --optimize-autoloader
+# Copy built Vue assets into public/
+COPY --from=frontend-build /app/frontend/dist/ ./public/
 
-# Set permissions
-RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 755 /var/www/html/storage \
-    && chmod -R 755 /var/www/html/bootstrap/cache
+# Final Composer optimizations
+RUN composer dump-autoload --optimize --no-dev \
+    && composer install --no-dev --optimize-autoloader --no-interaction
 
-# Configure Apache
-RUN a2enmod rewrite
-COPY backend/.htaccess ./public/.htaccess
-COPY backend/apache-config.conf /etc/apache2/sites-available/000-default.conf
+# Permissions for Laravel storage and cache
+RUN chown -R www-data:www-data storage bootstrap/cache public \
+    && chmod -R 775 storage bootstrap/cache
 
-# Expose port
+# Optional: Copy your custom Apache config if you still need overrides
+# COPY backend/apache-config.conf /etc/apache2/sites-available/000-default.conf
+
+# Environment variables (production defaults)
+ENV APP_ENV=production \
+    APP_DEBUG=false
+
 EXPOSE 80
-
 CMD ["apache2-foreground"]
