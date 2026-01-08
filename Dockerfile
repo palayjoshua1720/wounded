@@ -6,72 +6,51 @@ RUN npm ci
 COPY frontend/ .
 RUN npm run build
 
-# Stage 2: Composer dependencies (cached layer)
+# Stage 2: Composer dependencies
 FROM composer:latest AS backend-build
 WORKDIR /app/backend
 COPY backend/composer.json backend/composer.lock ./
 RUN composer install --no-dev --no-scripts --no-autoloader --optimize-autoloader
 
-# Stage 3: Final production image
-FROM php:8.2-apache AS final
+# Stage 3: Final production image (pinned to PHP 8.2)
+FROM php:8.2.27-apache AS final
 
-# Install system dependencies and PHP extensions required/recommended for Laravel
+# Install system dependencies and PHP extensions
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    git \
-    curl \
-    libpng-dev \
-    libonig-dev \
-    libxml2-dev \
-    libzip-dev \
-    zip \
-    unzip \
-    && docker-php-ext-install -j$(nproc) \
-        pdo_mysql \
-        mbstring \
-        exif \
-        pcntl \
-        bcmath \
-        gd \
-        zip \
-        fileinfo \
-    && apt-get clean \
+    git curl libpng-dev libonig-dev libxml2-dev libzip-dev zip unzip \
+    && docker-php-ext-install -j$(nproc) pdo_mysql mbstring exif pcntl bcmath gd zip \
     && rm -rf /var/lib/apt/lists/*
 
-# Enable Apache rewrite module (needed for Laravel pretty URLs)
+# Enable rewrite module
 RUN a2enmod rewrite
 
-# Set Apache DocumentRoot to Laravel's public folder (best practice)
+# Set DocumentRoot to public (cleaner than .htaccess)
 ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
 RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
 
-# Copy Composer binary
+# Copy Composer
 COPY --from=backend-build /usr/bin/composer /usr/bin/composer
 
-# Set working directory
 WORKDIR /var/www/html
 
-# Copy Laravel backend code
+# Copy backend code
 COPY backend/ .
 
-# Copy full Composer dependencies from build stage
+# Copy vendor from build stage
 COPY --from=backend-build /app/backend/vendor ./vendor
 
-# Copy built Vue assets into public/
+# Copy built frontend assets
 COPY --from=frontend-build /app/frontend/dist/ ./public/
 
 # Final Composer optimizations
-RUN composer dump-autoload --optimize --no-dev \
-    && composer install --no-dev --optimize-autoloader --no-interaction
+RUN composer dump-autoload --optimize --no-dev
 
-# Permissions for Laravel storage and cache
+# Permissions
 RUN chown -R www-data:www-data storage bootstrap/cache public \
     && chmod -R 775 storage bootstrap/cache
 
-# Optional: Copy your custom Apache config if you still need overrides
-# COPY backend/apache-config.conf /etc/apache2/sites-available/000-default.conf
-
-# Environment variables (production defaults)
+# Environment
 ENV APP_ENV=production \
     APP_DEBUG=false
 
