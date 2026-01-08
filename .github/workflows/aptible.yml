@@ -50,4 +50,3 @@ jobs:
             --private-registry-username ${{ github.actor }} \
             --private-registry-password ${{ secrets.GITHUB_TOKEN }} \
             # Remove the line below after the FIRST successful automatic deploy
-            --git-detach
