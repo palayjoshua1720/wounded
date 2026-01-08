@@ -8,6 +8,9 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read      # Default, but good to be explicit
+      packages: write     # THIS IS THE KEY FIX – allows GITHUB_TOKEN to write to GHCR
     env:
       VUE_APP_TITLE: "WOUNDMED INC."
       VUE_APP_API_URL: "https://woundmed.on-aptible.com"
@@ -43,6 +46,6 @@ jobs:
           environment: woundmed_environment
           username: ${{ secrets.APTIBLE_USERNAME }}
           password: ${{ secrets.APTIBLE_PASSWORD }}
-          docker_img: ${{ env.IMAGE_TAG }}  # Correct input name
-          private_registry_username: ${{ github.actor }}  # For GHCR auth
-          private_registry_password: ${{ secrets.GITHUB_TOKEN }}  # For GHCR auth
+          docker_img: ${{ env.IMAGE_TAG }}
+          private_registry_username: ${{ github.actor }}
+          private_registry_password: ${{ secrets.GITHUB_TOKEN }}
