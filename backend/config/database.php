@@ -44,7 +44,7 @@ return [
 
         'mysql' => [
             'driver' => 'mysql',
-            'url' => env('DB_URL'),
+            'url' => env('DATABASE_URL', env('DB_URL')),
             'host' => env('DB_HOST', '127.0.0.1'),
             'port' => env('DB_PORT', '3306'),
             'database' => env('DB_DATABASE', 'laravel'),
@@ -57,12 +57,12 @@ return [
             'prefix_indexes' => true,
             'strict' => true,
             'engine' => null,
-            'options' => extension_loaded('pdo_mysql') ? array_filter([
-                PDO::MYSQL_ATTR_SSL_CA => '/etc/ssl/certs/ca-certificates.crt',
-                PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => false,
-                PDO::MYSQL_ATTR_SSL_CIPHER => 'DHE-RSA-AES256-SHA',
-            ]) : [],
-            'sslmode' => 'require',
+            // 'options' => extension_loaded('pdo_mysql') ? array_filter([
+            //     PDO::MYSQL_ATTR_SSL_CA => '/etc/ssl/certs/ca-certificates.crt',
+            //     PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => false,
+            //     PDO::MYSQL_ATTR_SSL_CIPHER => 'DHE-RSA-AES256-SHA',
+            // ]) : [],
+            // 'sslmode' => 'require',
         ],
 
         'mariadb' => [
