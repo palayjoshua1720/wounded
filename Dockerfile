@@ -50,7 +50,7 @@ RUN composer dump-autoload --optimize --no-dev
 RUN chown -R www-data:www-data storage bootstrap/cache public \
     && chmod -R 775 storage bootstrap/cache
 
-# Environments
+# Environment
 ENV APP_ENV=production \
     APP_DEBUG=false
 
