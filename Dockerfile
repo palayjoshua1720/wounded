@@ -55,4 +55,5 @@ ENV APP_ENV=production \
     APP_DEBUG=false
 
 EXPOSE 80
-CMD ["apache2-foreground"]
+# CMD ["apache2-foreground"]
+CMD ["/entrypoint.sh"]
