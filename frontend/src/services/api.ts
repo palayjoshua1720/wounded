@@ -101,161 +101,194 @@ export const authApi = {
 
 
 export const userService = {
-    getUsers(params?: { search?: string; role?: string | number; status?: string; page?: number }) {
-        return api.get('/users', { params });
-    },
+  getUsers(params?: { search?: string; role?: string | number; status?: string; page?: number }) {
+    return api.get('/users', { params });
+  },
 
-    getUserStats() {
-        return api.get('/users/stats');
-    },
+  getUserStats() {
+    return api.get('/users/stats');
+  },
 
-    getManufacturers() {
-        return api.get('/management/manufacturers');
-    },
+  getManufacturers() {
+    return api.get('/management/manufacturers');
+  },
 
-    getClinics() {
-        return api.get('/management/users/clinics');
-    },
+  getClinics() {
+    return api.get('/management/users/clinics');
+  },
 
-    getClinicians(simple = true) {
-        return api.get('/management/users/clinician', { params: { simple } });
-    },
+  getClinicians(simple = true) {
+    return api.get('/management/users/clinician', { params: { simple } });
+  },
 
-    getUser(id: string) {
-        return api.get(`/users/${id}`);
-    },
+  getUser(id: string) {
+    return api.get(`/users/${id}`);
+  },
 
-    createUser(userData: any) {
-        return api.post('/users', userData);
-    },
+  createUser(userData: any) {
+    return api.post('/users', userData);
+  },
 
-    updateUser(id: string, userData: any) {
-        return api.put(`/users/${id}`, userData);
-    },
+  updateUser(id: string, userData: any) {
+    return api.put(`/users/${id}`, userData);
+  },
 
-    toggleUserStatus(id: string) {
-        return api.patch(`/users/${id}/toggle-status`);
-    },
+  toggleUserStatus(id: string) {
+    return api.patch(`/users/${id}/toggle-status`);
+  },
 
-    archiveUser(id: string) {
-        return api.patch(`/users/${id}/archive`);
-    },
+  archiveUser(id: string) {
+    return api.patch(`/users/${id}/archive`);
+  },
 
-    softDeleteUser(id: string) {
-        return api.delete(`/users/${id}/soft-delete`);
-    },
+  softDeleteUser(id: string) {
+    return api.delete(`/users/${id}/soft-delete`);
+  },
 
-    restoreUser(id: string) {
-        return api.patch(`/users/${id}/restore`);
-    },
+  restoreUser(id: string) {
+    return api.patch(`/users/${id}/restore`);
+  },
 };
 
 export const inventoryService = {
-    /**
-     * Get all inventory items from usage logs
-     */
-    getAllInventory() {
-        return api.get('/inventory/all');
-    },
+  /**
+   * Get all inventory items from usage logs
+   */
+  getAllInventory() {
+    return api.get('/inventory/all');
+  },
 
-    /**
-     * Get inventory by serial number
-     */
-    getInventoryBySerial(serialNumber: string) {
-        return api.get(`/inventory/serial/${serialNumber}`);
-    },
+  /**
+   * Get inventory by serial number
+   */
+  getInventoryBySerial(serialNumber: string) {
+    return api.get(`/inventory/serial/${serialNumber}`);
+  },
 
-    /**
-     * Get inventory by status
-     */
-    getInventoryByStatus(status: string) {
-        return api.get(`/inventory/status/${status}`);
-    },
+  /**
+   * Get inventory by status
+   */
+  getInventoryByStatus(status: string) {
+    return api.get(`/inventory/status/${status}`);
+  },
 
-    /**
-     * Create a new usage log
-     */
-    createUsageLog(data: any) {
-        return api.post('/inventory/usage-logs', data);
-    },
+  /**
+   * Create a new usage log
+   */
+  createUsageLog(data: any) {
+    return api.post('/inventory/usage-logs', data);
+  },
 
-    /**
-     * Update a usage log
-     */
-    updateUsageLog(id: string | number, data: any) {
-        return api.put(`/inventory/usage-logs/${id}`, data);
-    },
+  /**
+   * Update a usage log
+   */
+  updateUsageLog(id: string | number, data: any) {
+    return api.put(`/inventory/usage-logs/${id}`, data);
+  },
 
-    /**
-     * Delete a usage log
-     */
-    deleteUsageLog(id: string | number) {
-        return api.delete(`/inventory/usage-logs/${id}`);
-    },
+  /**
+   * Delete a usage log
+   */
+  deleteUsageLog(id: string | number) {
+    return api.delete(`/inventory/usage-logs/${id}`);
+  },
 
-    /**
-     * Search for patients by name
-     */
-    searchPatients(query: string) {
-        return api.get('/inventory/search-patients', { params: { q: query } });
-    },
+  /**
+   * Search for patients by name
+   */
+  searchPatients(query: string) {
+    return api.get('/inventory/search-patients', { params: { q: query } });
+  },
 
-    /**
-     * Get graft size details by ID
-     */
-    getGraftSize(graftSizeId: string | number) {
-        return api.get(`/inventory/graft-size/${graftSizeId}`);
-    },
+  /**
+   * Get graft size details by ID
+   */
+  getGraftSize(graftSizeId: string | number) {
+    return api.get(`/inventory/graft-size/${graftSizeId}`);
+  },
 
-    /**
-     * Get clinicians with clinic information for inventory
-     */
-    getClinicians() {
-        return api.get('/inventory/clinicians');
-    },
+  /**
+   * Get clinicians with clinic information for inventory
+   */
+  getClinicians() {
+    return api.get('/inventory/clinicians');
+  },
 
-    /**
-     * Update inventory item status
-     */
-    updateInventoryStatus(id: string | number, logStatus: number) {
-        return api.patch(`/inventory/${id}/status`, { log_status: logStatus });
-    },
+  /**
+   * Update inventory item status
+   */
+  updateInventoryStatus(id: string | number, logStatus: number) {
+    return api.patch(`/inventory/${id}/status`, { log_status: logStatus });
+  },
 };
 
 export const graftSizeService = {
-    /**
-     * Get all graft sizes (paginated)
-     */
-    getAllGraftSizes(params?: { page?: number; per_page?: number }) {
-        return api.get('/management/graft-sizes', { params });
-    },
+  /**
+   * Get all graft sizes (paginated)
+   */
+  getAllGraftSizes(params?: { page?: number; per_page?: number }) {
+    return api.get('/management/graft-sizes', { params });
+  },
 };
 
 export const orderService = {
-    /**
-     * Get all orders (paginated)
-     */
-    getAllOrders(params?: { page?: number; per_page?: number }) {
-        return api.get('/management/order/getorders', { params });
-    },
+  /**
+   * Get all orders (paginated)
+   */
+  getAllOrders(params?: { page?: number; per_page?: number }) {
+    return api.get('/management/order/getorders', { params });
+  },
 };
 
 export const brandService = {
-    /**
-     * Get all brands (paginated)
-     */
-    getAllBrands(params?: { page?: number; per_page?: number }) {
-        return api.get('/management/brands', { params });
-    },
+  /**
+   * Get all brands (paginated)
+   */
+  getAllBrands(params?: { page?: number; per_page?: number }) {
+    return api.get('/management/brands', { params });
+  },
 };
 
 export const patientService = {
-    /**
-     * Get all patients
-     */
-    getAllPatients() {
-        return api.get('/management/patients/patientinfo');
-    },
+  /**
+   * Get all patients
+   */
+  getAllPatients() {
+    return api.get('/management/patients/patientinfo');
+  },
+};
+
+export const dashboardService = {
+  async getMetrics() {
+    try {
+      const res = await api.get('/dashboard/stats');
+      return res.data?.data || {
+        brands: { total: 0, active: 0, new: 0 },
+        manufacturers: { total: 0, active: 0, new: 0 },
+        clinics: { total: 0, active: 0, new: 0 },
+        orders: { total: 0, new: 0 }
+      };
+    } catch (err) {
+      console.error('Failed to load dashboard metrics', err);
+      return {
+        brands: { total: 0, active: 0, new: 0 },
+        manufacturers: { total: 0, active: 0, new: 0 },
+        clinics: { total: 0, active: 0, new: 0 },
+        orders: { total: 0, new: 0 }
+      };
+    }
+  },
+
+  async getRecentActivity() {
+    try {
+      const res = await api.get('/dashboard/recent-activity');
+      console.log(res);
+      return res.data?.data || [];
+    } catch (err) {
+      console.error('Failed to load recent activity', err);
+      return [];
+    }
+  }
 };
 
 export default api 

@@ -10,7 +10,7 @@
         <button
           class="flex items-center px-5 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg group"
           @click="showAddInvoiceModal = true" :disabled="loading">
-          <FileUp  class="w-4 h-4 mr-2" />
+          <FileUp class="w-4 h-4 mr-2" />
           Add Invoice
         </button>
       </div>
@@ -184,9 +184,11 @@
             If extraction fails, you'll be able to enter details manually.
           </p>
         </div>
-        <div class="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-lg mb-4 border border-yellow-200 dark:border-yellow-800">
+        <div
+          class="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-lg mb-4 border border-yellow-200 dark:border-yellow-800">
           <p class="text-xs text-yellow-800 dark:text-yellow-300">
-            <strong>Note:</strong> Only PDF files are accepted. Other file formats (DOC, DOCX, etc.) will not be processed.
+            <strong>Note:</strong> Only PDF files are accepted. Other file formats (DOC, DOCX, etc.) will not be
+            processed.
           </p>
         </div>
         <input type="file" accept=".pdf" class="hidden" id="invoice-pdf-upload" @change="handlePdfUpload"
@@ -460,7 +462,7 @@
             <div v-for="(item, index) in selectedInvoice.line_items" :key="index"
               class="py-2 border-b border-gray-200 dark:border-gray-700 text-sm">
               <div class="font-medium text-gray-900 dark:text-white">{{ item.description }} <span v-if="item.size">({{
-                  item.size }})</span></div>
+                item.size }})</span></div>
               <div v-if="item.serial" class="text-gray-600 dark:text-gray-400 text-xs">
                 S/N: {{ item.serial }}
               </div>
@@ -500,7 +502,7 @@
           </div>
         </div>
       </div>
- 
+
 
     </div>
     <template #actions>
@@ -677,7 +679,8 @@
           class="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg">
           Clear & Add Manually
         </button>
-        <button @click="saveReviewedInvoice" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg">
+        <button @click="saveReviewedInvoice"
+          class="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg">
           Save Invoice
         </button>
       </div>
@@ -784,7 +787,10 @@
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Amount (Calculated)</label>
             <div
               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white">
-              ${{ calculateEditTotalAmount().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
+              ${{ calculateEditTotalAmount().toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+              maximumFractionDigits:
+              2 }) }}
             </div>
             <input v-model.number="invoiceToEdit.amount" type="hidden" />
             <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Automatically calculated from line items</p>
@@ -1015,7 +1021,7 @@ const filters = ref({
 
 // Modal states
 const showAddInvoiceModal = ref(false)
-const showUploadModal = ref(false) 
+const showUploadModal = ref(false)
 const showManualModal = ref(false)
 const showInvoiceModal = ref(false)
 const showMarkPaidModal = ref(false)
@@ -1074,7 +1080,7 @@ const hasFilesForProcessing = computed(() => uploadedFiles.value.length > 0)
 
 const hasInvoiceChanges = computed(() => {
   if (!invoiceToEdit.value || !originalInvoice.value) return false;
-  
+
   // Helper function to normalize dates for comparison
   const normalizeDate = (dateStr: string): string => {
     if (!dateStr) return '';
@@ -1088,7 +1094,7 @@ const hasInvoiceChanges = computed(() => {
       return dateStr;
     }
   };
-  
+
   // Compare primitive fields
   if (invoiceToEdit.value.invoice_number !== originalInvoice.value.invoice_number) return true;
   if (invoiceToEdit.value.clinic_id !== originalInvoice.value.clinic_id) return true;
@@ -1097,15 +1103,15 @@ const hasInvoiceChanges = computed(() => {
   if (normalizeDate(invoiceToEdit.value.invoice_date) !== normalizeDate(originalInvoice.value.invoice_date)) return true;
   if (normalizeDate(invoiceToEdit.value.due_date) !== normalizeDate(originalInvoice.value.due_date)) return true;
   if (invoiceToEdit.value.bill_to !== originalInvoice.value.bill_to) return true;
-  
+
   // Compare line items
   if (invoiceToEdit.value.line_items && originalInvoice.value.line_items) {
     if (invoiceToEdit.value.line_items.length !== originalInvoice.value.line_items.length) return true;
-    
+
     for (let i = 0; i < invoiceToEdit.value.line_items.length; i++) {
       const editedItem = invoiceToEdit.value.line_items[i];
       const originalItem = originalInvoice.value.line_items[i];
-      
+
       if (editedItem.description !== originalItem.description) return true;
       if (editedItem.size !== originalItem.size) return true;
       if (editedItem.serial !== originalItem.serial) return true;
@@ -1117,7 +1123,7 @@ const hasInvoiceChanges = computed(() => {
     // One is null/undefined and the other isn't
     return true;
   }
-  
+
   // No changes detected
   return false;
 })
@@ -1128,11 +1134,17 @@ const clinicDisplayName = (clinic: Clinic) => {
 }
 
 // Methods
-function showAlert(message: string, type: 'success' | 'error' | 'warning' | 'info' = 'info', duration = 2000) {
-  const icon = type === 'success' ? 'success' : 
-               type === 'error' ? 'error' : 
-               type === 'warning' ? 'warning' : 'info';
-  
+function showAlert(
+  message: string,
+  type: 'success' | 'error' | 'warning' | 'info' = 'info',
+  duration = 2000
+) {
+  const icon =
+    type === 'success' ? 'success' :
+      type === 'error' ? 'error' :
+        type === 'warning' ? 'warning' :
+          'info';
+
   Swal.fire({
     text: message,
     icon: icon,
@@ -1143,6 +1155,7 @@ function showAlert(message: string, type: 'success' | 'error' | 'warning' | 'inf
     timerProgressBar: true
   });
 }
+
 
 async function fetchInvoices() {
   loading.value = true
@@ -1242,15 +1255,15 @@ function removeUploadedFile(index: number) {
 function editInvoice(invoice: Invoice) {
   // Store the original invoice data for comparison
   originalInvoice.value = JSON.parse(JSON.stringify(invoice))
-  
+
   // Create a deep copy of the invoice to edit
   invoiceToEdit.value = JSON.parse(JSON.stringify(invoice))
-  
+
   // Ensure line_items array exists
   if (invoiceToEdit.value && !invoiceToEdit.value.line_items) {
     invoiceToEdit.value.line_items = [];
   }
-  
+
   // Ensure line items have all required properties
   if (invoiceToEdit.value && invoiceToEdit.value.line_items) {
     invoiceToEdit.value.line_items = invoiceToEdit.value.line_items.map((item: any) => ({
@@ -1261,7 +1274,7 @@ function editInvoice(invoice: Invoice) {
       amount: item.amount || 0
     }));
   }
-  
+
   // Ensure dates are in the correct format for HTML date inputs (YYYY-MM-DD)
   if (invoiceToEdit.value && invoiceToEdit.value.invoice_date) {
     // If the date is already in YYYY-MM-DD format, keep it as is
@@ -1271,7 +1284,7 @@ function editInvoice(invoice: Invoice) {
       invoiceToEdit.value.invoice_date = dateObj.toISOString().split('T')[0];
     }
   }
-  
+
   if (invoiceToEdit.value && invoiceToEdit.value.due_date) {
     // If the date is already in YYYY-MM-DD format, keep it as is
     // Otherwise, convert it to the correct format
@@ -1280,13 +1293,13 @@ function editInvoice(invoice: Invoice) {
       invoiceToEdit.value.due_date = dateObj.toISOString().split('T')[0];
     }
   }
-  
+
   showEditModal.value = true
 }
 
 async function confirmDeleteInvoice(invoice: Invoice) {
   invoiceToDelete.value = invoice
-  
+
   // Show Swal confirmation dialog directly
   const result = await Swal.fire({
     title: 'Are you sure?',
@@ -1315,16 +1328,16 @@ async function handleEditInvoiceSubmit() {
   submitting.value = true
   try {
     const response = await api.put(`/invoice-management/${invoiceToEdit.value.id}`, invoiceData)
-    
+
     showAlert('Invoice updated successfully', 'success')
     showEditModal.value = false
-    
+
     // Update the invoice in the list
     const index = invoices.value.findIndex(inv => inv.id === invoiceToEdit.value!.id)
     if (index !== -1) {
       invoices.value[index] = response.data.invoice
     }
-    
+
     // Refresh stats
     fetchStats()
   } catch (error: any) {
@@ -1333,7 +1346,7 @@ async function handleEditInvoiceSubmit() {
     if (axios.isAxiosError(error)) {
       const status = error.response?.status
       const data = error.response?.data
-      
+
       if (status === 422 && data?.errors) {
         const errors = data.errors
         if (errors.invoice_number) {
@@ -1352,624 +1365,624 @@ async function handleEditInvoiceSubmit() {
 }
 
 function simulateOcrExtraction(file: File) {
-    // In a real application, this would call your OCR service
-    extractionPreview.value = {
-      invoice_number: `INV-${new Date().getFullYear()}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
-      amount: Math.floor(Math.random() * 5000) + 1000,
-      invoice_date: new Date().toISOString().split('T')[0],
-      due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      serials: Array.from({ length: Math.floor(Math.random() * 3) + 1 }, () =>
-        `GS${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`
-      )
-    }
+  // In a real application, this would call your OCR service
+  extractionPreview.value = {
+    invoice_number: `INV-${new Date().getFullYear()}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
+    amount: Math.floor(Math.random() * 5000) + 1000,
+    invoice_date: new Date().toISOString().split('T')[0],
+    due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    serials: Array.from({ length: Math.floor(Math.random() * 3) + 1 }, () =>
+      `GS${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`
+    )
   }
+}
 
-  async function processUploadedInvoices() {
-    uploading.value = true
-    try {
-      for (const file of uploadedFiles.value) {
-        const formData = new FormData()
-        formData.append('pdf_file', file)
+async function processUploadedInvoices() {
+  uploading.value = true
+  try {
+    for (const file of uploadedFiles.value) {
+      const formData = new FormData()
+      formData.append('pdf_file', file)
 
-        const response = await api.post('/invoice-management/upload-pdf', formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data'
-          }
-        })
+      const response = await api.post('/invoice-management/upload-pdf', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      })
 
-        const result = response.data
+      const result = response.data
 
-        // Store extracted data for review
-        extractedInvoiceData.value = result.extracted_data
+      // Store extracted data for review
+      extractedInvoiceData.value = result.extracted_data
 
-        // Ensure line items array exists and has at least one item for editing
-        // Fix: Only create line items from serials if no line items were extracted
-        if (!extractedInvoiceData.value.line_items || extractedInvoiceData.value.line_items.length === 0) {
-          // Try to create line items from serials if available
-          if (extractedInvoiceData.value.serials && extractedInvoiceData.value.serials.length > 0) {
-            extractedInvoiceData.value.line_items = extractedInvoiceData.value.serials.map((serial: string) => ({
-              description: 'Graft Product',
-              size: '',
-              serial: serial,
-              quantity: 1,
-              amount: 0
-            }));
-          } else {
-            // Create at least one empty line item for manual entry
-            extractedInvoiceData.value.line_items = [{
-              description: '',
-              size: '',
-              serial: '',
-              quantity: 1,
-              amount: 0
-            }];
-          }
-        } else {
-          // Ensure line items have all required properties
-          extractedInvoiceData.value.line_items = extractedInvoiceData.value.line_items.map((item: any) => ({
-            description: item.description || '',
-            size: item.size || '',
-            serial: item.serial || '',
-            quantity: item.quantity || 1,
-            amount: item.amount || 0
+      // Ensure line items array exists and has at least one item for editing
+      // Fix: Only create line items from serials if no line items were extracted
+      if (!extractedInvoiceData.value.line_items || extractedInvoiceData.value.line_items.length === 0) {
+        // Try to create line items from serials if available
+        if (extractedInvoiceData.value.serials && extractedInvoiceData.value.serials.length > 0) {
+          extractedInvoiceData.value.line_items = extractedInvoiceData.value.serials.map((serial: string) => ({
+            description: 'Graft Product',
+            size: '',
+            serial: serial,
+            quantity: 1,
+            amount: 0
           }));
-        }
-
-        // If we have a fallback source, show a warning to the user
-        if (extractedInvoiceData.value.source && extractedInvoiceData.value.source === 'fallback') {
-          showAlert('PDF extraction failed. Please manually enter invoice details.', 'error');
-        }
-
-        // Show review modal instead of automatically creating invoice
-        showPdfReviewModal.value = true
-        showUploadModal.value = false
-        return
-      }
-    } catch (error: any) {
-      console.error('Error processing PDFs:', error)
-      let errorMessage = 'Failed to process PDFs'
-      if (axios.isAxiosError(error)) {
-        const status = error.response?.status
-        const data = error.response?.data
-
-        if (status === 422 && data?.errors) {
-          const errors = data.errors
-          if (errors.invoice_number) {
-            errorMessage = `Invoice already exists: ${errors.invoice_number[0]}`
-          }
-        } else if (status === 500) {
-          errorMessage = 'Failed to extract data from PDF. The system will open the manual entry form for you to input the details.'
-          setTimeout(() => {
-            showPdfReviewModal.value = false;
-            showManualModal.value = true;
-          }, 2000);
         } else {
-          errorMessage = data?.message || `Request failed with status code ${status}`
+          // Create at least one empty line item for manual entry
+          extractedInvoiceData.value.line_items = [{
+            description: '',
+            size: '',
+            serial: '',
+            quantity: 1,
+            amount: 0
+          }];
         }
-      } else if (error instanceof Error) {
-        errorMessage = error.message
+      } else {
+        // Ensure line items have all required properties
+        extractedInvoiceData.value.line_items = extractedInvoiceData.value.line_items.map((item: any) => ({
+          description: item.description || '',
+          size: item.size || '',
+          serial: item.serial || '',
+          quantity: item.quantity || 1,
+          amount: item.amount || 0
+        }));
       }
-      showAlert(errorMessage, 'error')
-    } finally {
-      uploading.value = false
+
+      // If we have a fallback source, show a warning to the user
+      if (extractedInvoiceData.value.source && extractedInvoiceData.value.source === 'fallback') {
+        showAlert('PDF extraction failed. Please manually enter invoice details.', 'error');
+      }
+
+      // Show review modal instead of automatically creating invoice
+      showPdfReviewModal.value = true
+      showUploadModal.value = false
+      return
     }
+  } catch (error: any) {
+    console.error('Error processing PDFs:', error)
+    let errorMessage = 'Failed to process PDFs'
+    if (axios.isAxiosError(error)) {
+      const status = error.response?.status
+      const data = error.response?.data
+
+      if (status === 422 && data?.errors) {
+        const errors = data.errors
+        if (errors.invoice_number) {
+          errorMessage = `Invoice already exists: ${errors.invoice_number[0]}`
+        }
+      } else if (status === 500) {
+        errorMessage = 'Failed to extract data from PDF. The system will open the manual entry form for you to input the details.'
+        setTimeout(() => {
+          showPdfReviewModal.value = false;
+          showManualModal.value = true;
+        }, 2000);
+      } else {
+        errorMessage = data?.message || `Request failed with status code ${status}`
+      }
+    } else if (error instanceof Error) {
+      errorMessage = error.message
+    }
+    showAlert(errorMessage, 'error')
+  } finally {
+    uploading.value = false
   }
+}
 
-  async function saveReviewedInvoice() {
-    if (!extractedInvoiceData.value || clinics.value.length === 0) return
+async function saveReviewedInvoice() {
+  if (!extractedInvoiceData.value || clinics.value.length === 0) return
 
-    submitting.value = true
-    try {
-      let notes = 'Created from PDF upload';
+  submitting.value = true
+  try {
+    let notes = 'Created from PDF upload';
 
-      if (extractedInvoiceData.value.vendor) {
-        notes += `\nVendor: ${extractedInvoiceData.value.vendor}`;
-      }
+    if (extractedInvoiceData.value.vendor) {
+      notes += `\nVendor: ${extractedInvoiceData.value.vendor}`;
+    }
 
-      if (extractedInvoiceData.value.notes) {
-        notes += `\nNotes: ${extractedInvoiceData.value.notes}`;
-      }
+    if (extractedInvoiceData.value.notes) {
+      notes += `\nNotes: ${extractedInvoiceData.value.notes}`;
+    }
 
-      if (extractedInvoiceData.value.payment_terms) {
-        notes += `\nPayment Terms: ${extractedInvoiceData.value.payment_terms}`;
-      }
+    if (extractedInvoiceData.value.payment_terms) {
+      notes += `\nPayment Terms: ${extractedInvoiceData.value.payment_terms}`;
+    }
 
-      if (extractedInvoiceData.value.bill_to) {
-        notes += `\nBill To: ${extractedInvoiceData.value.bill_to}`;
-      }
-      const allSerials: string[] = [];
-      let lineItemsNotes = '';
-      const lineItemsForStorage: Array<{ description: string, size: string, serial: string, quantity: number, amount: number }> = [];
+    if (extractedInvoiceData.value.bill_to) {
+      notes += `\nBill To: ${extractedInvoiceData.value.bill_to}`;
+    }
+    const allSerials: string[] = [];
+    let lineItemsNotes = '';
+    const lineItemsForStorage: Array<{ description: string, size: string, serial: string, quantity: number, amount: number }> = [];
 
-      if (extractedInvoiceData.value.line_items && extractedInvoiceData.value.line_items.length > 0) {
-        notes += `\nLine Items:\n`;
-        extractedInvoiceData.value.line_items.forEach((item: any) => {
-          // Add to notes
-          const itemDescription = item.size ? `${item.description} (${item.size})` : item.description;
-          notes += `${itemDescription}\n`;
-          notes += `S/N: ${item.serial}\n`;
-          notes += `$${item.amount} x ${item.quantity || 1} = $${(item.amount * (item.quantity || 1)).toFixed(2)}\n\n`;
+    if (extractedInvoiceData.value.line_items && extractedInvoiceData.value.line_items.length > 0) {
+      notes += `\nLine Items:\n`;
+      extractedInvoiceData.value.line_items.forEach((item: any) => {
+        // Add to notes
+        const itemDescription = item.size ? `${item.description} (${item.size})` : item.description;
+        notes += `${itemDescription}\n`;
+        notes += `S/N: ${item.serial}\n`;
+        notes += `$${item.amount} x ${item.quantity || 1} = $${(item.amount * (item.quantity || 1)).toFixed(2)}\n\n`;
 
-          // Collect serials from line items only
-          if (item.serial && typeof item.serial === 'string' && item.serial.trim() !== '') {
-            // Only add if not already in the array
-            if (!allSerials.includes(item.serial.trim())) {
-              allSerials.push(item.serial.trim());
-            }
+        // Collect serials from line items only
+        if (item.serial && typeof item.serial === 'string' && item.serial.trim() !== '') {
+          // Only add if not already in the array
+          if (!allSerials.includes(item.serial.trim())) {
+            allSerials.push(item.serial.trim());
           }
+        }
 
-          // Build line items for storage
-          lineItemsForStorage.push({
-            description: item.description,
-            size: item.size || '',
-            serial: item.serial || '',
-            quantity: item.quantity || 1,
-            amount: item.amount || 0
-          });
-
-          // Build line items notes for display
-          lineItemsNotes += `${itemDescription}\n`;
-          lineItemsNotes += `S/N: ${item.serial}\n`;
-          lineItemsNotes += `$${item.amount} x ${item.quantity || 1} = $${(item.amount * (item.quantity || 1)).toFixed(2)}\n\n`;
+        // Build line items for storage
+        lineItemsForStorage.push({
+          description: item.description,
+          size: item.size || '',
+          serial: item.serial || '',
+          quantity: item.quantity || 1,
+          amount: item.amount || 0
         });
-      }
 
-      // Include raw text for review if available
-      if (extractedInvoiceData.value.raw_text) {
-        notes += `\n\nRaw Extracted Text (first 1000 chars):\n${extractedInvoiceData.value.raw_text}`;
-      }
-
-      // Filter out any empty or invalid serials and remove duplicates
-      const validSerials = [...new Set(allSerials.filter(serial => serial && typeof serial === 'string' && serial.trim() !== ''))];
-
-      const invoiceData = {
-        invoice_number: extractedInvoiceData.value.invoice_number,
-        clinic_id: clinics.value[0].clinic_id,
-        amount: extractedInvoiceData.value.amount,
-        invoice_date: extractedInvoiceData.value.invoice_date,
-        due_date: extractedInvoiceData.value.due_date,
-        status: 'pending_review' as const,
-        serials: validSerials,
-        line_items: lineItemsForStorage,
-        has_line_items: lineItemsForStorage.length > 0,
-        notes: notes,
-        bill_to: extractedInvoiceData.value.bill_to
-      }
-
-      const response = await api.post('/invoice-management', invoiceData)
-
-      showAlert('Invoice created successfully', 'success')
-      showPdfReviewModal.value = false
-      extractedInvoiceData.value = null
-      fetchInvoices()
-      fetchStats()
-    } catch (error: any) {
-      console.error('Error creating invoice:', error)
-      let errorMessage = 'Failed to create invoice'
-      if (axios.isAxiosError(error)) {
-        const status = error.response?.status
-        const data = error.response?.data
-
-        if (status === 422 && data?.errors) {
-          const errors = data.errors
-          if (errors.invoice_number) {
-            errorMessage = `Invoice already exists: ${errors.invoice_number[0]}`
-          }
-        } else {
-          errorMessage = data?.message || `Request failed with status code ${status}`
-        }
-      } else if (error instanceof Error) {
-        errorMessage = error.message
-      }
-      showAlert(errorMessage, 'error')
-    } finally {
-      submitting.value = false
-    }
-  }
-
-
-  async function handleManualInvoiceSubmit() {
-    submitting.value = true
-    try {
-      // Process line items to collect serials and build notes
-      const allSerials: string[] = [];
-      let lineItemsNotes = '';
-      const lineItemsForStorage: Array<{ description: string, size: string, serial: string, quantity: number, amount: number }> = [];
-
-      if (manualInvoice.value.products && manualInvoice.value.products.length > 0) {
-        manualInvoice.value.products.forEach((product, index) => {
-          // Add to notes
-          const itemDescription = product.size ? `${product.name} (${product.size})` : product.name;
-          lineItemsNotes += `${itemDescription}\n`;
-          lineItemsNotes += `S/N: ${product.serials[0]}\n`;
-          lineItemsNotes += `$${product.unit_price} x ${product.quantity || 1} = $${(product.unit_price * (product.quantity || 1)).toFixed(2)}\n\n`;
-
-          // Collect serials from line items only
-          if (product.serials[0] && typeof product.serials[0] === 'string' && product.serials[0].trim() !== '') {
-            // Only add if not already in the array
-            if (!allSerials.includes(product.serials[0].trim())) {
-              allSerials.push(product.serials[0].trim());
-            }
-          }
-
-          // Build line items for storage
-          lineItemsForStorage.push({
-            description: product.name,
-            size: product.size || '',
-            serial: product.serials[0] || '',
-            quantity: product.quantity || 1,
-            amount: product.unit_price || 0
-          });
-        });
-      }
-
-      // Build notes with line items
-      let notes = '';
-      if (lineItemsNotes) {
-        notes += `\nLine Items:\n${lineItemsNotes}`;
-      }
-
-      // Filter out any empty or invalid serials and remove duplicates
-      const validSerials = [...new Set(allSerials.filter(serial => serial && typeof serial === 'string' && serial.trim() !== ''))];
-
-      const invoiceData = {
-        invoice_number: manualInvoice.value.invoice_number,
-        clinic_id: manualInvoice.value.clinic_id || clinics.value[0].clinic_id,
-        amount: manualInvoice.value.amount,
-        invoice_date: manualInvoice.value.invoice_date,
-        due_date: manualInvoice.value.due_date,
-        status: 'pending_review' as const,
-        serials: validSerials,
-        line_items: lineItemsForStorage,
-        has_line_items: lineItemsForStorage.length > 0,
-        notes: notes,
-        bill_to: manualInvoice.value.bill_to || null
-      }
-
-      const response = await api.post('/invoice-management', invoiceData)
-
-      showAlert('Invoice created successfully', 'success')
-      showManualModal.value = false
-      resetManualInvoiceForm()
-      fetchInvoices()
-      fetchStats()
-    } catch (error: any) {
-      console.error('Error creating invoice:', error)
-      let errorMessage = 'Failed to create invoice'
-      if (axios.isAxiosError(error)) {
-        const status = error.response?.status
-        const data = error.response?.data
-
-        if (status === 422 && data?.errors) {
-          const errors = data.errors
-          if (errors.invoice_number) {
-            errorMessage = `Invoice already exists: ${errors.invoice_number[0]}`
-          }
-        } else {
-          errorMessage = data?.message || `Request failed with status code ${status}`
-        }
-      } else if (error instanceof Error) {
-        errorMessage = error.message
-      }
-      showAlert(errorMessage, 'error')
-    } finally {
-      submitting.value = false
-    }
-  }
-
-  function resetManualInvoiceForm() {
-    manualInvoice.value = {
-      invoice_number: '',
-      clinic_id: clinics.value.length > 0 ? clinics.value[0].clinic_id.toString() : '',
-      invoice_date: '',
-      due_date: '',
-      amount: 0,
-      bill_to: '',
-      products: [
-        {
-          name: '',
-          size: '',
-          unit_price: 0,
-          quantity: 1,
-          serials: ['']
-        }
-      ]
-    }
-  }
-
-  // Product management functions
-  function addProduct() {
-    manualInvoice.value.products.push({
-      name: '',
-      size: '',
-      unit_price: 0,
-      quantity: 1,
-      serials: ['']
-    })
-  }
-
-  function calculateTotalAmount() {
-    return manualInvoice.value.products.reduce((total, product) => {
-      return total + (product.unit_price * (product.quantity || 1));
-    }, 0);
-  }
-
-  function removeProduct(index: number) {
-    if (manualInvoice.value.products.length > 1) {
-      manualInvoice.value.products.splice(index, 1)
-    }
-  }
-
-  function addProductSerial(productIndex: number) {
-    manualInvoice.value.products[productIndex].serials.push('')
-  }
-
-  function removeProductSerial(productIndex: number, serialIndex: number) {
-    const product = manualInvoice.value.products[productIndex]
-    if (product.serials.length > 1) {
-      product.serials.splice(serialIndex, 1)
-    }
-  }
-
-  function viewInvoiceDetails(invoice: Invoice) {
-    selectedInvoice.value = invoice
-    showInvoiceModal.value = true
-  }
-
-  function markAsPaid(invoice: Invoice) {
-    invoiceToMarkPaid.value = invoice
-    paymentData.value = {
-      paid_amount: invoice.amount,
-      payment_method: '',
-      payment_reference: ''
-    }
-    showMarkPaidModal.value = true
-  }
-
-  async function confirmMarkAsPaid() {
-    if (!invoiceToMarkPaid.value || !paymentData.value.paid_amount) return
-
-    try {
-      const response = await api.post(`/invoice-management/${invoiceToMarkPaid.value.id}/status`, {
-        status: 'paid',
-        paid_amount: paymentData.value.paid_amount,
-        payment_method: paymentData.value.payment_method,
-        payment_reference: paymentData.value.payment_reference
-      })
-
-      showAlert('Invoice marked as paid', 'success')
-      showMarkPaidModal.value = false
-      invoiceToMarkPaid.value = null
-      fetchInvoices()
-      fetchStats()
-    } catch (error) {
-      console.error('Error marking invoice as paid:', error)
-      showAlert(error instanceof Error ? error.message : 'Failed to mark invoice as paid', 'error')
-    }
-  }
-
-  function reviewExtractedData(invoice: Invoice) {
-    invoiceUnderReview.value = JSON.parse(JSON.stringify(invoice))
-    showReviewModal.value = true
-  }
-
-  function linkToOrder(invoice: Invoice) {
-    selectedInvoice.value = invoice
-    showReviewModal.value = true
-  }
-
-  // Delete invoice function
-  function deleteInvoice() {
-    if (!invoiceToDelete.value) return
-
-    api.delete(`/invoice-management/${invoiceToDelete.value.id}`)
-      .then(() => {
-        showAlert('Invoice deleted successfully', 'success')
-        // Remove the deleted invoice from the invoices array
-        invoices.value = invoices.value.filter(invoice => invoice.id !== invoiceToDelete.value!.id)
-        invoiceToDelete.value = null
-        fetchStats()
-      })
-      .catch(error => {
-        console.error('Error deleting invoice:', error)
-        if (axios.isAxiosError(error)) {
-          console.error('Axios error details:', error.response?.data, error.response?.status);
-        }
-        showAlert(error instanceof Error ? error.message : 'Failed to delete invoice', 'error')
-      })
-  }
-
-  // Line item management functions
-  function addLineItem() {
-    if (extractedInvoiceData.value && extractedInvoiceData.value.line_items) {
-      extractedInvoiceData.value.line_items.push({
-        description: '',
-        size: '',
-        serial: '',
-        quantity: 1,
-        amount: 0
+        // Build line items notes for display
+        lineItemsNotes += `${itemDescription}\n`;
+        lineItemsNotes += `S/N: ${item.serial}\n`;
+        lineItemsNotes += `$${item.amount} x ${item.quantity || 1} = $${(item.amount * (item.quantity || 1)).toFixed(2)}\n\n`;
       });
     }
-  }
 
-  function addEditLineItem() {
-    if (invoiceToEdit.value && invoiceToEdit.value.line_items) {
-      invoiceToEdit.value.line_items.push({
-        description: '',
-        size: '',
-        serial: '',
-        quantity: 1,
-        amount: 0
-      });
+    // Include raw text for review if available
+    if (extractedInvoiceData.value.raw_text) {
+      notes += `\n\nRaw Extracted Text (first 1000 chars):\n${extractedInvoiceData.value.raw_text}`;
     }
-  }
 
-  function calculateEditTotalAmount() {
-    if (!invoiceToEdit.value || !invoiceToEdit.value.line_items) return 0;
-    
-    return invoiceToEdit.value.line_items.reduce((total, item) => {
-      return total + (item.amount * (item.quantity || 1));
-    }, 0);
-  }
+    // Filter out any empty or invalid serials and remove duplicates
+    const validSerials = [...new Set(allSerials.filter(serial => serial && typeof serial === 'string' && serial.trim() !== ''))];
 
-  function resetLineItems() {
-    if (extractedInvoiceData.value) {
-      // Clear existing line items
-      extractedInvoiceData.value.line_items = [{
-        description: '',
-        size: '',
-        serial: '',
-        quantity: 1,
-        amount: 0
-      }];
-
-      // Clear other fields for manual entry
-      extractedInvoiceData.value.invoice_number = '';
-      extractedInvoiceData.value.amount = 0;
-      extractedInvoiceData.value.invoice_date = '';
-      extractedInvoiceData.value.due_date = '';
-      extractedInvoiceData.value.serials = [];
-      extractedInvoiceData.value.vendor = '';
-      extractedInvoiceData.value.notes = '';
-      extractedInvoiceData.value.payment_terms = '';
+    const invoiceData = {
+      invoice_number: extractedInvoiceData.value.invoice_number,
+      clinic_id: clinics.value[0].clinic_id,
+      amount: extractedInvoiceData.value.amount,
+      invoice_date: extractedInvoiceData.value.invoice_date,
+      due_date: extractedInvoiceData.value.due_date,
+      status: 'pending_review' as const,
+      serials: validSerials,
+      line_items: lineItemsForStorage,
+      has_line_items: lineItemsForStorage.length > 0,
+      notes: notes,
+      bill_to: extractedInvoiceData.value.bill_to
     }
-  }
 
-  function removeLineItem(index: number) {
-    if (extractedInvoiceData.value && extractedInvoiceData.value.line_items) {
-      extractedInvoiceData.value.line_items.splice(index, 1);
-    }
-  }
+    const response = await api.post('/invoice-management', invoiceData)
 
-  function removeEditLineItem(index: number) {
-    if (invoiceToEdit.value && invoiceToEdit.value.line_items) {
-      invoiceToEdit.value.line_items.splice(index, 1);
-    }
-  }
+    showAlert('Invoice created successfully', 'success')
+    showPdfReviewModal.value = false
+    extractedInvoiceData.value = null
+    fetchInvoices()
+    fetchStats()
+  } catch (error: any) {
+    console.error('Error creating invoice:', error)
+    let errorMessage = 'Failed to create invoice'
+    if (axios.isAxiosError(error)) {
+      const status = error.response?.status
+      const data = error.response?.data
 
-  // Parse line items from notes
-  function parseLineItems(notes: string) {
-    const lines = notes.split('\n');
-    const lineItems = [];
-    let inLineItemsSection = false;
-
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
-
-      // Check for both formats: "Line Items:" and "Line Items :"
-      if (line.startsWith('Line Items:') || line.startsWith('Line Items :')) {
-        inLineItemsSection = true;
-        continue;
+      if (status === 422 && data?.errors) {
+        const errors = data.errors
+        if (errors.invoice_number) {
+          errorMessage = `Invoice already exists: ${errors.invoice_number[0]}`
+        }
+      } else {
+        errorMessage = data?.message || `Request failed with status code ${status}`
       }
+    } else if (error instanceof Error) {
+      errorMessage = error.message
+    }
+    showAlert(errorMessage, 'error')
+  } finally {
+    submitting.value = false
+  }
+}
 
-      if (inLineItemsSection) {
-        // Look for product entries in the format:
-        // Product Name (Size)
-        // S/N: serial_number
-        // $price x quantity = $total
-        if (line.trim() !== '' && !line.startsWith('S/N: ') && !line.startsWith('$') && !line.startsWith('Raw Extracted Text')) {
-          // This is a product name line
-          // Try to match format with parentheses first: "Product Name (Size)"
-          let productNameMatch = line.match(/(.+)\s*\((.+)\)/);
-          let productName, productSize;
 
-          if (productNameMatch) {
-            // Format: "Product Name (Size)"
-            productName = productNameMatch[1].trim();
-            productSize = productNameMatch[2].trim();
-          } else {
-            // Format: "Product Name Size" (like "Amnio-Maxx Dual Layer Amnion Patch 2x2cm")
-            // Try to extract common size patterns
-            const sizePatterns = [/\s+(\d+x\d+cm)$/, /\s+(\d+cm)$/, /\s+(\d+x\d+)$/, /\s+(\d+\.\d+cm)$/, /\s+(\d+\.\d+x\d+\.\d+cm)$/];
-            let foundSize = false;
+async function handleManualInvoiceSubmit() {
+  submitting.value = true
+  try {
+    // Process line items to collect serials and build notes
+    const allSerials: string[] = [];
+    let lineItemsNotes = '';
+    const lineItemsForStorage: Array<{ description: string, size: string, serial: string, quantity: number, amount: number }> = [];
 
-            for (const pattern of sizePatterns) {
-              const match = line.match(pattern);
-              if (match) {
-                productSize = match[1];
-                productName = line.replace(pattern, '').trim();
-                foundSize = true;
-                break;
-              }
-            }
+    if (manualInvoice.value.products && manualInvoice.value.products.length > 0) {
+      manualInvoice.value.products.forEach((product, index) => {
+        // Add to notes
+        const itemDescription = product.size ? `${product.name} (${product.size})` : product.name;
+        lineItemsNotes += `${itemDescription}\n`;
+        lineItemsNotes += `S/N: ${product.serials[0]}\n`;
+        lineItemsNotes += `$${product.unit_price} x ${product.quantity || 1} = $${(product.unit_price * (product.quantity || 1)).toFixed(2)}\n\n`;
 
-            if (!foundSize) {
-              // No recognizable size pattern, treat entire line as product name
-              productName = line.trim();
-              productSize = '';
-            }
-          }
-
-          // Get the next lines for serial and pricing info
-          const serialLine = i + 1 < lines.length ? lines[i + 1] : '';
-          const pricingLine = i + 2 < lines.length ? lines[i + 2] : '';
-
-          let serials: string[] = [];
-          let unitPrice = 0;
-          let quantity = 0;
-          let total = 0;
-
-          // Parse serials
-          if (serialLine.startsWith('S/N: ')) {
-            serials.push(serialLine.replace('S/N: ', '').trim());
-            // Check for additional serials
-            let nextIndex = i + 2;
-            while (nextIndex < lines.length && lines[nextIndex].startsWith('S/N: ')) {
-              serials.push(lines[nextIndex].replace('S/N: ', '').trim());
-              nextIndex++;
-            }
-          }
-
-          // Parse pricing info
-          if (pricingLine.startsWith('$')) {
-            const pricingMatch = pricingLine.match(/\$(.+) x (.+) = \$(.+)/);
-            if (pricingMatch) {
-              unitPrice = parseFloat(pricingMatch[1]) || 0;
-              quantity = parseInt(pricingMatch[2]) || 0;
-              total = parseFloat(pricingMatch[3]) || 0;
-            }
-          }
-
-          lineItems.push({
-            name: productName,
-            size: productSize,
-            serials: serials,
-            unit_price: unitPrice,
-            quantity: quantity,
-            total: total
-          });
-
-          // Skip the processed lines
-          i += 2 + (serials.length > 1 ? serials.length - 1 : 0);
-        } else if (line.startsWith('Raw Extracted Text') || line.trim() === '') {
-          // Stop parsing when we hit the raw text section or an empty line that might indicate end of section
-          // Only break if we've already found some line items
-          if (lineItems.length > 0 && line.startsWith('Raw Extracted Text')) {
-            break;
+        // Collect serials from line items only
+        if (product.serials[0] && typeof product.serials[0] === 'string' && product.serials[0].trim() !== '') {
+          // Only add if not already in the array
+          if (!allSerials.includes(product.serials[0].trim())) {
+            allSerials.push(product.serials[0].trim());
           }
         }
-      }
+
+        // Build line items for storage
+        lineItemsForStorage.push({
+          description: product.name,
+          size: product.size || '',
+          serial: product.serials[0] || '',
+          quantity: product.quantity || 1,
+          amount: product.unit_price || 0
+        });
+      });
     }
 
-    return lineItems;
+    // Build notes with line items
+    let notes = '';
+    if (lineItemsNotes) {
+      notes += `\nLine Items:\n${lineItemsNotes}`;
+    }
+
+    // Filter out any empty or invalid serials and remove duplicates
+    const validSerials = [...new Set(allSerials.filter(serial => serial && typeof serial === 'string' && serial.trim() !== ''))];
+
+    const invoiceData = {
+      invoice_number: manualInvoice.value.invoice_number,
+      clinic_id: manualInvoice.value.clinic_id || clinics.value[0].clinic_id,
+      amount: manualInvoice.value.amount,
+      invoice_date: manualInvoice.value.invoice_date,
+      due_date: manualInvoice.value.due_date,
+      status: 'pending_review' as const,
+      serials: validSerials,
+      line_items: lineItemsForStorage,
+      has_line_items: lineItemsForStorage.length > 0,
+      notes: notes,
+      bill_to: manualInvoice.value.bill_to || null
+    }
+
+    const response = await api.post('/invoice-management', invoiceData)
+
+    showAlert('Invoice created successfully', 'success')
+    showManualModal.value = false
+    resetManualInvoiceForm()
+    fetchInvoices()
+    fetchStats()
+  } catch (error: any) {
+    console.error('Error creating invoice:', error)
+    let errorMessage = 'Failed to create invoice'
+    if (axios.isAxiosError(error)) {
+      const status = error.response?.status
+      const data = error.response?.data
+
+      if (status === 422 && data?.errors) {
+        const errors = data.errors
+        if (errors.invoice_number) {
+          errorMessage = `Invoice already exists: ${errors.invoice_number[0]}`
+        }
+      } else {
+        errorMessage = data?.message || `Request failed with status code ${status}`
+      }
+    } else if (error instanceof Error) {
+      errorMessage = error.message
+    }
+    showAlert(errorMessage, 'error')
+  } finally {
+    submitting.value = false
   }
+}
 
-  // Watch for changes in products to update the amount
-  watch(() => manualInvoice.value.products, () => {
-    manualInvoice.value.amount = calculateTotalAmount();
-  }, { deep: true });
+function resetManualInvoiceForm() {
+  manualInvoice.value = {
+    invoice_number: '',
+    clinic_id: clinics.value.length > 0 ? clinics.value[0].clinic_id.toString() : '',
+    invoice_date: '',
+    due_date: '',
+    amount: 0,
+    bill_to: '',
+    products: [
+      {
+        name: '',
+        size: '',
+        unit_price: 0,
+        quantity: 1,
+        serials: ['']
+      }
+    ]
+  }
+}
 
-  // Watch for changes in edit line items to update the amount field for backend submission
-  watch(() => invoiceToEdit.value?.line_items, () => {
-    // We don't automatically update the amount field to avoid interfering with change detection
-    // The amount will be updated when the form is submitted
-  }, { deep: true });
-
-  // Lifecycle
-  onMounted(() => {
-    fetchClinics().then(() => {
-      fetchInvoices()
-      fetchStats()
-    })
+// Product management functions
+function addProduct() {
+  manualInvoice.value.products.push({
+    name: '',
+    size: '',
+    unit_price: 0,
+    quantity: 1,
+    serials: ['']
   })
+}
+
+function calculateTotalAmount() {
+  return manualInvoice.value.products.reduce((total, product) => {
+    return total + (product.unit_price * (product.quantity || 1));
+  }, 0);
+}
+
+function removeProduct(index: number) {
+  if (manualInvoice.value.products.length > 1) {
+    manualInvoice.value.products.splice(index, 1)
+  }
+}
+
+function addProductSerial(productIndex: number) {
+  manualInvoice.value.products[productIndex].serials.push('')
+}
+
+function removeProductSerial(productIndex: number, serialIndex: number) {
+  const product = manualInvoice.value.products[productIndex]
+  if (product.serials.length > 1) {
+    product.serials.splice(serialIndex, 1)
+  }
+}
+
+function viewInvoiceDetails(invoice: Invoice) {
+  selectedInvoice.value = invoice
+  showInvoiceModal.value = true
+}
+
+function markAsPaid(invoice: Invoice) {
+  invoiceToMarkPaid.value = invoice
+  paymentData.value = {
+    paid_amount: invoice.amount,
+    payment_method: '',
+    payment_reference: ''
+  }
+  showMarkPaidModal.value = true
+}
+
+async function confirmMarkAsPaid() {
+  if (!invoiceToMarkPaid.value || !paymentData.value.paid_amount) return
+
+  try {
+    const response = await api.post(`/invoice-management/${invoiceToMarkPaid.value.id}/status`, {
+      status: 'paid',
+      paid_amount: paymentData.value.paid_amount,
+      payment_method: paymentData.value.payment_method,
+      payment_reference: paymentData.value.payment_reference
+    })
+
+    showAlert('Invoice marked as paid', 'success')
+    showMarkPaidModal.value = false
+    invoiceToMarkPaid.value = null
+    fetchInvoices()
+    fetchStats()
+  } catch (error) {
+    console.error('Error marking invoice as paid:', error)
+    showAlert(error instanceof Error ? error.message : 'Failed to mark invoice as paid', 'error')
+  }
+}
+
+function reviewExtractedData(invoice: Invoice) {
+  invoiceUnderReview.value = JSON.parse(JSON.stringify(invoice))
+  showReviewModal.value = true
+}
+
+function linkToOrder(invoice: Invoice) {
+  selectedInvoice.value = invoice
+  showReviewModal.value = true
+}
+
+// Delete invoice function
+function deleteInvoice() {
+  if (!invoiceToDelete.value) return
+
+  api.delete(`/invoice-management/${invoiceToDelete.value.id}`)
+    .then(() => {
+      showAlert('Invoice deleted successfully', 'success')
+      // Remove the deleted invoice from the invoices array
+      invoices.value = invoices.value.filter(invoice => invoice.id !== invoiceToDelete.value!.id)
+      invoiceToDelete.value = null
+      fetchStats()
+    })
+    .catch(error => {
+      console.error('Error deleting invoice:', error)
+      if (axios.isAxiosError(error)) {
+        console.error('Axios error details:', error.response?.data, error.response?.status);
+      }
+      showAlert(error instanceof Error ? error.message : 'Failed to delete invoice', 'error')
+    })
+}
+
+// Line item management functions
+function addLineItem() {
+  if (extractedInvoiceData.value && extractedInvoiceData.value.line_items) {
+    extractedInvoiceData.value.line_items.push({
+      description: '',
+      size: '',
+      serial: '',
+      quantity: 1,
+      amount: 0
+    });
+  }
+}
+
+function addEditLineItem() {
+  if (invoiceToEdit.value && invoiceToEdit.value.line_items) {
+    invoiceToEdit.value.line_items.push({
+      description: '',
+      size: '',
+      serial: '',
+      quantity: 1,
+      amount: 0
+    });
+  }
+}
+
+function calculateEditTotalAmount() {
+  if (!invoiceToEdit.value || !invoiceToEdit.value.line_items) return 0;
+
+  return invoiceToEdit.value.line_items.reduce((total, item) => {
+    return total + (item.amount * (item.quantity || 1));
+  }, 0);
+}
+
+function resetLineItems() {
+  if (extractedInvoiceData.value) {
+    // Clear existing line items
+    extractedInvoiceData.value.line_items = [{
+      description: '',
+      size: '',
+      serial: '',
+      quantity: 1,
+      amount: 0
+    }];
+
+    // Clear other fields for manual entry
+    extractedInvoiceData.value.invoice_number = '';
+    extractedInvoiceData.value.amount = 0;
+    extractedInvoiceData.value.invoice_date = '';
+    extractedInvoiceData.value.due_date = '';
+    extractedInvoiceData.value.serials = [];
+    extractedInvoiceData.value.vendor = '';
+    extractedInvoiceData.value.notes = '';
+    extractedInvoiceData.value.payment_terms = '';
+  }
+}
+
+function removeLineItem(index: number) {
+  if (extractedInvoiceData.value && extractedInvoiceData.value.line_items) {
+    extractedInvoiceData.value.line_items.splice(index, 1);
+  }
+}
+
+function removeEditLineItem(index: number) {
+  if (invoiceToEdit.value && invoiceToEdit.value.line_items) {
+    invoiceToEdit.value.line_items.splice(index, 1);
+  }
+}
+
+// Parse line items from notes
+function parseLineItems(notes: string) {
+  const lines = notes.split('\n');
+  const lineItems = [];
+  let inLineItemsSection = false;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    // Check for both formats: "Line Items:" and "Line Items :"
+    if (line.startsWith('Line Items:') || line.startsWith('Line Items :')) {
+      inLineItemsSection = true;
+      continue;
+    }
+
+    if (inLineItemsSection) {
+      // Look for product entries in the format:
+      // Product Name (Size)
+      // S/N: serial_number
+      // $price x quantity = $total
+      if (line.trim() !== '' && !line.startsWith('S/N: ') && !line.startsWith('$') && !line.startsWith('Raw Extracted Text')) {
+        // This is a product name line
+        // Try to match format with parentheses first: "Product Name (Size)"
+        let productNameMatch = line.match(/(.+)\s*\((.+)\)/);
+        let productName, productSize;
+
+        if (productNameMatch) {
+          // Format: "Product Name (Size)"
+          productName = productNameMatch[1].trim();
+          productSize = productNameMatch[2].trim();
+        } else {
+          // Format: "Product Name Size" (like "Amnio-Maxx Dual Layer Amnion Patch 2x2cm")
+          // Try to extract common size patterns
+          const sizePatterns = [/\s+(\d+x\d+cm)$/, /\s+(\d+cm)$/, /\s+(\d+x\d+)$/, /\s+(\d+\.\d+cm)$/, /\s+(\d+\.\d+x\d+\.\d+cm)$/];
+          let foundSize = false;
+
+          for (const pattern of sizePatterns) {
+            const match = line.match(pattern);
+            if (match) {
+              productSize = match[1];
+              productName = line.replace(pattern, '').trim();
+              foundSize = true;
+              break;
+            }
+          }
+
+          if (!foundSize) {
+            // No recognizable size pattern, treat entire line as product name
+            productName = line.trim();
+            productSize = '';
+          }
+        }
+
+        // Get the next lines for serial and pricing info
+        const serialLine = i + 1 < lines.length ? lines[i + 1] : '';
+        const pricingLine = i + 2 < lines.length ? lines[i + 2] : '';
+
+        let serials: string[] = [];
+        let unitPrice = 0;
+        let quantity = 0;
+        let total = 0;
+
+        // Parse serials
+        if (serialLine.startsWith('S/N: ')) {
+          serials.push(serialLine.replace('S/N: ', '').trim());
+          // Check for additional serials
+          let nextIndex = i + 2;
+          while (nextIndex < lines.length && lines[nextIndex].startsWith('S/N: ')) {
+            serials.push(lines[nextIndex].replace('S/N: ', '').trim());
+            nextIndex++;
+          }
+        }
+
+        // Parse pricing info
+        if (pricingLine.startsWith('$')) {
+          const pricingMatch = pricingLine.match(/\$(.+) x (.+) = \$(.+)/);
+          if (pricingMatch) {
+            unitPrice = parseFloat(pricingMatch[1]) || 0;
+            quantity = parseInt(pricingMatch[2]) || 0;
+            total = parseFloat(pricingMatch[3]) || 0;
+          }
+        }
+
+        lineItems.push({
+          name: productName,
+          size: productSize,
+          serials: serials,
+          unit_price: unitPrice,
+          quantity: quantity,
+          total: total
+        });
+
+        // Skip the processed lines
+        i += 2 + (serials.length > 1 ? serials.length - 1 : 0);
+      } else if (line.startsWith('Raw Extracted Text') || line.trim() === '') {
+        // Stop parsing when we hit the raw text section or an empty line that might indicate end of section
+        // Only break if we've already found some line items
+        if (lineItems.length > 0 && line.startsWith('Raw Extracted Text')) {
+          break;
+        }
+      }
+    }
+  }
+
+  return lineItems;
+}
+
+// Watch for changes in products to update the amount
+watch(() => manualInvoice.value.products, () => {
+  manualInvoice.value.amount = calculateTotalAmount();
+}, { deep: true });
+
+// Watch for changes in edit line items to update the amount field for backend submission
+watch(() => invoiceToEdit.value?.line_items, () => {
+  // We don't automatically update the amount field to avoid interfering with change detection
+  // The amount will be updated when the form is submitted
+}, { deep: true });
+
+// Lifecycle
+onMounted(() => {
+  fetchClinics().then(() => {
+    fetchInvoices()
+    fetchStats()
+  })
+})
 </script>

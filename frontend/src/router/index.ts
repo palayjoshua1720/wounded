@@ -10,6 +10,7 @@ import InventoryManagementView from '@/views/InventoryManagementView.vue'
 import InvoiceManagementView from '@/views/InvoiceManagementView.vue'
 import IVRManagementView from '@/views/IVRManagementView.vue'
 import GraftSizeManagementView from '@/views/GraftSizeManagementView.vue'
+import ProductManagementView from '@/views/ProductManagementView.vue'
 import NotificationCenterView from '@/views/NotificationCenterView.vue'
 import OrderManagementView from '@/views/OrderManagementView.vue'
 import ReportCenterView from '@/views/ReportCenterView.vue'
@@ -33,7 +34,7 @@ import InvalidMagicLinkView from '@/views/InvalidMagicLinkView.vue'
 import { pageLoader } from '@/composables/ui/usePageLoader'
 
 // Icons
-import { LayoutDashboard, UsersRound, Hospital, Factory, Package, ShieldCheck, ShoppingCart, ClipboardList, PencilRuler, ScanBarcode, BellRing, ChartColumn, CircleUserRound, Calculator, RotateCcw } from 'lucide-vue-next'
+import { LayoutDashboard, UsersRound, Hospital, Factory, Package, ShieldCheck, ShoppingCart, ClipboardList, PencilRuler, ScanBarcode, BellRing, ChartColumn, CircleUserRound, Calculator, RotateCcw, Layers } from 'lucide-vue-next'
 
 // Types
 interface NavigationItem {
@@ -178,8 +179,18 @@ const routes: RouteRecordRaw[] = [
 				component: GraftSizeManagementView,
 				meta: {
 					requiresAuth: true,
-					title: 'Graft Size',
+					title: 'Products',
 					icon: PencilRuler
+				}
+			},
+			{
+				path: 'product-management',
+				name: 'product-management',
+				component: ProductManagementView,
+				meta: {
+					requiresAuth: true,
+					title: 'Products',
+					icon: Layers
 				}
 			},
 			// IVR Management
@@ -589,6 +600,7 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 		'manufacturer-management': [0, 1],
 		'brand-management': [0, 1],
 		'graft-size-management': [0, 1],
+		'product-management': [0, 1],
 		// IVR Management
 		'admin-ivr-management': [0],
 		'office-staff-ivr-management': [1],
@@ -641,7 +653,8 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 					'clinic-management',
 					'manufacturer-management',
 					'brand-management',
-					'graft-size-management',
+					// 'graft-size-management',
+					'product-management',
 					'admin-ivr-management',
 					'admin-order-management',
 					'admin-invoice-management',
@@ -659,7 +672,8 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 					'clinic-management',
 					'manufacturer-management',
 					'brand-management',
-					'graft-size-management',
+					// 'graft-size-management',
+					'product-management',
 					'office-staff-ivr-management',
 					'office-staff-order-management',
 					'office-staff-invoice-management',
