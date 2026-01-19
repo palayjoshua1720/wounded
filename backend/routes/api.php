@@ -15,6 +15,8 @@ use App\Http\Controllers\Api\SampleController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\InventoryController;
+use App\Http\Controllers\Api\DashboardController;
+
 
 
 // System Info
@@ -73,7 +75,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/management/manufacturers/{id}/toggle', [ManufacturerController::class, 'toggleManufacturerStatus']);
     Route::delete('/management/manufacturers/{id}', [ManufacturerController::class, 'deleteManufacturer']);
     Route::post('/management/manufacturers/{id}', [ManufacturerController::class, 'updateManufacturer']);
-    Route::get('/management/manufacturers/{id}/download', [ManufacturerController::class, 'downloadIVRForm']);
+    Route::get('/management/manufacturers/{id}/download/{type}', [ManufacturerController::class, 'downloadFile']);
 
     // User management routes
     Route::get('/users/stats', [UserController::class, 'stats']);
@@ -115,6 +117,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/management/brands/{id}/archive', [BrandController::class, 'archiveBrand']);
     Route::get('/management/brands/{id}/toggle', [BrandController::class, 'toggleBrandStatus']);
     Route::delete('/management/brands/{id}', [BrandController::class, 'deleteBrand']);
+    // Route::get('/management/brands/stats', [BrandController::class, 'getBrandStats']);
 
     // Graft Size 
     Route::get('/management/graft-sizes', [GraftSizeController::class, 'getAllGraftSizes']);
@@ -135,17 +138,17 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/management/order/getbrands', [OrderController::class, 'getAllPatients']);
     Route::get('/management/order/getgraftsizes', [OrderController::class, 'getAllGraftSizes']);
     Route::get('/management/order/users/getpatients', [OrderController::class, 'getAllPatients']);
- 
- 
+
+
     Route::post('/management/order/add/neworder', [OrderController::class, 'addNewOrder']);
     Route::put('/management/order/update/{id}/updateorder', [OrderController::class, 'updateOrder']);
     Route::put('/management/order/delete/{id}/deleteorder', [OrderController::class, 'deleteOrder']);
     Route::put('/management/order/update/{id}/updateorderstatus', [OrderController::class, 'updateOrderStatus']);
     Route::put('/management/magicorder/update/{id}/updateorderstatus', [OrderController::class, 'updateMagicOrderStatus']);
     Route::post('/management/order/update/{id}/followuporderstatus', [OrderController::class, 'followUpOrder']);
- 
+
     Route::get('/management/manufacturer/order/getmanufacturerorders', [OrderController::class, 'getAllOrdersByManufacturers']);
- 
+
     Route::get('/management/manufacturer/order/getclinicorders', [OrderController::class, 'getAllOrdersByClinics']);
     Route::get('/auth/me-with-clinic', [OrderController::class, 'userWithClinic']);
     Route::post('/management/order/add/neworderbyclinic', [OrderController::class, 'addNewOrderByClinic']);
@@ -161,4 +164,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/inventory/usage-logs/{id}', [InventoryController::class, 'updateUsageLog']);
     Route::patch('/inventory/{id}/status', [InventoryController::class, 'updateInventoryStatus']);
     Route::delete('/inventory/usage-logs/{id}', [InventoryController::class, 'deleteUsageLog']);
+
+    // Dashboard
+    Route::get('/dashboard/stats', [DashboardController::class, 'getStats']);
+    Route::get('/dashboard/recent-activity', [DashboardController::class, 'recentActivity']);
 });

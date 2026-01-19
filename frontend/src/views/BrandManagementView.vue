@@ -270,21 +270,21 @@
 						</div>
 
 						<div>
-                            <label class="block text-sm font-medium text-gray-600 dark:text-gray-400">MUE (Medically Unlikely Edits)<span class="text-red-500">*</span></label>
-                            <div class="relative">
-                                <Hash class="absolute left-3 top-3 w-4 h-4 text-gray-400" />
-                                <input
-                                v-model.number="formData.mue"
-                                type="number"
-                                min="1"
-                                required
-                                placeholder="Enter MUE value"
-                                class="mt-1 block w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg 
-                                        focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                                />
-                            </div>
-                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Maximum units allowed per day per patient</p>
-                        </div>
+              <label class="block text-sm font-medium text-gray-600 dark:text-gray-400">MUE (Medically Unlikely Edits)<span class="text-red-500">*</span></label>
+              <div class="relative">
+                  <Hash class="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+                  <input
+                  v-model.number="formData.mue"
+                  type="number"
+                  min="1"
+                  required
+                  placeholder="Enter MUE value"
+                  class="mt-1 block w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg 
+                          focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  />
+              </div>
+              <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Maximum units allowed per day per patient</p>
+          </div>
 
 						<!-- Logo Upload Section -->
 						<div class="sm:col-span-2">
@@ -292,38 +292,47 @@
 								<Image class="w-5 h-5 text-green-500" />
 								<h3 class="text-md font-semibold text-gray-900 dark:text-gray-100">Brand Logo (Optional)</h3>
 							</div>
-							<div
+
+							<!-- Drag & Drop Area (only shown when no image selected) -->
+							<div v-if="!selectedLogoFile && !formData.logoUrl"
 								class="mt-1 flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer
-									bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition"
-								@drop="handleLogoDrop"
-								@dragover="allowLogoDrop"
-							>
-								<input
-									id="logo-upload"
-									type="file"
-									accept="image/png,image/jpeg,image/jpg"
-									class="hidden"
-									@change="handleLogoChange"
-								/>
-								<label for="logo-upload" class="flex flex-col items-center justify-center text-center cursor-pointer">
-									<svg class="w-10 h-10 mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-											d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6h.1a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-									</svg>
+										bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition cursor-pointer"
+								@drop.prevent="handleLogoDrop"
+								@dragover.prevent="allowLogoDrop">
+								<input id="logo-upload" type="file" accept="image/png,image/jpeg,image/jpg" class="hidden" @change="handleLogoChange" />
+								<label for="logo-upload" class="flex flex-col items-center justify-center text-center">
+									<UploadCloud class="w-10 h-10 mb-3 text-gray-400" />
 									<p class="mb-2 text-sm text-gray-500 dark:text-gray-400">
-										<span class="font-semibold">Click to upload</span> or drag and drop
+										<span class="font-semibold text-purple-600 dark:text-purple-400">Click to upload</span> or drag and drop
 									</p>
-									<p class="text-xs text-gray-500 dark:text-gray-400">JPEG, JPG, or PNG (max. 2MB)</p>
+									<p class="text-xs text-gray-500 dark:text-gray-400">JPEG, JPG, PNG (max. 2MB)</p>
 								</label>
 							</div>
-							<div v-if="selectedLogoFile" class="mt-2 flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-								<Image class="w-4 h-4 text-gray-400" />
-								<span>Selected: <span class="font-medium">{{ selectedLogoFile.name }}</span></span>
+
+							<!-- Selected (cropped) file preview -->
+							<div v-if="selectedLogoFile"
+								class="mt-3 flex items-center justify-between gap-3 text-sm text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 px-3 py-2 rounded-lg">
+								<div class="flex items-center gap-2">
+									<Image class="w-4 h-4 text-gray-400" />
+									<span>Selected: <span class="font-medium">{{ selectedLogoFile.name }}</span></span>
+									<img :src="formData.logoUrl" class="w-8 h-8 rounded object-cover ml-2 border" />
+								</div>
+								<button @click="removeCurrentLogo" class="text-red-500 hover:text-red-600 transition">
+									<X class="w-5 h-5" />
+								</button>
 							</div>
-							<div v-else-if="formData.logoUrl" class="mt-2 flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-								<Image class="w-4 h-4 text-gray-400" />
-								<span>Current: <img :src="formData.logoUrl" class="w-6 h-6 rounded object-cover inline ml-1" /> {{ formData.logoUrl.split('/').pop() }}</span>
-								<button @click="removeCurrentLogo" class="ml-2 text-red-500 hover:text-red-700 text-xs">Remove</button>
+
+							<!-- Existing logo preview (when editing) -->
+							<div v-else-if="formData.logoUrl && !selectedLogoFile"
+								class="mt-3 flex items-center justify-between gap-3 text-sm text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 px-3 py-2 rounded-lg">
+								<div class="flex items-center gap-2">
+									<Image class="w-4 h-4 text-gray-400" />
+									<span>Current logo:</span>
+									<img :src="formData.logoUrl" class="w-8 h-8 rounded object-cover border" />
+								</div>
+								<button @click="removeCurrentLogo" class="text-red-500 hover:text-red-600 transition">
+									<X class="w-5 h-5" />
+								</button>
 							</div>
 						</div>
 
@@ -343,7 +352,7 @@
 					</div>
 				</div>
 
-                <!-- Graft Sizes -->
+        		<!-- Graft Sizes -->
 				<div>
 					<div class="flex items-center gap-2 mb-2">
 						<PencilRuler class="w-5 h-5 text-green-500" />
@@ -455,7 +464,7 @@
 		</BaseModal>
 
 		<!-- Logo Cropper Modal -->
-        <BaseModal v-model="showLogoCropModal" title="Crop Logo" max-width="520px">
+      <BaseModal v-model="showLogoCropModal" title="Crop Logo" max-width="520px">
         <div class="p-6 space-y-6">
             <!-- Instructions -->
             <div class="text-center">
@@ -532,9 +541,7 @@
                             :disabled="logoScale <= 0.5"
                             class="flex items-center justify-center w-10 h-10 rounded-xl bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200 shadow-sm hover:shadow"
                         >
-                            <svg class="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/>
-                            </svg>
+                        <Minus class="w-5 h-5 text-gray-500" />
                         </button>
                         
                         <div class="flex-1 relative">
@@ -558,34 +565,28 @@
                             :disabled="logoScale >= 3"
                             class="flex items-center justify-center w-10 h-10 rounded-xl bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200 shadow-sm hover:shadow"
                         >
-                            <svg class="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                            </svg>
+                        <Plus class="w-5 h-5 text-gray-500" />
                         </button>
                     </div>
                 </div>
 
                 <!-- Action Buttons -->
                 <div class="flex flex-wrap gap-3 justify-center">
-                    <button
-                        @click="logoResetPosition"
-                        class="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-600 transition-all duration-200 shadow-sm hover:shadow"
-                    >
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                        </svg>
+                  <button
+                      @click="logoResetPosition"
+                      class="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-600 transition-all duration-200 shadow-sm hover:shadow"
+                  >
+						      <RefreshCw class="w-5 h-5 text-gray-500" />
                         Reset View
-                    </button>
+                  </button>
                     
-                    <button
-                        @click="logoSelectNewImage"
-                        class="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-all duration-200 shadow-sm hover:shadow"
-                    >
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                        </svg>
-                        Change Image
-                    </button>
+                  <button
+                      @click="logoSelectNewImage"
+                      class="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-all duration-200 shadow-sm hover:shadow"
+                  >
+                      <Image class="w-5 h-5 text-blue-500" />
+                      Change Image
+                  </button>
                 </div>
             </div>
         </div>
@@ -603,9 +604,6 @@
                     @click="logoConfirmCrop"
                     class="flex items-center gap-2 px-6 py-2.5 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl hover:from-blue-700 hover:to-indigo-700 shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-[1.02]"
                 >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                    </svg>
                     Apply Crop
                 </button>
             </div>
@@ -791,8 +789,35 @@
 				</div>
 			</template>
 		</BaseModal>
-
 	</div>
+
+	<div v-if="isLoadingFile" class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 max-w-sm w-full mx-4 animate-in fade-in zoom-in duration-200">
+        <div class="flex flex-col items-center space-y-6">
+          <div class="relative">
+            <svg class="w-16 h-16 text-blue-600" viewBox="0 0 58 58">
+              <circle cx="29" cy="29" r="26" stroke="currentColor" stroke-opacity="0.2" stroke-width="4" fill="none"/>
+              <circle 
+                cx="29" cy="29" r="26" 
+                stroke="currentColor" 
+                stroke-width="4" 
+                fill="none"
+                stroke-dasharray="164" 
+                :stroke-dashoffset="164 - (164 * loadProgress / 100)"
+                class="origin-center -rotate-90 transition-all duration-300 ease-out"
+              />
+            </svg>
+            <div class="absolute inset-0 flex items-center justify-center">
+              <Package class="w-8 h-8 text-blue-600 animate-pulse"/>
+            </div>
+          </div>
+          <div class="text-center">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Preparing file...</h3>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ loadProgress }}% complete</p>
+          </div>
+        </div>
+      </div>
+    </div>
 </template>
 
 <script setup lang="ts">
@@ -802,7 +827,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import BaseModal from '@/components/common/BaseModal.vue'
 import Pagination from '@/components/ui/Pagination.vue'
 import ContentLoader from '@/components/ui/ContentLoader.vue'
-import { Package, PackagePlus, Eye, SquarePen, Trash2, Archive, CircleCheck, CircleX, Factory, TriangleAlert, Hash, RulerDimensionLine, Diameter, DollarSign, PencilRuler, Plus, Search, Funnel, Globe, Ruler, PackageOpen, PackageSearch, ChevronDown, Image } from 'lucide-vue-next'
+import { Package, PackagePlus, Eye, SquarePen, Trash2, Archive, CircleCheck, CircleX, Factory, TriangleAlert, Hash, RulerDimensionLine, Diameter, DollarSign, PencilRuler, Plus, Search, Funnel, Globe, Ruler, PackageOpen, PackageSearch, ChevronDown, Image, UploadCloud, X, RefreshCw, Minus, PenLine } from 'lucide-vue-next'
 import api from '@/services/api'
 import axios from "axios";
 
@@ -810,12 +835,12 @@ const toast = useToast()
 
 // types
 interface GraftSize {
-  id?: number  // Optional: graft_size_id from backend (for edit/delete)
+  id?: number  
   size: string
   area: number | null
   price: number | null
-  graftStatus?: number  // Optional: 0=Active, 1=Inactive, 2=Archive
-  stock?: number  // Added stock field
+  graftStatus?: number  
+  stock?: number 
 }
 
 interface SimpleManufacturer {
@@ -913,12 +938,12 @@ async function getAllBrands(page = 1) {
       logoUrl: b.logoUrl,
       description: b.description,
      graftSizes: (b.graftSizes || []).map((s: any) => ({
-        id: s.id,                        // graft_size_id
+        id: s.id,
         size: s.size,
         area: s.area,
         price: s.price,
-        stock: s.stock || 0,  // Added stock field
-        graftStatus: s.graftStatus || 0  // Default active
+        stock: s.stock || 0,
+        graftStatus: s.graftStatus || 0  
       })),
       createdAt: b.createdAt,
       updatedAt: b.updatedAt,
@@ -946,7 +971,7 @@ function editBrand(b: Brand) {
 		logoUrl: b.logoUrl || '',
 		description: b.description || '',
 		graftSizes: b.graftSizes.length > 0 
-		? b.graftSizes.map((s: GraftSize) => ({  // Preserve id/graftStatus
+		? b.graftSizes.map((s: GraftSize) => ({
 			id: s.id,
 			size: s.size,
 			area: s.area,
@@ -960,7 +985,7 @@ function editBrand(b: Brand) {
 }
 
 function addGraftSize() {
-  formData.value.graftSizes.push({ size: '', area: null, price: null, stock: 0 })  // Added stock field with default value
+  formData.value.graftSizes.push({ size: '', area: null, price: null, stock: 0 })
 }
 
 function removeGraftSize(index: number) {
@@ -980,16 +1005,16 @@ async function handleSubmitForm() {
     form.append('manufacturerId', (formData.value.manufacturerId ?? '').toString())
     form.append('mue', formData.value.mue ? formData.value.mue.toString() : '')
     form.append('description', formData.value.description || '')
-	if (selectedLogoFile.value) {  // Append logo file
+
+    // === LOGO HANDLING – FIXED ORDER (100% reliable) ===
+    if (selectedLogoFile.value) {
       form.append('logo', selectedLogoFile.value)
-    }
-    // Pass removal flags so backend can delete existing files when requested
-    if (removeLogoFlag.value) {
-        form.append('remove_logo', '1')
+    } else if (removeLogoFlag.value) {
+      form.append('remove_logo', '1')
     }
 
-    // Append graft sizes as JSON
-   form.append('graftSizes', JSON.stringify(formData.value.graftSizes))
+    // Graft sizes as JSON
+    form.append('graftSizes', JSON.stringify(formData.value.graftSizes))
 
     if (showCreateForm.value) {
       await api.post('/management/brands', form, {
@@ -998,7 +1023,7 @@ async function handleSubmitForm() {
           'Content-Type': 'multipart/form-data'
         }
       })
-	  toast.success('Brand created!')
+      toast.success('Brand created!')
     } else if (showEditForm.value && selectedBrand.value) {
       await api.post(`/management/brands/${selectedBrand.value.id}`, form, {
         headers: {
@@ -1006,14 +1031,15 @@ async function handleSubmitForm() {
           'Content-Type': 'multipart/form-data'
         }
       })
-	  toast.success('Brand updated!')
+      toast.success('Brand updated!')
     }
 
     closeForm()
     getAllBrands(1)
-  } catch (error) {
+
+  } catch (error: any) {
     console.error(error.response?.data || error)
-    toast.error('Something went wrong!')
+    toast.error(error.response?.data?.message || 'Something went wrong!')
   }
 }
 
@@ -1141,6 +1167,22 @@ const filteredBrands = computed(() => {
     return matchesSearch && matchesStatus
   })
 })
+
+const isLoadingFile = ref(false)
+const loadProgress = ref(0)
+
+const simulateLoading = () => {
+    isLoadingFile.value = true
+    loadProgress.value = 0
+    const interval = setInterval(() => {
+        if (loadProgress.value >= 100) {
+            clearInterval(interval)
+            isLoadingFile.value = false
+            return
+        }
+        loadProgress.value += 10
+    }, 80)
+}
 
 // file handling
 const selectedFile = ref<File | null>(null)
@@ -1362,23 +1404,75 @@ function logoSelectNewImage() {
 }
 
 async function logoConfirmCrop() {
-    if (!logoCanvas.value || !logoSelectedImage.value || !logoPendingFile) return
-    const canvasEl = logoCanvas.value
-    canvasEl.toBlob((blob) => {
-        if (!blob) return
-        const newFile = new File([blob], logoPendingFile!.name, { type: blob.type })
-        selectedLogoFile.value = newFile
-        revokeLogoObjectUrl()
-        logoObjectUrl.value = URL.createObjectURL(newFile)
-        formData.value.logoUrl = logoObjectUrl.value
-        removeLogoFlag.value = false
-        showLogoCropModal.value = false
-        if (logoImageSrc.value && logoImageSrc.value.startsWith('blob:')) URL.revokeObjectURL(logoImageSrc.value)
-        logoImageSrc.value = null
-        logoSelectedImage.value = null
-        logoPendingFile = null
-    }, 'image/png')
+  if (!logoCanvas.value || !logoSelectedImage.value || !logoPendingFile) return
+
+  // Start the beautiful loader FIRST
+  simulateLoading()
+
+  try {
+    const blob = await new Promise<Blob | null>((resolve) => {
+      logoCanvas.value!.toBlob((b) => resolve(b), 'image/png')
+    })
+
+    if (!blob) throw new Error('Failed to generate image')
+
+    const newFile = new File([blob], logoPendingFile.name, { type: 'image/png' })
+
+    selectedLogoFile.value = newFile
+    revokeLogoObjectUrl()
+    logoObjectUrl.value = URL.createObjectURL(newFile)
+    formData.value.logoUrl = logoObjectUrl.value
+    removeLogoFlag.value = false
+
+    // Now safe to close modal
+    showLogoCropModal.value = false
+
+    // Cleanup
+    if (logoImageSrc.value?.startsWith('blob:')) {
+      URL.revokeObjectURL(logoImageSrc.value)
+    }
+    logoImageSrc.value = null
+    logoSelectedImage.value = null
+    logoPendingFile = null
+
+  } catch (err) {
+    console.error('Crop error:', err)
+    toast.error('Failed to process image')
+    isLoadingFile.value = false
+  }
 }
+
+// async function logoConfirmCrop() {
+//     if (!logoCanvas.value || !logoSelectedImage.value || !logoPendingFile) return
+
+//     const canvasEl = logoCanvas.value
+
+//     canvasEl.toBlob((blob) => {
+//         if (!blob) return
+
+//         const newFile = new File([blob], logoPendingFile!.name, { type: 'image/png' })
+
+//         selectedLogoFile.value = newFile
+//         revokeLogoObjectUrl() // clean any previous blob
+//         logoObjectUrl.value = URL.createObjectURL(newFile)
+
+//         // This is the crucial line – show the cropped image in the form preview
+//         formData.value.logoUrl = logoObjectUrl.value
+
+//         removeLogoFlag.value = false
+//         showLogoCropModal.value = false
+
+//         // Cleanup temporary image
+//         if (logoImageSrc.value && logoImageSrc.value.startsWith('blob:')) {
+//             URL.revokeObjectURL(logoImageSrc.value)
+//         }
+//         logoImageSrc.value = null
+//         logoSelectedImage.value = null
+//         logoPendingFile = null
+//     }, 'image/png')
+
+//     simulateLoading() // if you want the same progress bar
+// }
 
 function logoCancelCrop() {
     showLogoCropModal.value = false
@@ -1391,8 +1485,8 @@ function logoCancelCrop() {
 function removeCurrentLogo() {
     removeLogoFlag.value = true
     selectedLogoFile.value = null
-    formData.value.logoUrl = ''
-    revokeLogoObjectUrl()
+    formData.value.logoUrl = ''        // clear preview
+    revokeLogoObjectUrl()              // clean blob URL
 }
 
 // cleanup object URLs on unmount

@@ -12,8 +12,9 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 use App\Traits\AuditLogger;
 use Illuminate\Support\Arr;
+use App\Models\Product;
 
-class GraftSizeController extends Controller
+class ProductController extends Controller
 {
     use AuditLogger;
 
