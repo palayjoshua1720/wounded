@@ -1,202 +1,209 @@
 <template>
 	<div class="space-y-6">
-		<div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-			<div class="flex items-center space-x-3 mb-6">
-				<div class="p-2 bg-purple-100 dark:bg-purple-900/20 rounded-lg">
-					<ChartBarSquareIcon class="w-6 h-6 text-purple-600 dark:text-purple-400" />
-				</div>
+		<!-- Report Type Selection Card -->
+		<div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+			<div class="flex items-center justify-between mb-6">
 				<div>
-					<h2 class="text-xl font-semibold text-gray-900 dark:text-white">Reports & Analytics</h2>
-					<p class="text-gray-600 dark:text-gray-400">Generate comprehensive reports and insights</p>
+					<h3 class="text-lg font-semibold text-gray-900 dark:text-white">Select Report Type</h3>
+					<p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Choose the type of report you want to generate</p>
 				</div>
 			</div>
-
-			<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-				<!-- Report Type Selection -->
-				<div class="lg:col-span-2">
-					<h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Select Report Type</h3>
-					<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-					<div
-						v-for="type in reportTypes"
-						:key="type.id"
-						@click="reportType = type.id"
-						:class="[
-						'p-4 border rounded-lg cursor-pointer transition-colors',
+			<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+				<div
+					v-for="type in reportTypes"
+					:key="type.id"
+					@click="reportType = type.id"
+					:class="[
+						'p-5 border-2 rounded-xl cursor-pointer transition-all duration-200 group hover:shadow-md',
 						reportType === type.id
-							? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20'
-							: 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
-						]"
-					>
-						<div class="flex items-center space-x-3">
-						<component 
-							:is="type.icon" 
-							:class="[
-							'w-6 h-6',
-							reportType === type.id ? 'text-purple-600 dark:text-purple-400' : 'text-gray-400 dark:text-gray-500'
-							]" 
-						/>
-						<div>
+							? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 shadow-sm'
+							: 'border-gray-200 dark:border-gray-600 hover:border-blue-300 dark:hover:border-blue-700'
+					]"
+				>
+					<div class="flex items-start space-x-4">
+						<div :class="[
+							'p-3 rounded-lg transition-all duration-200',
+							reportType === type.id 
+								? 'bg-blue-100 dark:bg-blue-900/40' 
+								: 'bg-gray-100 dark:bg-gray-700 group-hover:bg-blue-50 dark:group-hover:bg-blue-900/30'
+						]">
+							<component 
+								:is="type.icon" 
+								:class="[
+									'w-6 h-6 transition-colors duration-200',
+									reportType === type.id ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400 group-hover:text-blue-500'
+								]" 
+							/>
+						</div>
+						<div class="flex-1">
 							<h4 :class="[
-							'font-medium',
-							reportType === type.id ? 'text-purple-900 dark:text-purple-100' : 'text-gray-900 dark:text-white'
+								'font-semibold text-base mb-1',
+								reportType === type.id ? 'text-blue-900 dark:text-blue-100' : 'text-gray-900 dark:text-white'
 							]">
-							{{ type.name }}
+								{{ type.name }}
 							</h4>
 							<p :class="[
-							'text-sm',
-							reportType === type.id ? 'text-purple-700 dark:text-purple-300' : 'text-gray-600 dark:text-gray-400'
+								'text-sm leading-relaxed',
+								reportType === type.id ? 'text-blue-700 dark:text-blue-300' : 'text-gray-600 dark:text-gray-400'
 							]">
-							{{ type.description }}
+								{{ type.description }}
 							</p>
 						</div>
-						</div>
-					</div>
-					</div>
-				</div>
-
-				<!-- Filters -->
-				<div>
-					<h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Filters</h3>
-					<div class="space-y-4">
-						<div>
-							<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-							Date Range
-							</label>
-							<select
-							v-model="dateRange"
-							class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-							>
-								<option v-for="option in dateRangeOptions" :key="option.value" :value="option.value">
-									{{ option.label }}
-								</option>
-							</select>
-						</div>
-
-						<div v-if="dateRange === 'custom'" class="grid grid-cols-2 gap-2">
-							<div>
-								<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-									Start Date
-								</label>
-								<input
-									v-model="startDate"
-									type="date"
-									class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-								/>
-							</div>
-							<div>
-								<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-									End Date
-								</label>
-								<input
-									v-model="endDate"
-									type="date"
-									class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-								/>
-							</div>
-						</div>
-
-						<div>
-							<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-							Clinic
-							</label>
-							<select
-							v-model="clinicFilter"
-							class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-							>
-								<option value="all">All Clinics</option>
-								<option value="clinic-1">Metro Wound Care Center</option>
-								<option value="clinic-2">Advanced Healing Institute</option>
-							</select>
-						</div>
-
-						<div>
-							<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-							Brand
-							</label>
-							<select
-							v-model="brandFilter"
-							class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-							>
-								<option value="all">All Brands</option>
-								<option value="brand-1">DermaGraft Pro</option>
-								<option value="brand-2">HealMatrix Advanced</option>
-								<option value="brand-3">Biolab Skin Graft</option>
-							</select>
-						</div>
-
-						<button
-							@click="handleGenerateReport"
-							class="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-						>
-							<ChartBarIcon class="w-4 h-4 text-white" />
-							<span>Generate Report</span>
-						</button>
 					</div>
 				</div>
 			</div>
 		</div>
 
-		<!-- Report Preview -->
-		<div v-if="selectedReportType" class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-			<div class="flex items-center justify-between mb-6">
-				<h3 class="text-lg font-medium text-gray-900 dark:text-white">
-					{{ selectedReportType.name }} Preview
-				</h3>
-				<button 
-					@click="exportReport"
-					class="flex items-center space-x-2 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-				>
-					<ArrowDownTrayIcon class="w-4 h-4 text-gray-700 dark:text-gray-300" />
-					<span>Export</span>
-				</button>
-			</div>
-
-			<div class="space-y-6">
-				<!-- Graph Type Selector -->
-				<div class="flex items-center mb-2">
-					<label class="mr-2 text-sm font-medium text-gray-700 dark:text-gray-300">Graph Type:</label>
-					<select v-model="graphType" class="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-purple-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
-						<option value="area">Area</option>
-						<option value="line">Line</option>
-						<option value="bar">Bar</option>
+		<!-- Filters Card -->
+		<div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+			<h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Report Filters</h3>
+			<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+				<div>
+					<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+						Date Range
+					</label>
+					<select
+						v-model="dateRange"
+						class="w-full px-3 py-3 border-0 bg-gray-50 dark:bg-gray-700/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200"
+					>
+						<option v-for="option in dateRangeOptions" :key="option.value" :value="option.value">
+							{{ option.label }}
+						</option>
 					</select>
 				</div>
-				<!-- Chart.js Line Graph Area -->
-				<div class="h-64 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg flex items-center justify-center">
-					<canvas ref="chartRef" style="max-width:100%;max-height:100%;"></canvas>
+
+				<div v-if="dateRange === 'custom'" class="md:col-span-2">
+					<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+						Custom Date Range
+					</label>
+					<div class="grid grid-cols-2 gap-2">
+						<input
+							v-model="startDate"
+							type="date"
+							placeholder="Start Date"
+							class="w-full px-3 py-3 border-0 bg-gray-50 dark:bg-gray-700/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200"
+						/>
+						<input
+							v-model="endDate"
+							type="date"
+							placeholder="End Date"
+							class="w-full px-3 py-3 border-0 bg-gray-50 dark:bg-gray-700/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200"
+						/>
+					</div>
 				</div>
 
-				<!-- Sample Data Table -->
-				<div class="overflow-x-auto">
-					<table class="w-full">
-						<thead class="bg-gray-50 dark:bg-gray-700">
-							<tr>
-								<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-									Metric
-								</th>
-								<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-									Value
-								</th>
-								<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-									Change
-								</th>
-							</tr>
-						</thead>
-						<tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-							<tr v-for="row in tableData" :key="row.metric">
-								<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
-									{{ row.metric }}
-								</td>
-								<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-									{{ row.value }}
-								</td>
-								<td class="px-6 py-4 whitespace-nowrap text-sm text-green-600 dark:text-green-400">
-									{{ row.change }}
-								</td>
-							</tr>
-						</tbody>
-					</table>
+				<div :class="dateRange === 'custom' ? '' : 'md:col-span-2'">
+					<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+						Clinic
+					</label>
+					<select
+						v-model="clinicFilter"
+						class="w-full px-3 py-3 border-0 bg-gray-50 dark:bg-gray-700/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200"
+					>
+						<option value="all">All Clinics</option>
+						<option value="clinic-1">Metro Wound Care Center</option>
+						<option value="clinic-2">Advanced Healing Institute</option>
+					</select>
 				</div>
+
+				<div>
+					<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+						Brand
+					</label>
+					<select
+						v-model="brandFilter"
+						class="w-full px-3 py-3 border-0 bg-gray-50 dark:bg-gray-700/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200"
+					>
+						<option value="all">All Brands</option>
+						<option value="brand-1">DermaGraft Pro</option>
+						<option value="brand-2">HealMatrix Advanced</option>
+						<option value="brand-3">Biolab Skin Graft</option>
+					</select>
+				</div>
+			</div>
+			
+			<div class="mt-6 flex items-center gap-3">
+				<button
+					@click="handleGenerateReport"
+					class="flex items-center justify-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg group"
+				>
+					<ChartBarIcon class="w-5 h-5 text-white group-hover:scale-110 transition-transform" />
+					<span>Generate Report</span>
+				</button>
+				<button
+					v-if="selectedReportType"
+					@click="exportReport"
+					class="flex items-center space-x-2 px-6 py-3 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200"
+				>
+					<ArrowDownTrayIcon class="w-5 h-5" />
+					<span>Export Report</span>
+				</button>
+			</div>
+		</div>
+
+		<!-- Report Preview -->
+		<div v-if="selectedReportType" class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+			<div class="p-6">
+				<div class="flex items-center justify-between mb-6">
+					<div class="flex items-center space-x-3">
+						<div class="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+							<component :is="selectedReportType.icon" class="w-5 h-5 text-blue-600 dark:text-blue-400" />
+						</div>
+						<div>
+							<h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+								{{ selectedReportType.name }}
+							</h3>
+							<p class="text-sm text-gray-600 dark:text-gray-400">{{ selectedReportType.description }}</p>
+						</div>
+					</div>
+					<div class="relative">
+						<label class="text-sm font-medium text-gray-700 dark:text-gray-300 mr-2">Visualization:</label>
+						<select v-model="graphType" class="px-3 py-2 border-0 bg-gray-50 dark:bg-gray-700/50 rounded-lg focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white">
+							<option value="area">Area Chart</option>
+							<option value="line">Line Chart</option>
+							<option value="bar">Bar Chart</option>
+						</select>
+					</div>
+				</div>
+
+				<!-- Chart Visualization -->
+				<div class="mb-6">
+					<div class="bg-gradient-to-br from-gray-50 to-gray-100/50 dark:from-gray-700/30 dark:to-gray-800/30 border border-gray-200 dark:border-gray-600 rounded-xl p-6">
+						<canvas ref="chartRef" style="max-width:100%;max-height:400px;"></canvas>
+					</div>
+				</div>
+			</div>
+
+			<!-- Data Table -->
+			<div class="overflow-x-auto">
+				<table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+					<thead class="bg-gray-50/80 dark:bg-gray-700/50 backdrop-blur-sm">
+						<tr>
+							<th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+								Metric
+							</th>
+							<th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+								Value
+							</th>
+							<th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+								Change
+							</th>
+						</tr>
+					</thead>
+					<tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+						<tr v-for="row in tableData" :key="row.metric" class="hover:bg-gray-50/70 dark:hover:bg-gray-700/50 transition-colors duration-150">
+							<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+								{{ row.metric }}
+							</td>
+							<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+								{{ row.value }}
+							</td>
+							<td class="px-6 py-4 whitespace-nowrap text-sm text-green-600 dark:text-green-400">
+								{{ row.change }}
+							</td>
+						</tr>
+					</tbody>
+				</table>
 			</div>
 		</div>
 	</div>
@@ -261,13 +268,6 @@ const ivrRequests = [
 	{ id: '4', dateSubmitted: '2025-01-22', clinicId: '2' },
 	{ id: '5', dateSubmitted: '2025-01-25', clinicId: '1' },
 ]
-// Top Graft Sizes (mocked as usage count per size)
-const topGraftSizes = [
-	{ size: '4cm²', count: 12 },
-	{ size: '6cm²', count: 8 },
-	{ size: '10cm²', count: 5 },
-	{ size: '16cm²', count: 3 },
-]
 
 interface ReportType {
 	id: string
@@ -323,12 +323,6 @@ const reportTypes: ReportType[] = [
 		name: 'IVR Report', 
 		icon: PhoneIcon, 
 		description: 'Insurance verification status' 
-	},
-	{ 
-		id: 'top_sizes', 
-		name: 'Top Graft Sizes', 
-		icon: ChartBarSquareIcon, 
-		description: 'Most used graft sizes per clinic/patient' 
 	}
 ]
 
@@ -439,19 +433,11 @@ function getReportData(type: string, range: string) {
 			if (idx !== -1) data[idx]++
 		})
 		return { labels, data, label: 'IVR Requests' }
-	} else if (type === 'top_sizes') {
-		// For top graft sizes, use bar chart style data
-		return {
-			labels: topGraftSizes.map(g => g.size),
-			data: topGraftSizes.map(g => g.count),
-			label: 'Top Graft Sizes'
-		}
 	}
 	return { labels: [], data: [], label: '' }
 }
 
 function getChartType(): ChartType {
-	if (reportType.value === 'top_sizes') return 'bar'
 	if (graphType.value === 'area') return 'line'
 	return graphType.value as ChartType
 }
@@ -483,7 +469,6 @@ function renderChart() {
 			data,
 			borderColor: '#7c3aed',
 			backgroundColor: 'rgba(124, 58, 237, 0.2)',
-			fill: graphType.value === 'area' || reportType.value === 'top_sizes',
 			tension: 0.4,
 			pointRadius: 3,
 			pointBackgroundColor: '#7c3aed',

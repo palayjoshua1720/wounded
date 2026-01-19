@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rules;
 use App\Http\Controllers\Controller;
 use App\Services\EmailService;
@@ -34,10 +35,23 @@ class UserController extends Controller
                 'phone'
             ]);
 
-        // Hide admin users from office staff
+        // Get the current authenticated user
         $currentUser = $request->user();
+        
+        // Hide admin users from office staff
         if ($currentUser && $currentUser->user_role === 1) {
             $query->where('user_role', '!=', 0);
+        }
+        
+        // Clinic users can only see clinicians from their own clinic
+        if ($currentUser && $currentUser->user_role === 2) {
+            $query->where('user_role', 3) // Only clinicians
+                  ->where('clinic_id', $currentUser->clinic_id); // Only from their clinic
+        }
+        
+        // Hide the current user from the list (regardless of role)
+        if ($currentUser) {
+            $query->where('id', '!=', $currentUser->id);
         }
 
         // Apply filters
@@ -77,10 +91,23 @@ class UserController extends Controller
     {
         $baseQuery = User::query();
 
-        // Hide admin users from office staff statistics
+        // Get the current authenticated user
         $currentUser = $request->user();
+        
+        // Hide admin users from office staff statistics
         if ($currentUser && $currentUser->user_role === 1) {
             $baseQuery->where('user_role', '!=', 0);
+        }
+        
+        // Clinic users can only see clinicians from their own clinic
+        if ($currentUser && $currentUser->user_role === 2) {
+            $baseQuery->where('user_role', 3) // Only clinicians
+                      ->where('clinic_id', $currentUser->clinic_id); // Only from their clinic
+        }
+        
+        // Hide the current user from the statistics
+        if ($currentUser) {
+            $baseQuery->where('id', '!=', $currentUser->id);
         }
 
         $total = (clone $baseQuery)->count();
@@ -205,7 +232,7 @@ class UserController extends Controller
             );
         } catch (\Exception $e) {
             // Log error but don't fail user creation
-            \Log::error('Failed to send welcome email: ' . $e->getMessage());
+            Log::error('Failed to send welcome email: ' . $e->getMessage());
         }
 
         return response()->json([

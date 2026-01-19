@@ -1039,7 +1039,7 @@ const clinicDisplayName = (clinic: Clinic) => {
 }
 
 // Methods
-function showAlert(message: string, type: 'success' | 'error' | 'warning' | 'info' = 'info', duration: number = 2000) {
+function showAlert(message: string, type: 'success' | 'error' | 'warning' | 'info' = 'info', duration = 2000) {
   const icon = type === 'success' ? 'success' : 
                type === 'error' ? 'error' : 
                type === 'warning' ? 'warning' : 'info';

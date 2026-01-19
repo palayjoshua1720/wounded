@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\GraftSizeController;
 use App\Http\Controllers\Api\ResetPassword;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\SampleController;
+use App\Http\Controllers\Api\ReturnsController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\InventoryController;
@@ -157,8 +158,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/inventory/status/{status}', [InventoryController::class, 'getInventoryByStatus']);
     Route::get('/inventory/search-patients', [InventoryController::class, 'searchPatients']);
     Route::get('/inventory/graft-size/{graftSizeId}', [InventoryController::class, 'getGraftSize']);
+    Route::get('/inventory/clinicians', [InventoryController::class, 'getCliniciansForInventory']);
     Route::post('/inventory/usage-logs', [InventoryController::class, 'storeUsageLog']);
     Route::put('/inventory/usage-logs/{id}', [InventoryController::class, 'updateUsageLog']);
     Route::patch('/inventory/{id}/status', [InventoryController::class, 'updateInventoryStatus']);
     Route::delete('/inventory/usage-logs/{id}', [InventoryController::class, 'deleteUsageLog']);
+
+    // Returns Management
+    Route::get('/management/returns', [ReturnsController::class, 'getAllReturns']);
+    Route::post('/management/returns', [ReturnsController::class, 'createReturn']);
+    Route::put('/management/returns/{id}', [ReturnsController::class, 'updateReturn']);
+    Route::delete('/management/returns/{id}', [ReturnsController::class, 'deleteReturn']);
+    Route::get('/management/returns/stats', [ReturnsController::class, 'getReturnStats']);
 });

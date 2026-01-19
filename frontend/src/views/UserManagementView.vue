@@ -262,17 +262,6 @@
                 </table>
             </div>
 
-            <!-- Empty State -->
-            <div v-if="filteredUsers.length === 0 && !tableLoader" class="text-center py-12">
-                <div
-                    class="mx-auto h-16 w-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mb-4">
-                    <Users class="h-8 w-8 text-gray-400 dark:text-gray-500" />
-                </div>
-                <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-1">No users found</h3>
-                <p class="text-gray-500 dark:text-gray-400 max-w-md mx-auto">Try adjusting your search or filter to find
-                    what you're looking for.</p>
-            </div>
-
             <!-- Pagination -->
             <div v-if="filteredUsers.length > 0"
                 class="flex items-center justify-between px-6 py-4 border-t border-gray-200 dark:border-gray-700">
@@ -281,8 +270,7 @@
                         itemsPerPage + 1 }}</span> to <span class="font-semibold text-gray-800 dark:text-white">{{
         Math.min(currentPage * itemsPerPage, totalResults) }}</span> of <span
                         class="font-semibold text-gray-800 dark:text-white">{{ totalResults }}</span> results
-                </p>
-                <nav class="flex items-center space-x-2">
+                </p>                <nav class="flex items-center space-x-2">
                     <button @click="previousPage" :disabled="currentPage === 1"
                         class="px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
                         Previous
@@ -560,8 +548,7 @@
                                 class="text-red-500 ml-1">*</span></label>
                         <select v-model="formData.role" required
                             class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white appearance-none transition-all duration-200">
-                            <!-- Admin and Office Staff only visible to admins -->
-                            <option v-if="!isOfficeStaff" value="admin">Admin</option>
+                            <!-- Office Staff only visible to admins -->
                             <option v-if="!isOfficeStaff" value="office-staff">Office Staff</option>
                             <!-- Roles available to both admin and office staff -->
                             <option value="clinic">Clinic Administrator</option>
@@ -1205,13 +1192,14 @@ const formatFullName = (user: { firstName: string, middleName?: string, lastName
 
 // Use server results directly
 const filteredUsers = computed(() => users.value)
-
 const totalPages = computed(() => {
-    return Math.max(1, Math.ceil(totalResults.value / itemsPerPage.value))
+    return Math.max(1, Math.ceil(filteredUsers.value.length / itemsPerPage.value))
 })
 
-const paginatedUsers = computed(() => users.value)
-
+const paginatedUsers = computed(() => {
+    // Since pagination is handled by the backend, we just return all users
+    return filteredUsers.value
+})
 const paginationNumbers = computed(() => {
     const pages = []
     const siblingCount = 1
@@ -1352,7 +1340,8 @@ const fetchUsers = async () => {
         lastLogin: u.lastLogin ?? undefined,
         createdAt: u.createdAt ?? u.created_at ?? new Date().toISOString(),
     }))
-    totalResults.value = Number(data.total ?? users.value.length)
+    // Update total results to reflect filtered count from backend
+    totalResults.value = data.total
     if (data.per_page) itemsPerPage.value = Number(data.per_page)
     } catch (err) {
         console.error('Failed to fetch users', err)
@@ -1360,7 +1349,6 @@ const fetchUsers = async () => {
         tableLoader.value = false
     }
 }
-
 const fetchUserStats = async () => {
     try {
         const { data } = await userService.getUserStats()
