@@ -17,25 +17,24 @@ return new class extends Migration
             $table->unsignedBigInteger('brand_id');
             $table->unsignedBigInteger('graft_size_id');
             $table->text('reason');
-            $table->text('other')->nullable(); // Custom reason when reason is 'Other'
             $table->timestamp('returned_at')->useCurrent();
             $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
 
             // Foreign key constraints
             $table->foreign('graft_log_id')
-                  ->references('graft_log_id')
-                  ->on('woundmed_usage_log')
-                  ->onDelete('set null');
-            
+                ->references('graft_log_id')
+                ->on('woundmed_usage_log')
+                ->onDelete('set null');
+
             $table->foreign('brand_id')
-                  ->references('brand_id')
-                  ->on('woundmed_brands')
-                  ->onDelete('cascade');
-            
+                ->references('brand_id')
+                ->on('woundmed_brands')
+                ->onDelete('cascade');
+
             $table->foreign('graft_size_id')
-                  ->references('graft_size_id')
-                  ->on('woundmed_graft_sizes')
-                  ->onDelete('cascade');
+                ->references('graft_size_id')
+                ->on('woundmed_graft_sizes')
+                ->onDelete('cascade');
         });
     }
 
