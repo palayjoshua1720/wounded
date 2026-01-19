@@ -490,7 +490,7 @@
 							</option>
 						</select>
 					</div>
-					<div v-if="showEditForm">
+					<!-- <div v-if="showEditForm">
 						<label class="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
 							<ShieldCheck class="w-5 h-5 text-green-600" />
 							<span>IVR Status<span class="text-red-500">*</span></span>
@@ -508,7 +508,7 @@
 							<option value="1">Eligible</option>
 							<option value="2">Not Eligible</option>
 						</select>
-					</div>
+					</div> -->
 				</div>
 
 				<transition name="fade-slide">
@@ -765,7 +765,7 @@ interface IVRRequest {
 interface Patient {
 	patient_id: string
 	patient_name: string
-	clinics?: Clinic[]
+	clinic?: Clinic
 	ivrs?: IVRRequest[]
 }
 
@@ -962,6 +962,9 @@ async function handleSubmitForm() {
 		payload.append('manufacturer_id', formData.value.manufacturer_id)
 		payload.append('eligibility_status', formData.value.eligibility_status.toString())
 		payload.append('primary_email', formData.value.primary_email)
+
+		console.log('payload: ');
+		console.log(payload);
 
 		if (selectedFile.value) {
 			payload.append('filepath', selectedFile.value)
@@ -1413,12 +1416,13 @@ watch(selectedManufacturer, (manufacturer) => {
 })
 
 watch(selectedPatient, (patient) => {
-	const clinic = patient?.clinics?.[0];
+	const clinic = patient?.clinic;
 	const ivr = patient?.ivrs?.[0];
+
+	console.log('clinic: ' + clinic?.clinic_id);	
 
 	if (clinic) {
 		formData.value.clinic_id = clinic.clinic_id;
-		
 	} else {
 		formData.value.clinic_id = '';
 	}

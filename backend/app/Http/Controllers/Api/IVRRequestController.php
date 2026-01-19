@@ -105,7 +105,7 @@ class IVRRequestController extends Controller
 
         $patientData = PatientInfo::with([
             'user',
-            'clinics',
+            'clinic',
             'ivrs'
         ])
             ->orderBy('created_at', 'desc')
@@ -124,6 +124,11 @@ class IVRRequestController extends Controller
 
     public function addIVRRequest(Request $request)
     {
+        echo '<pre>';
+        print_r($request->all());
+        echo '<br>';
+        echo '</pre>';
+        exit;
         $ip = $request->server('HTTP_X_FORWARDED_FOR') ?? $request->server('REMOTE_ADDR');
         $tempPassword = Str::random(12);
         $prevHash = $this->getLastRowHash();
