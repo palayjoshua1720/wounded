@@ -119,14 +119,13 @@ const routes: RouteRecordRaw[] = [
 					role: 1
 				}
 			},
-			// TEMPORARY - WILL FINALIZE LATER
 			{
 				path: 'clinic/users',
 				name: 'clinic-users',
 				component: UserManagementView,
 				meta: {
 					requiresAuth: true,
-					title: 'All Users',
+					title: 'Clinicians',
 					icon: UsersRound,
 					role: 2
 				}
@@ -328,7 +327,7 @@ const routes: RouteRecordRaw[] = [
 				component: InvoiceManagementView,
 				meta: {
 					requiresAuth: true,
-					title: 'Invoices & Payments',
+					title: 'Invoices',
 					icon: ClipboardList
 				}
 			},
@@ -338,7 +337,7 @@ const routes: RouteRecordRaw[] = [
 				component: InvoiceManagementView,
 				meta: {
 					requiresAuth: true,
-					title: 'Invoices & Payments',
+					title: 'Invoices',
 					icon: ClipboardList
 				}
 			},
@@ -348,7 +347,7 @@ const routes: RouteRecordRaw[] = [
 				component: InvoiceManagementView,
 				meta: {
 					requiresAuth: true,
-					title: 'Invoices & Payments',
+					title: 'Invoices',
 					icon: ClipboardList
 				}
 			},
@@ -358,7 +357,7 @@ const routes: RouteRecordRaw[] = [
 				component: InvoiceManagementView,
 				meta: {
 					requiresAuth: true,
-					title: 'Invoices & Payments',
+					title: 'Invoices',
 					icon: ClipboardList
 				}
 			},
@@ -368,7 +367,7 @@ const routes: RouteRecordRaw[] = [
 				component: InvoiceManagementView,
 				meta: {
 					requiresAuth: true,
-					title: 'Invoices & Payments',
+					title: 'Invoices',
 					icon: ClipboardList
 				}
 			},
@@ -378,7 +377,7 @@ const routes: RouteRecordRaw[] = [
 				component: InvoiceManagementView,
 				meta: {
 					requiresAuth: true,
-					title: 'Invoices & Payments',
+					title: 'Invoices',
 					icon: ClipboardList
 				}
 			},
@@ -389,7 +388,7 @@ const routes: RouteRecordRaw[] = [
 				component: InventoryManagementView,
 				meta: {
 					requiresAuth: true,
-					title: 'Inventory & Serials',
+					title: 'Inventory',
 					icon: ScanBarcode,
 					role: 0
 				}
@@ -400,7 +399,7 @@ const routes: RouteRecordRaw[] = [
 				component: InventoryManagementView,
 				meta: {
 					requiresAuth: true,
-					title: 'Inventory & Serials',
+					title: 'Inventory',
 					icon: ScanBarcode,
 					role: 1
 				}
@@ -411,7 +410,7 @@ const routes: RouteRecordRaw[] = [
 				component: InventoryManagementView,
 				meta: {
 					requiresAuth: true,
-					title: 'Inventory & Serials',
+					title: 'Inventory',
 					icon: ScanBarcode,
 					role: 4
 				}
@@ -422,7 +421,7 @@ const routes: RouteRecordRaw[] = [
 				component: InventoryManagementView,
 				meta: {
 					requiresAuth: true,
-					title: 'Inventory & Serials',
+					title: 'Inventory',
 					icon: ScanBarcode,
 					role: 5
 				}
@@ -430,12 +429,12 @@ const routes: RouteRecordRaw[] = [
 			// Others --- Change if needed
 			// Return Management
 			{
-				path: 'returns',
+				path: 'admin/returns',
 				name: 'returns',
 				component: ReturnManagementView,
 				meta: {
 					requiresAuth: true,
-					title: 'Return Management',
+					title: 'Returns',
 					icon: RotateCcw,
 					role: 0
 				}
@@ -621,12 +620,13 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 		'manufacturer/order-management': [4],
 		'manufacturer/ivr-management': [4],
 		'clinic/order-management': [2],
+		// Return Management
+		'returns': [0,1,2,3],
 
 		// Other Management
-		'returns': [],
 		'usage': [],
 		'smart-selector': [],
-		'reports': [],
+		'reports': [0],
 		'notifications': [0, 1],
 		'profile': [],
 	}
@@ -646,6 +646,8 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 					'admin-order-management',
 					'admin-invoice-management',
 					'admin-inventory',
+					'returns',
+					'reports',
 				].includes(route.name as string)
 			}
 

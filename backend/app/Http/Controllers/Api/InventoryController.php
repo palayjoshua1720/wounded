@@ -20,13 +20,12 @@ class InventoryController extends Controller
         $usageLogs = UsageLog::with([
             'patient.clinic',
             'clinician',
-            'graftSize.brand',
-            'graftSize.clinic'
+            'graftSize.brand.manufacturer'
         ])->get();
 
         $inventory = $usageLogs->map(function ($log) {
             return [
-                'id' => 'inv-' . $log->id,
+                'id' => 'inv-' . $log->graft_log_id,
                 'serialNumber' => $log->serial_number,
                 'patientId' => $log->patient_id,
                 'patientName' => $log->patient?->patient_name ?? 'Unknown Patient',
@@ -38,8 +37,6 @@ class InventoryController extends Controller
                 'graftPrice' => $log->graftSize?->price ?? null,
                 'brandId' => $log->graftSize?->brand_id,
                 'brandName' => $log->graftSize?->brand?->brand_name ?? 'N/A',
-                'graftClinicId' => $log->graftSize?->clinic_id,
-                'graftClinicName' => $log->graftSize?->clinic?->clinic_name ?? 'N/A',
                 // Use patient's clinic as the primary clinic for the table display
                 'clinicId' => $log->patient?->clinic_id,
                 'clinicName' => $log->patient?->clinic?->clinic_name ?? 'Unknown Clinic',
@@ -51,7 +48,7 @@ class InventoryController extends Controller
                 'expiredAt' => $log->expired_at ? $log->expired_at->format('Y-m-d') : null,
                 'filepath' => $log->filepath,
                 'loggedBy' => $log->logged_by,
-                'clinicianName' => $log->clinician?->name ?? 'Unknown Clinician',
+                'clinicianName' => $log->clinician?->first_name . ' ' . $log->clinician?->last_name ?? 'Unknown Clinician',
                 'loggedAt' => $log->logged_at ? $log->logged_at->format('Y-m-d H:i:s') : null,
                 'status' => $this->getStatusFromLogStatus($log->log_status),
                 'expiryDate' => $log->expired_at ? $log->expired_at->format('Y-m-d') : null,
@@ -72,7 +69,7 @@ class InventoryController extends Controller
     public function getInventoryBySerial($serialNumber)
     {
         $logs = UsageLog::where('serial_number', $serialNumber)
-            ->with(['patient.clinic', 'clinician', 'graftSize.brand', 'graftSize.clinic'])
+            ->with(['patient.clinic', 'clinician', 'graftSize.brand'])
             ->get();
 
         if ($logs->isEmpty()) {
@@ -86,12 +83,12 @@ class InventoryController extends Controller
             'serialNumber' => $serialNumber,
             'usageLogs' => $logs->map(function ($log) {
                 return [
-                    'id' => $log->id,
+                    'id' => $log->graft_log_id,
                     'patientName' => $log->patient?->patient_name ?? 'Unknown Patient',
                     'dateOfService' => $log->date_of_service ? $log->date_of_service->format('Y-m-d') : null,
                     'woundSite' => $log->wound_part,
                     'clinicianId' => $log->logged_by,
-                    'clinicianName' => $log->clinician?->name ?? 'Unknown Clinician',
+                    'clinicianName' => $log->clinician?->first_name . ' ' . $log->clinician?->last_name ?? 'Unknown Clinician',
                     'notes' => $log->description,
                     'logStatus' => $log->log_status,
                     'quantity' => $log->quantity_used
@@ -115,12 +112,12 @@ class InventoryController extends Controller
         $logStatus = $this->getLogStatusFromStatus($statusParam);
 
         $usageLogs = UsageLog::where('log_status', $logStatus)
-            ->with(['patient.clinic', 'clinician', 'graftSize.brand', 'graftSize.clinic'])
+            ->with(['patient.clinic', 'clinician', 'graftSize.brand'])
             ->get();
 
         $inventory = $usageLogs->map(function ($log) use ($statusParam) {
             return [
-                'id' => 'inv-' . $log->id,
+                'id' => 'inv-' . $log->graft_log_id,
                 'serialNumber' => $log->serial_number,
                 'patientName' => $log->patient?->patient_name ?? 'Unknown Patient',
                 'clinicId' => $log->patient?->clinic_id,
@@ -264,7 +261,8 @@ class InventoryController extends Controller
             ]);
         }
 
-        $patients = PatientInfo::where('patient_name', 'like', '%' . $query . '%')
+        $patients = PatientInfo::with('clinic')
+            ->where('patient_name', 'like', '%' . $query . '%')
             ->limit(10)
             ->get()
             ->map(function ($patient) {
@@ -272,6 +270,7 @@ class InventoryController extends Controller
                     'id' => $patient->patient_id,
                     'name' => $patient->patient_name,
                     'clinic_id' => $patient->clinic_id,
+                    'clinic_name' => $patient->clinic?->clinic_name ?? null,
                 ];
             });
 
@@ -286,7 +285,7 @@ class InventoryController extends Controller
      */
     public function getGraftSize($graftSizeId)
     {
-        $graftSize = GraftSize::with(['brand', 'clinic'])
+        $graftSize = GraftSize::with(['brand.manufacturer'])
             ->where('graft_size_id', $graftSizeId)
             ->first();
 
@@ -297,6 +296,9 @@ class InventoryController extends Controller
             ], 404);
         }
 
+        $brand = $graftSize->brand;
+        $manufacturer = $brand?->manufacturer;
+
         return response()->json([
             'success' => true,
             'data' => [
@@ -305,9 +307,9 @@ class InventoryController extends Controller
                 'area' => $graftSize->area,
                 'price' => $graftSize->price,
                 'brand_id' => $graftSize->brand_id,
-                'brand_name' => $graftSize->brand?->brand_name ?? 'N/A',
-                'clinic_id' => $graftSize->clinic_id,
-                'clinic_name' => $graftSize->clinic?->clinic_name ?? 'N/A',
+                'brand_name' => $brand?->brand_name ?? 'N/A',
+                'manufacturer_id' => $manufacturer?->manufacturer_id ?? null,
+                'manufacturer_name' => $manufacturer?->manufacturer_name ?? null,
             ]
         ]);
     }
@@ -329,10 +331,36 @@ class InventoryController extends Controller
             'success' => true,
             'message' => 'Inventory status updated successfully',
             'data' => [
-                'id' => 'inv-' . $usageLog->id,
+                'id' => 'inv-' . $usageLog->graft_log_id,
                 'status' => $this->getStatusFromLogStatus($usageLog->log_status),
                 'logStatus' => $usageLog->log_status
             ]
         ]);
+    }
+
+    /**
+     * Get clinicians with their clinic information for inventory usage
+     */
+    public function getCliniciansForInventory()
+    {
+        $clinicians = User::where('user_role', 3) // Clinician role
+            ->with(['clinic']) // Load clinic relationship
+            ->select('id', 'first_name', 'middle_name', 'last_name', 'clinic_id')
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($clinician) {
+                $fullname = $clinician->first_name . 
+                    ($clinician->middle_name ? ' ' . $clinician->middle_name . ' ' : ' ') . 
+                    $clinician->last_name;
+
+                return [
+                    'id' => (string) $clinician->id,
+                    'name' => $fullname,
+                    'clinic_id' => $clinician->clinic_id,
+                    'clinic_name' => $clinician->clinic?->clinic_name ?? null,
+                ];
+            });
+
+        return response()->json($clinicians);
     }
 }

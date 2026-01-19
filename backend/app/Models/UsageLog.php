@@ -10,6 +10,7 @@ class UsageLog extends Model
     use HasFactory;
 
     protected $table = 'woundmed_usage_log';
+    protected $primaryKey = 'graft_log_id';
 
     // Disable automatic created_at and updated_at management
     public $timestamps = false;

@@ -208,6 +208,13 @@ export const inventoryService = {
     },
 
     /**
+     * Get clinicians with clinic information for inventory
+     */
+    getClinicians() {
+        return api.get('/inventory/clinicians');
+    },
+
+    /**
      * Update inventory item status
      */
     updateInventoryStatus(id: string | number, logStatus: number) {
