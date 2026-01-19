@@ -38,7 +38,10 @@ Route::put('/management/public/magicorder/update/{id}/updateorderstatus', [Order
 // Sample Routes
 Route::get('/sample', [SampleController::class, 'index']);
 Route::post('/auth/login', [AuthController::class, 'login']);
+Route::post('/auth/login/verify-code', [AuthController::class, 'verifyLoginCode']);
+Route::post('/auth/login/verify-backup-code', [AuthController::class, 'verifyBackupCode']);
 Route::post('/auth/validation/validate-tfauth', [AuthController::class, 'validate_tfauth']);
+Route::get('/auth/profile/security/backup-codes', [AuthController::class, 'getUserBackupCodes']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
@@ -46,6 +49,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/auth/profile/security/enable-tfa', [AuthController::class, 'enable_tfauth']);
     Route::post('/auth/profile/security/disable-tfauth', [AuthController::class, 'disable_tfauth']);
     Route::post('/auth/profile/security/update-tfauth', [AuthController::class, 'update_tfauth']);
+    Route::post('/auth/profile/security/enable-one-time-email', [AuthController::class, 'enableOneTimeEmailVerification']);
+    Route::post('/auth/profile/security/disable-one-time-email', [AuthController::class, 'disableOneTimeEmailVerification']);
+    Route::post('/auth/profile/security/enable-backup-codes', [AuthController::class, 'enableBackupCodes']);
+    Route::post('/auth/profile/security/disable-backup-codes', [AuthController::class, 'disableBackupCodes']);
     Route::get('/invoice-management', [InvoiceController::class, 'index']);
     Route::get('/invoice-management/stats', [InvoiceController::class, 'getStats']);
     Route::get('/invoice-management/clinics', [InvoiceController::class, 'getClinics']);

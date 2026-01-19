@@ -8,7 +8,7 @@
       </div>
       <div class="flex gap-2">
         <button
-          class="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+          class="flex items-center px-5 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg group"
           @click="showAddInvoiceModal = true" :disabled="loading">
           <FileUp  class="w-4 h-4 mr-2" />
           Add Invoice
@@ -184,10 +184,15 @@
             If extraction fails, you'll be able to enter details manually.
           </p>
         </div>
+        <div class="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-lg mb-4 border border-yellow-200 dark:border-yellow-800">
+          <p class="text-xs text-yellow-800 dark:text-yellow-300">
+            <strong>Note:</strong> Only PDF files are accepted. Other file formats (DOC, DOCX, etc.) will not be processed.
+          </p>
+        </div>
         <input type="file" accept=".pdf" class="hidden" id="invoice-pdf-upload" @change="handlePdfUpload"
           ref="pdfInput" />
         <label for="invoice-pdf-upload"
-          class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 cursor-pointer">
+          class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg cursor-pointer">
           <Upload class="w-4 h-4 mr-2" />
           Choose PDF Files
         </label>
@@ -270,7 +275,7 @@
           Back
         </button>
         <button @click="processUploadedInvoices" :disabled="!hasFilesForProcessing || uploading"
-          class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">
+          class="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed">
           <RefreshCw v-if="uploading" class="w-4 h-4 mr-2 inline animate-spin" />
           <span v-else>Process {{ uploadedFiles.length }} File(s)</span>
         </button>
@@ -387,15 +392,7 @@
         </div>
       </div>
 
-      <!-- Notes -->
-      <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          Notes
-        </label>
-        <textarea v-model="manualInvoice.notes" rows="3"
-          class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-          placeholder="Additional notes (optional)"></textarea>
-      </div>
+
 
       <div class="flex justify-end gap-2 pt-4">
         <button type="button" @click="showManualModal = false; showAddInvoiceModal = true;"
@@ -403,7 +400,7 @@
           Back
         </button>
         <button type="submit" :disabled="submitting"
-          class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed">
+          class="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed">
           <Plus v-if="submitting" class="w-4 h-4 mr-2 inline animate-spin" />
           <span v-else>Add Invoice</span>
         </button>
@@ -504,11 +501,7 @@
         </div>
       </div>
  
-      <!-- Notes -->
-      <div v-if="selectedInvoice.notes">
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Notes</label>
-        <p class="text-sm text-gray-900 dark:text-white whitespace-pre-wrap">{{ selectedInvoice.notes }}</p>
-      </div>
+
     </div>
     <template #actions>
       <div class="flex justify-end w-full p-5">
@@ -670,13 +663,7 @@
           </div>
         </div>
 
-        <!-- Notes -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes</label>
-          <textarea v-model="extractedInvoiceData.notes" rows="3"
-            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-            placeholder="Additional notes"></textarea>
-        </div>
+
       </div>
     </div>
 
@@ -687,10 +674,10 @@
           Cancel
         </button>
         <button @click="resetLineItems" v-if="extractedInvoiceData && extractedInvoiceData.source === 'fallback'"
-          class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+          class="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg">
           Clear & Add Manually
         </button>
-        <button @click="saveReviewedInvoice" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+        <button @click="saveReviewedInvoice" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg">
           Save Invoice
         </button>
       </div>
@@ -760,7 +747,7 @@
           Cancel
         </button>
         <button @click="confirmMarkAsPaid" :disabled="!paymentData.paid_amount"
-          class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed">
+          class="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed">
           Mark as Paid
         </button>
       </div>
@@ -770,7 +757,7 @@
 
 
   <!-- Edit Invoice Modal -->
-  <BaseModal v-model="showEditModal" title="Edit Invoice" size="lg">
+  <BaseModal v-model="showEditModal" title="Edit Invoice" size="xl">
     <form @submit.prevent="handleEditInvoiceSubmit" class="space-y-6">
       <div v-if="invoiceToEdit" class="space-y-4">
         <!-- Invoice Details -->
@@ -794,10 +781,13 @@
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Amount</label>
-            <input v-model.number="invoiceToEdit.amount" type="number" step="0.01"
-              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-              placeholder="Amount" />
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Amount (Calculated)</label>
+            <div
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white">
+              ${{ calculateEditTotalAmount().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
+            </div>
+            <input v-model.number="invoiceToEdit.amount" type="hidden" />
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Automatically calculated from line items</p>
           </div>
 
           <div>
@@ -812,7 +802,7 @@
               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
           </div>
 
-          <div v-if="invoiceToEdit.bill_to">
+          <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Bill To</label>
             <input v-model="invoiceToEdit.bill_to"
               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
@@ -820,13 +810,63 @@
           </div>
         </div>
 
-        <!-- Notes -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes</label>
-          <textarea v-model="invoiceToEdit.notes" rows="3"
-            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-            placeholder="Additional notes"></textarea>
+        <!-- Line Items -->
+        <div class="border-t pt-4">
+          <div class="flex justify-between items-center mb-3">
+            <h4 class="text-lg font-medium text-gray-900 dark:text-white">Line Items</h4>
+            <button type="button" @click="addEditLineItem"
+              class="flex items-center px-2 py-1 text-sm bg-blue-100 text-blue-700 rounded hover:bg-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:hover:bg-blue-900/40">
+              <Plus class="w-4 h-4 mr-1" />
+              Add Item
+            </button>
+          </div>
+          <div class="max-h-96 overflow-y-auto space-y-3">
+            <div v-for="(item, index) in invoiceToEdit.line_items" :key="index"
+              class="p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800">
+              <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-2">
+                <div>
+                  <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
+                  <input v-model="item.description"
+                    class="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+                    placeholder="Product description" />
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Size</label>
+                  <input v-model="item.size"
+                    class="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+                    placeholder="Product size (e.g. 2x2cm)" />
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Serial Number</label>
+                  <input v-model="item.serial"
+                    class="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+                    placeholder="Serial number" />
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Quantity</label>
+                  <input v-model.number="item.quantity" type="number" min="1"
+                    class="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+                    placeholder="1" />
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Amount</label>
+                  <input v-model.number="item.amount" type="number" step="0.01" min="0"
+                    class="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+                    placeholder="0.00" />
+                </div>
+              </div>
+              <div class="flex justify-end">
+                <button type="button" @click="removeEditLineItem(index)"
+                  class="text-red-600 hover:text-red-800 text-sm flex items-center">
+                  <Minus class="w-4 h-4 mr-1" />
+                  Remove
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
+
+
       </div>
 
       <div class="flex justify-end gap-2 pt-4">
@@ -834,8 +874,8 @@
           class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
           Cancel
         </button>
-        <button type="submit" :disabled="submitting"
-          class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed">
+        <button type="submit" :disabled="submitting || !hasInvoiceChanges"
+          class="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed">
           <RefreshCw v-if="submitting" class="w-4 h-4 mr-2 inline animate-spin" />
           <span v-else>Update Invoice</span>
         </button>
@@ -901,7 +941,7 @@ interface Invoice {
     serial: string
     quantity: number
     amount: number
-  }> | null
+  }>
   has_line_items: boolean
   notes?: string
   bill_to?: string
@@ -975,8 +1015,7 @@ const filters = ref({
 
 // Modal states
 const showAddInvoiceModal = ref(false)
-const showUploadModal = ref(false)
-const showSheetSyncModal = ref(false)
+const showUploadModal = ref(false) 
 const showManualModal = ref(false)
 const showInvoiceModal = ref(false)
 const showMarkPaidModal = ref(false)
@@ -991,6 +1030,7 @@ const invoiceToMarkPaid = ref<Invoice | null>(null)
 const extractedInvoiceData = ref<any>(null)
 const invoiceToDelete = ref<Invoice | null>(null)
 const invoiceToEdit = ref<Invoice | null>(null)
+const originalInvoice = ref<Invoice | null>(null)
 
 // Upload state
 const uploadedFiles = ref<File[]>([])
@@ -1017,8 +1057,7 @@ const manualInvoice = ref({
       quantity: 1,
       serials: ['']
     }
-  ],
-  notes: ''
+  ]
 })
 
 // Payment data
@@ -1033,13 +1072,63 @@ const paymentData = ref({
 // Computed properties
 const hasFilesForProcessing = computed(() => uploadedFiles.value.length > 0)
 
+const hasInvoiceChanges = computed(() => {
+  if (!invoiceToEdit.value || !originalInvoice.value) return false;
+  
+  // Helper function to normalize dates for comparison
+  const normalizeDate = (dateStr: string): string => {
+    if (!dateStr) return '';
+    // If already in YYYY-MM-DD format, return as is
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr;
+    // Otherwise, try to parse and convert
+    try {
+      const dateObj = new Date(dateStr);
+      return dateObj.toISOString().split('T')[0];
+    } catch {
+      return dateStr;
+    }
+  };
+  
+  // Compare primitive fields
+  if (invoiceToEdit.value.invoice_number !== originalInvoice.value.invoice_number) return true;
+  if (invoiceToEdit.value.clinic_id !== originalInvoice.value.clinic_id) return true;
+  // Use Math.abs for floating point comparison to handle precision issues
+  if (Math.abs(invoiceToEdit.value.amount - originalInvoice.value.amount) > 0.01) return true;
+  if (normalizeDate(invoiceToEdit.value.invoice_date) !== normalizeDate(originalInvoice.value.invoice_date)) return true;
+  if (normalizeDate(invoiceToEdit.value.due_date) !== normalizeDate(originalInvoice.value.due_date)) return true;
+  if (invoiceToEdit.value.bill_to !== originalInvoice.value.bill_to) return true;
+  
+  // Compare line items
+  if (invoiceToEdit.value.line_items && originalInvoice.value.line_items) {
+    if (invoiceToEdit.value.line_items.length !== originalInvoice.value.line_items.length) return true;
+    
+    for (let i = 0; i < invoiceToEdit.value.line_items.length; i++) {
+      const editedItem = invoiceToEdit.value.line_items[i];
+      const originalItem = originalInvoice.value.line_items[i];
+      
+      if (editedItem.description !== originalItem.description) return true;
+      if (editedItem.size !== originalItem.size) return true;
+      if (editedItem.serial !== originalItem.serial) return true;
+      if (editedItem.quantity !== originalItem.quantity) return true;
+      // Use Math.abs for floating point comparison to handle precision issues
+      if (Math.abs(editedItem.amount - originalItem.amount) > 0.01) return true;
+    }
+  } else if (invoiceToEdit.value.line_items || originalInvoice.value.line_items) {
+    // One is null/undefined and the other isn't
+    return true;
+  }
+  
+  // No changes detected
+  return false;
+})
+
 // Format clinic display name for dropdowns
 const clinicDisplayName = (clinic: Clinic) => {
   return `${clinic.clinic_name} (${clinic.clinic_code})`;
 }
 
 // Methods
-function showAlert(message: string, type: 'success' | 'error' | 'warning' | 'info' = 'info', duration: number = 2000) {
+function showAlert(message: string, type: 'success' | 'error' | 'warning' | 'info' = 'info', duration = 2000) {
   const icon = type === 'success' ? 'success' : 
                type === 'error' ? 'error' : 
                type === 'warning' ? 'warning' : 'info';
@@ -1151,8 +1240,47 @@ function removeUploadedFile(index: number) {
 }
 
 function editInvoice(invoice: Invoice) {
+  // Store the original invoice data for comparison
+  originalInvoice.value = JSON.parse(JSON.stringify(invoice))
+  
   // Create a deep copy of the invoice to edit
   invoiceToEdit.value = JSON.parse(JSON.stringify(invoice))
+  
+  // Ensure line_items array exists
+  if (invoiceToEdit.value && !invoiceToEdit.value.line_items) {
+    invoiceToEdit.value.line_items = [];
+  }
+  
+  // Ensure line items have all required properties
+  if (invoiceToEdit.value && invoiceToEdit.value.line_items) {
+    invoiceToEdit.value.line_items = invoiceToEdit.value.line_items.map((item: any) => ({
+      description: item.description || '',
+      size: item.size || '',
+      serial: item.serial || '',
+      quantity: item.quantity || 1,
+      amount: item.amount || 0
+    }));
+  }
+  
+  // Ensure dates are in the correct format for HTML date inputs (YYYY-MM-DD)
+  if (invoiceToEdit.value && invoiceToEdit.value.invoice_date) {
+    // If the date is already in YYYY-MM-DD format, keep it as is
+    // Otherwise, convert it to the correct format
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(invoiceToEdit.value.invoice_date)) {
+      const dateObj = new Date(invoiceToEdit.value.invoice_date);
+      invoiceToEdit.value.invoice_date = dateObj.toISOString().split('T')[0];
+    }
+  }
+  
+  if (invoiceToEdit.value && invoiceToEdit.value.due_date) {
+    // If the date is already in YYYY-MM-DD format, keep it as is
+    // Otherwise, convert it to the correct format
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(invoiceToEdit.value.due_date)) {
+      const dateObj = new Date(invoiceToEdit.value.due_date);
+      invoiceToEdit.value.due_date = dateObj.toISOString().split('T')[0];
+    }
+  }
+  
   showEditModal.value = true
 }
 
@@ -1162,7 +1290,7 @@ async function confirmDeleteInvoice(invoice: Invoice) {
   // Show Swal confirmation dialog directly
   const result = await Swal.fire({
     title: 'Are you sure?',
-    text: `Are you sure you want to delete invoice ${invoice.invoice_number}? This action cannot be undone.`,
+    html: `Are you sure you want to delete invoice <strong>${invoice.invoice_number}</strong>? This action cannot be undone.`,
     icon: 'warning',
     showCancelButton: true,
     confirmButtonColor: '#3085d6',
@@ -1180,9 +1308,13 @@ async function confirmDeleteInvoice(invoice: Invoice) {
 async function handleEditInvoiceSubmit() {
   if (!invoiceToEdit.value) return
 
+  // Calculate the total amount from line items before submission
+  const invoiceData = JSON.parse(JSON.stringify(invoiceToEdit.value));
+  invoiceData.amount = calculateEditTotalAmount();
+
   submitting.value = true
   try {
-    const response = await api.put(`/invoice-management/${invoiceToEdit.value.id}`, invoiceToEdit.value)
+    const response = await api.put(`/invoice-management/${invoiceToEdit.value.id}`, invoiceData)
     
     showAlert('Invoice updated successfully', 'success')
     showEditModal.value = false
@@ -1472,7 +1604,7 @@ function simulateOcrExtraction(file: File) {
       }
 
       // Build notes with line items
-      let notes = manualInvoice.value.notes || '';
+      let notes = '';
       if (lineItemsNotes) {
         notes += `\nLine Items:\n${lineItemsNotes}`;
       }
@@ -1541,8 +1673,7 @@ function simulateOcrExtraction(file: File) {
           quantity: 1,
           serials: ['']
         }
-      ],
-      notes: ''
+      ]
     }
   }
 
@@ -1661,6 +1792,26 @@ function simulateOcrExtraction(file: File) {
     }
   }
 
+  function addEditLineItem() {
+    if (invoiceToEdit.value && invoiceToEdit.value.line_items) {
+      invoiceToEdit.value.line_items.push({
+        description: '',
+        size: '',
+        serial: '',
+        quantity: 1,
+        amount: 0
+      });
+    }
+  }
+
+  function calculateEditTotalAmount() {
+    if (!invoiceToEdit.value || !invoiceToEdit.value.line_items) return 0;
+    
+    return invoiceToEdit.value.line_items.reduce((total, item) => {
+      return total + (item.amount * (item.quantity || 1));
+    }, 0);
+  }
+
   function resetLineItems() {
     if (extractedInvoiceData.value) {
       // Clear existing line items
@@ -1687,6 +1838,12 @@ function simulateOcrExtraction(file: File) {
   function removeLineItem(index: number) {
     if (extractedInvoiceData.value && extractedInvoiceData.value.line_items) {
       extractedInvoiceData.value.line_items.splice(index, 1);
+    }
+  }
+
+  function removeEditLineItem(index: number) {
+    if (invoiceToEdit.value && invoiceToEdit.value.line_items) {
+      invoiceToEdit.value.line_items.splice(index, 1);
     }
   }
 
@@ -1800,6 +1957,12 @@ function simulateOcrExtraction(file: File) {
   // Watch for changes in products to update the amount
   watch(() => manualInvoice.value.products, () => {
     manualInvoice.value.amount = calculateTotalAmount();
+  }, { deep: true });
+
+  // Watch for changes in edit line items to update the amount field for backend submission
+  watch(() => invoiceToEdit.value?.line_items, () => {
+    // We don't automatically update the amount field to avoid interfering with change detection
+    // The amount will be updated when the form is submitted
   }, { deep: true });
 
   // Lifecycle

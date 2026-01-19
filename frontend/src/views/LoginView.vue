@@ -223,6 +223,88 @@
             </div>
         </div>
     </div>
+
+    <!-- Verification Code Modal -->
+    <div v-if="verificationCodeModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 w-full max-w-md border border-gray-200 dark:border-gray-700 transform transition-all duration-300 scale-100">
+            <div class="flex items-center justify-center w-12 h-12 mx-auto rounded-full bg-blue-100 dark:bg-blue-900/30 mb-4">
+                <Mail class="h-6 w-6 text-blue-600 dark:text-blue-400" />
+            </div>
+            <h3 class="text-xl font-bold text-center text-gray-900 dark:text-white mb-2">Enter Verification Code</h3>
+            <p class="text-gray-700 dark:text-gray-300 text-center mb-6">We've sent a 6-digit verification code to your email. Please enter it below.</p>
+            
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Verification Code</label>
+                <input
+                    v-model="verificationCode"
+                    type="text"
+                    maxlength="6"
+                    inputmode="numeric"
+                    pattern="\d*"
+                    class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100 text-base text-center text-xl tracking-widest"
+                    placeholder="Enter 6-digit code"
+                    @input="onVerificationCodeInput"
+                />
+            </div>
+            
+            <div class="flex justify-center space-x-4">
+                <button 
+                    @click="closeVerificationModal" 
+                    :disabled="verificationLoading"
+                    class="px-5 py-2.5 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 font-semibold transition-colors duration-200 disabled:opacity-50"
+                >
+                    Cancel
+                </button>
+                <button 
+                    @click="verifyCode" 
+                    :disabled="verificationLoading || verificationCode.length !== 6"
+                    class="px-5 py-2.5 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 font-semibold transition-all duration-200 shadow-md transform hover:scale-[1.03] disabled:opacity-50"
+                >
+                    {{ verificationLoading ? 'Verifying...' : 'Verify' }}
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Backup Code Modal -->
+    <div v-if="backupCodeModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 w-full max-w-md border border-gray-200 dark:border-gray-700 transform transition-all duration-300 scale-100">
+            <div class="flex items-center justify-center w-12 h-12 mx-auto rounded-full bg-orange-100 dark:bg-orange-900/30 mb-4">
+                <Key class="h-6 w-6 text-orange-600 dark:text-orange-400" />
+            </div>
+            <h3 class="text-xl font-bold text-center text-gray-900 dark:text-white mb-2">Enter Backup Code</h3>
+            <p class="text-gray-700 dark:text-gray-300 text-center mb-6">Please enter one of your 8-character backup codes to complete login.</p>
+            
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Backup Code</label>
+                <input
+                    v-model="backupCode"
+                    type="text"
+                    maxlength="8"
+                    class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700 dark:text-gray-100 text-base text-center text-xl tracking-widest uppercase"
+                    placeholder="Enter 8-character code"
+                    @input="onBackupCodeInput"
+                />
+            </div>
+            
+            <div class="flex justify-center space-x-4">
+                <button 
+                    @click="closeBackupCodeModal" 
+                    :disabled="backupCodeLoading"
+                    class="px-5 py-2.5 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 font-semibold transition-colors duration-200 disabled:opacity-50"
+                >
+                    Cancel
+                </button>
+                <button 
+                    @click="verifyBackupCode" 
+                    :disabled="backupCodeLoading || backupCode.length !== 8"
+                    class="px-5 py-2.5 rounded-lg bg-gradient-to-r from-orange-500 to-amber-500 text-white hover:from-orange-600 hover:to-amber-600 font-semibold transition-all duration-200 shadow-md transform hover:scale-[1.03] disabled:opacity-50"
+                >
+                    {{ backupCodeLoading ? 'Verifying...' : 'Verify' }}
+                </button>
+            </div>
+        </div>
+    </div>
 </template>
 
 <script setup lang="ts">
@@ -241,7 +323,7 @@ import {
     KeySquare
 } from 'lucide-vue-next';
 
-const { email, password, loading, loading2FA, pinBoxes, handleLogin, proceedLogin, continue2FA, handleSecurity } = useLogin()
+const { email, password, loading, loading2FA, pinBoxes, handleLogin, proceedLogin, continue2FA, handleSecurity, verificationCodeModal, verificationCode, verificationLoading, verificationUserId, closeVerificationModal, verifyCode, onVerificationCodeInput, backupCodeModal, backupCode, backupCodeLoading, backupUserId, closeBackupCodeModal, verifyBackupCode, onBackupCodeInput } = useLogin()
 const showPassword = ref(false)
 const router = useRouter()
 const hasSavedAccounts = ref(false)
