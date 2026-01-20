@@ -17,10 +17,19 @@ trait AuditLogger
      * @param int $status
      * @return void
      */
-    protected function logAudit(Request $request, $actionType, $actionMessage, $entityId, $status = 0)
+    protected function logAudit(Request $request, $actionType, $actionMessage, $entityId, int $status = 0, ?string $attemptedIdentifier = null)
     {
         $userId = $request->user()->id ?? null;
-        $attemptedIdentifier = $userId ? null : 'N/A'; // Authenticated requests will have user_id
+
+        # If user is authenticated, attempted_identifier MUST be null
+        if ($attemptedIdentifier === null) {
+            if ($userId) {
+                $attemptedIdentifier = (string) $userId; # Authenticated -> default to user ID
+            } else {
+                $attemptedIdentifier = $request->input('email'); # Unauthenticated -> try email from request
+            }
+        }
+        
         $ipAddress = $request->ip();
         $entity = $this->getEntityName();
         $entityType = $this->getEntityType();

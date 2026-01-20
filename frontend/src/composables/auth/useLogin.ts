@@ -176,7 +176,7 @@ export function useLogin() {
 		} else if (role === 4) {
 			router.push('/manufacturer/ivr-management')
 		} else if (role === 5) {
-			router.push('/ivr-management')
+			router.push('/biller/ivr-management')
 		} else {
 			router.push('/')
 		}

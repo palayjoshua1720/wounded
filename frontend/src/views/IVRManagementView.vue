@@ -157,14 +157,14 @@
 									<button
 									@click="editIVR(ivr)"
 									class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"
-									title="Edit User"
+									title="Edit IVR"
 									>
 										<SquarePen class="w-4 h-4" />
 									</button>
 									<button
 									@click="confirmDelete(ivr)"
 									class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
-									title="Delete User"
+									title="Delete IVR"
 									>
 										<Trash2 class="w-4 h-4" />
 									</button>
@@ -173,7 +173,7 @@
 									:class="[
 										'text-yellow-600 hover:text-yellow-900 dark:text-yellow-400 dark:hover:text-yellow-300',
 									]"
-									:title="ivr.ivr_status === 1 ? 'Unarchive User' : 'Archive User'"
+									:title="ivr.ivr_status === 1 ? 'Unarchive IVR' : 'Archive IVR'"
 									>
 										<component
 											:is="ivr.ivr_status === 1 ? ArchiveRestore : Archive"
@@ -337,8 +337,14 @@
 
 					<div v-if="filePreviewUrl" class="mt-2 border rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800 p-3">
 						<div v-if="isImageFile(filePreviewUrl)" class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4 bg-gray-50 dark:bg-gray-700/50">
-							<img 
+							<!-- <img
 								:src="selectedIvrRequest.filepath" 
+								:alt="selectedIvrRequest.filepath"
+								class="max-w-full h-auto rounded-lg shadow-md"
+								
+							/> -->
+							<img 
+								:src="`${API_URL}/private-file/${selectedIvrRequest.filepath}`"
 								:alt="selectedIvrRequest.filepath"
 								class="max-w-full h-auto rounded-lg shadow-md"
 								
@@ -346,7 +352,7 @@
 						</div>
 						<div v-else-if="isPDFFile(filePreviewUrl)" class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4 bg-gray-50 dark:bg-gray-700/50">
 							<iframe 
-								:src="selectedIvrRequest.filepath" 
+								:src="`${API_URL}/private-file/${selectedIvrRequest.filepath}`"
 								class="w-full h-96 rounded-lg"
 								frameborder="0"
 							></iframe>
@@ -709,8 +715,8 @@ import {
 	Package, NotebookPen, FilePlus2,
 	Hospital, Calendar, CircleCheckBig,
 	Archive, ArchiveRestore, FilePenLine,
-	CloudUpload, FileText, X, ShieldCheck,
-	ChevronDown, FileXIcon, CircleCheck
+	CloudUpload, FileText, X, File,
+	ChevronDown, FileXIcon, CircleCheck, 
 } from 'lucide-vue-next'
 import api from '../services/api'
 import { toast } from 'vue3-toastify'
@@ -789,6 +795,8 @@ interface Clinic {
 	clinic_id: string
 	clinic_name: string
 }
+
+const API_URL = process.env.VUE_APP_API_URL;
 
 const overrideStatus = ref<number>(0);
 
@@ -966,11 +974,21 @@ async function handleSubmitForm() {
 		console.log('payload: ');
 		console.log(payload);
 
-		if (selectedFile.value) {
+		// For create: file is required. For edit: allow keeping existing uploaded file
+		if (showCreateForm.value) {
+			if (!selectedFile.value) {
+				toast.error('IVR Information Required.')
+				return
+			}
 			payload.append('filepath', selectedFile.value)
-		} else {
-			toast.error('IVR Information Required.')
-			return;
+		} else if (showEditForm.value) {
+			if (selectedFile.value) {
+				payload.append('filepath', selectedFile.value)
+			} else if (!formData.value.filepath) {
+				// No newly selected file and no existing filepath to keep
+				toast.error('IVR Information Required.')
+				return
+			}
 		}
 
 		Swal.fire({

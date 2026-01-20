@@ -11,9 +11,22 @@ use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash as LaravelHash;
 use App\Services\VerificationCodeService;
+use App\Traits\AuditLogger;
 
 class AuthController extends Controller
 {
+    use AuditLogger;
+
+    protected function getEntityName()
+    {
+        return 'woundmed_users';
+    }
+
+    protected function getEntityType()
+    {
+        return 'user';
+    }
+
     public function login(Request $request)
     {
         $request->validate([
@@ -21,8 +34,8 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        $ip = $request->server('HTTP_X_FORWARDED_FOR') ?? $request->server('REMOTE_ADDR');
         $user = User::where('email', $request->email)->first();
+        $ip = $request->server('HTTP_X_FORWARDED_FOR') ?? $request->server('REMOTE_ADDR');
         $prevHash = $this->getLastRowHash();
 
         if (! $user) {
@@ -43,9 +56,23 @@ class AuthController extends Controller
 
             DB::table('woundmed_audit_logs')->insert($log);
 
+            // Return response indicating verification code is required
             return response()->json([
-                'message' => 'The provided credentials are incorrect.',
-            ], 401);
+                'message' => 'Verification code sent to your email. Please check your inbox.',
+                'requires_verification' => true,
+                'user_id' => $user->id,
+                'email' => $user->email,
+            ], 200);
+        }
+        
+        // Check if user has enabled backup codes but not one-time email verification
+        if ($user->backup_codes_enabled && !$user->one_time_email_verification && !$user->tfa_enabled) {
+            // Return response indicating backup code is required
+            return response()->json([
+                'message' => 'Backup code required for login. Please enter one of your backup codes.',
+                'requires_backup_code' => true,
+                'user_id' => $user->id,
+            ], 200);
         }
 
         if (! Hash::check($request->password, $user->password)) {
@@ -67,8 +94,8 @@ class AuthController extends Controller
             DB::table('woundmed_audit_logs')->insert($log);
 
             return response()->json([
-                'message' => 'The provided credentials are incorrect.',
-            ], 401);
+                'message' => 'Invalid or expired verification code.',
+            ], 400);
         }
 
         // Check if user has enabled one-time email verification
@@ -118,7 +145,12 @@ class AuthController extends Controller
         $user->last_logged_in = now();
         $user->save();
 
-        $token = $user->createToken('auth_token')->plainTextToken;
+        // $token = $user->createToken('auth_token')->plainTextToken;
+        $token = $user->createToken(
+            'auth_token',
+            ['*'],
+            now()->addHours(4)
+        )->plainTextToken;
 
         $log = [
             'user_id' => $user->id,
@@ -244,6 +276,8 @@ class AuthController extends Controller
         $user->tfa_secret = $request->pin;
         $user->save();
 
+        $this->logAudit($request, 'security', "2FA enabled", $user->id);
+
         return response()->json([
             'message' => 'Two-Factor Authentication is now enabled.',
             'tfa_enabled' => $user->tfa_enabled
@@ -269,6 +303,8 @@ class AuthController extends Controller
         $user->tfa_secret = null;
         $user->save();
 
+        $this->logAudit($request, 'security', "2FA disabled", $user->id);
+
         return response()->json([
             'message' => 'Two-Factor Authentication has been disabled.'
         ]);
@@ -290,6 +326,8 @@ class AuthController extends Controller
         $user->tfa_secret = $request->pin;
         $user->save();
 
+        $this->logAudit($request, 'security', "2FA updated", $user->id);
+
         return response()->json([
             'message' => 'Your 2FA PIN has been successfully updated.'
         ]);
@@ -308,9 +346,7 @@ class AuthController extends Controller
             'email' => 'required|email',
         ]);
 
-        $ip = $request->server('HTTP_X_FORWARDED_FOR') ?? $request->server('REMOTE_ADDR');
         $user = User::where('email', $request->email)->first();
-        $prevHash = $this->getLastRowHash();
 
         if (!$user) {
             return response()->json([
@@ -325,44 +361,15 @@ class AuthController extends Controller
         }
 
         if ($user->tfa_secret !== $request->pinBoxes) {
-            $log = [
-                'user_id' => $user->id,
-                'attempted_identifier' => null,
-                'ip_address'=> $ip,
-                'action_type' => 'login',
-                'action_message' => 'Invalid 2FA code',
-                'entity_id' => $user->id,
-                'entity' => 'woundmed_users',
-                'entity_type' => 'authentication',
-                'status' => 1,
-                'timestamp' => now(),
-            ];
-            $log['prev_hash'] = $prevHash;
-            $log['row_hash'] = $this->generateRowHash($log, $prevHash);
 
-            DB::table('woundmed_audit_logs')->insert($log);
+            $this->logAudit($request, 'authentication-2fa', "Invalid 2FA code", $user->id, 1);
 
             return response()->json([
                 'message' => 'Invalid 2FA code.'
             ], 401);
         }
 
-        $log = [
-            'user_id' => $user->id,
-            'attempted_identifier' => null,
-            'ip_address'=> $ip,
-            'action_type' => 'login',
-            'action_message' => '2FA verification successful',
-            'entity_id' => $user->id,
-            'entity' => 'woundmed_users',
-            'entity_type' => 'authentication',
-            'status' => 0,
-            'timestamp' => now(),
-        ];
-        $log['prev_hash'] = $prevHash;
-        $log['row_hash'] = $this->generateRowHash($log, $prevHash);
-
-        DB::table('woundmed_audit_logs')->insert($log);
+        $this->logAudit($request, 'authentication-2fa', "2FA verification successful", $user->id);
 
         # Passed 2FA
         return response()->json([
@@ -375,6 +382,7 @@ class AuthController extends Controller
 
     public function user(Request $request)
     {
+        $ip = $request->server('HTTP_X_FORWARDED_FOR') ?? $request->server('REMOTE_ADDR');
         $user = $request->user();
         
         return response()->json([
@@ -399,7 +407,6 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        $ip = $request->server('HTTP_X_FORWARDED_FOR') ?? $request->server('REMOTE_ADDR');
         $user = $request->user();
         $prevHash = $this->getLastRowHash();
 

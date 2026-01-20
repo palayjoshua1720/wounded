@@ -46,6 +46,10 @@ Route::post('/auth/login/verify-backup-code', [AuthController::class, 'verifyBac
 Route::post('/auth/validation/validate-tfauth', [AuthController::class, 'validate_tfauth']);
 Route::get('/auth/profile/security/backup-codes', [AuthController::class, 'getUserBackupCodes']);
 
+// ivr file stream
+Route::get('/private-file/{path}', [IVRRequestController::class, 'viewIVRFile'])
+->where('path', '.*');
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::get('/auth/me', [AuthController::class, 'user']);
@@ -146,8 +150,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/management/order/getbrands', [OrderController::class, 'getAllPatients']);
     Route::get('/management/order/getgraftsizes', [OrderController::class, 'getAllGraftSizes']);
     Route::get('/management/order/users/getpatients', [OrderController::class, 'getAllPatients']);
-
-
+ 
     Route::post('/management/order/add/neworder', [OrderController::class, 'addNewOrder']);
     Route::put('/management/order/update/{id}/updateorder', [OrderController::class, 'updateOrder']);
     Route::put('/management/order/delete/{id}/deleteorder', [OrderController::class, 'deleteOrder']);

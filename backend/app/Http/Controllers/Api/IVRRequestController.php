@@ -17,9 +17,22 @@ use Illuminate\Support\Facades\Storage;
 use App\Services\EmailService;
 use App\Template\IVRRequestNotificationEmail;
 use App\Helpers\IVRHelper;
+use App\Traits\AuditLogger;
 
 class IVRRequestController extends Controller
 {
+    use AuditLogger;
+
+    protected function getEntityName()
+    {
+        return 'woundmed_ivr';
+    }
+
+    protected function getEntityType()
+    {
+        return 'ivr';
+    }
+
     public function getAllIVRRequests(Request $request)
     {
         $perPage = $request->query('per_page', 10);
@@ -33,16 +46,16 @@ class IVRRequestController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate($perPage);
 
-        $ivrRequests->getCollection()->transform(function ($ivr) {
+        // $ivrRequests->getCollection()->transform(function ($ivr) {
 
-            if ($ivr->filepath) {
-                $fileName = basename($ivr->filepath);
+        //     if ($ivr->filepath) {
+        //         $fileName = basename($ivr->filepath);
 
-                $ivr->filepath = url('/storage/ivr/' . $fileName);
-            }
+        //         $ivr->filepath = url('/storage/ivr/' . $fileName);
+        //     }
 
-            return $ivr;
-        });
+        //     return $ivr;
+        // });
 
         return response()->json([
             'data' => $ivrRequests->items(),
@@ -124,14 +137,7 @@ class IVRRequestController extends Controller
 
     public function addIVRRequest(Request $request)
     {
-        echo '<pre>';
-        print_r($request->all());
-        echo '<br>';
-        echo '</pre>';
-        exit;
-        $ip = $request->server('HTTP_X_FORWARDED_FOR') ?? $request->server('REMOTE_ADDR');
         $tempPassword = Str::random(12);
-        $prevHash = $this->getLastRowHash();
         try {
             $validated = $request->validate([
                 'patient_id' => 'required|int|max:255',
@@ -140,7 +146,13 @@ class IVRRequestController extends Controller
                 'filepath' => 'required|file|mimes:pdf,doc,docx|max:10240',
                 'notes' => 'nullable|string',
             ]);
-            $path = $request->file('filepath')->store('ivr', 'public');
+            // $path = $request->file('filepath')->store('ivr', 'public');
+            $path = null;
+            if ($request->hasFile('filepath')) {
+                $filename = time().'.'.$request->file('filepath')->getClientOriginalExtension();
+                $path = $request->file('filepath')->storeAs('ivr', $filename, 'private');
+            }
+            
             $ivrNumber = '#IVR-' . strtoupper(uniqid());
             $newIVR = IVR::create([
                 'ivr_number' => $ivrNumber,
@@ -189,6 +201,9 @@ class IVRRequestController extends Controller
                 'IVR Request',
                 'IVR Request'
             );
+
+            $this->logAudit($request, 'ivr_request_create', "IVR request created: {$ivrNumber}", $newIVR->ivr_id);
+
             return response()->json([
                 'success' => true,
                 'message' => 'IVR created successfully!',
@@ -201,97 +216,9 @@ class IVRRequestController extends Controller
         }
     }
 
-    // public function addIVRRequest(Request $request)
-    // {
-    //     $ip = $request->server('HTTP_X_FORWARDED_FOR') ?? $request->server('REMOTE_ADDR');
-    //     $tempPassword = Str::random(12);
-    //     $prevHash = $this->getLastRowHash();
-
-    //     try {
-    //         $validated = $request->validate([
-    //             'patient_id' => 'required|int|max:255',
-    //             'brand_id' => 'nullable|int|max:255',
-    //             'manufacturer_id' => 'required|int|max:255',
-    //             'filepath' => 'required|file|mimes:pdf,doc,docx|max:10240',
-    //             'notes' => 'nullable|string',
-    //         ]);
-
-    //         $path = $request->file('filepath')->store('ivr', 'public');
-    //         $ivrNumber = '#IVR-' . strtoupper(uniqid());
-
-    //         $newIVR = IVR::create([
-    //             'ivr_number' => $ivrNumber,
-    //             'clinic_id' => $request['clinic_id'] ?? null,
-    //             'brand_id' => $validated['brand_id'] ?? null,
-    //             'manufacturer_id' => $validated['manufacturer_id'] ?? null,
-    //             'patient_id' => $validated['patient_id'] ?? null,
-    //             'filepath' => $path,
-    //             'description' => $validated['notes'] ?? null,
-    //             'eligibility_status' => $request['eligibility_status'] ?? 0,
-    //             'submitted_at' => now(),
-    //             'timestamp' => now(),
-    //         ]);
-
-    //         $token = Str::random(64);
-
-    //         DB::table('magic_tokens')->insert([
-    //             'ivr_id'          => $newIVR->ivr_id,
-    //             'manufacturer_id' => $validated['manufacturer_id'],
-    //             'token'           => hash('sha256', $token),
-    //             'expires_at'      => now()->addDays(60),
-    //             'created_at'      => now(),
-    //         ]);
-
-    //         $email = $request->primary_email;
-    //         $ivrUrl = config('app.frontend_url')
-    //             . '/woundmed-ivr-request?token=' . $token
-    //             . '&ivr_id=' . $newIVR->ivr_id;
-
-    //         $emailBody = IVRRequestNotificationEmail::getTemplate([
-    //             'ivr_number'        => $ivrNumber,
-    //             'patient_name'      => IVRHelper::getPatientName($validated['patient_id']),
-    //             'clinic_name'       => IVRHelper::getClinicName($request['clinic_id']),
-    //             'brand_name'        => IVRHelper::getManufacturerName($validated['manufacturer_id']),
-    //             'manufacturer_name' => IVRHelper::getManufacturerName($validated['manufacturer_id']),
-    //             'eligibility_label'  => 'Pending',
-    //             'file_url'          => $path,
-    //             'ivr_link'      => $ivrUrl
-    //         ]);
-
-    //         $emailService = new EmailService();
-
-    //         $params = [
-    //             'to'        => $email,
-    //             'from'      => 'noreply@woundmed.com',
-    //             'from_name' => 'WoundMed IVR',
-    //             'subject'   => "New IVR Request: {$ivrNumber}",
-    //             'body'      => $emailBody,
-    //         ];
-
-    //         $response = $emailService->send_email(
-    //             $params,
-    //             'IVR Request',
-    //             'IVR Request'
-    //         );
-
-    //         return response()->json([
-    //             'success' => true,
-    //             'message' => 'IVR created successfully!',
-    //         ]);
-
-    //     } catch (ValidationException $th) {
-    //         return response()->json([
-    //             'success' => false,
-    //             'message' => 'Failed to create IVR: ' . $th->getMessage(),
-    //         ], 500);
-    //     }
-    // }
-
     public function updateIVRRequest(Request $request, $id)
     {
-        $ip = $request->server('HTTP_X_FORWARDED_FOR') ?? $request->server('REMOTE_ADDR');
         $tempPassword = Str::random(12);
-        $prevHash = $this->getLastRowHash();
 
         try {
             $validated = $request->validate([
@@ -330,6 +257,8 @@ class IVRRequestController extends Controller
 
             $ivr->save();
 
+            $this->logAudit($request, 'ivr_request_update', "IVR request updated: {$ivr->ivr_number}", $ivr->ivr_id);
+
             return response()->json([
                 'success' => true,
                 'message' => 'IVR details updated successfully!',
@@ -344,9 +273,7 @@ class IVRRequestController extends Controller
 
     public function updateEligibilityStatus(Request $request, $id)
     {
-        $ip = $request->server('HTTP_X_FORWARDED_FOR') ?? $request->server('REMOTE_ADDR');
         $tempPassword = Str::random(12);
-        $prevHash = $this->getLastRowHash();
 
         try {
             $validated = $request->validate([
@@ -358,6 +285,8 @@ class IVRRequestController extends Controller
             $ivr->eligibility_status = $validated['eligibility_status'];
 
             $ivr->save();
+
+            $this->logAudit($request, 'ivr_request_eligiblestatus_update', "IVR Eligiblitiy Status Updated: {$validated['eligibility_status']}", $ivr->ivr_id);
 
             return response()->json([
                 'success' => true,
@@ -375,6 +304,8 @@ class IVRRequestController extends Controller
     {
         $ivr = IVR::findOrFail($id);
         $ivr->delete();
+        
+        $this->logAudit($request, 'ivr_request_delete', "IVR Request Deleted: {$ivr->ivr_number}", $ivr->ivr_id);
 
         return response()->json(['message' => 'IVR Request deleted successfully.']);
     }
@@ -384,6 +315,8 @@ class IVRRequestController extends Controller
         $ivr = IVR::findOrFail($id);
         $ivr->update(['ivr_status' => 1]);
 
+        $this->logAudit($request, 'ivr_request_archive', "IVR Request Archived: {$ivr->ivr_number}", $ivr->ivr_id);
+
         return response()->json(['message' => 'IVR Request archived successfully.']);
     }
 
@@ -391,6 +324,8 @@ class IVRRequestController extends Controller
     {
         $ivr = IVR::findOrFail($id);
         $ivr->update(['ivr_status' => 0]);
+
+        $this->logAudit($request, 'ivr_request_unarchive', "IVR Request Unarchived: {$ivr->ivr_number}", $ivr->ivr_id);
 
         return response()->json(['message' => 'IVR Request unarchived successfully.']);
     }
@@ -405,21 +340,6 @@ class IVRRequestController extends Controller
 
         $filename = basename($manufacturer->filepath);
         return Storage::disk('private')->download($manufacturer->filepath, $filename);
-    }
-
-    private function generateRowHash(array $data, $prevHash = null)
-    {
-        $string = json_encode($data) . $prevHash;
-        return hash('sha256', $string);
-    }
-
-    private function getLastRowHash()
-    {
-        $last = DB::table('woundmed_audit_logs')
-            ->select('row_hash')
-            ->latest('audit_log_id')
-            ->first();
-        return $last?->row_hash ?? null;
     }
 
     // magic links
@@ -518,9 +438,26 @@ class IVRRequestController extends Controller
                 ->update(['used_at' => now()]);
         }
 
+        $this->logAudit($request, 'ivr_request_magic_update', "IVR Request Magic Link Updated: {$validated['eligibility_status']}", $ivr->ivr_id);
+
         return response()->json([
             'success' => true,
             'message' => 'IVR status updated successfully.',
         ]);
+    }
+
+    // live ivr file streaming
+    public function viewIVRFile($filename)
+    {
+        $path = "ivr/" . $filename;
+
+        if (!Storage::disk('private')->exists($path)) {
+            return abort(404, 'File not found.');
+        }
+
+        $file = Storage::disk('private')->get($path);
+        $mime = Storage::disk('private')->mimeType($path);
+
+        return response($file, 200)->header('Content-Type', $mime);
     }
 }

@@ -66,7 +66,7 @@ class Orders extends Model
 
     public function ivr()
     {
-        return $this->belongsTo(Ivr::class, 'ivr_id', 'ivr_id');
+        return $this->belongsTo(IVR::class, 'ivr_id', 'ivr_id');
     }
 
     public function manufacturer()
