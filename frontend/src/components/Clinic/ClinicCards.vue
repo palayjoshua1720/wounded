@@ -116,7 +116,7 @@
 		</div>
 
 		<template v-if="!tableLoader">
-			<div class="bg-white mt-4 rounded-bl-2xl rounded-br-2xl shadow-sm">
+			<div class="bg-white mt-4 rounded-bl-2xl rounded-br-2xl shadow-sm dark:bg-gray-800">
 				<Pagination v-if="users && users.length > 0" :pagination="pagination" @update:page="(p:number) => $emit('update:page', p)" />
 			</div>
 		</template>

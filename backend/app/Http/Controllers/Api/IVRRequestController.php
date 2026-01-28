@@ -48,10 +48,10 @@ class IVRRequestController extends Controller
 
         // $ivrRequests->getCollection()->transform(function ($ivr) {
 
-        //     if ($ivr->filepath) {
-        //         $fileName = basename($ivr->filepath);
+        //     if ($ivr->ivr_file) {
+        //         $fileName = basename($ivr->ivr_file);
 
-        //         $ivr->filepath = url('/storage/ivr/' . $fileName);
+        //         $ivr->ivr_file = url('/storage/ivr/' . $fileName);
         //     }
 
         //     return $ivr;
@@ -143,14 +143,14 @@ class IVRRequestController extends Controller
                 'patient_id' => 'required|int|max:255',
                 'brand_id' => 'nullable|int|max:255',
                 'manufacturer_id' => 'required|int|max:255',
-                'filepath' => 'required|file|mimes:pdf,doc,docx|max:10240',
+                'ivr_file' => 'required|file|mimes:pdf,doc,docx|max:10240',
                 'notes' => 'nullable|string',
             ]);
-            // $path = $request->file('filepath')->store('ivr', 'public');
+            // $path = $request->file('ivr_file')->store('ivr', 'public');
             $path = null;
-            if ($request->hasFile('filepath')) {
-                $filename = time().'.'.$request->file('filepath')->getClientOriginalExtension();
-                $path = $request->file('filepath')->storeAs('ivr', $filename, 'private');
+            if ($request->hasFile('ivr_file')) {
+                $filename = time().'.'.$request->file('ivr_file')->getClientOriginalExtension();
+                $path = $request->file('ivr_file')->storeAs('ivr', $filename, 'private');
             }
             
             $ivrNumber = '#IVR-' . strtoupper(uniqid());
@@ -160,7 +160,7 @@ class IVRRequestController extends Controller
                 'brand_id' => $validated['brand_id'] ?? null,
                 'manufacturer_id' => $validated['manufacturer_id'] ?? null,
                 'patient_id' => $validated['patient_id'] ?? null,
-                'filepath' => $path,
+                'ivr_file' => $path,
                 'description' => $validated['notes'] ?? null,
                 'eligibility_status' => 0,
                 'submitted_at' => now(),
@@ -174,7 +174,7 @@ class IVRRequestController extends Controller
                 'expires_at'      => now()->addDays(60),
                 'created_at'      => now(),
             ]);
-            $email = $request->primary_email;
+            $email = $request->eligibility_email;
             $ivrUrl = config('app.frontend_url')
                 . '/woundmed-ivr-request?token=' . $token
                 . '&ivr_id=' . $newIVR->ivr_id;
@@ -227,25 +227,25 @@ class IVRRequestController extends Controller
                 'manufacturer_id' => 'required|int|max:255',
                 'eligibility_status' => 'nullable|int|max:255',
                 'notes' => 'required|string',
-                'filepath' => 'nullable|file|mimes:pdf,doc,docx|max:10240',
+                'ivr_file' => 'nullable|file|mimes:pdf,doc,docx|max:10240',
                 'remove_existing_file' => 'nullable|boolean',
             ]);
 
             $ivr = IVR::findOrFail($id);
 
-            if ($request->hasFile('filepath')) {
-                if ($ivr->filepath && Storage::disk('private')->exists($ivr->filepath)) {
-                    Storage::disk('private')->delete($ivr->filepath);
+            if ($request->hasFile('ivr_file')) {
+                if ($ivr->ivr_file && Storage::disk('private')->exists($ivr->ivr_file)) {
+                    Storage::disk('private')->delete($ivr->ivr_file);
                 }
 
-                $newPath = $request->file('filepath')->store('ivr', 'private');
-                $ivr->filepath = $newPath;
+                $newPath = $request->file('ivr_file')->store('ivr', 'private');
+                $ivr->ivr_file = $newPath;
             } elseif ($request->remove_existing_file) {
-                if ($ivr->filepath && Storage::disk('private')->exists($ivr->filepath)) {
-                    Storage::disk('private')->delete($ivr->filepath);
+                if ($ivr->ivr_file && Storage::disk('private')->exists($ivr->ivr_file)) {
+                    Storage::disk('private')->delete($ivr->ivr_file);
                 }
 
-                $ivr->filepath = null;
+                $ivr->ivr_file = null;
             }
 
             $ivr->clinic_id = $request->clinic_id ?? $ivr->clinic_id;
@@ -334,12 +334,12 @@ class IVRRequestController extends Controller
     {
         $manufacturer = Manufacturer::findOrFail($id);
 
-        if (!$manufacturer->filepath || !Storage::disk('private')->exists($manufacturer->filepath)) {
+        if (!$manufacturer->ivr_file || !Storage::disk('private')->exists($manufacturer->ivr_file)) {
             return response()->json(['error' => 'File not found'], 404);
         }
 
-        $filename = basename($manufacturer->filepath);
-        return Storage::disk('private')->download($manufacturer->filepath, $filename);
+        $filename = basename($manufacturer->ivr_file);
+        return Storage::disk('private')->download($manufacturer->ivr_file, $filename);
     }
 
     // magic links
@@ -446,13 +446,23 @@ class IVRRequestController extends Controller
         ]);
     }
 
-    // live ivr file streaming
-    public function viewIVRFile($filename)
+    // live file streaming - can handle both ivr and order files
+    public function viewOrderFile($filename)
     {
-        $path = "ivr/" . $filename;
-
+        $decodedFilename = urldecode($filename);
+        
+        $path = "ivr/" . $decodedFilename;
+        
         if (!Storage::disk('private')->exists($path)) {
-            return abort(404, 'File not found.');
+            $path = "order/" . $decodedFilename;
+            
+            if (!Storage::disk('private')->exists($path)) {
+                $path = $decodedFilename;
+                
+                if (!Storage::disk('private')->exists($path)) {
+                    return abort(404, 'File not found.');
+                }
+            }
         }
 
         $file = Storage::disk('private')->get($path);

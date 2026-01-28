@@ -270,7 +270,7 @@
     <div v-if="backupCodeModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
         <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 w-full max-w-md border border-gray-200 dark:border-gray-700 transform transition-all duration-300 scale-100">
             <div class="flex items-center justify-center w-12 h-12 mx-auto rounded-full bg-orange-100 dark:bg-orange-900/30 mb-4">
-                <Key class="h-6 w-6 text-orange-600 dark:text-orange-400" />
+                <KeySquare class="h-6 w-6 text-orange-600 dark:text-orange-400" />
             </div>
             <h3 class="text-xl font-bold text-center text-gray-900 dark:text-white mb-2">Enter Backup Code</h3>
             <p class="text-gray-700 dark:text-gray-300 text-center mb-6">Please enter one of your 8-character backup codes to complete login.</p>

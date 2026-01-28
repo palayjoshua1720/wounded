@@ -25,11 +25,13 @@ class Orders extends Model
         'manufacturer_id',
         'tracking_num',
         'tracking_code',
+        'tracking_link',
         'items',
         'order_status',
         'notes',
         'ordered_at',
         'followup_last_sent_at',
+        'order_file',
     ];
 
     protected $casts = [

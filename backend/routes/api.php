@@ -50,6 +50,10 @@ Route::get('/auth/profile/security/backup-codes', [AuthController::class, 'getUs
 Route::get('/private-file/{path}', [IVRRequestController::class, 'viewIVRFile'])
 ->where('path', '.*');
 
+// order file stream
+Route::get('/private-order-file/{path}', [OrderController::class, 'viewOrderFile'])
+->where('path', '.*');
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::get('/auth/me', [AuthController::class, 'user']);

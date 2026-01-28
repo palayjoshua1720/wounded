@@ -20,6 +20,7 @@ use App\Services\EmailService;
 use App\Template\OrderNotificationEmail;
 use App\Template\FollowupOrderNotificationEmail;
 use App\Helpers\OrderHelper;
+use Illuminate\Support\Facades\Storage;
 
 class OrderController extends Controller
 {
@@ -154,6 +155,10 @@ class OrderController extends Controller
 
     public function addNewOrder(Request $request)
     {
+        $request->merge([
+            'items' => json_decode($request->items, true)
+        ]);
+
         try {
             $validated = $request->validate([
                 'clinic_id' => 'required|int|max:255',
@@ -170,7 +175,15 @@ class OrderController extends Controller
                 'items.*.device_type' => 'nullable|string|max:255',
                 'ivr_id' => 'required|integer|exists:woundmed_ivr,ivr_id',
                 'manufacturer_id' => 'required|integer|exists:woundmed_manufacturers,manufacturer_id',
+                'order_file' => 'file|mimes:pdf,doc,docx|max:10240',
             ]);
+
+            // $path = $request->file('order_file')->store('order', 'public');
+            $path = null;
+            if ($request->hasFile('order_file')) {
+                $filename = time().'.'.$request->file('order_file')->getClientOriginalExtension();
+                $path = $request->file('order_file')->storeAs('order', $filename, 'private');
+            }
 
             $orderCode = 'ORD-' . strtoupper(uniqid());
             $trackingNum = 'TRK-' . strtoupper(Str::random(10));
@@ -185,6 +198,7 @@ class OrderController extends Controller
                 'tracking_num' => $trackingNum,
                 'notes' => $validated['notes'],
                 'items' => $validated['items'],
+                'order_file' => $path,
                 'order_status' => 0,
                 'ordered_at' => now(),
             ]);
@@ -214,7 +228,7 @@ class OrderController extends Controller
                 'created_at'      => now(),
             ]);
 
-            $email = $request->primary_email;
+            $email = $request->order_email;
             $orderUrl = config('app.frontend_url')
                 . '/woundmed-order?token=' . $token
                 . '&order_id=' . $order->order_id;
@@ -241,7 +255,7 @@ class OrderController extends Controller
                     ];
                 }, $validated['items']),
                 'total_asp'       => $totalAsp,
-                'order_link'      => $orderUrl
+                'order_link'      => $orderUrl,
             ]);
 
             $emailService = new EmailService();
@@ -423,6 +437,7 @@ class OrderController extends Controller
             'order_status'  => 'required|integer|min:0|max:4',
             'order_number'  => 'required_if:order_status,1|string|max:255',
             'tracking_code' => 'required_if:order_status,2|string|max:255',
+            'tracking_link' => 'required_if:order_status,2|string|max:255',
             'token'         => 'required|string',
         ]);
 
@@ -437,6 +452,10 @@ class OrderController extends Controller
 
         if ($request->filled('tracking_code')) {
             $dataToUpdate['tracking_code'] = $request->tracking_code;
+        }
+
+        if ($request->filled('tracking_link')) {
+            $dataToUpdate['tracking_link'] = $request->tracking_link;
         }
 
         $order->update($dataToUpdate);
@@ -517,10 +536,10 @@ class OrderController extends Controller
             $emails = [];
 
             if ($manufacturer) {
-                if (is_array($manufacturer->primary_email)) {
-                    $emails = $manufacturer->primary_email;
+                if (is_array($manufacturer->order_email)) {
+                    $emails = $manufacturer->order_email;
                 } else {
-                    $emails = array_map('trim', explode(',', $manufacturer->primary_email));
+                    $emails = array_map('trim', explode(',', $manufacturer->order_email));
                 }
             }
 
@@ -759,7 +778,7 @@ class OrderController extends Controller
                 'created_at'      => now(),
             ]);
 
-            $email = $request->primary_email;
+            $email = $request->order_email;
             $orderUrl = config('app.frontend_url')
                 . '/woundmed-order?token=' . $token
                 . '&order_id=' . $order->order_id;
@@ -876,5 +895,29 @@ class OrderController extends Controller
                 'message' => 'Failed to create order: ' . $th->getMessage(),
             ], 500);
         }
+    }
+
+    public function viewOrderFile($filename)
+    {
+        $decodedFilename = urldecode($filename);
+        
+        $path = "ivr/" . $decodedFilename;
+        
+        if (!Storage::disk('private')->exists($path)) {
+            $path = "order/" . $decodedFilename;
+            
+            if (!Storage::disk('private')->exists($path)) {
+                $path = $decodedFilename;
+                
+                if (!Storage::disk('private')->exists($path)) {
+                    return abort(404, 'File not found.');
+                }
+            }
+        }
+
+        $file = Storage::disk('private')->get($path);
+        $mime = Storage::disk('private')->mimeType($path);
+
+        return response($file, 200)->header('Content-Type', $mime);
     }
 }

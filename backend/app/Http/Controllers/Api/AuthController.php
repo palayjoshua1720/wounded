@@ -39,62 +39,26 @@ class AuthController extends Controller
         $prevHash = $this->getLastRowHash();
 
         if (! $user) {
-            $log = [
-                'user_id' => null,
-                'attempted_identifier' => $request->email,
-                'ip_address'=> $ip,
-                'action_type' => 'login',
-                'action_message' => 'login failed',
-                'entity_id' => null,
-                'entity' => 'woundmed_users',
-                'entity_type' => 'authentication',
-                'status' => 1,
-                'timestamp' => now(),
-            ];
-            $log['prev_hash'] = $prevHash;
-            $log['row_hash'] = $this->generateRowHash($log, $prevHash);
+            $this->logAudit($request, 'authentication', "login failed", null, 1, $request->email);
 
-            DB::table('woundmed_audit_logs')->insert($log);
-
-            // Return response indicating verification code is required
             return response()->json([
-                'message' => 'Verification code sent to your email. Please check your inbox.',
-                'requires_verification' => true,
-                'user_id' => $user->id,
-                'email' => $user->email,
-            ], 200);
+                'message' => 'The provided credentials are incorrect.',
+            ], 401);
         }
         
         // Check if user has enabled backup codes but not one-time email verification
         if ($user->backup_codes_enabled && !$user->one_time_email_verification && !$user->tfa_enabled) {
             // Return response indicating backup code is required
             return response()->json([
-                'message' => 'Backup code required for login. Please enter one of your backup codes.',
-                'requires_backup_code' => true,
-                'user_id' => $user->id,
-            ], 200);
+                'message' => 'The provided credentials are incorrect.',
+            ], 401);
         }
 
         if (! Hash::check($request->password, $user->password)) {
-            $log = [
-                'user_id' => $user->id,
-                'attempted_identifier' => $request->email,
-                'ip_address'=> $ip,
-                'action_type' => 'login',
-                'action_message' => 'login failed',
-                'entity_id' => $user?->id,
-                'entity' => 'woundmed_users',
-                'entity_type' => 'authentication',
-                'status' => 1,
-                'timestamp' => now(),
-            ];
-            $log['prev_hash'] = $prevHash;
-            $log['row_hash'] = $this->generateRowHash($log, $prevHash);
-
-            DB::table('woundmed_audit_logs')->insert($log);
+            $this->logAudit($request, 'authentication', "login failed", $user->id, 1);
 
             return response()->json([
-                'message' => 'Invalid or expired verification code.',
+                'message' => 'The provided credentials are incorrect.',
             ], 400);
         }
 
@@ -105,22 +69,7 @@ class AuthController extends Controller
             $verificationCode = $verificationCodeService->sendVerificationCode($user);
 
             // Log that verification code was sent
-            $log = [
-                'user_id' => $user->id,
-                'attempted_identifier' => null,
-                'ip_address'=> $ip,
-                'action_type' => 'login',
-                'action_message' => 'verification code sent for one-time email verification',
-                'entity_id' => $user->id,
-                'entity' => 'woundmed_users',
-                'entity_type' => 'authentication',
-                'status' => 0,
-                'timestamp' => now(),
-            ];
-            $log['prev_hash'] = $prevHash;
-            $log['row_hash'] = $this->generateRowHash($log, $prevHash);
-
-            DB::table('woundmed_audit_logs')->insert($log);
+            $this->logAudit($request, 'authentication-one-time-email', "One-time email verification code sent", $user->id);
 
             // Return response indicating verification code is required
             return response()->json([
@@ -141,7 +90,6 @@ class AuthController extends Controller
             ], 200);
         }
 
-        // If no verification required, proceed with normal login
         $user->last_logged_in = now();
         $user->save();
 
@@ -152,22 +100,7 @@ class AuthController extends Controller
             now()->addHours(4)
         )->plainTextToken;
 
-        $log = [
-            'user_id' => $user->id,
-            'attempted_identifier' => null,
-            'ip_address'=> $ip,
-            'action_type' => 'login',
-            'action_message' => 'login success',
-            'entity_id' => $user->id,
-            'entity' => 'woundmed_users',
-            'entity_type' => 'authentication',
-            'status' => 0,
-            'timestamp' => now(),
-        ];
-        $log['prev_hash'] = $prevHash;
-        $log['row_hash'] = $this->generateRowHash($log, $prevHash);
-
-        DB::table('woundmed_audit_logs')->insert($log);
+        $this->logAudit($request, 'authentication', "login success", $user->id);
 
         return response()->json([
             'user' => $user,
@@ -201,22 +134,7 @@ class AuthController extends Controller
 
         if (!$isValid) {
             // Log failed verification attempt
-            $log = [
-                'user_id' => $user->id,
-                'attempted_identifier' => null,
-                'ip_address'=> $ip,
-                'action_type' => 'login',
-                'action_message' => 'verification code failed',
-                'entity_id' => $user->id,
-                'entity' => 'woundmed_users',
-                'entity_type' => 'authentication',
-                'status' => 1,
-                'timestamp' => now(),
-            ];
-            $log['prev_hash'] = $prevHash;
-            $log['row_hash'] = $this->generateRowHash($log, $prevHash);
-
-            DB::table('woundmed_audit_logs')->insert($log);
+            $this->logAudit($request, 'authentication-one-time-email', "One-time email verification failed", $user->id);
 
             return response()->json([
                 'message' => 'Invalid or expired verification code.',
@@ -227,25 +145,15 @@ class AuthController extends Controller
         $user->last_logged_in = now();
         $user->save();
 
-        $token = $user->createToken('auth_token')->plainTextToken;
+        // $token = $user->createToken('auth_token')->plainTextToken;
+        $token = $user->createToken(
+            'auth_token',
+            ['*'],
+            now()->addHours(4)
+        )->plainTextToken;
 
         // Log successful login
-        $log = [
-            'user_id' => $user->id,
-            'attempted_identifier' => null,
-            'ip_address'=> $ip,
-            'action_type' => 'login',
-            'action_message' => 'login success after code verification',
-            'entity_id' => $user->id,
-            'entity' => 'woundmed_users',
-            'entity_type' => 'authentication',
-            'status' => 0,
-            'timestamp' => now(),
-        ];
-        $log['prev_hash'] = $prevHash;
-        $log['row_hash'] = $this->generateRowHash($log, $prevHash);
-
-        DB::table('woundmed_audit_logs')->insert($log);
+        $this->logAudit($request, 'authentication-one-time-email', "One-time email verification success", $user->id);
 
         return response()->json([
             'user' => $user,
@@ -408,25 +316,8 @@ class AuthController extends Controller
     public function logout(Request $request)
     {
         $user = $request->user();
-        $prevHash = $this->getLastRowHash();
 
-        $log = [
-            'user_id'               => $user->id,
-            'attempted_identifier'  => null,
-            'ip_address'            => $ip,
-            'action_type'           => 'logout',
-            'action_message'        => 'logout',
-            'entity_id'             => $user->id,
-            'entity'                => 'woundmed_users',
-            'entity_type'           => 'authentication',
-            'status'                => 0,
-            'timestamp'             => now(),
-        ];
-
-        $log['prev_hash'] = $prevHash;
-        $log['row_hash'] = $this->generateRowHash($log, $prevHash);
-
-        DB::table('woundmed_audit_logs')->insert($log);
+        $this->logAudit($request, 'authentication', "logout", $user->id);
         
         $request->user()->currentAccessToken()->delete();
         return response()->json(['message' => 'Logged out successfully.']);
@@ -449,6 +340,8 @@ class AuthController extends Controller
 
         $user->one_time_email_verification = 1;
         $user->save();
+
+        $this->logAudit($request, 'security', "One time email enabled", $user->id);
 
         return response()->json([
             'message' => 'One-Time Email Verification is now enabled.',
@@ -473,6 +366,8 @@ class AuthController extends Controller
 
         $user->one_time_email_verification = 0;
         $user->save();
+
+        $this->logAudit($request, 'security', "One time email disabled", $user->id);
 
         return response()->json([
             'message' => 'One-Time Email Verification has been disabled.',
@@ -521,6 +416,8 @@ class AuthController extends Controller
         // Return the generated codes
         $codes = array_column($backupCodes, 'code');
 
+        $this->logAudit($request, 'security', "Backup codes enabled", $user->id);
+
         return response()->json([
             'message' => 'Backup codes have been generated and enabled.',
             'backup_codes_enabled' => $user->backup_codes_enabled,
@@ -549,6 +446,8 @@ class AuthController extends Controller
         // Disable backup codes for the user
         $user->backup_codes_enabled = false;
         $user->save();
+
+        $this->logAudit($request, 'security', "Backup codes disabled", $user->id);
 
         return response()->json([
             'message' => 'Backup codes have been disabled and all codes have been deleted.',
@@ -586,22 +485,7 @@ class AuthController extends Controller
 
         if (!$backupCode) {
             // Log failed verification attempt
-            $log = [
-                'user_id' => $user->id,
-                'attempted_identifier' => null,
-                'ip_address'=> $ip,
-                'action_type' => 'login',
-                'action_message' => 'backup code verification failed',
-                'entity_id' => $user->id,
-                'entity' => 'woundmed_users',
-                'entity_type' => 'authentication',
-                'status' => 1,
-                'timestamp' => now(),
-            ];
-            $log['prev_hash'] = $prevHash;
-            $log['row_hash'] = $this->generateRowHash($log, $prevHash);
-
-            DB::table('woundmed_audit_logs')->insert($log);
+            $this->logAudit($request, 'authentication-backup-codes', "Backup codes verification failed", $user->id);
 
             return response()->json([
                 'message' => 'Invalid backup code.',
@@ -615,25 +499,15 @@ class AuthController extends Controller
         $user->last_logged_in = now();
         $user->save();
 
-        $token = $user->createToken('auth_token')->plainTextToken;
+        // $token = $user->createToken('auth_token')->plainTextToken;
+        $token = $user->createToken(
+            'auth_token',
+            ['*'],
+            now()->addHours(4)
+        )->plainTextToken;
 
         // Log successful login
-        $log = [
-            'user_id' => $user->id,
-            'attempted_identifier' => null,
-            'ip_address'=> $ip,
-            'action_type' => 'login',
-            'action_message' => 'login success after backup code verification',
-            'entity_id' => $user->id,
-            'entity' => 'woundmed_users',
-            'entity_type' => 'authentication',
-            'status' => 0,
-            'timestamp' => now(),
-        ];
-        $log['prev_hash'] = $prevHash;
-        $log['row_hash'] = $this->generateRowHash($log, $prevHash);
-
-        DB::table('woundmed_audit_logs')->insert($log);
+        $this->logAudit($request, 'authentication-backup-codes', "Backup codes verification successful", $user->id);
 
         return response()->json([
             'user' => $user,
