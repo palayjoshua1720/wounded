@@ -8,6 +8,7 @@ use App\Models\Manufacturer;
 use App\Models\Brand;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Cache;
 use App\Models\User;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -49,14 +50,18 @@ class ManufacturerController extends Controller
                 'id'                => (string) $m->manufacturer_id,
                 'manufacturerName'  => $m->manufacturer_name,
                 'primaryEmail'      => $m->primary_email,
+                'orderEmail'        => $m->order_email,
+                'eligibilityEmail'  => $m->eligibility_email,
                 'secondaryEmail'    => $m->secondary_email,
                 'website'           => $m->website,
                 'address'           => $m->address,
                 'contactPerson'     => $m->contact_person,
                 'contactNumber'     => $m->contact_number,
-                'filename'          => $m->filepath ? basename($m->filepath) : '',
+                'ivrFilename'       => $m->ivr_file       ? basename($m->ivr_file)       : '',
+                'orderFilename'     => $m->order_file     ? basename($m->order_file)     : '',
+                'onboardingFilename' => $m->onboarding_file ? basename($m->onboarding_file) : '',
                 'manufacturerStatus' => (int) $m->manufacturer_status,
-                'logoUrl'           => $logoUrl,  // Using existing 'logo' field
+                'logoUrl'           => $logoUrl,
                 'brands'            => $formattedBrands,
                 'createdAt'         => $m->created_at,
                 'updatedAt'         => $m->updated_at,
@@ -79,18 +84,24 @@ class ManufacturerController extends Controller
         $validated = $request->validate([
             'manufacturerName'  => 'required|string|max:255',
             'primaryEmail'      => 'required|email|unique:woundmed_manufacturers,primary_email',
+            'orderEmail'           => 'required|email',
+            'eligibilityEmail'     => 'required|email',
             'secondaryEmail'    => 'nullable|email',
             'website'           => 'nullable|url',
             'address'           => 'nullable|string|max:255',
             'contactPerson'     => 'required|string|max:255',
             'contactNumber'     => 'required|string|max:20',
-            'ivrForm'           => 'required|file|mimes:pdf,doc,docx|max:10240', // 10MB max
-            'logo'              => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'manufacturerStatus' => 'required|in:0,1,2',
+            'ivrForm'            => 'required|file|mimes:pdf,doc,docx|max:10240',
+            'orderForm'          => 'required|file|mimes:pdf,doc,docx|max:10240',
+            'onboardingForm'     => 'required|file|mimes:pdf,doc,docx|max:10240',
+            'logo'              => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
-        // Store IVR file securely in private storage
-        $path = $request->file('ivrForm')->store('manufacturers', 'private');
+        // Store files in organized subfolders
+        $ivrPath       = $request->file('ivrForm')->store('manufacturers/ivr', 'private');
+        $orderPath     = $request->file('orderForm')->store('manufacturers/orders', 'private');
+        $onboardingPath = $request->file('onboardingForm')->store('manufacturers/onboarding', 'private');
 
         // Handle logo upload (public storage for easy access)
         $logoPath = null;
@@ -101,12 +112,16 @@ class ManufacturerController extends Controller
         $manufacturer = Manufacturer::create([
             'manufacturer_name'     => $validated['manufacturerName'],
             'primary_email'         => $validated['primaryEmail'],
+            'order_email'           => $validated['orderEmail'],
+            'eligibility_email'     => $validated['eligibilityEmail'],
             'secondary_email'       => $validated['secondaryEmail'] ?? null,
             'website'               => $validated['website'] ?? null,
             'address'               => $validated['address'] ?? null,
             'contact_person'        => $validated['contactPerson'],
             'contact_number'        => $validated['contactNumber'],
-            'filepath'              => $path, // store relative path only
+            'ivr_file'              => $ivrPath,
+            'order_file'            => $orderPath,
+            'onboarding_file'       => $onboardingPath,
             'logo'                  => $logoPath, // Using existing 'logo' field
             'manufacturer_status'   => $validated['manufacturerStatus'] ?? 0,
         ]);
@@ -115,6 +130,112 @@ class ManufacturerController extends Controller
 
         return response()->json([
             'message' => 'Manufacturer created successfully',
+            'data'    => $manufacturer,
+        ]);
+    }
+
+    public function updateManufacturer(Request $request, $id)
+    {
+        $manufacturer = Manufacturer::findOrFail($id);
+
+        $validated = $request->validate([
+            'manufacturerName'   => 'required|string|max:255',
+            'primaryEmail'       => 'required|email|unique:woundmed_manufacturers,primary_email,' . $id . ',manufacturer_id',
+            'orderEmail'         => 'required|email',
+            'eligibilityEmail'   => 'required|email',
+            'secondaryEmail'     => 'nullable|email',
+            'website'            => 'nullable|url',
+            'address'            => 'nullable|string|max:255',
+            'contactPerson'      => 'required|string|max:255',
+            'contactNumber'      => 'required|string|max:20',
+            'manufacturerStatus' => 'required|in:0,1,2',
+
+            // Files are optional on update
+            'ivrForm'            => 'nullable|file|mimes:pdf,doc,docx|max:10240',
+            'orderForm'          => 'nullable|file|mimes:pdf,doc,docx|max:10240',
+            'onboardingForm'     => 'nullable|file|mimes:pdf,doc,docx|max:10240',
+
+            'logo'               => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'remove_logo'        => 'nullable|in:1',
+            'remove_ivr'         => 'nullable|in:1',
+            'remove_order'       => 'nullable|in:1',
+            'remove_onboarding'  => 'nullable|in:1',
+        ]);
+
+        $oldName = $manufacturer->manufacturer_name;
+
+        // ── LOGO ────────────────────────────────────────────────────────────────
+        if ($request->hasFile('logo')) {
+            if ($manufacturer->logo && Storage::disk('public')->exists($manufacturer->logo)) {
+                Storage::disk('public')->delete($manufacturer->logo);
+            }
+            $manufacturer->logo = $request->file('logo')->store('manufacturers/logos', 'public');
+        } elseif ($request->boolean('remove_logo')) {
+            if ($manufacturer->logo && Storage::disk('public')->exists($manufacturer->logo)) {
+                Storage::disk('public')->delete($manufacturer->logo);
+            }
+            $manufacturer->logo = null;
+        }
+
+        // ── IVR FILE ────────────────────────────────────────────────────────────
+        if ($request->hasFile('ivrForm')) {
+            if ($manufacturer->ivr_file && Storage::disk('private')->exists($manufacturer->ivr_file)) {
+                Storage::disk('private')->delete($manufacturer->ivr_file);
+            }
+            $manufacturer->ivr_file = $request->file('ivrForm')->store('manufacturers/ivr', 'private');
+        } elseif ($request->boolean('remove_ivr')) {
+            if ($manufacturer->ivr_file && Storage::disk('private')->exists($manufacturer->ivr_file)) {
+                Storage::disk('private')->delete($manufacturer->ivr_file);
+            }
+            $manufacturer->ivr_file = null;
+        }
+
+        // ── ORDER FILE ──────────────────────────────────────────────────────────
+        if ($request->hasFile('orderForm')) {
+            if ($manufacturer->order_file && Storage::disk('private')->exists($manufacturer->order_file)) {
+                Storage::disk('private')->delete($manufacturer->order_file);
+            }
+            $manufacturer->order_file = $request->file('orderForm')->store('manufacturers/orders', 'private');
+        } elseif ($request->boolean('remove_order')) {
+            if ($manufacturer->order_file && Storage::disk('private')->exists($manufacturer->order_file)) {
+                Storage::disk('private')->delete($manufacturer->order_file);
+            }
+            $manufacturer->order_file = null;
+        }
+
+        // ── ONBOARDING FILE ─────────────────────────────────────────────────────
+        if ($request->hasFile('onboardingForm')) {
+            if ($manufacturer->onboarding_file && Storage::disk('private')->exists($manufacturer->onboarding_file)) {
+                Storage::disk('private')->delete($manufacturer->onboarding_file);
+            }
+            $manufacturer->onboarding_file = $request->file('onboardingForm')->store('manufacturers/onboarding', 'private');
+        } elseif ($request->boolean('remove_onboarding')) {
+            if ($manufacturer->onboarding_file && Storage::disk('private')->exists($manufacturer->onboarding_file)) {
+                Storage::disk('private')->delete($manufacturer->onboarding_file);
+            }
+            $manufacturer->onboarding_file = null;
+        }
+
+        // Basic fields
+        $manufacturer->fill([
+            'manufacturer_name'   => $validated['manufacturerName'],
+            'primary_email'       => $validated['primaryEmail'],
+            'order_email'         => $validated['orderEmail'],
+            'eligibility_email'   => $validated['eligibilityEmail'],
+            'secondary_email'     => $validated['secondaryEmail'] ?? null,
+            'website'             => $validated['website'] ?? null,
+            'address'             => $validated['address'] ?? null,
+            'contact_person'      => $validated['contactPerson'],
+            'contact_number'      => $validated['contactNumber'],
+            'manufacturer_status' => $validated['manufacturerStatus'],
+        ]);
+
+        $manufacturer->save();
+
+        $this->logAudit($request, 'manufacturer_update', "Manufacturer updated: {$oldName} → {$validated['manufacturerName']}", $id);
+
+        return response()->json([
+            'message' => 'Manufacturer updated successfully',
             'data'    => $manufacturer,
         ]);
     }
@@ -165,70 +286,29 @@ class ManufacturerController extends Controller
     public function deleteManufacturer(Request $request, $id)
     {
         $manufacturer = Manufacturer::findOrFail($id);
-        $name = $manufacturer->manufacturer_name; // Capture before delete
-        $manufacturer->delete(); // Soft delete
-        // Log successful deletion
+        $name = $manufacturer->manufacturer_name;
+
+        // Clean up files
+        foreach (['ivr_file', 'order_file', 'onboarding_file'] as $field) {
+            $path = $manufacturer->$field;
+            if ($path && Storage::disk('private')->exists($path)) {
+                Storage::disk('private')->delete($path);
+            }
+        }
+
+        if ($manufacturer->logo && Storage::disk('public')->exists($manufacturer->logo)) {
+            Storage::disk('public')->delete($manufacturer->logo);
+        }
+
+        $manufacturer->delete();
+
         $this->logAudit($request, 'manufacturer_delete', "Manufacturer deleted: {$name}", $id);
+
         return response()->json([
             'message' => 'Manufacturer deleted successfully',
         ]);
     }
 
-    public function updateManufacturer(Request $request, $id)
-    {
-        $manufacturer = Manufacturer::findOrFail($id);
-        $validated = $request->validate([
-            'manufacturerName'  => 'required|string|max:255',
-            'primaryEmail'      => 'required|email|unique:woundmed_manufacturers,primary_email,' . $id . ',manufacturer_id',
-            'secondaryEmail'    => 'nullable|email',
-            'website'           => 'nullable|url',
-            'address'           => 'nullable|string|max:255',
-            'contactPerson'     => 'required|string|max:255',
-            'contactNumber'     => 'required|string|max:20',
-            'ivrForm'           => 'nullable|file|mimes:pdf,doc,docx|max:10240',
-            'logo'              => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'manufacturerStatus' => 'required|in:0,1,2',
-        ]);
-
-        // Handle IVR file update if provided
-        if ($request->hasFile('ivrForm')) {
-            // Optionally delete old file if exists
-            if ($manufacturer->filepath && Storage::disk('private')->exists($manufacturer->filepath)) {
-                Storage::disk('private')->delete($manufacturer->filepath);
-            }
-            $path = $request->file('ivrForm')->store('manufacturers', 'private');
-            $manufacturer->filepath = $path;
-        }
-
-        // Handle logo update if provided
-        if ($request->hasFile('logo')) {
-            // Delete old logo if exists
-            if ($manufacturer->logo && Storage::disk('public')->exists($manufacturer->logo)) {
-                Storage::disk('public')->delete($manufacturer->logo);
-            }
-            $logoPath = $request->file('logo')->store('manufacturers/logos', 'public');
-            $manufacturer->logo = $logoPath;
-        }
-
-        $oldName = $manufacturer->manufacturer_name;
-        $manufacturer->manufacturer_name = $validated['manufacturerName'];
-        $manufacturer->primary_email = $validated['primaryEmail'];
-        $manufacturer->secondary_email = $validated['secondaryEmail'] ?? null;
-        $manufacturer->website = $validated['website'] ?? null;
-        $manufacturer->address = $validated['address'] ?? null;
-        $manufacturer->contact_person = $validated['contactPerson'];
-        $manufacturer->contact_number = $validated['contactNumber'];
-        $manufacturer->manufacturer_status = $validated['manufacturerStatus'];
-        $manufacturer->save();
-        // Log successful update
-        $this->logAudit($request, 'manufacturer_update', "Manufacturer updated: {$oldName} -> {$validated['manufacturerName']}", $id);
-        return response()->json([
-            'message' => 'Manufacturer updated successfully',
-            'data'    => $manufacturer,
-        ]);
-    }
-
-    //
     public function handleAction(Request $request, $id)
     {
         $manufacturer = Manufacturer::findOrFail($id);
@@ -260,15 +340,22 @@ class ManufacturerController extends Controller
         ]);
     }
 
-    public function downloadIVRForm($id)
+    public function downloadFile(Request $request, $id, $type)
     {
         $manufacturer = Manufacturer::findOrFail($id);
 
-        if (!$manufacturer->filepath || !Storage::disk('private')->exists($manufacturer->filepath)) {
+        $path = match ($type) {
+            'ivr'        => $manufacturer->ivr_file,
+            'order'      => $manufacturer->order_file,
+            'onboarding' => $manufacturer->onboarding_file,
+            default      => null,
+        };
+
+        if (!$path || !Storage::disk('private')->exists($path)) {
             return response()->json(['error' => 'File not found'], 404);
         }
 
-        $filename = basename($manufacturer->filepath);
-        return Storage::disk('private')->download($manufacturer->filepath, $filename);
+        $filename = basename($path);
+        return Storage::disk('private')->download($path, $filename);
     }
 }

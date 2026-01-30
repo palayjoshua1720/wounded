@@ -320,7 +320,7 @@
 									<div class="flex items-center space-x-3">
 										<button
 											type="button"
-											v-if="selectedIvrRequest.manufacturer?.filepath" 
+											v-if="selectedIvrRequest.manufacturer?.ivr_file" 
 											@click="downloadIVRForm(selectedIvrRequest.manufacturer?.manufacturer_id)" 
 											target="_blank"
 											class="flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-md shadow hover:bg-blue-700 active:bg-blue-800 transition"
@@ -337,22 +337,16 @@
 
 					<div v-if="filePreviewUrl" class="mt-2 border rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800 p-3">
 						<div v-if="isImageFile(filePreviewUrl)" class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4 bg-gray-50 dark:bg-gray-700/50">
-							<!-- <img
-								:src="selectedIvrRequest.filepath" 
-								:alt="selectedIvrRequest.filepath"
-								class="max-w-full h-auto rounded-lg shadow-md"
-								
-							/> -->
 							<img 
-								:src="`${API_URL}/private-file/${selectedIvrRequest.filepath}`"
-								:alt="selectedIvrRequest.filepath"
+								:src="`${API_URL}/private-file/${selectedIvrRequest.ivr_file}`"
+								:alt="selectedIvrRequest.ivr_file"
 								class="max-w-full h-auto rounded-lg shadow-md"
 								
 							/>
 						</div>
 						<div v-else-if="isPDFFile(filePreviewUrl)" class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4 bg-gray-50 dark:bg-gray-700/50">
 							<iframe 
-								:src="`${API_URL}/private-file/${selectedIvrRequest.filepath}`"
+								:src="`${API_URL}/private-file/${selectedIvrRequest.ivr_file}`"
 								class="w-full h-96 rounded-lg"
 								frameborder="0"
 							></iframe>
@@ -530,11 +524,15 @@
 									<strong>Form Type: </strong>
 									<span>File</span>
 								</p>
+								<p class="text-sm text-blue-700">
+									<strong>Eligibility Confirmation Email: </strong>
+									<span>{{ selectedManufacturer.eligibility_email }}</span>
+								</p>
 							</div>
 							<div class="flex items-center gap-2 mt-2">
 								<button
 									type="button"
-									v-if="selectedManufacturer.filepath"
+									v-if="selectedManufacturer.ivr_file"
 									@click="downloadIVRForm(selectedManufacturer.manufacturer_id)"
 									class="flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-md shadow hover:bg-blue-700 active:bg-blue-800 transition"
 								>
@@ -547,12 +545,13 @@
 								<strong class="text-red-700 dark:text-red-400">Note:</strong>
 								After downloading the form, please complete all required fields. Once finished, save your changes and re-upload the updated file using the upload section below.
 							</p>
+							<p> </p>
 						</div>
 					</div>
 				</transition>
 
 				<!-- IVR Information -->
-				 <transition name="fade-slide">
+				<transition name="fade-slide">
 					<div v-if="selectedManufacturer" class="relative">
 
 						<!-- Loader Overlay -->
@@ -666,6 +665,7 @@
 						</div>
 					</div>
 				</transition>
+				
 				<div>
 					<label class="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
 						<NotebookPen class="w-5 h-5 text-green-600" />
@@ -738,7 +738,7 @@ interface IVRRequest {
 	notes: string
 	description: string
 	verified_at: string
-	filepath: string
+	ivr_file: string
 
 	// Nested relations
 	patient?: {
@@ -762,9 +762,10 @@ interface IVRRequest {
 	manufacturer?: {
 		manufacturer_id: string
 		manufacturer_name: string
-		filepath: string
+		ivr_file: string
 		contact_person?: string
 		primary_email?: string | null
+		eligibility_email?: string | null
 	}
 }
 
@@ -786,8 +787,9 @@ interface Brand {
 interface Manufacturer {
 	manufacturer_id: string
 	manufacturer_name: string
-	filepath: string
+	ivr_file: string
 	primary_email?: string
+	eligibility_email?: string
 	eligibility_status: number
 }
 
@@ -832,7 +834,6 @@ const ivrEligibilityStatus: Record<number, { label: string; classes: string }> =
 	},
 }
 
-
 const searchTerm = ref('')
 const statusFilter = ref('all')
 const selectedIvrRequest = ref<IVRRequest | null>(null)
@@ -849,12 +850,12 @@ const formData = ref({
 	clinic_id: '',
 	brand_id: '',
 	manufacturer_id: '',
-	primary_email: '',
+	eligibility_email: '',
 	patient_id: '',
 	description: '',
 	status: '',
 	eligibility_status: 0,
-	filepath: '',
+	ivr_file: '',
 	ivr_status: 0
 })
 
@@ -881,9 +882,9 @@ async function editIVR(ivr: IVRRequest) {
 		status: ivr.ivr_status.toString(),
 		manufacturer_id: ivr.manufacturer?.manufacturer_id || '',
 		eligibility_status: ivr.eligibility_status,
-		filepath: ivr.filepath || '',
+		ivr_file: ivr.ivr_file || '',
 		ivr_status:ivr.ivr_status || 0,
-		primary_email: '',
+		eligibility_email: '',
 	}
 	
 	await nextTick();
@@ -969,7 +970,7 @@ async function handleSubmitForm() {
 		payload.append('clinic_id', formData.value.clinic_id)
 		payload.append('manufacturer_id', formData.value.manufacturer_id)
 		payload.append('eligibility_status', formData.value.eligibility_status.toString())
-		payload.append('primary_email', formData.value.primary_email)
+		payload.append('eligibility_email', formData.value.eligibility_email)
 
 		console.log('payload: ');
 		console.log(payload);
@@ -980,12 +981,12 @@ async function handleSubmitForm() {
 				toast.error('IVR Information Required.')
 				return
 			}
-			payload.append('filepath', selectedFile.value)
+			payload.append('ivr_file', selectedFile.value)
 		} else if (showEditForm.value) {
 			if (selectedFile.value) {
-				payload.append('filepath', selectedFile.value)
-			} else if (!formData.value.filepath) {
-				// No newly selected file and no existing filepath to keep
+				payload.append('ivr_file', selectedFile.value)
+			} else if (!formData.value.ivr_file) {
+				// No newly selected file and no existing ivr_file to keep
 				toast.error('IVR Information Required.')
 				return
 			}
@@ -1107,12 +1108,12 @@ function clearForm(){
 		clinic_id: '',
 		brand_id: '',
 		manufacturer_id: '',
-		primary_email: '',
+		eligibility_email: '',
 		patient_id: '',
 		description: '',
 		status: '',
 		eligibility_status: 0,
-		filepath: '',
+		ivr_file: '',
 		ivr_status: 0,
 	}
 }
@@ -1244,16 +1245,16 @@ const removeFile = () => {
 }
 
 const removeExistingFile = () => {
-	formData.value.filepath = '';
+	formData.value.ivr_file = '';
 	selectedFile.value = null
 	loadProgress.value = 0
 	isLoadingFile.value = false
 }
 
 const existingFile = computed(() => {
-    return formData.value.filepath ? {
-        name: formData.value.filepath.split('/').pop(),
-        url: formData.value.filepath
+    return formData.value.ivr_file ? {
+        name: formData.value.ivr_file.split('/').pop(),
+        url: formData.value.ivr_file
     } : null
 })
 
@@ -1387,8 +1388,8 @@ const hasExistingIVR = (patientId: number, manufacturerId: number) => {
 }
 
 const filePreviewUrl = computed(() => {
-    if (!selectedIvrRequest.value?.manufacturer?.filepath) return null;
-    return `/storage/${selectedIvrRequest.value.manufacturer.filepath}`;
+    if (!selectedIvrRequest.value?.manufacturer?.ivr_file) return null;
+    return `/storage/${selectedIvrRequest.value.manufacturer.ivr_file}`;
 });
 
 function isImageFile(filename: string) {
@@ -1413,8 +1414,8 @@ onMounted(async () => {
 watch(selectedManufacturer, (manufacturer) => {
 	if (manufacturer) {
 		formData.value.manufacturer_id = manufacturer.manufacturer_id
-		formData.value.primary_email = manufacturer.primary_email ?? ''
-		console.log(formData.value.primary_email);
+		formData.value.eligibility_email = manufacturer.eligibility_email ?? ''
+		console.log(formData.value.eligibility_email);
 		formData.value.brand_id = selectedIvrRequest.value?.brand_id ?? '';
 		
 	} else {
@@ -1424,8 +1425,8 @@ watch(selectedManufacturer, (manufacturer) => {
 watch(selectedManufacturer, (manufacturer) => {
 	if (manufacturer) {
 		formData.value.manufacturer_id = manufacturer.manufacturer_id
-		formData.value.primary_email = manufacturer.primary_email ?? ''
-		console.log(formData.value.primary_email);
+		formData.value.eligibility_email = manufacturer.eligibility_email ?? ''
+		console.log(formData.value.eligibility_email);
 		formData.value.brand_id = selectedIvrRequest.value?.brand_id ?? '';
 		
 	} else {

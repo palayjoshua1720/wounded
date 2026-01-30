@@ -313,7 +313,6 @@ class GraftSizeController extends Controller
         ]);
     }
 
-    // New: Stats endpoint
     public function getGraftStats()
     {
         $total = GraftSize::count();

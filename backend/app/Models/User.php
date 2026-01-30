@@ -25,6 +25,8 @@ class User extends Authenticatable
         'user_role',
         'user_status',
         'phone',
+        'one_time_email_verification',
+        'backup_codes_enabled',
     ];
 
     protected $hidden = [
@@ -36,6 +38,8 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'user_status' => 'integer',
         'user_role' => 'integer',
+        'one_time_email_verification' => 'integer',
+        'backup_codes_enabled' => 'boolean',
     ];
 
     /**

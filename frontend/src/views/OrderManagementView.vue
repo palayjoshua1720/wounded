@@ -350,6 +350,32 @@
 						</div>
 					</div>
 
+					<h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4 border-t pt-5">
+						Order File
+					</h3>
+					<div v-if="filePreviewUrl" class="border rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800 p-3" style="margin-top: unset !important;">
+						<div v-if="isImageFile(filePreviewUrl)" class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4 bg-gray-50 dark:bg-gray-700/50">
+							<img 
+								:src="`${API_URL}/private-file/${selectedOrder.order_file}`"
+								:alt="selectedOrder.order_file"
+								class="max-w-full h-auto rounded-lg shadow-md"
+								
+							/>
+						</div>
+						<div v-else-if="isPDFFile(filePreviewUrl)" class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4 bg-gray-50 dark:bg-gray-700/50">
+							<iframe 
+								:src="`${API_URL}/private-file/${selectedOrder.order_file}`"
+								class="w-full h-96 rounded-lg"
+								frameborder="0"
+							></iframe>
+						</div>
+						<div v-else class="text-center py-8 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700/50">
+							<File class="w-16 h-16 text-gray-400 mx-auto mb-3" />
+							<p class="text-sm text-gray-500 dark:text-gray-400 font-medium">Preview not available for this file type</p>
+							<p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Download to view the file</p>
+						</div>
+					</div>
+
 					<div class="border-t border-gray-200 pt-6">
 						<h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">
 							Override Status
@@ -471,6 +497,19 @@
 							{{ ivr.ivr_number }} [{{ ivr.manufacturer?.manufacturer_name }}]
 						</option>
 					</select>
+					
+					<div
+					v-if="selectedIVR"
+					class="flex items-center gap-2 text-sm text-gray-700 mt-2 mb-2"
+					>
+						<span class="font-semibold text-gray-600">
+							Eligibility Notification Email:
+						</span>
+						<span class="text-gray-900">
+							{{ selectedIVR.manufacturer?.order_email || '—' }}
+						</span>
+					</div>
+
 					<div v-if="selectedIVR" class="mt-2">
 						<div
 							class="p-3 rounded-lg flex items-center space-x-2 border dark:border-opacity-40"
@@ -508,14 +547,17 @@
 				<!-- Order Items -->
 				<div :class="{ 'opacity-40 pointer-events-none': !isSelectedIVREligible }">
 					<div class="flex items-center justify-between mb-4">
-						<h3 class="text-lg font-medium text-gray-900 dark:text-white">Order Items</h3>
+						 <div class="flex items-center gap-2 mb-2">
+							<Blocks class="w-5 h-5 text-green-500" />
+							<h3 class="text-lg font-medium text-gray-900 dark:text-white">Order Items</h3>
+						</div>
 						<button type="button" @click="addOrderItem" class="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
 							<PackagePlus class="w-4 h-4" />
 							<span>Add Item</span>
 						</button>
 					</div>
 
-					<p class="text-xs text-yellow-600 dark:text-yellow-400 mb-2">Note: You may exceed the MUE (Maximum Units per Episode) for a product, but this will be flagged for review. You can still submit the order.</p>
+					<p class="text-xs text-yellow-600 dark:text-yellow-400 mb-2">Note: You may exceed the MUE (Medically Unlikely Edits) for a product, but this will be flagged for review. You can still submit the order.</p>
 					<div v-for="(item, idx) in formData.items" :key="item.id" class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 mb-4">
 						<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-[2fr_2fr_1fr_1fr_auto] gap-4 items-end">
 							<!-- Brand -->
@@ -597,6 +639,120 @@
 					</div>
 				</div>
 
+				<transition name="fade-slide">
+					<div v-if="selectedIVR" class="relative">
+
+						<!-- Loader Overlay -->
+						<transition name="fade"> 
+							<div
+								v-if="isLoadingFile"
+								class="absolute inset-0 bg-white/70 dark:bg-gray-900/60 backdrop-blur-sm flex flex-col items-center justify-center rounded-lg z-10"
+							>
+								<div class="w-60 bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden mb-3">
+									<div
+										class="h-full bg-purple-500 transition-all duration-100"
+										:style="{ width: loadProgress + '%' }"
+									></div>
+								</div>
+
+								<p class="text-sm text-gray-700 dark:text-gray-300">
+									Preparing file... {{ loadProgress }}%
+								</p>
+							</div>
+						</transition>
+
+						<!-- Upload Box -->
+						<div :class="{ 'blur-sm': isLoadingFile }">
+							<div class="flex items-center gap-2 mb-2">
+								<Folder class="w-5 h-5 text-green-500" />
+								<h3 class="text-md font-semibold text-gray-900 dark:text-gray-100">Order File</h3>
+							</div>
+
+							<div v-if="isCreateMode ? !selectedFile : (!existingFile && !selectedFile)"
+								class="mt-1 flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer 
+									bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition"
+								@drop="handleDrop"
+								@dragover="allowDrop"
+							>
+								<input
+									id="order-upload"
+									type="file"
+									accept=".pdf,.doc,.docx"
+									class="hidden"
+									@change="handleFileChange"
+								/>
+
+								<label for="order-upload" class="text-center cursor-pointer">
+									<div class="mx-auto w-16 h-16 bg-purple-100 dark:bg-purple-900/40 rounded-full flex items-center justify-center mb-3">
+										<CloudUpload class="w-8 h-8 text-purple-500" />
+									</div>
+
+									<p class="text-sm font-semibold text-gray-900 dark:text-white mb-1">
+										<span class="text-purple-600 dark:text-purple-400">Click to upload</span> or drag and drop
+									</p>
+									<p class="text-xs text-gray-500 dark:text-gray-400">PDF or DOCX (max. 10MB)</p>
+								</label>
+							</div>
+
+							<!-- File Preview -->
+							<div
+								v-if="selectedFile" 
+								class="mt-3 flex items-center justify-between gap-3 text-sm text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 px-3 py-2 rounded-lg"
+							>
+								<div class="flex items-center gap-2">
+									<FileText class="w-4 h-4 text-gray-400" />
+									<div>
+										<p class="font-medium">{{ selectedFile.name }}</p>
+										<p class="text-xs text-gray-500">
+											Size: {{ (selectedFile.size / 1024 / 1024).toFixed(2) }} MB • Type: {{ selectedFile.type || 'N/A' }}
+										</p>
+									</div>
+								</div>
+
+								<!-- Remove Button -->
+								<button 
+									@click="removeFile"
+									class="text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 transition"
+									title="Remove file"
+								>
+									<X class="w-5 h-5" />
+								</button>
+							</div>
+							
+							<!-- Existing file (Edit mode only) -->
+							<div
+								v-if="!showCreateForm && existingFile"
+								class="mt-3 flex items-center justify-between gap-3 text-sm text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 px-3 py-2 rounded-lg"
+							>
+								<div class="flex items-center gap-2">
+									<FileText class="w-4 h-4 text-gray-400" />
+									<div>
+										<p class="font-medium">{{ existingFile.name }}</p>
+										<p class="text-xs text-gray-500">Current uploaded file</p>
+									</div>
+								</div>
+
+								<div class="inline-flex items-center gap-1">
+								<a 
+									:href="existingFile.url" 
+									target="_blank"
+									class="text-blue-600 hover:underline"
+								>
+									<Eye class="w-5 h-4" />
+								</a>
+								<button 
+									@click="removeExistingFile"
+									class="text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 transition"
+									title="Remove file"
+								>
+									<X class="w-5 h-5" />
+								</button>
+								</div>
+							</div>
+						</div>
+					</div>
+				</transition>
+
 				<!-- Internal Notes -->
 				<div>
 					<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Internal Notes</label>
@@ -653,8 +809,8 @@ import {
 	Calendar1, FileTextIcon, SquarePen,
 	PackagePlus, ShoppingCart, Trash2,
 	ChevronDown, Package, Send, ShieldCheck,
-	Factory, TruckElectric,
-	FileText, BaggageClaim
+	Factory, TruckElectric, Folder, CloudUpload,
+	FileText, BaggageClaim, X, Blocks
 } from 'lucide-vue-next';
 import api from '@/services/api'
 import { toast } from 'vue3-toastify'
@@ -674,6 +830,7 @@ interface Order {
 	tracking_code?: string;
 	ivr_num: string
 	manufacturer_name: string
+	order_file: string
 
 	clinic: Clinic
 	clinician: Clinician
@@ -712,7 +869,7 @@ interface Brand {
 	manufacturer?: {
 		manufacturer_id: string
 		manufacturer_name: string
-		primary_email: string | string[]
+		order_email: string | string[]
 	}
 }
 
@@ -736,7 +893,7 @@ interface IVR {
 interface Manufacturer {
 	manufacturer_id: string
 	manufacturer_name: string
-	primary_email: string
+	order_email: string
 	brands: Brand[]
 }
 
@@ -760,6 +917,8 @@ type OrderItem = {
 	graftStock?: number
 }
 
+const API_URL = process.env.VUE_APP_API_URL;
+
 // 0-submitted | 1-acknowledged | 2-shipped | 3-delivered | 4-cancelled
 type OrderStatus = 'submitted' | 'acknowledged' | 'shipped' | 'delivered' | 'cancelled'
 
@@ -781,6 +940,7 @@ const orderStatusReverseMap: Record<number, OrderStatus> = {
 	4: 'cancelled'
 }
 
+const isRevertingIVR = ref(false)
 const tableLoader = ref(false);
 const orders = ref<Order[]>([])
 const clinics = ref<Clinic[]>([])
@@ -795,6 +955,10 @@ const pagination = ref({
 	total: 0,
 })
 
+// file handling
+const isLoadingFile = ref(false)
+const loadProgress = ref(0)
+const selectedFile = ref<File | null>(null)
 
 const searchTerm = ref('')
 const statusFilter = ref('all')
@@ -802,6 +966,7 @@ const statusFilter = ref('all')
 const selectedOrder = ref<Order | null>(null)
 const showOrderModal = ref(false)
 const showCreateForm = ref(false)
+const isCreateMode = computed(() => showCreateForm.value);
 const showEditForm = ref(false)
 const showFormModal = ref(false)
 const selectedOrderForEdit = ref<Order | null>(null)
@@ -814,7 +979,7 @@ const formData = ref({
 	patientId: '',
 	ivrId: '',
 	brandId: '',
-	primary_email: '',
+	order_email: '',
 	sizeId: '',
 	dateOfOrder: '',
 	status: 'submitted' as const,
@@ -834,8 +999,8 @@ const formData = ref({
 		}
 	],
 	manufacturerId: '',
-	trackingNumber: ''
-
+	trackingNumber: '',
+	order_file: ''
 })
 
 const filteredPatients = computed(() => {
@@ -1001,7 +1166,7 @@ function resetCreateForm() {
 		patientId: '',
 		brandId: '',
 		ivrId: '',
-		primary_email: '',
+		order_email: '',
 		sizeId: '',
 		dateOfOrder: '',
 		status: 'submitted',
@@ -1019,7 +1184,8 @@ function resetCreateForm() {
 			graftStock: 0
 		}],
 		manufacturerId: '',
-		trackingNumber: ''
+		trackingNumber: '',
+		order_file: ''
 	}
 	previousIvrId.value = null
 }
@@ -1114,7 +1280,7 @@ async function editOrder(order: Order) {
 		patientId: fullOrder.patient?.patient_id?.toString() || '',
 		brandId: '',
 		ivrId: fullOrder.ivr?.ivr_id?.toString() || '',
-		primary_email: '',
+		order_email: '',
 		sizeId: '',
 		dateOfOrder: fullOrder.ordered_at
 			? new Date(fullOrder.ordered_at).toISOString().split('T')[0]
@@ -1123,7 +1289,8 @@ async function editOrder(order: Order) {
 		notes: fullOrder.notes || '',
 		items: [],
 		manufacturerId: fullOrder.manufacturer_id?.toString() || '',
-		trackingNumber: fullOrder.tracking_num || ''
+		trackingNumber: fullOrder.tracking_num || '',
+		order_file: fullOrder.order_file || ''
 	};
 
 	showFormModal.value = true;
@@ -1251,7 +1418,7 @@ const followUpHoursLeft = computed(() => {
 });
 
 function getSizesByBrand(brandId: string) {
-	const sizes = graftSizes.value.filter(gs => gs.brand.brand_id == brandId)
+	const sizes = graftSizes.value.filter(gs => gs.brand && gs.brand.brand_id == brandId)
 	return sizes
 }
 
@@ -1287,6 +1454,79 @@ function graftStockCheck(graftId: number) {
 	const graft = graftSizes.value.find(g => g.graft_size_id === graftId)
 	return graft?.stock ?? 0
 }
+
+
+// file upload
+const simulateLoading = () => {
+	isLoadingFile.value = true
+	loadProgress.value = 0
+
+	const interval = setInterval(() => {
+		if (loadProgress.value >= 100) {
+			clearInterval(interval)
+			isLoadingFile.value = false
+			return
+		}
+		loadProgress.value += 10
+	}, 80)
+}
+
+const handleFileChange = (event: any) => {
+	const file = event.target.files[0]
+	if (!file) return
+
+	selectedFile.value = file
+	simulateLoading()
+}
+
+const handleDrop = (event: any) => {
+	event.preventDefault()
+	const file = event.dataTransfer.files[0]
+	if (!file) return
+
+	selectedFile.value = file
+	simulateLoading()
+}
+
+const allowDrop = (event: any) => {
+	event.preventDefault()
+}
+
+const removeFile = () => {
+	selectedFile.value = null
+	loadProgress.value = 0
+	isLoadingFile.value = false
+}
+
+const removeExistingFile = () => {
+	formData.value.order_file = '';
+	selectedFile.value = null
+	loadProgress.value = 0
+	isLoadingFile.value = false
+}
+
+const filePreviewUrl = computed(() => {
+    if (!selectedOrder.value?.order_file) return null;
+    return `/storage/${selectedOrder.value.order_file}`;
+});
+
+function isImageFile(filename: string) {
+    if (!filename) return false
+    const ext = filename.split('.').pop()?.toLowerCase() || ''
+    return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext)
+}
+
+function isPDFFile(filename: string) {
+    if (!filename) return false
+    return filename.toLowerCase().endsWith('.pdf')
+}
+
+const existingFile = computed(() => {
+    return formData.value.order_file ? {
+        name: formData.value.order_file.split('/').pop(),
+        url: formData.value.order_file
+    } : null
+})
 
 async function getAllOrders(page = 1)
 {
@@ -1332,7 +1572,8 @@ async function getAllOrders(page = 1)
 				patient: o.patient,
 				brand: o.brand,
 				ivr_num: o?.ivr?.ivr_number ?? '',
-				manufacturer_name: o?.ivr?.manufacturer.manufacturer_name ?? ''
+				manufacturer_name: o?.ivr?.manufacturer.manufacturer_name ?? '',
+				order_file: o.order_file ?? ''
 			} as Order
 		})
 
@@ -1407,24 +1648,36 @@ async function getAllGraftSizes() {
 }
 
 async function addNewOrder(){
-	const payload = {
-		clinic_id: formData.value.clinicId,
-		clinician_id: formData.value.clinicianId,
-		patient_id: formData.value.patientId,
-		primary_email: formData.value.primary_email,
-		notes: formData.value.notes,
-		items: formData.value.items.map(item => ({
-			brand_id: item.brandId,
-			graft_id: item.sizeId,
-			ivr_id: formData.value.ivrId,
-			quantity: item.quantity,
-			asp: item.asp,
-			product_type: item.productType,
-			device_type: item.deviceType,
-			graftStock: item.graftStock
-		})),
-		ivr_id: formData.value.ivrId,
-		manufacturer_id: formData.value.manufacturerId,
+	const payload = new FormData()
+
+	payload.append('clinic_id', formData.value.clinicId)
+	payload.append('clinician_id', formData.value.clinicianId)
+	payload.append('patient_id', formData.value.patientId)
+	payload.append('order_email', formData.value.order_email)
+	payload.append('notes', formData.value.notes)
+	payload.append('ivr_id', formData.value.ivrId)
+	payload.append('manufacturer_id', formData.value.manufacturerId)
+
+	payload.append(
+		'items',
+		JSON.stringify(
+			formData.value.items.map(item => ({
+				brand_id: item.brandId,
+				graft_id: item.sizeId,
+				ivr_id: formData.value.ivrId,
+				quantity: item.quantity,
+				asp: item.asp,
+				product_type: item.productType,
+				device_type: item.deviceType,
+				graftStock: item.graftStock
+			}))
+		)
+	)
+
+	console.log('order file:', selectedFile.value)
+
+	if (selectedFile.value) {
+		payload.append('order_file', selectedFile.value)
 	}
 
 	Swal.fire({
@@ -1446,7 +1699,7 @@ async function addNewOrder(){
 				{
 					headers: {
 						Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
-						'Content-Type': 'application/json'
+						'Content-Type': 'multipart/form-data'
 					}
 				}
 			)
@@ -1661,6 +1914,12 @@ watch(() => formData.value.ivrId, (newVal, oldVal) => {
 watch(
 	() => formData.value.ivrId,
 	async (newVal, oldVal) => {
+		if (isRevertingIVR.value) {
+			isRevertingIVR.value = false
+			return
+		}
+
+
 		if (!formData.value.patientId) return
 		if (!oldVal || oldVal === '') return
 		if (newVal === oldVal) return
@@ -1681,9 +1940,13 @@ watch(
 		if (result.isConfirmed) {
 			resetOrderItems()
 		} else {
+			isRevertingIVR.value = true
+
 			formData.value.ivrId = previousIvrId.value
 				? String(previousIvrId.value)
 				: ''
+				
+			Swal.close()
 		}
 
 		Swal.close()
@@ -1706,7 +1969,7 @@ watch(() => formData.value.ivrId, () => {
 	if (!selectedIVR.value) return
 
 	formData.value.manufacturerId = selectedIVR.value.manufacturer?.manufacturer_id;
-	formData.value.primary_email = selectedIVR.value.manufacturer?.primary_email;
+	formData.value.order_email = selectedIVR.value.manufacturer?.order_email;
 	
 	if (selectedIVR.value.eligibility_status !== 1) {
 		toast.error(

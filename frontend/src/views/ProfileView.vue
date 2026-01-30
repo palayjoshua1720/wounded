@@ -315,6 +315,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useUser } from '@/composables/auth/useUser'
 import BaseModal from '@/components/ui/BaseModal.vue'
+import api from '@/services/api'
 
 // Store and composables
 const authStore = useAuthStore()
@@ -340,7 +341,21 @@ const passwordForm = ref({
 
 // Computed properties
 const currentUser = computed(() => authStore.currentUser)
-const role = computed(() => currentUser.value?.role || localStorage.getItem('mock-role'))
+const role = computed(() => {
+  if (currentUser.value) {
+    // Map user_role numbers to role names
+    const roleMap: Record<number, string> = {
+      0: 'admin',
+      1: 'office',
+      2: 'clinic',
+      3: 'clinician',
+      4: 'manufacturer',
+      5: 'biller'
+    }
+    return roleMap[currentUser.value.user_role ?? 0] || 'user'
+  }
+  return localStorage.getItem('mock-role') || 'user'
+})
 
 const memberSince = computed(() => {
   return 'January 2024'
@@ -367,10 +382,46 @@ const roleSpecificTitle = computed(() => {
 const updateProfile = async () => {
   isUpdating.value = true
   try {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    console.log('Profile updated:', profileForm.value)
+    // Get current user ID
+    const userId = currentUser.value?.id
+    if (!userId) {
+      throw new Error('User not found')
+    }
+    
+    // Split the full name into first, middle, and last names
+    const nameParts = profileForm.value.name.trim().split(/\s+/)
+    let first_name = ''
+    let middle_name = ''
+    let last_name = ''
+    
+    if (nameParts.length === 1) {
+      first_name = nameParts[0]
+    } else if (nameParts.length === 2) {
+      first_name = nameParts[0]
+      last_name = nameParts[1]
+    } else if (nameParts.length >= 3) {
+      first_name = nameParts[0]
+      middle_name = nameParts.slice(1, -1).join(' ')
+      last_name = nameParts[nameParts.length - 1]
+    }
+    
+    // Prepare update data - properly handle empty values for optional fields
+    const updateData = {
+      first_name: first_name,
+      middle_name: middle_name || null,
+      last_name: last_name,
+      email: profileForm.value.email,
+      phone: profileForm.value.phone || null,
+    }
+    
+    // Make API call to update user profile
+    const response = await api.put(`/users/${userId}`, updateData)
+    
     // Show success message
+    console.log('Profile updated:', response.data)
+    
+    // Reload the page to ensure changes are reflected
+    window.location.reload()
   } catch (error) {
     console.error('Failed to update profile:', error)
   } finally {
@@ -406,10 +457,17 @@ const changePassword = async () => {
 // Initialize form data
 onMounted(() => {
   if (currentUser.value) {
+    // Combine first, middle, and last names into a full name
+    const nameParts = [
+      currentUser.value.first_name,
+      currentUser.value.middle_name,
+      currentUser.value.last_name
+    ].filter(part => part); // Filter out null/undefined/empty parts
+    
     profileForm.value = {
-      name: currentUser.value.name || '',
+      name: nameParts.join(' ') || '',
       email: currentUser.value.email || '',
-      phone: '+1 (555) 123-4567',
+      phone: currentUser.value.phone || '',
       department: role.value === 'admin' ? 'Administration' :
                  role.value === 'clinic' ? 'Medical' :
                  role.value === 'sales' ? 'Sales & Marketing' : 'General'

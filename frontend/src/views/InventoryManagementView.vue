@@ -13,15 +13,10 @@
                     <BarChart3 class="w-5 h-5 mr-2" />
                     {{ showStatistics ? 'Hide' : 'Show' }} Stats
                 </button>
-                <button @click="showUsageLogForm = true"
+                <button @click="showLogUsageChoiceModal = true"
                     class="flex items-center px-5 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg group">
                     <Plus class="w-5 h-5 mr-2 group-hover:scale-110 transition-transform" />
                     Log Usage
-                </button>
-                <button @click="showUploadModal = true"
-                    class="flex items-center px-5 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200">
-                    <UploadCloud class="w-5 h-5 mr-2" />
-                    Upload File
                 </button>
             </div>
         </div>
@@ -36,7 +31,7 @@
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Inventory Statistics</h3>
 
                 <!-- Main Stats -->
-                <div class="grid grid-cols-1 sm:grid-cols-4 gap-6 mb-6">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-6">
                     <div class="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
                         <div
                             class="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
@@ -54,11 +49,11 @@
                         </div>
                         <div>
                             <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ getStatusCount('delivered')
-                                }}</p>
+                            }}</p>
                             <p class="text-sm text-gray-500 dark:text-gray-400">Available</p>
                         </div>
                     </div>
-                    <div class="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+                    <!-- <div class="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
                         <div
                             class="w-10 h-10 rounded-lg bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center flex-shrink-0">
                             <Clock class="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
@@ -68,7 +63,7 @@
                             </p>
                             <p class="text-sm text-gray-500 dark:text-gray-400">Expected</p>
                         </div>
-                    </div>
+                    </div> -->
                     <div class="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
                         <div
                             class="w-10 h-10 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center flex-shrink-0">
@@ -92,28 +87,28 @@
                                 <Package class="w-4 h-4 mr-2 text-blue-500" /> Delivered
                             </span>
                             <span class="font-semibold text-gray-900 dark:text-white">{{ getStatusCount('delivered')
-                                }}</span>
+                            }}</span>
                         </div>
-                        <div class="flex items-center justify-between">
+                        <!-- <div class="flex items-center justify-between">
                             <span class="flex items-center text-sm text-gray-600 dark:text-gray-300">
                                 <Clock class="w-4 h-4 mr-2 text-yellow-500" /> Expected
                             </span>
                             <span class="font-semibold text-gray-900 dark:text-white">{{ getStatusCount('expected')
                                 }}</span>
-                        </div>
+                        </div> -->
                         <div class="flex items-center justify-between">
                             <span class="flex items-center text-sm text-gray-600 dark:text-gray-300">
                                 <CheckCircle2 class="w-4 h-4 mr-2 text-green-500" /> Used
                             </span>
                             <span class="font-semibold text-gray-900 dark:text-white">{{ getStatusCount('used')
-                                }}</span>
+                            }}</span>
                         </div>
                         <div class="flex items-center justify-between">
                             <span class="flex items-center text-sm text-gray-600 dark:text-gray-300">
                                 <AlertTriangle class="w-4 h-4 mr-2 text-red-500" /> Expired
                             </span>
                             <span class="font-semibold text-gray-900 dark:text-white">{{ getStatusCount('expired')
-                                }}</span>
+                            }}</span>
                         </div>
                         <div class="flex items-center justify-between">
                             <span class="flex items-center text-sm text-gray-600 dark:text-gray-300">
@@ -127,21 +122,21 @@
                                 <CornerUpLeft class="w-4 h-4 mr-2 text-gray-500" /> Returned
                             </span>
                             <span class="font-semibold text-gray-900 dark:text-white">{{ getStatusCount('returned')
-                                }}</span>
+                            }}</span>
                         </div>
                         <div class="flex items-center justify-between">
                             <span class="flex items-center text-sm text-gray-600 dark:text-gray-300">
                                 <Package class="w-4 h-4 mr-2 text-indigo-500" /> Unused
                             </span>
                             <span class="font-semibold text-gray-900 dark:text-white">{{ getStatusCount('unused')
-                                }}</span>
+                            }}</span>
                         </div>
                         <div class="flex items-center justify-between">
                             <span class="flex items-center text-sm text-gray-600 dark:text-gray-300">
                                 <Repeat2 class="w-4 h-4 mr-2 text-orange-500" /> Reassigned
                             </span>
                             <span class="font-semibold text-gray-900 dark:text-white">{{ getStatusCount('reassigned')
-                                }}</span>
+                            }}</span>
                         </div>
                     </div>
                 </div>
@@ -165,7 +160,7 @@
                         <select v-model="statusFilter"
                             class="pl-10 pr-8 py-3.5 border-0 bg-gray-50 dark:bg-gray-700/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-gray-700 text-gray-900 dark:text-white appearance-none transition-all duration-200">
                             <option value="all">All Status</option>
-                            <option value="expected">Expected</option>
+                            <!-- <option value="expected">Expected</option> -->
                             <option value="delivered">Delivered</option>
                             <option value="used">Used</option>
                             <option value="partially_used">Partially Used</option>
@@ -190,21 +185,6 @@
             </div>
         </div>
 
-        <!-- Usage Log Form -->
-        <div v-if="showUsageLogForm"
-            class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
-            <div class="flex items-center justify-between mb-6">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Log Product Usage</h3>
-                <button @click="showUsageLogForm = false"
-                    class="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200">
-                    <X class="w-5 h-5" />
-                </button>
-            </div>
-            <UsageLogForm :inventory-items="inventory" :clinicians="clinicians" :brands="brands"
-                :graft-sizes="graftSizes" @submit="handleUsageLogSubmitAndHide" @bulk-upload="handleBulkUpload"
-                @cancel="handleUsageLogCancelAndHide" />
-        </div>
-
         <!-- Inventory Table Card -->
         <div
             class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
@@ -212,6 +192,10 @@
                 <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                     <thead class="bg-gray-50/80 dark:bg-gray-700/50 backdrop-blur-sm">
                         <tr>
+                            <th
+                                class="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                Inventory ID
+                            </th>
                             <th
                                 class="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                 Product
@@ -243,10 +227,15 @@
                         </tr>
                     </thead>
                     <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                        <TableLoader v-if="tableLoader" :colspan="7" />
+                        <TableLoader v-if="tableLoader" :colspan="8" />
                         <template v-else>
                             <tr v-for="item in filteredInventory" :key="item.id"
                                 class="hover:bg-gray-50/70 dark:hover:bg-gray-700/50 transition-colors duration-150">
+                                <td class="px-6 py-5 whitespace-nowrap">
+                                    <div class="text-sm font-mono text-blue-600 dark:text-blue-400 font-semibold">
+                                        #{{ item.id }}
+                                    </div>
+                                </td>
                                 <td class="px-6 py-5 whitespace-nowrap">
                                     <div class="flex items-center">
                                         <div
@@ -271,7 +260,7 @@
                                 </td>
                                 <td class="px-6 py-5 whitespace-nowrap">
                                     <div class="text-sm text-gray-900 dark:text-white">{{ getClinicName(item.clinicId)
-                                    }}
+                                        }}
                                     </div>
                                 </td>
                                 <td class="px-6 py-5 whitespace-nowrap">
@@ -338,27 +327,27 @@
             <div class="space-y-6">
                 <!-- Upload Area -->
                 <div v-if="!uploadedFile"
-                    class="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-2 border-dashed border-blue-300 dark:border-blue-600 rounded-2xl p-10 text-center transition-all duration-300 hover:border-blue-500 dark:hover:border-blue-400 hover:shadow-lg group">
-                    <div class="mb-6">
+                    class="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-2 border-dashed border-blue-300 dark:border-blue-600 rounded-2xl p-8 text-center transition-all duration-300 hover:border-blue-500 dark:hover:border-blue-400 hover:shadow-lg group">
+                    <div class="mb-4">
                         <div
-                            class="inline-flex items-center justify-center w-20 h-20 bg-white dark:bg-gray-800 rounded-full shadow-md mb-4 group-hover:scale-110 transition-transform duration-300">
-                            <UploadCloud class="w-10 h-10 text-blue-600 dark:text-blue-400" />
+                            class="inline-flex items-center justify-center w-16 h-16 bg-white dark:bg-gray-800 rounded-full shadow-md mb-3 group-hover:scale-110 transition-transform duration-300">
+                            <UploadCloud class="w-8 h-8 text-blue-600 dark:text-blue-400" />
                         </div>
-                        <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">Upload Log Usage</h3>
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Upload Log Usage</h3>
                         <p class="text-sm text-gray-600 dark:text-gray-400 max-w-md mx-auto">
                             Drag and drop your file here, or click to browse
                         </p>
                     </div>
-
+        
                     <input type="file" @change="handleFileUpload" accept=".pdf,.jpg,.jpeg,.png" class="hidden"
                         id="file-upload" ref="fileInput" />
                     <label for="file-upload"
-                        class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl shadow-md hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 cursor-pointer font-medium group-hover:shadow-xl">
+                        class="inline-flex items-center px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl shadow-md hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 cursor-pointer font-medium group-hover:shadow-xl">
                         <FileText class="w-5 h-5 mr-2" />
                         Choose File
                     </label>
                 </div>
-
+        
                 <!-- OCR Processing Display -->
                 <div v-if="isProcessingOCR"
                     class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-xl p-6">
@@ -368,17 +357,17 @@
                     <p class="text-center text-gray-700 dark:text-gray-300 font-medium">Processing image with OCR...</p>
                     <p class="text-center text-sm text-gray-500 dark:text-gray-400 mt-2">{{ ocrProgress }}%</p>
                 </div>
-
+        
                 <!-- File Preview -->
                 <div v-if="uploadedFile && !isProcessingOCR" class="space-y-4">
                     <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4">
-                        <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center justify-between mb-3">
                             <div class="flex items-center space-x-3">
-                                <FileText class="w-8 h-8 text-blue-600 dark:text-blue-400" />
+                                <FileText class="w-7 h-7 text-blue-600 dark:text-blue-400" />
                                 <div>
                                     <p class="text-sm font-medium text-gray-900 dark:text-white">{{ uploadedFile.name }}
                                     </p>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400">{{
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">{{-
                                         formatFileSize(uploadedFile.size) }}
                                     </p>
                                 </div>
@@ -387,158 +376,154 @@
                                 <X class="w-5 h-5" />
                             </button>
                         </div>
-
+        
                         <!-- Image Preview -->
-                        <div v-if="previewUrl" class="mb-4">
+                        <div v-if="previewUrl" class="mb-3">
                             <img :src="previewUrl" alt="Preview"
-                                class="max-h-64 mx-auto rounded-lg border border-gray-300 dark:border-gray-600" />
+                                class="max-h-48 mx-auto rounded-lg border border-gray-300 dark:border-gray-600" />
                         </div>
                     </div>
-
+        
                     <!-- Extracted Data Form -->
                     <div
-                        class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-6 border border-gray-200 dark:border-gray-600">
-                        <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Extracted Information</h4>
+                        class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-5 border border-gray-200 dark:border-gray-600">
+                        <h4 class="text-base font-semibold text-gray-900 dark:text-white mb-4">Extracted Information</h4>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Serial
-                                    Number</label>
-                                <input v-model="extractedData.serialNumber" type="text"
-                                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                                    placeholder="Enter serial number" />
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">Serial
+                                        Number</label>
+                                    <input v-model="extractedData.serialNumber" type="text"
+                                        class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                        placeholder="Enter serial number" />
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">Patient
+                                        Name</label>
+                                    <input v-model="extractedData.patientName" type="text"
+                                        class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                        placeholder="Enter patient name" />
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">Date of
+                                        Service</label>
+                                    <input v-model="extractedData.dateOfService" type="date"
+                                        class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">Wound
+                                        Part</label>
+                                    <input v-model="extractedData.woundSite" type="text"
+                                        class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                        placeholder="Enter wound location" />
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">Quantity
+                                        Used</label>
+                                    <input v-model.number="extractedData.quantityUsed" type="number" min="1"
+                                        class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                        placeholder="Enter quantity" />
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">Patient
+                                        ID</label>
+                                    <input v-model="extractedData.patientId" type="text"
+                                        class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                        placeholder="Enter patient ID" />
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">Clinician
+                                        ID</label>
+                                    <input v-model="extractedData.clinicianId" type="text"
+                                        class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                        placeholder="Enter clinician ID" />
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">Graft
+                                        Size
+                                        ID</label>
+                                    <input v-model="extractedData.graftSizeId" type="text"
+                                        class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                        placeholder="Enter graft size ID" />
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">Clinic
+                                        ID</label>
+                                    <input v-model="extractedData.clinicId" type="text"
+                                        class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                        placeholder="Enter clinic ID" />
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">Expired
+                                        At</label>
+                                    <input v-model="extractedData.expiredAt" type="date"
+                                        class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+                                </div>
+
+                                <div class="md:col-span-2">
+                                    <label
+                                        class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">Notes/Description</label>
+                                    <textarea v-model="extractedData.notes" rows="2"
+                                        class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                        placeholder="Enter additional notes"></textarea>
+                                </div>
                             </div>
 
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Patient
-                                    Name</label>
-                                <input v-model="extractedData.patientName" type="text"
-                                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                                    placeholder="Enter patient name" />
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Date of
-                                    Service</label>
-                                <input v-model="extractedData.dateOfService" type="date"
-                                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Wound
-                                    Part</label>
-                                <input v-model="extractedData.woundSite" type="text"
-                                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                                    placeholder="Enter wound location" />
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Quantity
-                                    Used</label>
-                                <input v-model.number="extractedData.quantityUsed" type="number" min="1"
-                                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                                    placeholder="Enter quantity" />
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Patient
-                                    ID</label>
-                                <input v-model="extractedData.patientId" type="text"
-                                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                                    placeholder="Enter patient ID" />
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Clinician
-                                    ID</label>
-                                <input v-model="extractedData.clinicianId" type="text"
-                                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                                    placeholder="Enter clinician ID" />
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Graft
-                                    Size
-                                    ID</label>
-                                <input v-model="extractedData.graftSizeId" type="text"
-                                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                                    placeholder="Enter graft size ID" />
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Clinic
-                                    ID</label>
-                                <input v-model="extractedData.clinicId" type="text"
-                                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                                    placeholder="Enter clinic ID" />
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Expired
-                                    At</label>
-                                <input v-model="extractedData.expiredAt" type="date"
-                                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
-                            </div>
-
-                            <div class="md:col-span-2">
-                                <label
-                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Notes/Description</label>
-                                <textarea v-model="extractedData.notes" rows="3"
-                                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                                    placeholder="Enter additional notes"></textarea>
-                            </div>
-                        </div>
-
-                        <!-- Raw OCR Text (Collapsible) -->
-                        <div v-if="rawOcrText" class="mt-4">
-                            <button @click="showRawOcrText = !showRawOcrText"
-                                class="flex items-center text-sm text-blue-600 dark:text-blue-400 hover:underline">
-                                <ChevronDown :class="{ 'rotate-180': showRawOcrText }"
-                                    class="w-4 h-4 mr-1 transition-transform" />
-                                {{ showRawOcrText ? 'Hide' : 'Show' }} Raw OCR Text
-                            </button>
-                            <div v-if="showRawOcrText"
-                                class="mt-2 p-3 bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600">
-                                <pre class="text-xs text-gray-700 dark:text-gray-300 whitespace-pre-wrap font-mono">{{
-                                    rawOcrText }}</pre>
+                            <!-- Raw OCR Text (Collapsible) -->
+                            <div v-if="rawOcrText" class="mt-3">
+                                <button @click="showRawOcrText = !showRawOcrText"
+                                    class="flex items-center text-xs text-blue-600 dark:text-blue-400 hover:underline">
+                                    <ChevronDown :class="{ 'rotate-180': showRawOcrText }"
+                                        class="w-4 h-4 mr-1 transition-transform" />
+                                    {{ showRawOcrText ? 'Hide' : 'Show' }} Raw OCR Text
+                                </button>
+                                <div v-if="showRawOcrText"
+                                    class="mt-2 p-3 bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600 max-h-32 overflow-y-auto">
+                                    <pre class="text-xs text-gray-700 dark:text-gray-300 whitespace-pre-wrap font-mono">{{-
+                                        rawOcrText }}</pre>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-
+            
+        
                 <!-- Supported Formats Info -->
                 <div v-if="!uploadedFile"
-                    class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
-                    <div class="flex items-start space-x-3">
-                        <div
-                            class="flex-shrink-0 w-5 h-5 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mt-0.5">
-                            <svg class="w-3 h-3 text-blue-600 dark:text-blue-400" fill="currentColor"
-                                viewBox="0 0 20 20">
-                                <path fill-rule="evenodd"
-                                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-                                    clip-rule="evenodd" />
-                            </svg>
-                        </div>
-                        <div class="flex-1">
-                            <h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-2">OCR will extract text
-                                from:
-                            </h4>
-                            <div class="grid grid-cols-2 gap-2 text-xs text-gray-600 dark:text-gray-400">
-                                <div class="flex items-center">
-                                    <span class="w-1.5 h-1.5 bg-green-500 rounded-full mr-2"></span>
-                                    PDF (.pdf)
-                                </div>
-                                <div class="flex items-center">
-                                    <span class="w-1.5 h-1.5 bg-green-500 rounded-full mr-2"></span>
-                                    Image Files (.jpg, .png)
-                                </div>
+                        class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+                        <div class="flex items-start space-x-3">
+                            <div
+                                class="flex-shrink-0 w-5 h-5 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mt-0.5">
+                                <Info class="w-3 h-3 text-blue-600 dark:text-blue-400" />
                             </div>
-                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-2 italic">Tesseract OCR will
-                                automatically
-                                extract information from your uploaded document</p>
+                            <div class="flex-1">
+                                <h4 class="text-xs font-semibold text-gray-900 dark:text-white mb-2">OCR will extract text
+                                    from:
+                                </h4>
+                                <div class="grid grid-cols-2 gap-2 text-xs text-gray-600 dark:text-gray-400">
+                                    <div class="flex items-center">
+                                        <span class="w-1.5 h-1.5 bg-green-500 rounded-full mr-2"></span>
+                                        PDF (.pdf)
+                                    </div>
+                                    <div class="flex items-center">
+                                        <span class="w-1.5 h-1.5 bg-green-500 rounded-full mr-2"></span>
+                                        Image Files (.jpg, .png)
+                                    </div>
+                                </div>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-2 italic">Tesseract OCR will
+                                    automatically
+                                    extract information from your uploaded document</p>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </div>
             <template #actions>
                 <div class="flex justify-end space-x-3 px-6 py-4 bg-gray-50 dark:bg-gray-700/30">
                     <button @click="closeUploadModal"
@@ -553,242 +538,251 @@
             </template>
         </BaseModal>
 
+        <!-- Log Usage Choice Modal -->
+        <BaseModal v-model="showLogUsageChoiceModal" title="Log Usage">
+            <div class="space-y-4">
+                <p class="text-gray-600 dark:text-gray-400">Choose how you want to log the usage:</p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                    <button @click="showUsageLogForm = true; showLogUsageChoiceModal = false"
+                        class="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-gray-700 transition-colors">
+                        <Edit class="w-8 h-8 text-blue-600 dark:text-blue-400 mb-2" />
+                        <span class="font-medium text-gray-900 dark:text-white">Manual Entry</span>
+                        <span class="text-sm text-gray-500 dark:text-gray-400 mt-1">Enter usage details manually</span>
+                    </button>
+
+                    <button @click="showUploadModal = true; showLogUsageChoiceModal = false"
+                        class="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-purple-500 hover:bg-purple-50 dark:hover:bg-gray-700 transition-colors">
+                        <UploadCloud class="w-8 h-8 text-purple-600 dark:text-purple-400 mb-2" />
+                        <span class="font-medium text-gray-900 dark:text-white">Upload File</span>
+                        <span class="text-sm text-gray-500 dark:text-gray-400 mt-1">Upload usage data via
+                            file/OCR</span>
+                    </button>
+                </div>
+            </div>
+
+            <template #actions>
+                <div class="flex justify-end w-full p-5">
+                    <button @click="showLogUsageChoiceModal = false"
+                        class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
+                        Cancel
+                    </button>
+                </div>
+            </template>
+        </BaseModal>
+
+        <!-- Usage Log Form Modal -->
+        <BaseModal v-model="showUsageLogForm" title="Log Product Usage" width="max-w-4xl">
+            <UsageLogForm :inventory-items="inventory" :clinicians="clinicians" :brands="brands"
+                :graft-sizes="graftSizes" @submit="handleUsageLogSubmitAndHide" @bulk-upload="handleBulkUpload"
+                @cancel="handleUsageLogCancelAndHide" />
+        </BaseModal>
+
         <!-- Item Details Modal -->
-        <BaseModal v-model="showItemModal" title="Inventory Item Details" width="max-w-5xl">
+        <BaseModal v-model="showItemModal" title="Inventory Details" width="max-w-5xl">
             <div v-if="selectedItem" class="space-y-4">
-                <!-- Serial Number Header -->
-                <div class="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl p-4 text-white shadow-lg">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm text-blue-100 mb-1">Serial Number</p>
-                            <p class="text-2xl font-bold font-mono tracking-wide">{{ selectedItem.serialNumber }}</p>
+                <!-- Header Section -->
+                <div class="relative bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-700 dark:to-indigo-800 rounded-lg p-5 shadow-md overflow-hidden">
+                    <!-- Simple decorative accent -->
+                    <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12"></div>
+                    
+                    <div class="relative flex items-center justify-between gap-4">
+                        <!-- Left: Serial Number -->
+                        <div class="flex-1 min-w-0">
+                            <p class="text-blue-100 dark:text-blue-200 text-xs font-medium mb-1">Serial Number</p>
+                            <p class="text-white text-xl font-bold font-mono break-all">{{ selectedItem.serialNumber }}</p>
                         </div>
-                        <div class="bg-white/20 backdrop-blur-sm rounded-xl px-4 py-2">
-                            <span
-                                :class="`inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold ${getStatusColor(selectedItem.status)} shadow-sm`">
+                        
+                        <!-- Right: Badges -->
+                        <div class="flex items-center gap-2 flex-shrink-0">
+                            <!-- Item ID Badge -->
+                            <div class="bg-white/20 backdrop-blur-sm rounded-md px-3 py-1 border border-white/30">
+                                <p class="text-xs font-semibold text-white">#{{ selectedItem.id }}</p>
+                            </div>
+                            
+                            <!-- Status Badge -->
+                            <span :class="`inline-flex items-center justify-center px-2.5 py-1 rounded-md text-xs font-semibold shadow-lg ${getStatusColor(selectedItem.status)}`">
                                 {{ formatStatusText(selectedItem.status) }}
                             </span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Product Information Cards -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                    <!-- Product Details Card -->
-                    <div
-                        class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3 shadow-sm hover:shadow-md transition-shadow duration-200">
-                        <div class="flex items-center mb-2">
-                            <div
-                                class="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center mr-2">
-                                <Package class="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                <!-- Main Information Card -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+                    <!-- Brand -->
+                    <div class="px-6 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors border-b border-gray-100 dark:border-gray-700">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center flex-shrink-0">
+                                <Package class="w-4 h-4 text-white" />
                             </div>
-                            <h3 class="text-xs font-semibold text-gray-900 dark:text-white uppercase tracking-wide">
-                                Product Details</h3>
-                        </div>
-                        <div class="space-y-2">
-                            <div>
-                                <p class="text-xs text-gray-500 dark:text-gray-400">Brand</p>
-                                <p class="text-sm font-semibold text-gray-900 dark:text-white">{{
-                                    getBrandName(selectedItem.brandId) }}</p>
-                            </div>
-                            <div>
-                                <p class="text-xs text-gray-500 dark:text-gray-400">Size</p>
-                                <p class="text-sm font-medium text-gray-700 dark:text-gray-300">{{
-                                    getSizeName(selectedItem.brandId, selectedItem.sizeId) }}</p>
+                            <div class="flex-1 min-w-0 flex items-center justify-between">
+                                <span class="text-sm text-gray-600 dark:text-gray-400">Brand</span>
+                                <span class="text-sm font-semibold text-gray-900 dark:text-white">{{ getBrandName(selectedItem.brandId) }}</span>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Location Card -->
-                    <div
-                        class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3 shadow-sm hover:shadow-md transition-shadow duration-200">
-                        <div class="flex items-center mb-2">
-                            <div
-                                class="w-8 h-8 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center mr-2">
-                                <MapPin class="w-4 h-4 text-green-600 dark:text-green-400" />
+                    <!-- Size -->
+                    <div class="px-6 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors border-b border-gray-100 dark:border-gray-700">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center flex-shrink-0">
+                                <Maximize2 class="w-4 h-4 text-white" />
                             </div>
-                            <h3 class="text-xs font-semibold text-gray-900 dark:text-white uppercase tracking-wide">
-                                Location
-                            </h3>
-                        </div>
-                        <div>
-                            <p class="text-xs text-gray-500 dark:text-gray-400">Assigned Clinic</p>
-                            <p class="text-sm font-semibold text-gray-900 dark:text-white">{{
-                                getClinicName(selectedItem.clinicId) }}</p>
-                        </div>
-                    </div>
-
-                    <!-- Order Information Card -->
-                    <div
-                        class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3 shadow-sm hover:shadow-md transition-shadow duration-200">
-                        <div class="flex items-center mb-2">
-                            <div
-                                class="w-8 h-8 bg-orange-100 dark:bg-orange-900/30 rounded-lg flex items-center justify-center mr-2">
-                                <FileText class="w-4 h-4 text-orange-600 dark:text-orange-400" />
-                            </div>
-                            <h3 class="text-xs font-semibold text-gray-900 dark:text-white uppercase tracking-wide">
-                                Order Info
-                            </h3>
-                        </div>
-                        <div class="space-y-2">
-                            <div v-if="selectedItem.orderCode">
-                                <p class="text-xs text-gray-500 dark:text-gray-400">Order Code</p>
-                                <p class="text-sm font-mono font-semibold text-gray-900 dark:text-white">{{
-                                    selectedItem.orderCode }}</p>
-                            </div>
-                            <div v-if="selectedItem.orderId">
-                                <p class="text-xs text-gray-500 dark:text-gray-400">Order ID</p>
-                                <p class="text-sm font-mono font-medium text-gray-700 dark:text-gray-300">#{{
-                                    selectedItem.orderId }}</p>
-                            </div>
-                            <div v-if="!selectedItem.orderCode && !selectedItem.orderId">
-                                <p class="text-sm text-gray-500 dark:text-gray-400 italic">No matching order found</p>
+                            <div class="flex-1 min-w-0 flex items-center justify-between">
+                                <span class="text-sm text-gray-600 dark:text-gray-400">Size</span>
+                                <span class="text-sm font-semibold text-gray-900 dark:text-white">{{ getSizeName(selectedItem.brandId, selectedItem.sizeId) }}</span>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Date Information Card -->
-                    <div
-                        class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3 shadow-sm hover:shadow-md transition-shadow duration-200">
-                        <div class="flex items-center mb-2">
-                            <div
-                                class="w-8 h-8 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center mr-2">
-                                <Calendar class="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                    <!-- Clinic -->
+                    <div class="px-6 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors border-b border-gray-100 dark:border-gray-700">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center flex-shrink-0">
+                                <MapPin class="w-4 h-4 text-white" />
                             </div>
-                            <h3 class="text-xs font-semibold text-gray-900 dark:text-white uppercase tracking-wide">
-                                Dates</h3>
-                        </div>
-                        <div class="space-y-2">
-                            <div v-if="selectedItem.deliveryDate">
-                                <p class="text-xs text-gray-500 dark:text-gray-400">Date of Service</p>
-                                <p class="text-sm font-medium text-gray-700 dark:text-gray-300">{{
-                                    formatDate(selectedItem.deliveryDate) }}</p>
-                            </div>
-                            <div v-if="selectedItem.expiryDate">
-                                <p class="text-xs text-gray-500 dark:text-gray-400">Expiry Date</p>
-                                <p
-                                    :class="`text-sm font-semibold ${isExpiringSoon(selectedItem.expiryDate) ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-white'}`">
-                                    {{ formatDate(selectedItem.expiryDate) }}
-                                </p>
-                                <span v-if="isExpiringSoon(selectedItem.expiryDate)"
-                                    class="inline-flex items-center mt-1 px-1.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-200">
-                                    <AlertTriangle class="w-3 h-3 mr-1" />
-                                    Expiring Soon
-                                </span>
+                            <div class="flex-1 min-w-0 flex items-center justify-between">
+                                <span class="text-sm text-gray-600 dark:text-gray-400">Clinic</span>
+                                <span class="text-sm font-semibold text-gray-900 dark:text-white">{{ getClinicName(selectedItem.clinicId) }}</span>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Patient Information Card -->
-                    <div
-                        class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3 shadow-sm hover:shadow-md transition-shadow duration-200">
-                        <div class="flex items-center mb-2">
-                            <div
-                                class="w-8 h-8 bg-teal-100 dark:bg-teal-900/30 rounded-lg flex items-center justify-center mr-2">
-                                <svg class="w-4 h-4 text-teal-600 dark:text-teal-400" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                </svg>
+                    <!-- Patient -->
+                    <div class="px-6 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors border-b border-gray-100 dark:border-gray-700">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center flex-shrink-0">
+                                <User class="w-4 h-4 text-white" />
                             </div>
-                            <h3 class="text-xs font-semibold text-gray-900 dark:text-white uppercase tracking-wide">
-                                Patient Info
-                            </h3>
-                        </div>
-                        <div>
-                            <p class="text-xs text-gray-500 dark:text-gray-400">Patient Name</p>
-                            <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ selectedItem.patientName
-                                || 'N/A'
-                            }}</p>
-                        </div>
-                    </div>
-
-                    <!-- Usage Details Card -->
-                    <div
-                        class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3 shadow-sm hover:shadow-md transition-shadow duration-200">
-                        <div class="flex items-center mb-2">
-                            <div
-                                class="w-8 h-8 bg-pink-100 dark:bg-pink-900/30 rounded-lg flex items-center justify-center mr-2">
-                                <svg class="w-4 h-4 text-pink-600 dark:text-pink-400" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                </svg>
-                            </div>
-                            <h3 class="text-xs font-semibold text-gray-900 dark:text-white uppercase tracking-wide">
-                                Usage Details
-                            </h3>
-                        </div>
-                        <div class="space-y-2">
-                            <div v-if="selectedItem.woundPart">
-                                <p class="text-xs text-gray-500 dark:text-gray-400">Wound Part</p>
-                                <p class="text-sm font-medium text-gray-700 dark:text-gray-300">{{
-                                    selectedItem.woundPart }}</p>
-                            </div>
-                            <div v-if="selectedItem.quantity">
-                                <p class="text-xs text-gray-500 dark:text-gray-400">Quantity Used</p>
-                                <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ selectedItem.quantity
-                                }}</p>
+                            <div class="flex-1 min-w-0 flex items-center justify-between">
+                                <span class="text-sm text-gray-600 dark:text-gray-400">Patient</span>
+                                <span class="text-sm font-semibold text-gray-900 dark:text-white">{{ selectedItem.patientName || 'N/A' }}</span>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Description/Notes Card -->
-                    <div v-if="selectedItem.description"
-                        class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3 shadow-sm hover:shadow-md transition-shadow duration-200">
-                        <div class="flex items-center mb-2">
-                            <div
-                                class="w-8 h-8 bg-amber-100 dark:bg-amber-900/30 rounded-lg flex items-center justify-center mr-2">
-                                <svg class="w-4 h-4 text-amber-600 dark:text-amber-400" fill="none"
-                                    stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                </svg>
+                    <!-- Order Code -->
+                    <div v-if="selectedItem.orderCode" class="px-6 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors border-b border-gray-100 dark:border-gray-700">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center flex-shrink-0">
+                                <FileText class="w-4 h-4 text-white" />
                             </div>
-                            <h3 class="text-xs font-semibold text-gray-900 dark:text-white uppercase tracking-wide">
-                                Description / Notes
-                            </h3>
-                        </div>
-                        <div>
-                            <p class="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{{
-                                selectedItem.description
-                                }}</p>
+                            <div class="flex-1 min-w-0 flex items-center justify-between">
+                                <span class="text-sm text-gray-600 dark:text-gray-400">Order Code</span>
+                                <span class="text-sm font-mono font-semibold text-gray-900 dark:text-white">{{ selectedItem.orderCode }}</span>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- File Upload Card -->
-                    <div v-if="selectedItem.filepath"
-                        class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3 shadow-sm hover:shadow-md transition-shadow duration-200">
-                        <div class="flex items-center mb-2">
-                            <div
-                                class="w-8 h-8 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg flex items-center justify-center mr-2">
-                                <svg class="w-4 h-4 text-indigo-600 dark:text-indigo-400" fill="none"
-                                    stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                </svg>
+                    <!-- Order ID -->
+                    <div v-if="selectedItem.orderId" class="px-6 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors border-b border-gray-100 dark:border-gray-700">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-400 to-orange-500 flex items-center justify-center flex-shrink-0">
+                                <Hash class="w-4 h-4 text-white" />
                             </div>
-                            <h3 class="text-xs font-semibold text-gray-900 dark:text-white uppercase tracking-wide">
-                                Attached File
-                            </h3>
+                            <div class="flex-1 min-w-0 flex items-center justify-between">
+                                <span class="text-sm text-gray-600 dark:text-gray-400">Order ID</span>
+                                <span class="text-sm font-mono font-semibold text-gray-900 dark:text-white">#{{ selectedItem.orderId }}</span>
+                            </div>
                         </div>
-                        <div>
-                            <a :href="selectedItem.filepath" target="_blank" rel="noopener noreferrer"
-                                class="inline-flex items-center px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/20 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded-lg transition-all duration-200 text-xs font-medium">
-                                <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                </svg>
-                                View File
-                            </a>
+                    </div>
+
+                    <!-- Date of Service -->
+                    <div v-if="selectedItem.deliveryDate" class="px-6 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors border-b border-gray-100 dark:border-gray-700">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center flex-shrink-0">
+                                <Calendar class="w-4 h-4 text-white" />
+                            </div>
+                            <div class="flex-1 min-w-0 flex items-center justify-between">
+                                <span class="text-sm text-gray-600 dark:text-gray-400">Date of Service</span>
+                                <span class="text-sm font-semibold text-gray-900 dark:text-white">{{ formatDate(selectedItem.deliveryDate) }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Expiry Date -->
+                    <div v-if="selectedItem.expiryDate" class="px-6 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-rose-500 to-rose-600 flex items-center justify-center flex-shrink-0">
+                                <AlertTriangle class="w-4 h-4 text-white" />
+                            </div>
+                            <div class="flex-1 min-w-0 flex items-center justify-between">
+                                <span class="text-sm text-gray-600 dark:text-gray-400">Expiry Date</span>
+                                <div class="flex items-center gap-2">
+                                    <span :class="`text-sm font-semibold ${isExpiringSoon(selectedItem.expiryDate) ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-white'}`">
+                                        {{ formatDate(selectedItem.expiryDate) }}
+                                    </span>
+                                    <span v-if="isExpiringSoon(selectedItem.expiryDate)" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-200">
+                                        Expiring Soon
+                                    </span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
+                <!-- Usage Information -->
+                <div v-if="selectedItem.woundPart || selectedItem.quantity" class="relative bg-gradient-to-br from-pink-50 to-rose-50 dark:from-pink-900/20 dark:to-rose-900/20 rounded-xl p-5 border border-pink-100 dark:border-pink-800/30 overflow-hidden">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-pink-200 dark:bg-pink-800 rounded-full -mr-16 -mt-16 opacity-20"></div>
+                    <div class="relative">
+                        <div class="flex items-center gap-2 mb-3">
+                            <div class="w-7 h-7 rounded-lg bg-gradient-to-br from-pink-500 to-rose-600 flex items-center justify-center flex-shrink-0">
+                                <FileStack class="w-4 h-4 text-white" />
+                            </div>
+                            <h3 class="text-sm font-semibold text-pink-900 dark:text-pink-200">Usage Information</h3>
+                        </div>
+                        <div class="space-y-2">
+                            <div v-if="selectedItem.woundPart" class="flex items-center justify-between">
+                                <span class="text-sm text-pink-700 dark:text-pink-300">Wound Part</span>
+                                <span class="text-sm font-semibold text-pink-900 dark:text-pink-100">{{ selectedItem.woundPart }}</span>
+                            </div>
+                            <div v-if="selectedItem.quantity" class="flex items-center justify-between">
+                                <span class="text-sm text-pink-700 dark:text-pink-300">Quantity Used</span>
+                                <span class="text-sm font-semibold text-pink-900 dark:text-pink-100">{{ selectedItem.quantity }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Description/Notes -->
+                <div v-if="selectedItem.description" class="relative bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 rounded-xl p-5 border border-amber-100 dark:border-amber-800/30 overflow-hidden">
+                    <div class="absolute bottom-0 left-0 w-32 h-32 bg-amber-200 dark:bg-amber-800 rounded-full -ml-16 -mb-16 opacity-20"></div>
+                    <div class="relative">
+                        <div class="flex items-center gap-2 mb-2.5">
+                            <div class="w-7 h-7 rounded-lg bg-gradient-to-br from-amber-500 to-yellow-600 flex items-center justify-center flex-shrink-0">
+                                <MessageSquare class="w-4 h-4 text-white" />
+                            </div>
+                            <h3 class="text-sm font-semibold text-amber-900 dark:text-amber-200">Notes & Description</h3>
+                        </div>
+                        <p class="text-sm text-amber-800 dark:text-amber-200 whitespace-pre-wrap leading-relaxed">{{ selectedItem.description }}</p>
+                    </div>
+                </div>
+
+                <!-- Attached File -->
+                <div v-if="selectedItem.filepath" class="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0">
+                                <ImageIcon class="w-5 h-5 text-white" />
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">Attached Document</p>
+                                <p class="text-sm font-semibold text-gray-900 dark:text-white">File Available</p>
+                            </div>
+                        </div>
+                        <a :href="selectedItem.filepath" target="_blank" rel="noopener noreferrer"
+                            class="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white rounded-lg transition-colors text-sm font-medium shadow-sm">
+                            <Eye class="w-4 h-4 mr-1.5" />
+                            View File
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Usage History -->
+
                 <!-- Status-specific Alert -->
-                <div v-if="selectedItem.status === 'expected'"
+                <!-- <div v-if="selectedItem.status === 'expected'"
                     class="bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 border border-yellow-200 dark:border-yellow-700 rounded-xl p-4">
                     <div class="flex items-start">
                         <Clock class="w-5 h-5 text-yellow-600 dark:text-yellow-400 mr-3 flex-shrink-0 mt-0.5" />
@@ -800,7 +794,7 @@
                                 Please update the status when received.</p>
                         </div>
                     </div>
-                </div>
+                </div> -->
 
                 <!-- Usage History -->
                 <div v-if="['used', 'partially_used'].includes(selectedItem.status) && selectedItem.usageLogs && selectedItem.usageLogs.length > 0"
@@ -847,7 +841,7 @@
                                     <td class="px-6 py-4 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">{{
                                         getClinicianName(log.clinicianId) }}</td>
                                     <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{{ log.notes || 'N/A'
-                                        }}</td>
+                                    }}</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -870,11 +864,7 @@
                                 <!-- Status Description Tooltip Button -->
                                 <button @click="showStatusInfo = !showStatusInfo"
                                     class="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors">
-                                    <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" fill="none"
-                                        stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
+                                    <Info class="w-4 h-4 text-gray-500 dark:text-gray-400" />
                                 </button>
                             </div>
 
@@ -896,11 +886,7 @@
                                     class="relative">
                                     <button @click="showMoreActions = !showMoreActions"
                                         class="inline-flex items-center px-3 py-2 bg-white dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg shadow-sm hover:shadow-md hover:bg-gray-50 dark:hover:bg-gray-600 transition-all duration-200 text-xs font-medium">
-                                        <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-                                        </svg>
+                                        <MoreVertical class="w-3.5 h-3.5 mr-1.5" />
                                         More Actions
                                     </button>
 
@@ -949,11 +935,7 @@
                         <div v-if="showStatusInfo"
                             class="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg">
                             <div class="flex items-start">
-                                <svg class="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5 mr-2 flex-shrink-0"
-                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
+                                <Info class="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5 mr-2 flex-shrink-0" />
                                 <div class="flex-1">
                                     <p class="text-xs font-semibold text-blue-900 dark:text-blue-100">{{
                                         getStatusDescription(selectedItem.status).title }}</p>
@@ -1018,7 +1000,7 @@
                             </label>
                             <select v-model="editingItem.status"
                                 class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200">
-                                <option value="expected">Expected</option>
+                                <!-- <option value="expected">Expected</option> -->
                                 <option value="delivered">Delivered</option>
                                 <option value="used">Used</option>
                                 <option value="partially_used">Partially Used</option>
@@ -1072,15 +1054,10 @@
                             </label>
                             <div
                                 class="flex items-center px-4 py-3 bg-gray-50 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-xl">
-                                <svg class="w-4 h-4 text-gray-400 dark:text-gray-500 mr-2" fill="currentColor"
-                                    viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd"
-                                        d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
-                                        clip-rule="evenodd" />
-                                </svg>
+                                <Lock class="w-4 h-4 text-gray-400 dark:text-gray-500 mr-2" />
                                 <span class="text-gray-900 dark:text-white font-medium">{{ editingItem.patientName ||
                                     'N/A'
-                                }}</span>
+                                    }}</span>
                                 <span class="ml-auto text-xs text-gray-500 dark:text-gray-400 italic">Read-only</span>
                             </div>
                         </div>
@@ -1101,10 +1078,7 @@
             <template #actions>
                 <div class="flex justify-between items-center px-6 py-4 bg-gray-50 dark:bg-gray-700/30">
                     <p class="text-xs text-gray-500 dark:text-gray-400 flex items-center">
-                        <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
+                        <Info class="w-3.5 h-3.5 mr-1.5" />
                         Changes will be saved immediately&nbsp;&nbsp;&nbsp;&nbsp;
                     </p>
                     <div class="flex space-x-3">
@@ -1114,10 +1088,7 @@
                         </button>
                         <button @click="handleSaveEdit"
                             class="inline-flex items-center px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg font-medium">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
-                            </svg>
+                            <Save class="w-4 h-4 mr-2" />
                             Save Changes
                         </button>
                     </div>
@@ -1195,7 +1166,7 @@ import {
     MapPin,
     CheckCircle2,
     Calendar,
-    Clock,
+    // Clock,
     Repeat2,
     CornerUpLeft,
     AlertTriangle,
@@ -1206,7 +1177,18 @@ import {
     Eye,
     FilePenLine,
     Trash2,
-    X
+    X,
+    Edit,
+    Info,
+    Maximize2,
+    User,
+    Hash,
+    FileStack,
+    MessageSquare,
+    Image as ImageIcon,
+    MoreVertical,
+    Save,
+    Lock
 } from 'lucide-vue-next';
 import Swal from 'sweetalert2'
 import { createWorker } from 'tesseract.js'
@@ -1245,44 +1227,56 @@ const graftSizes = ref<Array<{ graft_size_id: string; brand_id: string; size: st
 const orders = ref<Array<any>>([])
 
 const fetchInventory = async () => {
-    const response = await inventoryService.getAllInventory()
-    const payload = response.data
-    const rawItems: any[] = Array.isArray(payload?.data) ? payload.data : Array.isArray(payload) ? payload : []
+    try {
+        const response = await inventoryService.getAllInventory()
+        const payload = response.data
+        const rawItems: any[] = Array.isArray(payload?.data) ? payload.data : Array.isArray(payload) ? payload : []
 
-    inventory.value = rawItems.map((item: any) => {
-        // Match order based on brand, graft size, clinic, and patient
-        const matchedOrder = findMatchingOrder(
-            item.brandId,
-            item.sizeId,
-            item.clinicId,
-            item.patientId
-        )
+        inventory.value = rawItems.map((item: any) => {
+            // Match order based on brand, graft size, clinic, and patient
+            const matchedOrder = findMatchingOrder(
+                item.brandId,
+                item.sizeId,
+                item.clinicId,
+                item.patientId
+            )
 
-        return {
-            id: String(item.id ?? item.serialNumber),
-            serialNumber: String(item.serialNumber ?? ''),
-            clinicId: item.clinicId ? String(item.clinicId) : '',
-            clinicName: item.clinicName ?? 'Unknown Clinic',
-            status: String(item.status ?? 'expected'),
-            expiryDate: item.expiryDate ?? item.expiredAt ?? undefined,
-            usageLogs: Array.isArray(item.usageLogs) ? item.usageLogs : [],
-            // Map some helpful label fields for the UI
-            productName: item.description ?? undefined,
-            description: item.description ?? undefined,
-            deliveryDate: item.dateOfService ?? undefined,
-            brandId: String(item.brandId ?? ''),
-            brandName: item.brandName ?? 'Unknown Brand',
-            sizeId: String(item.sizeId ?? ''),
-            sizeName: item.graftSize ?? 'Unknown Size',
-            patientId: item.patientId ? String(item.patientId) : undefined,
-            patientName: item.patientName ?? undefined,
-            woundPart: item.woundPart ?? undefined,
-            filepath: item.filepath ?? undefined,
-            quantity: item.quantity ?? undefined,
-            orderId: matchedOrder?.order_id ? String(matchedOrder.order_id) : undefined,
-            orderCode: matchedOrder?.order_code ?? undefined,
-        }
-    })
+            return {
+                id: String(item.id ?? item.serialNumber),
+                serialNumber: String(item.serialNumber ?? ''),
+                clinicId: item.clinicId ? String(item.clinicId) : '',
+                clinicName: item.clinicName ?? 'Unknown Clinic',
+                status: String(item.status ?? 'delivered'),
+                expiryDate: item.expiryDate ?? item.expiredAt ?? undefined,
+                usageLogs: Array.isArray(item.usageLogs) ? item.usageLogs : [],
+                // Map some helpful label fields for the UI
+                productName: item.description ?? undefined,
+                description: item.description ?? undefined,
+                deliveryDate: item.dateOfService ?? undefined,
+                brandId: String(item.brandId ?? ''),
+                brandName: item.brandName ?? 'Unknown Brand',
+                sizeId: String(item.sizeId ?? ''),
+                sizeName: item.graftSize ?? 'Unknown Size',
+                patientId: item.patientId ? String(item.patientId) : undefined,
+                patientName: item.patientName ?? undefined,
+                woundPart: item.woundPart ?? undefined,
+                filepath: item.filepath ?? undefined,
+                quantity: item.quantity ?? undefined,
+                orderId: matchedOrder?.order_id ? String(matchedOrder.order_id) : undefined,
+                orderCode: matchedOrder?.order_code ?? undefined,
+            }
+        })
+    } catch (error) {
+        console.error('Failed to fetch inventory:', error)
+
+        // Show error to user
+        await Swal.fire({
+            title: 'Error Loading Inventory',
+            text: 'Failed to load inventory data from the backend. Please check the console for details.',
+            icon: 'error',
+            confirmButtonColor: '#2563eb'
+        })
+    }
 }
 
 const findMatchingOrder = (
@@ -1347,12 +1341,14 @@ onMounted(() => {
                 }))
             }),
         // Fetch clinicians
-        userService.getClinicians(true)
+        inventoryService.getClinicians()
             .then(({ data }) => {
                 const rows: any[] = Array.isArray(data) ? data : []
                 clinicians.value = rows.map((c: any) => ({
                     id: String(c.id),
                     name: c.name || 'Unknown Clinician',
+                    clinic_id: c.clinic_id,
+                    clinic_name: c.clinic_name
                 }))
             }),
         // Fetch patients
@@ -1378,6 +1374,7 @@ const showUploadModal = ref(false)
 const showItemModal = ref(false)
 const selectedItem = ref<InventoryItem | null>(null)
 const showUsageLogForm = ref(false)
+const showLogUsageChoiceModal = ref(false)
 const showEditModal = ref(false)
 const editingItem = ref<InventoryItem | null>(null)
 const showDeleteModal = ref(false)
@@ -1412,7 +1409,7 @@ const extractedData = ref({
 // Data from backend
 const brands = ref<Array<any>>([])
 const clinics = ref<Array<any>>([])
-const clinicians = ref<Array<{ id: string; name: string }>>([])
+const clinicians = ref<Array<{ id: string; name: string; clinic_id?: string; clinic_name?: string }>>([])
 const patients = ref<Array<any>>([])
 
 const uniqueBrands = computed(() => {
@@ -1492,7 +1489,7 @@ function getAvailableSizes(brandId?: string) {
 
 function getStatusColor(status: string) {
     switch (status) {
-        case 'expected': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200'
+        // case 'expected': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200'
         case 'delivered': return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200'
         case 'used': return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200'
         case 'partially_used': return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200'
@@ -1505,7 +1502,7 @@ function getStatusColor(status: string) {
 
 function getStatusIcon(status: string) {
     switch (status) {
-        case 'expected': return Clock
+        // case 'expected': return Clock
         case 'delivered': return Package
         case 'used': return CheckCircle2
         case 'expired': return AlertTriangle
@@ -1515,10 +1512,10 @@ function getStatusIcon(status: string) {
 
 function getStatusDescription(status: string): { title: string; description: string } {
     const descriptions: Record<string, { title: string; description: string }> = {
-        'expected': {
-            title: 'Expected',
-            description: 'From initial order - Item is expected to be delivered'
-        },
+        // 'expected': {
+        //     title: 'Expected',
+        //     description: 'From initial order - Item is expected to be delivered'
+        // },
         'delivered': {
             title: 'Delivered',
             description: 'Confirmed by manufacturer and logged - Item has been confirmed and recorded'
@@ -1551,12 +1548,12 @@ function getPrimaryActions(currentStatus: string) {
     const actions: Array<{ status: string; label: string; icon: any; class: string }> = []
 
     switch (currentStatus) {
-        case 'expected':
-            actions.push(
-                { status: 'delivered', label: 'Mark Delivered', icon: Package, class: 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white' },
-                { status: 'used', label: 'Mark Used', icon: CheckCircle2, class: 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white' }
-            )
-            break
+        // case 'expected':
+        //     actions.push(
+        //         { status: 'delivered', label: 'Mark Delivered', icon: Package, class: 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white' },
+        //         { status: 'used', label: 'Mark Used', icon: CheckCircle2, class: 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white' }
+        //     )
+        //     break
         case 'delivered':
             actions.push(
                 { status: 'used', label: 'Mark Used', icon: CheckCircle2, class: 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white' },
@@ -1583,14 +1580,14 @@ function getSecondaryActions(currentStatus: string) {
     const actions: Array<{ status: string; label: string; icon: any; class: string }> = []
 
     switch (currentStatus) {
-        case 'expected':
-            actions.push(
-                { status: 'partially_used', label: 'Partially Used', icon: Repeat2, class: 'bg-white dark:bg-gray-800 border-2 border-purple-300 dark:border-purple-600 text-purple-700 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-900/20' },
-                { status: 'reassigned', label: 'Reassign', icon: Repeat2, class: 'bg-white dark:bg-gray-800 border-2 border-orange-300 dark:border-orange-600 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20' },
-                { status: 'unused', label: 'Mark Unused', icon: Package, class: 'bg-white dark:bg-gray-800 border-2 border-blue-300 dark:border-blue-600 text-blue-700 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20' },
-                { status: 'expired', label: 'Mark Expired', icon: AlertTriangle, class: 'bg-white dark:bg-gray-800 border-2 border-red-300 dark:border-red-600 text-red-700 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20' }
-            )
-            break
+        // case 'expected':
+        //     actions.push(
+        //         { status: 'partially_used', label: 'Partially Used', icon: Repeat2, class: 'bg-white dark:bg-gray-800 border-2 border-purple-300 dark:border-purple-600 text-purple-700 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-900/20' },
+        //         { status: 'reassigned', label: 'Reassign', icon: Repeat2, class: 'bg-white dark:bg-gray-800 border-2 border-orange-300 dark:border-orange-600 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20' },
+        //         { status: 'unused', label: 'Mark Unused', icon: Package, class: 'bg-white dark:bg-gray-800 border-2 border-blue-300 dark:border-blue-600 text-blue-700 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20' },
+        //         { status: 'expired', label: 'Mark Expired', icon: AlertTriangle, class: 'bg-white dark:bg-gray-800 border-2 border-red-300 dark:border-red-600 text-red-700 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20' }
+        //     )
+        //     break
         case 'delivered':
             actions.push(
                 { status: 'reassigned', label: 'Reassign', icon: Repeat2, class: 'bg-white dark:bg-gray-800 border-2 border-orange-300 dark:border-orange-600 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20' },
@@ -1648,7 +1645,7 @@ async function handleStatusUpdate(itemId: string, newStatus: InventoryItem['stat
 
         // Map status to log_status numeric value
         const statusMap: Record<string, number> = {
-            'expected': 0,
+            // 'expected': 0,
             'delivered': 1,
             'used': 2,
             'partially_used': 3,
@@ -1695,7 +1692,8 @@ async function handleStatusUpdate(itemId: string, newStatus: InventoryItem['stat
 
 function formatDate(dateString?: string) {
     if (!dateString) return 'N/A'
-    return new Date(dateString).toLocaleDateString()
+    const date = new Date(dateString)
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
 function isExpiringSoon(expiryDateString?: string) {
@@ -1758,7 +1756,7 @@ async function handleSaveEdit() {
         }
 
         const statusMap: Record<string, number> = {
-            'expected': 0,
+            // 'expected': 0,
             'delivered': 1,
             'used': 2,
             'partially_used': 3,
@@ -1843,11 +1841,15 @@ async function handleUsageLogSubmit(usageLog: {
     expiredAt: string
     quantityUsed: number
 }) {
-    console.log('Usage log submitted:', usageLog)
-
     const currentUserId = authStore.user?.id
     if (!currentUserId) {
         console.error('Cannot log usage: no authenticated user')
+        await Swal.fire({
+            title: 'Error!',
+            text: 'You must be logged in to create usage logs.',
+            icon: 'error',
+            confirmButtonColor: '#2563eb'
+        })
         return
     }
 
@@ -1871,12 +1873,45 @@ async function handleUsageLogSubmit(usageLog: {
         // Refresh inventory from backend so UI stays in sync
         await fetchInventory()
 
-        console.log('Usage log saved to backend')
-    } catch (error) {
+        // Show success message
+        await Swal.fire({
+            title: 'Success!',
+            text: 'Usage log has been created successfully.',
+            icon: 'success',
+            confirmButtonColor: '#2563eb',
+            timer: 2000,
+            showConfirmButton: false
+        })
+    } catch (error: any) {
         console.error('Failed to save usage log to backend', error)
-    } finally {
-        showUsageLogForm.value = false
+
+        // Extract error message from response
+        let errorMessage = 'Failed to save usage log. Please try again.'
+
+        if (error.response?.data?.message) {
+            errorMessage = error.response.data.message
+        } else if (error.response?.data?.errors) {
+            // Handle validation errors
+            const errors = error.response.data.errors
+            const firstError = Object.values(errors)[0]
+            if (Array.isArray(firstError) && firstError.length > 0) {
+                errorMessage = firstError[0]
+            }
+        }
+
+        await Swal.fire({
+            title: 'Error!',
+            text: errorMessage,
+            icon: 'error',
+            confirmButtonColor: '#2563eb'
+        })
+
+        // Don't close the modal on error so user can fix the issue
+        return
     }
+
+    // Only close modal on success
+    showUsageLogForm.value = false
 }
 
 function handleUsageLogCancel() {
@@ -1991,7 +2026,7 @@ function parseOCRText(text: string) {
     const quantityPattern = /\b(?:quantity|qty|qty\.?|amount)[:\s-]*([0-9]+)/i;
     const patientPattern = /(?:patient|patient name|name)[:\s]*([A-Za-z\s.'-]{2,50})/i;
     const woundPattern = /(?:wound|site|location)[:\s]*([A-Za-z\s.'-]{2,50})/i;
-    const clinicianPattern = /(?:clinician|doctor|physician)[:\s]*([A-Za-z\s.'-]{2,50})/i; 
+    const clinicianPattern = /(?:clinician|doctor|physician)[:\s]*([A-Za-z\s.'-]{2,50})/i;
     const expiryPattern = /(?:expiry|exp|expires)[:\s]*([.\d/ -]{4,})/i;
 
     const graftSizePattern = /(?:size|graft size)[:\s]*([\d\s\w\W]{2,30})/i;

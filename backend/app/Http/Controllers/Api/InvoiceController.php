@@ -91,8 +91,23 @@ class InvoiceController extends Controller
 
     public function update(Request $request, Invoice $invoice): JsonResponse
     {
-        $validator = Validator::make($request->all(), [
-            'invoice_number' => 'sometimes|required|string|unique:invoices,invoice_number,' . $invoice->id,
+        // Filter out empty line items before validation
+        $requestData = $request->all();
+        if (isset($requestData['line_items']) && is_array($requestData['line_items'])) {
+            // Remove line items that are completely empty (no description and default values)
+            $requestData['line_items'] = array_filter($requestData['line_items'], function($item) {
+                // Keep items that have a description or have non-default values
+                return !empty($item['description']) || 
+                       (!empty($item['size']) || !empty($item['serial']) || 
+                        $item['quantity'] != 1 || $item['amount'] != 0);
+            });
+            
+            // Re-index array to ensure sequential keys
+            $requestData['line_items'] = array_values($requestData['line_items']);
+        }
+
+        $validator = Validator::make($requestData, [
+            'invoice_number' => 'sometimes|required|string|unique:woundmed_invoices,invoice_number,' . $invoice->id,
             'clinic_id'      => 'sometimes|required|exists:woundmed_clinics,clinic_id',
             'amount'         => 'sometimes|required|numeric|min:0',
             'invoice_date'   => 'sometimes|required|date',
@@ -102,13 +117,19 @@ class InvoiceController extends Controller
             'serials'        => 'nullable|array',
             'serials.*'      => 'string',
             'bill_to'        => 'nullable|string',
+            'line_items'     => 'nullable|array',
+            'line_items.*.description' => 'required|string',
+            'line_items.*.size' => 'nullable|string',
+            'line_items.*.serial' => 'nullable|string',
+            'line_items.*.quantity' => 'required|integer|min:1',
+            'line_items.*.amount' => 'required|numeric|min:0',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $updateData = $request->all();
+        $updateData = $requestData;
         
         // Handle bill_to field specifically
         if ($request->has('bill_to')) {
@@ -122,6 +143,13 @@ class InvoiceController extends Controller
             } elseif ($request->status !== 'paid') {
                 $updateData['paid_date'] = null;
             }
+        }
+
+        // Handle line_items specifically
+        if ($request->has('line_items')) {
+            $updateData['line_items'] = $requestData['line_items'];
+            // Update has_line_items flag
+            $updateData['has_line_items'] = !empty($requestData['line_items']);
         }
 
         $invoice->update($updateData);
@@ -399,6 +427,9 @@ class InvoiceController extends Controller
             '/([A-Z0-9]{2,}[-_]?[A-Z0-9]{2,}[-_]?[A-Z0-9]{2,})/i', // "ABC123-DEF456-GHI789"
             '/Invoice\s*Number:?\s*([A-Z0-9\-]+)/i', // "Invoice Number: ABC-123"
             '/#\s*([A-Z0-9\-]+)/', // "# ABC-123"
+            '/Invoice\s*No\.?\s*:?(\d+)/i', // "Invoice No: 12345" or "Invoice No. 12345"
+            '/Invoice\s*No\.?\s*:?([A-Z0-9\-]+)/i', // "Invoice No: INV-12345"
+            '/INVOICE\s*NO\.?\s*:?(\d+)/i', // "INVOICE NO: 12345" or "INVOICE NO. 12345"
         ];
         
         foreach ($patterns as $pattern) {
@@ -437,6 +468,9 @@ class InvoiceController extends Controller
             '/Balance\s*Due\s*\$?\s*([0-9,]+\.?[0-9]*)/i',
             '/\$\s*([0-9,]+\.?[0-9]*)\s*(Total|Amount)/i',
             '/Grand\s*Total\s*\$?\s*([0-9,]+\.?[0-9]*)/i',
+            '/Total\s*Due\s*\$?\s*([0-9,]+\.?[0-9]*)/i',
+            '/Final\s*Amount\s*\$?\s*([0-9,]+\.?[0-9]*)/i',
+            '/Invoice\s*Amount\s*\$?\s*([0-9,]+\.?[0-9]*)/i',
         ];
         
         $amountFound = false;
@@ -474,6 +508,9 @@ class InvoiceController extends Controller
             '/(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{1,2},?\s+\d{4}/i', // January 1, 2023
             '/\d{4}[\/\-]\d{1,2}[\/\-]\d{1,2}/', // YYYY-MM-DD
             '/(\d{1,2}\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{4})/i', // 1 January 2023
+            '/Date\s*Issued\s*:?(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/i', // "Date Issued: 06/11/2025"
+            '/Issue\s*Date\s*:?(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/i', // "Issue Date: 06/11/2025"
+            '/Payment\s*Due\s*:?(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/i', // "Payment Due: 08/10/2025"
         ];
         
         foreach ($datePatterns as $pattern) {
@@ -498,6 +535,10 @@ class InvoiceController extends Controller
             '/[A-Z]\d[A-Z]\d[A-Z]\d/', // A1B2C3
             '/[A-Z]{3,}\d{3,}/', // ABC123456
             '/\d{4,}[A-Z]{3,}/', // 123456ABC
+            '/[A-Z]{2,}\d{2,}[A-Z]{2,}\d{8}/', // AB12CD3456789012 (new format)
+            '/LOT\s*-?\s*\d{4,}/i', // LOT-1234 or LOT 1234
+            '/Batch\s*-?\s*[A-Z0-9]{4,}/i', // Batch-ABCD1234
+            '/SN\s*-?\s*[A-Z0-9]{4,}/i', // SN-ABCD1234
         ];
         
         foreach ($serialPatterns as $pattern) {
@@ -534,6 +575,9 @@ class InvoiceController extends Controller
             '/(Company|Vendor|Biller|From|Sold By|Supplier|Issued By):?\s*([A-Z][A-Za-z0-9\s&.,-]+)/i',
             '/^([A-Z][A-Za-z0-9\s&.,-]{15,})/', // Company name at start of document (longer minimum length)
             '/(Bill\s*To|Customer):?\s*([A-Z][A-Za-z0-9\s&.,-]+)/i',
+            '/From:\s*([A-Z][A-Za-z0-9\s&.,-]+)/i', // "From: Company Name"
+            '/Issued\s*by:\s*([A-Z][A-Za-z0-9\s&.,-]+)/i', // "Issued by: Company Name"
+            '/Supplier:\s*([A-Z][A-Za-z0-9\s&.,-]+)/i', // "Supplier: Company Name"
         ];
         
         foreach ($vendorPatterns as $pattern) {
@@ -552,10 +596,12 @@ class InvoiceController extends Controller
         // Look for "Bill To" patterns with more comprehensive matching
         $billToPatterns = [
             '/Bill To\s+(.*?)(?=\s+Vendor Remit To|\s+PO Box|\s+Phone#|\s+Email:|\s+PO #|\s+Terms|\s+Item|\s+\n\n|$)/is', // More specific pattern for this invoice format
-            '/BILL\s*TO\s*INVOICE\s*#\s*[A-Z0-9]+\s*([A-Z][A-Za-z0-9&\s\.\,\n\r\-\(\)\/#]+)/i',
-            '/Bill\s*To:?[\s\n]*([A-Z][A-Za-z0-9\s&.,\n-]+)/i',
-            '/Customer:?[\s\n]*([A-Z][A-Za-z0-9\s&.,\n-]+)/i',
-            '/To:?[\s\n]*([A-Z][A-Za-z0-9\s&.,\n-]+)/i',
+            '/BILL\s*TO\s*INVOICE\s*#\s*[A-Z0-9]+\s*([A-Z][A-Za-z0-9&\s\.\,\n\r\-\(\)\/#+]+)/i',
+            '/Bill\s*To:?[,\s\n]*([A-Z][A-Za-z0-9\s&.,\n-]+)/i',
+            '/Customer:?[,\s\n]*([A-Z][A-Za-z0-9\s&.,\n-]+)/i',
+            '/To:?[,\s\n]*([A-Z][A-Za-z0-9\s&.,\n-]+)/i',
+            '/Bill\s*To\s*:\s*(.*?)(?=\n\n|\n[A-Z]|$)/is', // "Bill To: Customer Name" followed by double newline or uppercase section
+            '/Invoice\s*To\s*:\s*(.*?)(?=\n\n|\n[A-Z]|$)/is', // "Invoice To: Customer Name" followed by double newline or uppercase section
         ];
         
         foreach ($billToPatterns as $pattern) {
@@ -605,7 +651,9 @@ class InvoiceController extends Controller
                 
                 // Look for the specific pattern: "Product Name S/N: serial_number price"
                 // Example: "Amnio-Maxx Dual Layer Amnion Patch 2x2cm S/N: PTT-24-5317-0005 4,950.00"
-                if (preg_match('/^(.+?)\s+S\/N:\s*([A-Z0-9-]+)\s+([0-9,]+\.?[0-9]*)$/', $line, $matches)) {
+                if (preg_match('/^(.+?)\s+S\/N:\s*([A-Z0-9-]+)\s+([0-9,]+\.?[0-9]*)$/', $line, $matches) ||
+                    preg_match('/^(.+?)\s+SN:\s*([A-Z0-9-]+)\s+\$([0-9,]+\.?[0-9]*)$/', $line, $matches) ||
+                    preg_match('/^(.+?)\s+Serial\s*#?:\s*([A-Z0-9-]+)\s+\$([0-9,]+\.?[0-9]*)$/', $line, $matches)) {
                     $fullDescription = trim($matches[1]);
                     $serialNumber = $matches[2];
                     $itemAmount = floatval(str_replace(',', '', $matches[3]));
@@ -652,7 +700,9 @@ class InvoiceController extends Controller
             // "S/N: PTT-24-2933-0010 7,425.00"
             if (!$lineMatched && preg_match('/^(.+?)\s+(\d+(?:\.\d+)?x\d+(?:\.\d+)?cm|\d+(?:\.\d+)?cm)$/i', $line, $descMatches) && isset($lines[$i + 1])) {
                 $nextLine = trim($lines[$i + 1]);
-                if (preg_match('/S\/N:\s*([A-Z0-9-]+)\s+([0-9,]+\.?[0-9]*)$/', $nextLine, $snMatches)) {
+                if (preg_match('/S\/N:\s*([A-Z0-9-]+)\s+([0-9,]+\.?[0-9]*)$/', $nextLine, $snMatches) ||
+                    preg_match('/SN:\s*([A-Z0-9-]+)\s+\$([0-9,]+\.?[0-9]*)$/', $nextLine, $snMatches) ||
+                    preg_match('/Serial\s*#?:\s*([A-Z0-9-]+)\s+\$([0-9,]+\.?[0-9]*)$/', $nextLine, $snMatches)) {
                     $description = trim($descMatches[1]);
                     $size = $descMatches[2];
                     $serialNumber = $snMatches[1];
@@ -685,12 +735,16 @@ class InvoiceController extends Controller
             // Also look for pattern without "S/N:"
             // More flexible pattern to catch edge cases
             if (!$lineMatched && (preg_match('/(.+?)\s+([A-Z0-9-]+)\s+([0-9,]+\.?[0-9]*)$/', $line, $matches) ||
-                preg_match('/(.+?)\s+([A-Z0-9-]+)\s+\$?([0-9,]+\.?[0-9]*)$/', $line, $matches))) {
+                preg_match('/(.+?)\s+([A-Z0-9-]+)\s+\$?([0-9,]+\.?[0-9]*)$/', $line, $matches) ||
+                preg_match('/(.+?)\s+\$([0-9,]+\.?[0-9]*)\s+([A-Z0-9-]+)$/', $line, $matches))) {
                 // Check if the middle part looks like a serial number
                 $possibleSerial = $matches[2];
                 // Serial numbers typically have a pattern like PTT-24-5317-0005
                 if (preg_match('/[A-Z]+-[0-9]+-[0-9]+-[0-9]+/', $possibleSerial) || 
-                    preg_match('/[A-Z0-9]+-[0-9]+-[0-9]+-[0-9]+/', $possibleSerial)) {
+                    preg_match('/[A-Z0-9]+-[0-9]+-[0-9]+-[0-9]+/', $possibleSerial) ||
+                    preg_match('/[A-Z]{2,}\d{2,}[A-Z]{2,}\d{8}/', $possibleSerial) ||
+                    preg_match('/LOT-?\d{4,}/i', $possibleSerial) ||
+                    preg_match('/Batch-?[A-Z0-9]{4,}/i', $possibleSerial)) {
                     $description = trim($matches[1]);
                     $serialNumber = $possibleSerial;
                     $itemAmount = floatval(str_replace(',', '', $matches[3]));
@@ -789,7 +843,9 @@ class InvoiceController extends Controller
                 // More flexible pattern matching
                 if (preg_match('/(.+?)\s+(?:\$|USD\s*\$?)\s*([0-9,]+\.?[0-9]*)$/', $line, $productMatches) ||
                     preg_match('/(.+?)\s+([0-9,]+\.?[0-9]*)\s*(?:\$|USD)$/', $line, $productMatches) ||
-                    preg_match('/(.+?)\s+\$([0-9,]+\.?[0-9]*)\s*$/', $line, $productMatches)) {
+                    preg_match('/(.+?)\s+\$([0-9,]+\.?[0-9]*)\s*$/', $line, $productMatches) ||
+                    preg_match('/(.+?)\s+\$([0-9,]+\.?[0-9]*)\s+[A-Z0-9-]+$/', $line, $productMatches) ||
+                    preg_match('/(.+?)\s+[A-Z0-9-]+\s+\$([0-9,]+\.?[0-9]*)$/', $line, $productMatches)) {
                     
                     $description = trim($productMatches[1]);
                     $itemAmount = floatval(str_replace(',', '', $productMatches[2]));
@@ -918,6 +974,9 @@ class InvoiceController extends Controller
         $notesPatterns = [
             '/(Notes|Comments|Additional Information|Memo|Remarks):?\s*([^\n]+)/i',
             '/(Note|Comment):?\s*([^\n]+)/i',
+            '/Special\s*Instructions?:?\s*([^\n]+)/i',
+            '/Terms\s*&\s*Conditions?:?\s*([^\n]+)/i',
+            '/Additional\s*Notes?:?\s*([^\n]+)/i',
         ];
         
         foreach ($notesPatterns as $pattern) {
@@ -934,6 +993,8 @@ class InvoiceController extends Controller
             '/Terms\s*(Net \d+)/i', // Specific pattern for "Terms Net 60"
             '/(Terms|Payment Terms|Due Date|Payment Due):?\s*([^\n]+)/i',
             '/(Term|Due):?\s*([^\n]+)/i',
+            '/Payment\s*Terms?:?\s*(Net \d+\s*days?)/i', // "Payment Terms: Net 30 days"
+            '/Due\s*in\s*(\d+\s*days?)/i', // "Due in 30 days"
         ];
         
         foreach ($termsPatterns as $pattern) {
@@ -1070,6 +1131,13 @@ class InvoiceController extends Controller
     {
         // Look for the table format in the text
         $pattern = '/Item\s+(.*?)\s+Quantity\s+(.*?)\s+Description\s+(.*?)\s+Serial\/Lot Numbers\s+(.*?)\s+Price Each\s+(.*?)\s+Amount\s+(.*?)(?=\s+Invoice Total|\n\n|$)/is';
+        
+        // Alternative table patterns
+        $alternativePatterns = [
+            '/Item\s+No\.?\s+(.*?)\s+Qty\s+(.*?)\s+Description\s+(.*?)\s+Serial\s+(.*?)\s+Unit Price\s+(.*?)\s+Total\s+(.*?)(?=\s+Invoice Total|\n\n|$)/is',
+            '/#\s+(.*?)\s+Qty\s+(.*?)\s+Item\s+(.*?)\s+Serial\s+(.*?)\s+Price\s+(.*?)\s+Amount\s+(.*?)(?=\s+Invoice Total|\n\n|$)/is',
+            '/Product\s+(.*?)\s+Qty\s+(.*?)\s+Description\s+(.*?)\s+Serial\s+(.*?)\s+Unit\s+Price\s+(.*?)\s+Total\s+(.*?)(?=\s+Invoice Total|\n\n|$)/is'
+        ];
         
         if (preg_match($pattern, $text, $matches)) {
             // Extract the data from each column
@@ -1215,7 +1283,22 @@ class InvoiceController extends Controller
 
     public function store(Request $request): JsonResponse
     {
-        $validator = Validator::make($request->all(), [
+        // Filter out empty line items before validation
+        $requestData = $request->all();
+        if (isset($requestData['line_items']) && is_array($requestData['line_items'])) {
+            // Remove line items that are completely empty (no description and default values)
+            $requestData['line_items'] = array_filter($requestData['line_items'], function($item) {
+                // Keep items that have a description or have non-default values
+                return !empty($item['description']) || 
+                       (!empty($item['size']) || !empty($item['serial']) || 
+                        $item['quantity'] != 1 || $item['amount'] != 0);
+            });
+            
+            // Re-index array to ensure sequential keys
+            $requestData['line_items'] = array_values($requestData['line_items']);
+        }
+
+        $validator = Validator::make($requestData, [
             'invoice_number' => 'required|string|unique:woundmed_invoices',
             'clinic_id'      => 'required|exists:woundmed_clinics,clinic_id',
             'amount'         => 'required|numeric|min:0',
@@ -1256,7 +1339,7 @@ class InvoiceController extends Controller
         }
         
         // Process line items
-        $lineItems = $request->line_items ?? [];
+        $lineItems = $requestData['line_items'] ?? [];
         $hasLineItems = !empty($lineItems);
         
         $invoice = Invoice::create([

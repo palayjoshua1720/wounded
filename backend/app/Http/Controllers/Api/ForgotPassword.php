@@ -47,7 +47,8 @@ class ForgotPassword extends Controller
 
         $resetUrl = config('app.frontend_url') . '/reset-password?token=' . $token . '&email=' . urlencode($user->email);
 
-        $emailBody = ForgotPasswordEmail::getTemplate($resetUrl);
+        $userName = trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? ''));
+        $emailBody = ForgotPasswordEmail::getTemplate($resetUrl, $userName);
 
         $emailService = new EmailService();
         $params = [

@@ -91,17 +91,62 @@
                             Enter the shipping or tracking number provided by the courier (e.g., FedEx, UPS, USPS).
                         </p>
                     </div>
+
+                    <div class="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                        <div class="flex items-center gap-2 mb-2">
+                            <Link class="w-6 h-6 text-gray-900 dark:text-gray-300" />
+                            <label class="text-sm text-gray-600 dark:text-gray-300 font-medium">
+                                Tracking Link
+                            </label>
+                        </div>
+
+                        <input
+                            v-model="formData.tracking_link"
+                            type="text"
+                            class="w-full px-2 py-2 border border-gray-300 dark:border-gray-600 
+                                rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent 
+                                bg-white dark:bg-gray-700 text-gray-900 dark:text-white 
+                                transition-all duration-200"
+                            placeholder="Enter tracking link here"
+                            required
+                        >
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                            Enter the shipping or tracking link provided by the courier (e.g., FedEx, UPS, USPS).
+                        </p>
+                    </div>
                 </div>
 
                 <div v-if="displayOrder.statusLabel == 'shipped' || displayOrder.statusLabel == 'delivered'" class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
                     <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-                        <Truck />
+                        <Container />
                         <div>
                             <p class="text-sm text-gray-500 font-medium">Tracking Code</p>
                             <p class="text-md font-semibold text-gray-900">
                                 {{ order?.tracking_code }}
                             </p>
                         </div>
+                    </div>
+                    <div
+                        v-if="order?.tracking_link"
+                        class="flex items-center p-3 bg-gray-50 rounded-xl"
+                        >
+                        <Link class="mr-3" />
+
+                        <div class="flex-1">
+                            <p class="text-sm text-gray-500 font-medium">Tracking Link</p>
+                            <p class="text-md font-semibold text-gray-900"> {{ order?.tracking_link }} </p>
+                        </div>
+
+                        <a
+                            :href="order.tracking_link"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="ml-3 flex items-center justify-center w-9 h-9 rounded-full bg-white border
+                                text-gray-600 hover:text-blue-600 hover:border-blue-500 transition"
+                            title="Open tracking link"
+                        >
+                            <ExternalLink class="w-4 h-4" />
+                        </a>
                     </div>
                 </div>
             </div>
@@ -187,6 +232,51 @@
                 </div>
             </div>
 
+            <!-- Order File Attachment -->
+            <div v-if="displayOrder.orderFile" class="bg-white rounded-xl shadow-sm p-6 mb-6">
+                <h2 class="text-xl font-semibold text-gray-900 mb-4 inline-flex items-center gap-1">
+                    <Folder class="w-5 h-5" />
+                    Order File Attachment
+                </h2>
+                <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl dark:bg-gray-800">
+                    <FileText class="w-6 h-6 text-gray-700 dark:text-gray-300" />
+                    <div>
+                        <p class="text-sm text-gray-500 font-medium">Attached File</p>
+                        <a 
+                            :href="`${api.defaults.baseURL}/private-order-file/${displayOrder.orderFile}`" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            class="text-blue-600 hover:text-blue-800 underline"
+                        >
+                            {{ displayOrder.orderFile.split('/').pop() }}
+                        </a>
+                    </div>
+                </div>
+
+                <div v-if="filePreviewUrl" class="mt-2 border rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800 p-3">
+                    <div v-if="isImageFile(filePreviewUrl)" class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4 bg-gray-50 dark:bg-gray-700/50">
+                        <img 
+                            :src="`${API_URL}/private-file/${displayOrder.orderFile}`"
+                            :alt="displayOrder.orderFile"
+                            class="max-w-full h-auto rounded-lg shadow-md"
+                            
+                        />
+                    </div>
+                    <div v-else-if="isPDFFile(filePreviewUrl)" class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4 bg-gray-50 dark:bg-gray-700/50">
+                        <iframe 
+                            :src="`${API_URL}/private-file/${displayOrder.orderFile}`"
+                            class="w-full h-96 rounded-lg"
+                            frameborder="0"
+                        ></iframe>
+                    </div>
+                    <div v-else class="text-center py-8 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700/50">
+                        <File class="w-16 h-16 text-gray-400 mx-auto mb-3" />
+                        <p class="text-sm text-gray-500 dark:text-gray-400 font-medium">Preview not available for this file type</p>
+                        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Download to view the file</p>
+                    </div>
+                </div>
+            </div>
+
             <!-- Actions -->
             <div class="bg-white rounded-xl shadow-sm p-6">
                 <div class="flex items-center justify-between">
@@ -228,8 +318,8 @@ import { useRoute, useRouter } from "vue-router";
 import {
     FileText, Truck, CircleCheckBig,
     BadgeCheck, TruckElectric, PackageCheck,
-    PackageX, ReceiptText, ShoppingBag,
-    ShoppingCart, Container
+    PackageX, ReceiptText, ShoppingBag, Link,
+    ShoppingCart, Container, ExternalLink, Folder
 } from 'lucide-vue-next';
 import api from "@/services/api";
 import { toast } from 'vue3-toastify'
@@ -246,6 +336,8 @@ interface Order {
 	items: OrderItem[];
 	tracking_num?: string;
     tracking_code?: string;
+    tracking_link?: string;
+    order_file?: string;
 
 	clinic?: Clinic;
 	clinician?: Clinician;
@@ -352,6 +444,7 @@ interface DisplayOrder {
     items: DisplayOrderItem[];
     totalAmount: number;
     trackingCode?: string;
+    orderFile?: string;
 }
 
 type OrderStatus = 'submitted' | 'acknowledged' | 'shipped' | 'delivered' | 'cancelled'
@@ -362,6 +455,8 @@ const orderStatusMap: Record<OrderStatus, number> = {
 	delivered: 3,
 	cancelled: 4
 }
+
+const API_URL = process.env.VUE_APP_API_URL;
 
 const route = useRoute();
 const router = useRouter();
@@ -377,6 +472,7 @@ const orderId = route.query.order_id as string;
 
 const formData = ref({
     tracking_code: '',
+    tracking_link: '',
     order_number: '',
 })
 
@@ -446,6 +542,8 @@ function transformOrderResponse(raw: any): Order {
         patient: raw.patient,
         manufacturer: raw.manufacturer,
         tracking_code: raw.tracking_code ?? raw.trackingCode ?? '',
+        tracking_link: raw.tracking_link ?? raw.trackingLink ?? '',
+        order_file: raw.order_file ?? '',
     }
 }
 
@@ -517,6 +615,7 @@ const displayOrder = computed<DisplayOrder | null>(() => {
         orderNumber: current.order_number || '—',
         trackingNumber: current.tracking_num || '—',
         trackingCode: current.tracking_code || '-',
+        trackingLink: current.tracking_link || '-',
         statusLabel: current.order_status,
         manufacturer: current.manufacturer?.manufacturer_name || '—',
         orderingClinic: current.clinic?.clinic_name || '—',
@@ -524,7 +623,8 @@ const displayOrder = computed<DisplayOrder | null>(() => {
         patientName: current.patient?.patient_name || '—',
         createdAt: formatDate(current.ordered_at),
         items,
-        totalAmount: items.reduce((sum, item) => sum + item.subtotal, 0)
+        totalAmount: items.reduce((sum, item) => sum + item.subtotal, 0),
+        orderFile: current.order_file || undefined
     };
 });
 
@@ -563,6 +663,22 @@ function formatDate(dateString?: string) {
         hour: 'numeric',
         minute: '2-digit'
     });
+}
+
+const filePreviewUrl = computed(() => {
+    if (!displayOrder.value?.orderFile) return null;
+    return `/storage/${displayOrder.value.orderFile}`;
+});
+
+function isImageFile(filename: string) {
+    if (!filename) return false
+    const ext = filename.split('.').pop()?.toLowerCase() || ''
+    return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext)
+}
+
+function isPDFFile(filename: string) {
+    if (!filename) return false
+    return filename.toLowerCase().endsWith('.pdf')
 }
 
 /** Status badges */
@@ -663,31 +779,65 @@ async function handleAction(newStatus: OrderStatus) {
 
         payload.append('order_number', formData.value.order_number);
     } else if (statusNumber === 2) {
-        if (!formData.value.tracking_code) {
-            Swal.fire({
-                icon: 'error',
-                title: "Tracking Code Required",
-                html: `
-                    <p class="text-gray-700">
-                        To proceed with <strong>marking this order as Shipped</strong>,
-                        you must enter a valid tracking code from the courier.
-                    </p>
-                    <p class="mt-2 text-xs text-red-500">
-                        Example: FedEx, UPS, USPS tracking numbers.
-                    </p>
-                `,
-                confirmButtonText: "Okay, I'll enter it",
-                confirmButtonColor: "#d33",
-                allowOutsideClick: false,
-                allowEscapeKey: true,
-            });
-            return;
-        }
+        if (!formData.value.tracking_code || !formData.value.tracking_link) {
+            const missing = []
 
-        payload.append('tracking_code', formData.value.tracking_code);
+            if (!formData.value.tracking_code) {
+                missing.push('Tracking Code')
+            }
+
+            if (!formData.value.tracking_link) {
+                missing.push('Tracking Link')
+            }
+
+            if (missing.length) {
+                const isBothMissing = missing.length === 2
+
+                Swal.fire({
+                    icon: 'error',
+                    title: isBothMissing
+                        ? 'Tracking Information Required'
+                        : `${missing[0]} Required`,
+                    html: `
+                        <p class="text-gray-700">
+                            To proceed with <strong>marking this order as Shipped</strong>,
+                            you must provide ${isBothMissing ? 'the following information' : `a valid ${missing[0].toLowerCase()}`}.
+                        </p>
+
+                        ${
+                            isBothMissing
+                                ? `
+                                    <ul class="mt-2 text-xs text-red-500 list-disc pl-5">
+                                        <li>Tracking Code (e.g. FedEx / UPS / USPS)</li>
+                                        <li>Tracking Link (courier tracking URL)</li>
+                                    </ul>
+                                `
+                                : `
+                                    <p class="mt-2 text-xs text-red-500">
+                                        ${missing[0]} is required before shipping can proceed.
+                                    </p>
+                                `
+                        }
+                    `,
+                    confirmButtonText: isBothMissing
+                        ? "Okay, I'll enter them"
+                        : "Okay, I'll enter it",
+                    confirmButtonColor: '#d33',
+                    allowOutsideClick: false,
+                    allowEscapeKey: true,
+                })
+                return
+            }
+        }
+        payload.append('tracking_code', formData.value.tracking_code)
+        payload.append('tracking_link', formData.value.tracking_link)
     } else {
         if (formData.value.tracking_code) {
             payload.append('tracking_code', formData.value.tracking_code);
+        }
+
+        if (formData.value.tracking_link) {
+            payload.append('tracking_link', formData.value.tracking_link)
         }
     }
 

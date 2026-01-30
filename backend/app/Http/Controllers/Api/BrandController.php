@@ -9,6 +9,7 @@ use App\Models\GraftSize;
 use App\Models\Manufacturer;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use App\Traits\AuditLogger;
@@ -207,50 +208,58 @@ class BrandController extends Controller
         $brand = Brand::findOrFail($id);
 
         $validated = $request->validate([
-            'brandName' => 'required|string|max:255',
-            'manufacturerId' => 'required|exists:woundmed_manufacturers,manufacturer_id',
-            'product_type' => 'nullable|in:0,1',
-            'mue' => 'required|integer|min:0',
-            'description' => 'nullable|string',
-            'brandStatus' => 'required|in:0,1,2',
-            'graftSizes' => 'nullable|json',
-            'graftSizes.*.id' => 'nullable|exists:woundmed_graft_sizes,graft_size_id',
+            'brandName'         => 'required|string|max:255',
+            'manufacturerId'    => 'required|exists:woundmed_manufacturers,manufacturer_id',
+            'product_type'      => 'nullable|in:0,1',
+            'mue'               => 'required|integer|min:0',
+            'description'       => 'nullable|string',
+            'brandStatus'       => 'required|in:0,1,2',
+            'graftSizes'        => 'nullable|json',
+            'graftSizes.*.id'   => 'nullable|exists:woundmed_graft_sizes,graft_size_id',
             'graftSizes.*.size' => 'nullable|string|max:50',
             'graftSizes.*.area' => 'nullable|numeric|min:0',
             'graftSizes.*.price' => 'nullable|numeric|min:0',
             'graftSizes.*.stock' => 'nullable|integer|min:0',
             'graftSizes.*.graftStatus' => 'nullable|in:0,1,2',
-            'logo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048', // Added logo validation
+            'logo'              => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'remove_logo'       => 'nullable|in:1', // ← Critical for removal
         ]);
 
-        // Parse and validate graftSizes conditionally
+        $oldBrandName = $brand->brand_name;
+
+        // === HANDLE GRAFT SIZES (unchanged – already perfect) ===
         if ($request->has('graftSizes')) {
             $graftSizesJson = $request->input('graftSizes');
             $parsed = is_string($graftSizesJson) ? json_decode($graftSizesJson, true) : $graftSizesJson;
+
             if (json_last_error() !== JSON_ERROR_NONE) {
                 throw ValidationException::withMessages(['graftSizes' => 'Invalid JSON format for graft sizes.']);
             }
             if (!is_array($parsed)) {
                 throw ValidationException::withMessages(['graftSizes' => 'Graft sizes must be an array.']);
             }
+
             foreach ($parsed as $index => $sizeData) {
-                $size = trim($sizeData['size'] ?? '');
-                $area = $sizeData['area'] ?? null;
-                $price = $sizeData['price'] ?? null;
+                $size   = trim($sizeData['size'] ?? '');
+                $area   = $sizeData['area'] ?? null;
+                $price  = $sizeData['price'] ?? null;
                 $hasInput = !empty($size) || ($area !== null && $area >= 0) || ($price !== null && $price >= 0);
+
                 if ($hasInput) {
                     if (empty($size)) {
                         throw ValidationException::withMessages(["graftSizes.{$index}.size" => 'Size is required when other fields are provided.']);
                     }
                     if ($area === null || $area < 0) {
-                        throw ValidationException::withMessages(["graftSizes.{$index}.area" => 'Area is required and must be >= 0 when other fields are provided.']);
+                        throw ValidationException::withMessages(["graftSizes.{$index}.area" => 'Area is required and must be >= 0.']);
                     }
                     if ($price === null || $price < 0) {
-                        throw ValidationException::withMessages(["graftSizes.{$index}.price" => 'Price is required and must be >= 0 when other fields are provided.']);
+                        throw ValidationException::withMessages(["graftSizes.{$index}.price" => 'Price is required and must be >= 0.']);
                     }
+
                     $status = $sizeData['graftStatus'] ?? 0;
-                    $stock = $sizeData['stock'] ?? 0;
+                    $stock  = $sizeData['stock'] ?? 0;
                     $sizeId = $sizeData['id'] ?? null;
+
                     if ($sizeId) {
                         // Update existing
                         $gs = GraftSize::where('graft_size_id', $sizeId)
@@ -258,31 +267,27 @@ class BrandController extends Controller
                             ->firstOrFail();
                         $oldSize = $gs->size;
                         $gs->update([
-                            'size' => $size,
-                            'area' => $area,
-                            'price' => $price,
-                            'stock' => $stock,
+                            'size'         => $size,
+                            'area'         => $area,
+                            'price'        => $price,
+                            'stock'        => $stock,
                             'graft_status' => $status,
                         ]);
-
-                        // Log audit trail for graft size update
-                        $this->logAudit($request, 'graft_size_update', "Graft size updated: {$oldSize} -> {$size} for brand ID: {$id}", $sizeId);
+                        $this->logAudit($request, 'graft_size_update', "Graft size updated: {$oldSize} → {$size} for brand ID: {$id}", $sizeId);
                     } else {
                         // Create new
                         $graftSize = GraftSize::create([
-                            'brand_id' => $id,
-                            'size' => $size,
-                            'area' => $area,
-                            'price' => $price,
-                            'stock' => $stock,
+                            'brand_id'     => $id,
+                            'size'         => $size,
+                            'area'         => $area,
+                            'price'        => $price,
+                            'stock'        => $stock,
                             'graft_status' => $status,
                         ]);
-
-                        // Log audit trail for graft size creation during brand update
                         $this->logAudit($request, 'graft_size_create', "Graft size created: {$size} for brand ID: {$id}", $graftSize->graft_size_id);
                     }
                 } else {
-                    // All empty: delete if existing
+                    // All fields empty → delete if exists
                     $sizeId = $sizeData['id'] ?? null;
                     if ($sizeId) {
                         $gs = GraftSize::where('graft_size_id', $sizeId)
@@ -290,7 +295,6 @@ class BrandController extends Controller
                             ->first();
                         if ($gs) {
                             $gs->delete();
-                            // Log audit trail for graft size deletion
                             $this->logAudit($request, 'graft_size_delete', "Graft size deleted: {$gs->size} for brand ID: {$id}", $sizeId);
                         }
                     }
@@ -298,61 +302,65 @@ class BrandController extends Controller
             }
         }
 
-        // Handle logo update if provided
+        // === HANDLE LOGO (NOW WITH REMOVAL SUPPORT) ===
         if ($request->hasFile('logo')) {
-            // Delete old logo if exists
+            // New logo uploaded → replace old one
             if ($brand->logo && Storage::disk('public')->exists($brand->logo)) {
                 Storage::disk('public')->delete($brand->logo);
             }
             $logoPath = $request->file('logo')->store('brands/logos', 'public');
             $brand->logo = $logoPath;
+        } elseif ($request->has('remove_logo') && $request->input('remove_logo') === '1') {
+            // User clicked "X" → explicitly remove logo
+            if ($brand->logo && Storage::disk('public')->exists($brand->logo)) {
+                Storage::disk('public')->delete($brand->logo);
+            }
+            $brand->logo = null;
         }
+        // If neither → keep current logo
 
-        // Update brand
-        $oldBrandName = $brand->brand_name;
+        // === UPDATE BRAND FIELDS ===
         $brand->update([
             'manufacturer_id' => $validated['manufacturerId'],
-            'brand_name' => $validated['brandName'],
-            'product_type' => $validated['product_type'] ?? 0,
-            'mue' => $validated['mue'],
-            'description' => $validated['description'] ?? null,
-            'brand_status' => $validated['brandStatus'],
+            'brand_name'      => $validated['brandName'],
+            'product_type'    => $validated['product_type'] ?? 0,
+            'mue'             => $validated['mue'],
+            'description'     => $validated['description'] ?? null,
+            'brand_status'    => $validated['brandStatus'],
         ]);
 
-        // Log audit trail for brand update
-        $this->logAudit($request, 'brand_update', "Brand updated: {$oldBrandName} -> {$validated['brandName']}", $id);
+        $this->logAudit($request, 'brand_update', "Brand updated: {$oldBrandName} → {$validated['brandName']}", $id);
 
-        // Reload for response
+        // Reload relationships
         $brand->load(['graftSizes', 'manufacturer']);
         $manufacturer = $brand->manufacturer;
 
         $formattedGraftSizes = $brand->graftSizes->map(function ($size) {
             return [
-                'id' => (string) $size->graft_size_id,
-                'size' => $size->size,
-                'area' => (float) $size->area,
-                'price' => (float) $size->price,
-                'stock' => (int) $size->stock,
+                'id'          => (string) $size->graft_size_id,
+                'size'        => $size->size,
+                'area'        => (float) $size->area,
+                'price'       => (float) $size->price,
+                'stock'       => (int) $size->stock,
                 'graftStatus' => (int) $size->graft_status,
             ];
         });
 
-        $logoUrl = $brand->logo ? asset('storage/' . $brand->logo) : null; // Added logo URL
+        $logoUrl = $brand->logo ? asset('storage/' . $brand->logo) : null;
 
         return response()->json([
             'message' => 'Brand updated successfully',
-            'data' => [
-                'id' => (string) $brand->brand_id,
-                'brandName' => $brand->brand_name,
-                'manufacturerName' => $manufacturer ? $manufacturer->manufacturer_name : null,
-                'mue' => (int) $brand->mue,
-                'description' => $brand->description,
-                'brandStatus' => (int) $brand->brand_status,
-                'productType' => $brand->product_type == 0 ? 'Graft' : 'Device',
-                'graftSizes' => $formattedGraftSizes,
-                'logoUrl' => $logoUrl, // Added logo URL to response
-                // 'createdAt' => $brand->created_at,
-                'updatedAt' => $brand->updated_at,
+            'data'    => [
+                'id'              => (string) $brand->brand_id,
+                'brandName'       => $brand->brand_name,
+                'manufacturerName' => $manufacturer?->manufacturer_name,
+                'mue'             => (int) $brand->mue,
+                'description'     => $brand->description,
+                'brandStatus'     => (int) $brand->brand_status,
+                'productType'     => $brand->product_type == 0 ? 'Graft' : 'Device',
+                'graftSizes'      => $formattedGraftSizes,
+                'logoUrl'         => $logoUrl,
+                'updatedAt'       => $brand->updated_at,
             ],
         ]);
     }

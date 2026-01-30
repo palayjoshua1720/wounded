@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rules;
 use App\Http\Controllers\Controller;
 use App\Services\EmailService;
@@ -34,10 +35,23 @@ class UserController extends Controller
                 'phone'
             ]);
 
-        // Hide admin users from office staff
+        // Get the current authenticated user
         $currentUser = $request->user();
+        
+        // Hide admin users from office staff
         if ($currentUser && $currentUser->user_role === 1) {
             $query->where('user_role', '!=', 0);
+        }
+        
+        // Clinic users can only see clinicians from their own clinic
+        if ($currentUser && $currentUser->user_role === 2) {
+            $query->where('user_role', 3) // Only clinicians
+                  ->where('clinic_id', $currentUser->clinic_id); // Only from their clinic
+        }
+        
+        // Hide the current user from the list (regardless of role)
+        if ($currentUser) {
+            $query->where('id', '!=', $currentUser->id);
         }
 
         // Apply filters
@@ -77,10 +91,23 @@ class UserController extends Controller
     {
         $baseQuery = User::query();
 
-        // Hide admin users from office staff statistics
+        // Get the current authenticated user
         $currentUser = $request->user();
+        
+        // Hide admin users from office staff statistics
         if ($currentUser && $currentUser->user_role === 1) {
             $baseQuery->where('user_role', '!=', 0);
+        }
+        
+        // Clinic users can only see clinicians from their own clinic
+        if ($currentUser && $currentUser->user_role === 2) {
+            $baseQuery->where('user_role', 3) // Only clinicians
+                      ->where('clinic_id', $currentUser->clinic_id); // Only from their clinic
+        }
+        
+        // Hide the current user from the statistics
+        if ($currentUser) {
+            $baseQuery->where('id', '!=', $currentUser->id);
         }
 
         $total = (clone $baseQuery)->count();
@@ -205,7 +232,7 @@ class UserController extends Controller
             );
         } catch (\Exception $e) {
             // Log error but don't fail user creation
-            \Log::error('Failed to send welcome email: ' . $e->getMessage());
+            Log::error('Failed to send welcome email: ' . $e->getMessage());
         }
 
         return response()->json([
@@ -238,9 +265,9 @@ class UserController extends Controller
         }
 
         $validated = $request->validate([
-            'first_name' => 'sometimes|required|string|max:255',
+            'first_name' => 'sometimes|string|max:255',
             'middle_name' => 'nullable|string|max:255',
-            'last_name' => 'sometimes|required|string|max:255',
+            'last_name' => 'sometimes|string|max:255',
             'email' => 'sometimes|required|string|email|max:255|unique:woundmed_users,email,' . $user->id,
             'user_role' => 'sometimes|required|integer|between:0,5',
             'user_status' => 'sometimes|required|integer|between:0,2',
@@ -281,15 +308,15 @@ class UserController extends Controller
         }
 
         $updateData = [
-            'first_name' => $validated['first_name'] ?? $user->first_name,
-            'middle_name' => $validated['middle_name'] ?? $user->middle_name,
-            'last_name' => $validated['last_name'] ?? $user->last_name,
+            'first_name' => isset($validated['first_name']) ? ($validated['first_name'] ?: $user->first_name) : $user->first_name,
+            'middle_name' => array_key_exists('middle_name', $validated) ? ($validated['middle_name'] ?: null) : $user->middle_name,
+            'last_name' => isset($validated['last_name']) ? ($validated['last_name'] ?: $user->last_name) : $user->last_name,
             'email' => $validated['email'] ?? $user->email,
             'user_role' => $validated['user_role'] ?? $user->user_role,
             'user_status' => $validated['user_status'] ?? $user->user_status,
             'clinic_id' => $validated['clinic_id'] ?? $user->clinic_id,
             'manufacturer_id' => $validated['manufacturer_id'] ?? $user->manufacturer_id,
-            'phone' => $validated['phone'] ?? $user->phone,
+            'phone' => array_key_exists('phone', $validated) ? ($validated['phone'] ?: null) : $user->phone,
         ];
 
         if (isset($validated['password'])) {
@@ -430,6 +457,7 @@ class UserController extends Controller
             'firstName' => $user->first_name,
             'lastName' => $user->last_name,
             'middleName' => $user->middle_name,
+            'one_time_email_verification' => $user->one_time_email_verification,
         ];
     }
 }

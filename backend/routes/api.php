@@ -12,9 +12,12 @@ use App\Http\Controllers\Api\GraftSizeController;
 use App\Http\Controllers\Api\ResetPassword;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\SampleController;
+use App\Http\Controllers\Api\ReturnsController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\InventoryController;
+use App\Http\Controllers\Api\DashboardController;
+
 
 
 // System Info
@@ -38,10 +41,17 @@ Route::put('/management/public/magicorder/update/{id}/updateorderstatus', [Order
 // Sample Routes
 Route::get('/sample', [SampleController::class, 'index']);
 Route::post('/auth/login', [AuthController::class, 'login']);
+Route::post('/auth/login/verify-code', [AuthController::class, 'verifyLoginCode']);
+Route::post('/auth/login/verify-backup-code', [AuthController::class, 'verifyBackupCode']);
 Route::post('/auth/validation/validate-tfauth', [AuthController::class, 'validate_tfauth']);
+Route::get('/auth/profile/security/backup-codes', [AuthController::class, 'getUserBackupCodes']);
 
 // ivr file stream
 Route::get('/private-file/{path}', [IVRRequestController::class, 'viewIVRFile'])
+->where('path', '.*');
+
+// order file stream
+Route::get('/private-order-file/{path}', [OrderController::class, 'viewOrderFile'])
 ->where('path', '.*');
 
 Route::middleware('auth:sanctum')->group(function () {
@@ -50,6 +60,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/auth/profile/security/enable-tfa', [AuthController::class, 'enable_tfauth']);
     Route::post('/auth/profile/security/disable-tfauth', [AuthController::class, 'disable_tfauth']);
     Route::post('/auth/profile/security/update-tfauth', [AuthController::class, 'update_tfauth']);
+    Route::post('/auth/profile/security/enable-one-time-email', [AuthController::class, 'enableOneTimeEmailVerification']);
+    Route::post('/auth/profile/security/disable-one-time-email', [AuthController::class, 'disableOneTimeEmailVerification']);
+    Route::post('/auth/profile/security/enable-backup-codes', [AuthController::class, 'enableBackupCodes']);
+    Route::post('/auth/profile/security/disable-backup-codes', [AuthController::class, 'disableBackupCodes']);
     Route::get('/invoice-management', [InvoiceController::class, 'index']);
     Route::get('/invoice-management/stats', [InvoiceController::class, 'getStats']);
     Route::get('/invoice-management/clinics', [InvoiceController::class, 'getClinics']);
@@ -77,7 +91,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/management/manufacturers/{id}/toggle', [ManufacturerController::class, 'toggleManufacturerStatus']);
     Route::delete('/management/manufacturers/{id}', [ManufacturerController::class, 'deleteManufacturer']);
     Route::post('/management/manufacturers/{id}', [ManufacturerController::class, 'updateManufacturer']);
-    Route::get('/management/manufacturers/{id}/download', [ManufacturerController::class, 'downloadIVRForm']);
+    Route::get('/management/manufacturers/{id}/download/{type}', [ManufacturerController::class, 'downloadFile']);
 
     // User management routes
     Route::get('/users/stats', [UserController::class, 'stats']);
@@ -119,6 +133,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/management/brands/{id}/archive', [BrandController::class, 'archiveBrand']);
     Route::get('/management/brands/{id}/toggle', [BrandController::class, 'toggleBrandStatus']);
     Route::delete('/management/brands/{id}', [BrandController::class, 'deleteBrand']);
+    // Route::get('/management/brands/stats', [BrandController::class, 'getBrandStats']);
 
     // Graft Size 
     Route::get('/management/graft-sizes', [GraftSizeController::class, 'getAllGraftSizes']);
@@ -146,9 +161,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/management/order/update/{id}/updateorderstatus', [OrderController::class, 'updateOrderStatus']);
     Route::put('/management/magicorder/update/{id}/updateorderstatus', [OrderController::class, 'updateMagicOrderStatus']);
     Route::post('/management/order/update/{id}/followuporderstatus', [OrderController::class, 'followUpOrder']);
- 
+
     Route::get('/management/manufacturer/order/getmanufacturerorders', [OrderController::class, 'getAllOrdersByManufacturers']);
- 
+
     Route::get('/management/manufacturer/order/getclinicorders', [OrderController::class, 'getAllOrdersByClinics']);
     Route::get('/auth/me-with-clinic', [OrderController::class, 'userWithClinic']);
     Route::post('/management/order/add/neworderbyclinic', [OrderController::class, 'addNewOrderByClinic']);
@@ -160,8 +175,20 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/inventory/status/{status}', [InventoryController::class, 'getInventoryByStatus']);
     Route::get('/inventory/search-patients', [InventoryController::class, 'searchPatients']);
     Route::get('/inventory/graft-size/{graftSizeId}', [InventoryController::class, 'getGraftSize']);
+    Route::get('/inventory/clinicians', [InventoryController::class, 'getCliniciansForInventory']);
     Route::post('/inventory/usage-logs', [InventoryController::class, 'storeUsageLog']);
     Route::put('/inventory/usage-logs/{id}', [InventoryController::class, 'updateUsageLog']);
     Route::patch('/inventory/{id}/status', [InventoryController::class, 'updateInventoryStatus']);
     Route::delete('/inventory/usage-logs/{id}', [InventoryController::class, 'deleteUsageLog']);
+
+    // Dashboard
+    Route::get('/dashboard/stats', [DashboardController::class, 'getStats']);
+    Route::get('/dashboard/recent-activity', [DashboardController::class, 'recentActivity']);
+
+    // Returns Management
+    Route::get('/management/returns', [ReturnsController::class, 'getAllReturns']);
+    Route::post('/management/returns', [ReturnsController::class, 'createReturn']);
+    Route::put('/management/returns/{id}', [ReturnsController::class, 'updateReturn']);
+    Route::delete('/management/returns/{id}', [ReturnsController::class, 'deleteReturn']);
+    Route::get('/management/returns/stats', [ReturnsController::class, 'getReturnStats']);
 });

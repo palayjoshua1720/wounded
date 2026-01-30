@@ -12,6 +12,10 @@ interface User {
 	middle_name: string
 	last_name: string
 	full_name: string
+	phone?: string
+	tfa_enabled?: number
+	one_time_email_verification?: number
+	backup_codes_enabled?: boolean
 }
 
 interface LoginCredentials {

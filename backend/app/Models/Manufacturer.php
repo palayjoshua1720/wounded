@@ -16,12 +16,16 @@ class Manufacturer extends Model
     protected $fillable = [
         'manufacturer_name',
         'primary_email',
+        'order_email',
+        'eligibility_email',
         'secondary_email',
         'website',
         'address',
         'contact_person',
         'contact_number',
-        'filepath',
+        'ivr_file',
+        'order_file',
+        'onboarding_file',
         'manufacturer_status',
         'logo',
     ];

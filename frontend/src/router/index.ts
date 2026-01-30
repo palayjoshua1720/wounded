@@ -10,6 +10,7 @@ import InventoryManagementView from '@/views/InventoryManagementView.vue'
 import InvoiceManagementView from '@/views/InvoiceManagementView.vue'
 import IVRManagementView from '@/views/IVRManagementView.vue'
 import GraftSizeManagementView from '@/views/GraftSizeManagementView.vue'
+import ProductManagementView from '@/views/ProductManagementView.vue'
 import NotificationCenterView from '@/views/NotificationCenterView.vue'
 import OrderManagementView from '@/views/OrderManagementView.vue'
 import ReportCenterView from '@/views/ReportCenterView.vue'
@@ -33,7 +34,7 @@ import InvalidMagicLinkView from '@/views/InvalidMagicLinkView.vue'
 import { pageLoader } from '@/composables/ui/usePageLoader'
 
 // Icons
-import { LayoutDashboard, UsersRound, Hospital, Factory, Package, ShieldCheck, ShoppingCart, ClipboardList, PencilRuler, ScanBarcode, BellRing, ChartColumn, CircleUserRound, Calculator, RotateCcw } from 'lucide-vue-next'
+import { LayoutDashboard, UsersRound, Hospital, Factory, Package, ShieldCheck, ShoppingCart, ClipboardList, PencilRuler, ScanBarcode, BellRing, ChartColumn, CircleUserRound, Calculator, RotateCcw, Layers } from 'lucide-vue-next'
 
 // Types
 interface NavigationItem {
@@ -119,14 +120,13 @@ const routes: RouteRecordRaw[] = [
 					role: 1
 				}
 			},
-			// TEMPORARY - WILL FINALIZE LATER
 			{
 				path: 'clinic/users',
 				name: 'clinic-users',
 				component: UserManagementView,
 				meta: {
 					requiresAuth: true,
-					title: 'All Users',
+					title: 'Clinicians',
 					icon: UsersRound,
 					role: 2
 				}
@@ -179,8 +179,18 @@ const routes: RouteRecordRaw[] = [
 				component: GraftSizeManagementView,
 				meta: {
 					requiresAuth: true,
-					title: 'Graft Size',
+					title: 'Products',
 					icon: PencilRuler
+				}
+			},
+			{
+				path: 'product-management',
+				name: 'product-management',
+				component: ProductManagementView,
+				meta: {
+					requiresAuth: true,
+					title: 'Products',
+					icon: Layers
 				}
 			},
 			// IVR Management
@@ -328,7 +338,7 @@ const routes: RouteRecordRaw[] = [
 				component: InvoiceManagementView,
 				meta: {
 					requiresAuth: true,
-					title: 'Invoices & Payments',
+					title: 'Invoices',
 					icon: ClipboardList
 				}
 			},
@@ -338,7 +348,7 @@ const routes: RouteRecordRaw[] = [
 				component: InvoiceManagementView,
 				meta: {
 					requiresAuth: true,
-					title: 'Invoices & Payments',
+					title: 'Invoices',
 					icon: ClipboardList
 				}
 			},
@@ -348,7 +358,7 @@ const routes: RouteRecordRaw[] = [
 				component: InvoiceManagementView,
 				meta: {
 					requiresAuth: true,
-					title: 'Invoices & Payments',
+					title: 'Invoices',
 					icon: ClipboardList
 				}
 			},
@@ -358,7 +368,7 @@ const routes: RouteRecordRaw[] = [
 				component: InvoiceManagementView,
 				meta: {
 					requiresAuth: true,
-					title: 'Invoices & Payments',
+					title: 'Invoices',
 					icon: ClipboardList
 				}
 			},
@@ -368,7 +378,7 @@ const routes: RouteRecordRaw[] = [
 				component: InvoiceManagementView,
 				meta: {
 					requiresAuth: true,
-					title: 'Invoices & Payments',
+					title: 'Invoices',
 					icon: ClipboardList
 				}
 			},
@@ -378,7 +388,7 @@ const routes: RouteRecordRaw[] = [
 				component: InvoiceManagementView,
 				meta: {
 					requiresAuth: true,
-					title: 'Invoices & Payments',
+					title: 'Invoices',
 					icon: ClipboardList
 				}
 			},
@@ -389,7 +399,7 @@ const routes: RouteRecordRaw[] = [
 				component: InventoryManagementView,
 				meta: {
 					requiresAuth: true,
-					title: 'Inventory & Serials',
+					title: 'Inventory',
 					icon: ScanBarcode,
 					role: 0
 				}
@@ -400,7 +410,7 @@ const routes: RouteRecordRaw[] = [
 				component: InventoryManagementView,
 				meta: {
 					requiresAuth: true,
-					title: 'Inventory & Serials',
+					title: 'Inventory',
 					icon: ScanBarcode,
 					role: 1
 				}
@@ -411,7 +421,7 @@ const routes: RouteRecordRaw[] = [
 				component: InventoryManagementView,
 				meta: {
 					requiresAuth: true,
-					title: 'Inventory & Serials',
+					title: 'Inventory',
 					icon: ScanBarcode,
 					role: 4
 				}
@@ -422,7 +432,7 @@ const routes: RouteRecordRaw[] = [
 				component: InventoryManagementView,
 				meta: {
 					requiresAuth: true,
-					title: 'Inventory & Serials',
+					title: 'Inventory',
 					icon: ScanBarcode,
 					role: 5
 				}
@@ -430,12 +440,12 @@ const routes: RouteRecordRaw[] = [
 			// Others --- Change if needed
 			// Return Management
 			{
-				path: 'returns',
+				path: 'admin/returns',
 				name: 'returns',
 				component: ReturnManagementView,
 				meta: {
 					requiresAuth: true,
-					title: 'Return Management',
+					title: 'Returns',
 					icon: RotateCcw,
 					role: 0
 				}
@@ -590,6 +600,7 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 		'manufacturer-management': [0, 1],
 		'brand-management': [0, 1],
 		'graft-size-management': [0, 1],
+		'product-management': [0, 1],
 		// IVR Management
 		'admin-ivr-management': [0],
 		'office-staff-ivr-management': [1],
@@ -621,12 +632,13 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 		'manufacturer/order-management': [4],
 		'manufacturer/ivr-management': [4],
 		'clinic/order-management': [2],
+		// Return Management
+		'returns': [0,1,2,3],
 
 		// Other Management
-		'returns': [],
 		'usage': [],
 		'smart-selector': [],
-		'reports': [],
+		'reports': [0],
 		'notifications': [0, 1],
 		'profile': [],
 	}
@@ -641,11 +653,14 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 					'clinic-management',
 					'manufacturer-management',
 					'brand-management',
-					'graft-size-management',
+					// 'graft-size-management',
+					'product-management',
 					'admin-ivr-management',
 					'admin-order-management',
 					'admin-invoice-management',
 					'admin-inventory',
+					'returns',
+					'reports',
 				].includes(route.name as string)
 			}
 
@@ -657,7 +672,8 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 					'clinic-management',
 					'manufacturer-management',
 					'brand-management',
-					'graft-size-management',
+					// 'graft-size-management',
+					'product-management',
 					'office-staff-ivr-management',
 					'office-staff-order-management',
 					'office-staff-invoice-management',
