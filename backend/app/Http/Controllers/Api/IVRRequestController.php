@@ -447,7 +447,7 @@ class IVRRequestController extends Controller
     }
 
     // live file streaming - can handle both ivr and order files
-    public function viewOrderFile($filename)
+    public function viewIVRFile($filename)
     {
         $decodedFilename = urldecode($filename);
         

@@ -337,12 +337,6 @@
 
 					<div v-if="filePreviewUrl" class="mt-2 border rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800 p-3">
 						<div v-if="isImageFile(filePreviewUrl)" class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4 bg-gray-50 dark:bg-gray-700/50">
-							<!-- <img
-								:src="selectedIvrRequest.ivr_file" 
-								:alt="selectedIvrRequest.ivr_file"
-								class="max-w-full h-auto rounded-lg shadow-md"
-								
-							/> -->
 							<img 
 								:src="`${API_URL}/private-file/${selectedIvrRequest.ivr_file}`"
 								:alt="selectedIvrRequest.ivr_file"

@@ -350,6 +350,32 @@
 						</div>
 					</div>
 
+					<h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4 border-t pt-5">
+						Order File
+					</h3>
+					<div v-if="filePreviewUrl" class="border rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800 p-3" style="margin-top: unset !important;">
+						<div v-if="isImageFile(filePreviewUrl)" class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4 bg-gray-50 dark:bg-gray-700/50">
+							<img 
+								:src="`${API_URL}/private-file/${selectedOrder.order_file}`"
+								:alt="selectedOrder.order_file"
+								class="max-w-full h-auto rounded-lg shadow-md"
+								
+							/>
+						</div>
+						<div v-else-if="isPDFFile(filePreviewUrl)" class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4 bg-gray-50 dark:bg-gray-700/50">
+							<iframe 
+								:src="`${API_URL}/private-file/${selectedOrder.order_file}`"
+								class="w-full h-96 rounded-lg"
+								frameborder="0"
+							></iframe>
+						</div>
+						<div v-else class="text-center py-8 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700/50">
+							<File class="w-16 h-16 text-gray-400 mx-auto mb-3" />
+							<p class="text-sm text-gray-500 dark:text-gray-400 font-medium">Preview not available for this file type</p>
+							<p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Download to view the file</p>
+						</div>
+					</div>
+
 					<div class="border-t border-gray-200 pt-6">
 						<h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">
 							Override Status
@@ -890,6 +916,8 @@ type OrderItem = {
 	deviceType?: string;
 	graftStock?: number
 }
+
+const API_URL = process.env.VUE_APP_API_URL;
 
 // 0-submitted | 1-acknowledged | 2-shipped | 3-delivered | 4-cancelled
 type OrderStatus = 'submitted' | 'acknowledged' | 'shipped' | 'delivered' | 'cancelled'
@@ -1475,6 +1503,22 @@ const removeExistingFile = () => {
 	selectedFile.value = null
 	loadProgress.value = 0
 	isLoadingFile.value = false
+}
+
+const filePreviewUrl = computed(() => {
+    if (!selectedOrder.value?.order_file) return null;
+    return `/storage/${selectedOrder.value.order_file}`;
+});
+
+function isImageFile(filename: string) {
+    if (!filename) return false
+    const ext = filename.split('.').pop()?.toLowerCase() || ''
+    return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext)
+}
+
+function isPDFFile(filename: string) {
+    if (!filename) return false
+    return filename.toLowerCase().endsWith('.pdf')
 }
 
 const existingFile = computed(() => {

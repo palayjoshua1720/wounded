@@ -252,6 +252,29 @@
                         </a>
                     </div>
                 </div>
+
+                <div v-if="filePreviewUrl" class="mt-2 border rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800 p-3">
+                    <div v-if="isImageFile(filePreviewUrl)" class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4 bg-gray-50 dark:bg-gray-700/50">
+                        <img 
+                            :src="`${API_URL}/private-file/${displayOrder.orderFile}`"
+                            :alt="displayOrder.orderFile"
+                            class="max-w-full h-auto rounded-lg shadow-md"
+                            
+                        />
+                    </div>
+                    <div v-else-if="isPDFFile(filePreviewUrl)" class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4 bg-gray-50 dark:bg-gray-700/50">
+                        <iframe 
+                            :src="`${API_URL}/private-file/${displayOrder.orderFile}`"
+                            class="w-full h-96 rounded-lg"
+                            frameborder="0"
+                        ></iframe>
+                    </div>
+                    <div v-else class="text-center py-8 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700/50">
+                        <File class="w-16 h-16 text-gray-400 mx-auto mb-3" />
+                        <p class="text-sm text-gray-500 dark:text-gray-400 font-medium">Preview not available for this file type</p>
+                        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Download to view the file</p>
+                    </div>
+                </div>
             </div>
 
             <!-- Actions -->
@@ -432,6 +455,8 @@ const orderStatusMap: Record<OrderStatus, number> = {
 	delivered: 3,
 	cancelled: 4
 }
+
+const API_URL = process.env.VUE_APP_API_URL;
 
 const route = useRoute();
 const router = useRouter();
@@ -638,6 +663,22 @@ function formatDate(dateString?: string) {
         hour: 'numeric',
         minute: '2-digit'
     });
+}
+
+const filePreviewUrl = computed(() => {
+    if (!displayOrder.value?.orderFile) return null;
+    return `/storage/${displayOrder.value.orderFile}`;
+});
+
+function isImageFile(filename: string) {
+    if (!filename) return false
+    const ext = filename.split('.').pop()?.toLowerCase() || ''
+    return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext)
+}
+
+function isPDFFile(filename: string) {
+    if (!filename) return false
+    return filename.toLowerCase().endsWith('.pdf')
 }
 
 /** Status badges */
