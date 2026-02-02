@@ -57,12 +57,11 @@ return [
             'prefix_indexes' => true,
             'strict' => true,
             'engine' => null,
-            // 'options' => extension_loaded('pdo_mysql') ? array_filter([
-            //     PDO::MYSQL_ATTR_SSL_CA => '/etc/ssl/certs/ca-certificates.crt',
-            //     PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => false,
-            //     PDO::MYSQL_ATTR_SSL_CIPHER => 'DHE-RSA-AES256-SHA',
-            // ]) : [],
-            // 'sslmode' => 'require',
+            'options' => extension_loaded('pdo_mysql') ? array_filter([
+                PDO::MYSQL_ATTR_SSL_MODE => PDO::MYSQL_ATTR_SSL_MODE_REQUIRED,  // Enforce SSL encryption
+                PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => false,               // Skip cert chain/hostname verification (fixes self-signed error)
+                PDO::MYSQL_ATTR_SSL_CA => false,                               // No need for CA file
+            ]) : [],
         ],
 
         'mariadb' => [

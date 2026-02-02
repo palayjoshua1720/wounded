@@ -59,7 +59,7 @@ export function useLogin() {
 				throw new Error('Please enter both email and password')
 			}
 
-			const response = await api.post('/api/auth/login', {
+			const response = await api.post('/auth/login', {
 				email: email.value,
 				password: password.value
 			})
