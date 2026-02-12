@@ -17,8 +17,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\InventoryController;
 use App\Http\Controllers\Api\DashboardController;
-
-
+use App\Http\Controllers\Api\ProductController;
 
 // System Info
 Route::get('/version', function (Request $request) {
@@ -48,7 +47,7 @@ Route::get('/auth/profile/security/backup-codes', [AuthController::class, 'getUs
 
 // ivr file stream
 Route::get('/private-file/{path}', [IVRRequestController::class, 'viewIVRFile'])
-->where('path', '.*');
+    ->where('path', '.*');
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
@@ -129,19 +128,29 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/management/brands/{id}/archive', [BrandController::class, 'archiveBrand']);
     Route::get('/management/brands/{id}/toggle', [BrandController::class, 'toggleBrandStatus']);
     Route::delete('/management/brands/{id}', [BrandController::class, 'deleteBrand']);
-    // Route::get('/management/brands/stats', [BrandController::class, 'getBrandStats']);
 
     // Graft Size 
-    Route::get('/management/graft-sizes', [GraftSizeController::class, 'getAllGraftSizes']);
-    Route::post('/management/graft-sizes', [GraftSizeController::class, 'addNewGraftSize']);
-    Route::put('/management/update/{id}/updategraftsize', [GraftSizeController::class, 'updateGraftSize']);
-    Route::put('/management/archive/{id}/archivegraftsize', [GraftSizeController::class, 'archiveGraftSize']);
-    Route::put('/management/archive/{id}/unarchivegraftsize', [GraftSizeController::class, 'unarchiveGraftSize']);
-    Route::put('/management/delete/{id}/deletegraftsize', [GraftSizeController::class, 'deleteGraftSize']);
-    Route::put('/management/deactivate/{id}/deactivategraftsize', [GraftSizeController::class, 'toggleInactiveGraftSize']);
-    Route::put('/management/activate/{id}/activategraftsize', [GraftSizeController::class, 'activateGraftSize']);
-    Route::get('/management/graft-sizes/stats', [GraftSizeController::class, 'getGraftStats']);
-    Route::get('/management/graft-sizes/getAllBrands', [GraftSizeController::class, 'getAllBrands']);
+    Route::get('/management/graft-sizes', [ProductController::class, 'getAllGraftSizes']);
+    Route::post('/management/graft-sizes', [ProductController::class, 'addNewGraftSize']);
+    Route::put('/management/update/{id}/updategraftsize', [ProductController::class, 'updateGraftSize']);
+    Route::put('/management/archive/{id}/archivegraftsize', [ProductController::class, 'archiveGraftSize']);
+    Route::put('/management/archive/{id}/unarchivegraftsize', [ProductController::class, 'unarchiveGraftSize']);
+    Route::put('/management/delete/{id}/deletegraftsize', [ProductController::class, 'deleteGraftSize']);
+    Route::put('/management/deactivate/{id}/deactivategraftsize', [ProductController::class, 'toggleInactiveGraftSize']);
+    Route::put('/management/activate/{id}/activategraftsize', [ProductController::class, 'activateGraftSize']);
+    Route::get('/management/graft-sizes/stats', [ProductController::class, 'getGraftStats']);
+    Route::get('/management/graft-sizes/getAllBrands', [ProductController::class, 'getAllBrands']);
+
+    // Other Product
+    Route::get('/management/other-products', [ProductController::class, 'getAllOtherProducts']);
+    Route::post('/management/other-products', [ProductController::class, 'addOtherProduct']);
+    Route::put('/management/other-products/{id}/updateotherproduct', [ProductController::class, 'updateOtherProduct']);
+    Route::get('/management/other-products/stats', [ProductController::class, 'getOtherProductsStats']);
+    Route::put('/management/other-products/{id}/activate',    [ProductController::class, 'activateOtherProduct']);
+    Route::put('/management/other-products/{id}/deactivate',  [ProductController::class, 'deactivateOtherProduct']);
+    Route::put('/management/other-products/{id}/archive',     [ProductController::class, 'archiveOtherProduct']);
+    Route::put('/management/other-products/{id}/unarchive',   [ProductController::class, 'unarchiveOtherProduct']);
+    Route::delete('/management/other-products/{id}',          [ProductController::class, 'deleteOtherProduct']);
 
     // Order
     Route::get('/management/order/getorders', [OrderController::class, 'getAllOrders']);
@@ -150,7 +159,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/management/order/getbrands', [OrderController::class, 'getAllPatients']);
     Route::get('/management/order/getgraftsizes', [OrderController::class, 'getAllGraftSizes']);
     Route::get('/management/order/users/getpatients', [OrderController::class, 'getAllPatients']);
- 
+
     Route::post('/management/order/add/neworder', [OrderController::class, 'addNewOrder']);
     Route::put('/management/order/update/{id}/updateorder', [OrderController::class, 'updateOrder']);
     Route::put('/management/order/delete/{id}/deleteorder', [OrderController::class, 'deleteOrder']);
