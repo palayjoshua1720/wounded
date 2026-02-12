@@ -6,13 +6,13 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Brand;
 use App\Models\GraftSize;
-use App\Models\Manufacturer;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use App\Traits\AuditLogger;
+use App\Models\Manufacturer;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 
 class BrandController extends Controller
 {
@@ -40,11 +40,12 @@ class BrandController extends Controller
         $formattedBrands = $brands->map(function ($brand) {
             $formattedGraftSizes = $brand->graftSizes->map(function ($size) {
                 return [
-                    'id' => (string) $size->graft_size_id,
-                    'size' => $size->size,
-                    'area' => (float) $size->area,
-                    'price' => (float) $size->price,
-                    'stock' => (int) $size->stock,
+                    'id'          => (string) $size->graft_size_id,
+                    'item_no'     => $size->item_no,
+                    'size'        => $size->size,
+                    'area'        => (float) $size->area,
+                    'price'       => (float) $size->price,
+                    'stock'       => (int) $size->stock,
                     'graftStatus' => (int) $size->graft_status,
                 ];
             });
@@ -89,11 +90,12 @@ class BrandController extends Controller
             'brandStatus' => 'required|in:0,1,2',
             'graftSizes' => 'nullable|json',
             'graftSizes.*.size' => 'nullable|string|max:50',
+            'graftSizes.*.item_no' => 'nullable|string|max:255',
             'graftSizes.*.area' => 'nullable|numeric|min:0',
             'graftSizes.*.price' => 'nullable|numeric|min:0',
             'graftSizes.*.stock' => 'nullable|integer|min:0',
             'graftSizes.*.graftStatus' => 'nullable|in:0,1,2',
-            'logo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048', // Added logo validation
+            'logo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
         // Parse and validate graftSizes conditionally
@@ -123,6 +125,7 @@ class BrandController extends Controller
                         throw ValidationException::withMessages(["graftSizes.{$index}.price" => 'Price is required and must be >= 0 when other fields are provided.']);
                     }
                     $graftSizesData[] = [
+                        'item_no' => $sizeData['item_no'],
                         'size' => $size,
                         'area' => $area,
                         'price' => $price,
@@ -156,12 +159,13 @@ class BrandController extends Controller
         // Create graft sizes linked to the new brand
         foreach ($graftSizesData as $sizeData) {
             $graftSize = GraftSize::create([
-                'brand_id' => $brand->brand_id,
-                'size' => $sizeData['size'],
-                'area' => $sizeData['area'],
-                'price' => $sizeData['price'],
-                'stock' => $sizeData['stock'] ?? 0,
-                'graft_status' => $sizeData['graftStatus'],
+                'brand_id'      => $brand->brand_id,
+                'item_no'       => $sizeData['item_no'],
+                'size'          => $sizeData['size'],
+                'area'          => $sizeData['area'],
+                'price'         => $sizeData['price'],
+                'stock'         => $sizeData['stock'] ?? 0,
+                'graft_status'  => $sizeData['graftStatus'],
             ]);
 
             // Log audit trail for graft size creation
@@ -174,12 +178,13 @@ class BrandController extends Controller
 
         $formattedGraftSizes = $brand->graftSizes->map(function ($size) {
             return [
-                'id' => (string) $size->graft_size_id,
-                'size' => $size->size,
-                'area' => (float) $size->area,
-                'price' => (float) $size->price,
-                'stock' => (int) $size->stock,
-                'graftStatus' => (int) $size->graft_status,
+                'id'            => (string) $size->graft_size_id,
+                'item_no'      => $size->item_no,
+                'size'         => $size->size,
+                'area'         => (float) $size->area,
+                'price'        => (float) $size->price,
+                'stock'        => (int) $size->stock,
+                'graft_status' => (int) $size->graft_status,
             ];
         });
 
@@ -196,9 +201,8 @@ class BrandController extends Controller
                 'brandStatus' => (int) $brand->brand_status,
                 'productType' => $brand->product_type == 0 ? 'Graft' : 'Device',
                 'graftSizes' => $formattedGraftSizes,
-                'logoUrl' => $logoUrl, // Added logo URL to response
+                'logoUrl' => $logoUrl,
                 'createdAt' => $brand->created_at,
-                // 'updatedAt' => $brand->updated_at,
             ],
         ], 201);
     }
@@ -217,6 +221,7 @@ class BrandController extends Controller
             'graftSizes'        => 'nullable|json',
             'graftSizes.*.id'   => 'nullable|exists:woundmed_graft_sizes,graft_size_id',
             'graftSizes.*.size' => 'nullable|string|max:50',
+            'graftSizes.*.item_no' => 'nullable|string|max:255',
             'graftSizes.*.area' => 'nullable|numeric|min:0',
             'graftSizes.*.price' => 'nullable|numeric|min:0',
             'graftSizes.*.stock' => 'nullable|integer|min:0',
@@ -258,6 +263,7 @@ class BrandController extends Controller
 
                     $status = $sizeData['graftStatus'] ?? 0;
                     $stock  = $sizeData['stock'] ?? 0;
+                    $itemNo = $sizeData['item_no'];
                     $sizeId = $sizeData['id'] ?? null;
 
                     if ($sizeId) {
@@ -267,6 +273,7 @@ class BrandController extends Controller
                             ->firstOrFail();
                         $oldSize = $gs->size;
                         $gs->update([
+                            'item_no'      => $itemNo,
                             'size'         => $size,
                             'area'         => $area,
                             'price'        => $price,
@@ -278,6 +285,7 @@ class BrandController extends Controller
                         // Create new
                         $graftSize = GraftSize::create([
                             'brand_id'     => $id,
+                            'item_no'      => $itemNo,
                             'size'         => $size,
                             'area'         => $area,
                             'price'        => $price,
@@ -338,6 +346,7 @@ class BrandController extends Controller
         $formattedGraftSizes = $brand->graftSizes->map(function ($size) {
             return [
                 'id'          => (string) $size->graft_size_id,
+                'item_no'     => $size->item_no,
                 'size'        => $size->size,
                 'area'        => (float) $size->area,
                 'price'       => (float) $size->price,

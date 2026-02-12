@@ -17,7 +17,7 @@ trait AuditLogger
      * @param int $status
      * @return void
      */
-    protected function logAudit(Request $request, $actionType, $actionMessage, $entityId, int $status = 0, ?string $attemptedIdentifier = null)
+    protected function logAudit(Request $request, $actionType, $actionMessage, $entityId, int $status = 0, ?string $attemptedIdentifier = null, ?string $entityOverride = null, ?string $entityTypeOverride = null)
     {
         $userId = $request->user()->id ?? null;
 
@@ -29,10 +29,14 @@ trait AuditLogger
                 $attemptedIdentifier = $request->input('email'); # Unauthenticated -> try email from request
             }
         }
-        
+
         $ipAddress = $request->ip();
-        $entity = $this->getEntityName();
-        $entityType = $this->getEntityType();
+
+        // Use override values if provided, otherwise fall back to controller methods
+        $entity = $entityOverride ?? $this->getEntityName();
+        $entityType = $entityTypeOverride ?? $this->getEntityType();
+        // $entity = $this->getEntityName();
+        // $entityType = $this->getEntityType();
 
         // Get prev_hash from the latest audit log entry
         $lastLog = DB::table('woundmed_audit_logs')->latest('audit_log_id')->first();
