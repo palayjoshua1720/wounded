@@ -66,12 +66,20 @@
                   @input="updateManualFormField(field.key, $event)" @change="handleFieldChange"
                   :type="field.type === 'select' || field.type === 'textarea' ? undefined : field.type"
                   :step="field.step" :min="field.min" :placeholder="field.placeholder" :class="field.class"
-                  :required="field.required" :rows="field.type === 'textarea' ? 3 : undefined">
-                  <option v-if="field.type === 'select'" value="">{{ field.placeholder || 'Select option' }}</option>
-                  <option v-if="field.type === 'select'" v-for="option in field.options" :key="option.value"
-                    :value="option.value">
-                    {{ option.label }}
-                  </option>
+                  :required="field.required" :rows="field.type === 'textarea' ? 3 : undefined"
+                >
+                  <template v-if="field.type === 'select'">
+                    <option value="">
+                      {{ field.placeholder || 'Select option' }}
+                    </option>
+                    <option
+                      v-for="option in field.options"
+                      :key="option.value"
+                      :value="option.value"
+                    >
+                      {{ option.label }}
+                    </option>
+                  </template>
                 </component>
               </div>
             </div>
