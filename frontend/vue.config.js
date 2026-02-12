@@ -17,6 +17,16 @@ fs.writeFileSync(manifestPath, processedManifest);
 module.exports = defineConfig({
   transpileDependencies: [],
   publicPath: process.env.VUE_APP_BASE_URL,
+  lintOnSave: false, // Disable ESLint to fix CLIEngine error
+  devServer: {
+    proxy: {
+      '/api': {
+        target: 'http://127.0.0.1:8000',
+        changeOrigin: true,
+        secure: false
+      }
+    }
+  },
   configureWebpack: {
     plugins: [
       new webpack.DefinePlugin({
@@ -28,6 +38,14 @@ module.exports = defineConfig({
         '@': path.resolve(__dirname, 'src')
       }
     }
+  },
+  chainWebpack: config => {
+    // Commenting out TypeScript checker to fix forkTsCheckerServiceBeforeStart error
+    // Original problematic configuration was causing webpack plugin conflicts
+    // config.plugin('fork-ts-checker').use(require('fork-ts-checker-webpack-plugin'));
+    
+    // Remove the problematic TypeScript checker plugin
+    config.plugins.delete('fork-ts-checker');
   },
   css: {
     loaderOptions: {

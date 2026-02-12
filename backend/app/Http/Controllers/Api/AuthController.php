@@ -53,7 +53,7 @@ class AuthController extends Controller
                 'message' => 'The provided credentials are incorrect.',
             ], 401);
         }
-
+        
         if (! Hash::check($request->password, $user->password)) {
             $this->logAudit($request, 'authentication', "login failed", $user->id, 1);
 
@@ -80,7 +80,17 @@ class AuthController extends Controller
             ], 200);
         }
         
-        // Check if user has enabled backup codes but not one-time email verification
+        // Check if user has enabled TFA
+        if ($user->tfa_enabled) {
+            // Return response indicating TFA code is required
+            return response()->json([
+                'message' => 'Two-factor authentication code required for login. Please enter your TFA code.',
+                'requires_tfa' => true,
+                'user_id' => $user->id,
+            ], 200);
+        }
+        
+        // Check if user has enabled backup codes but not other verification methods
         if ($user->backup_codes_enabled && !$user->one_time_email_verification && !$user->tfa_enabled) {
             // Return response indicating backup code is required
             return response()->json([

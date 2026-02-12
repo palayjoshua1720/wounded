@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Clinic;
 use App\Models\Invoice;
+use App\Models\SerialPayment;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -86,7 +87,15 @@ class InvoiceController extends Controller
 
     public function show(Invoice $invoice): JsonResponse
     {
-        return response()->json($invoice->load('clinic'));
+        $invoiceData = $invoice->load('clinic');
+        
+        // Add serial payment information to the response
+        $serialPayments = $invoice->serialPayments()->get();
+        
+        // Add the serial payment data as an attribute
+        $invoiceData->setAttribute('serial_payments', $serialPayments);
+        
+        return response()->json($invoiceData);
     }
 
     public function update(Request $request, Invoice $invoice): JsonResponse
@@ -1467,5 +1476,102 @@ class InvoiceController extends Controller
         } catch (\Exception $e) {
             return response()->json(['error' => 'Failed to sync with Google Sheets: ' . $e->getMessage()], 500);
         }
+    }
+
+    public function updateSerialPayment(Request $request, Invoice $invoice): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'serial_number' => 'required|string',
+            'status' => 'required|in:pending,paid,cancelled',
+            'amount' => 'nullable|numeric|min:0',
+            'payment_method' => 'nullable|string',
+            'payment_reference' => 'nullable|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        // Find or create serial payment record
+        $serialPayment = SerialPayment::updateOrCreate(
+            [
+                'invoice_id' => $invoice->id,
+                'serial_number' => $request->serial_number,
+            ],
+            [
+                'status' => $request->status,
+                'amount' => $request->amount,
+                'payment_method' => $request->payment_method,
+                'payment_reference' => $request->payment_reference,
+                'paid_date' => $request->status === 'paid' ? now() : null,
+                'metadata' => [
+                    'updated_by' => 'api',
+                    'updated_at' => now()->toISOString(),
+                ]
+            ]
+        );
+
+        // Check if all serials in the invoice are now paid to potentially update the invoice status
+        $this->updateInvoiceStatusBasedOnSerialPayments($invoice);
+
+        return response()->json([
+            'message' => 'Serial payment updated successfully',
+            'serial_payment' => $serialPayment->load('invoice'),
+        ]);
+    }
+
+    private function updateInvoiceStatusBasedOnSerialPayments(Invoice $invoice): void
+    {
+        // Get all serials from the invoice (from line_items or serials array)
+        $allSerials = [];
+        
+        if (!empty($invoice->line_items)) {
+            foreach ($invoice->line_items as $item) {
+                if (!empty($item['serial'])) {
+                    $allSerials[] = $item['serial'];
+                }
+            }
+        }
+        
+        if (!empty($invoice->serials)) {
+            $allSerials = array_merge($allSerials, $invoice->serials);
+        }
+        
+        $allSerials = array_unique($allSerials);
+        
+        if (empty($allSerials)) {
+            return; // No serials to track
+        }
+
+        // Count how many serials are paid
+        $paidSerials = SerialPayment::where('invoice_id', $invoice->id)
+            ->whereIn('serial_number', $allSerials)
+            ->where('status', 'paid')
+            ->count();
+
+        // If all serials are paid, mark the entire invoice as paid
+        if ($paidSerials === count($allSerials)) {
+            $invoice->update([
+                'status' => 'paid',
+                'paid_date' => now(),
+                'paid_amount' => $invoice->amount, // Assuming full payment
+                'payment_method' => 'serial_payments_full',
+                'payment_reference' => 'All serials paid',
+            ]);
+        } elseif ($paidSerials > 0) {
+            // If some serials are paid but not all, mark as partially paid
+            $invoice->update([
+                'status' => 'pending',
+                'partial_payment' => true,
+                'payment_method' => 'serial_payments_partial',
+            ]);
+        }
+    }
+
+    public function getSerialPayments(Invoice $invoice): JsonResponse
+    {
+        $serialPayments = $invoice->serialPayments()->get();
+        
+        return response()->json($serialPayments);
     }
 }
