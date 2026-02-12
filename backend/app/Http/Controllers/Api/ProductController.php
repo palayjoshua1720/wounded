@@ -483,7 +483,7 @@ class ProductController extends Controller
 
         try {
             $validator = Validator::make($request->all(), [
-                'product_type'  => ['sometimes', 'required', 'integer', 'in:1,2'],
+                'product_type'  => ['sometimes', 'required', 'integer', 'in:0,1'],
                 'product_name'  => ['sometimes', 'required', 'string', 'max:255'],
                 'price'         => ['sometimes', 'required', 'numeric', 'min:0'],
                 'stock'         => ['sometimes', 'required', 'integer', 'min:0'],
@@ -557,7 +557,7 @@ class ProductController extends Controller
             ->map(function ($row) {
                 return [
                     'type'  => (int) $row->product_type,
-                    'label' => $row->product_type === 1 ? 'Wound Supplies' : 'Devices',
+                    'label' => $row->product_type === 0 ? 'Wound Supplies' : 'Devices',
                     'count' => (int) $row->count,
                 ];
             });
@@ -631,13 +631,8 @@ class ProductController extends Controller
         ]);
     }
 
-    public function deleteOtherProduct(Request $request, $id)
+    public function deleteOtherProduct($id)
     {
-        $user = $request->user();
-        if (!$user || $user->role !== 0) {
-            return response()->json(['message' => 'Unauthorized: Only administrators can delete products.'], 403);
-        }
-
         $product = OtherProduct::findOrFail($id);
         if ($product->status !== 2) {
             return response()->json(['message' => 'Can only delete archived products'], 400);

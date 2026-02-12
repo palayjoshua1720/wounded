@@ -1067,8 +1067,8 @@
                         Product Type <span class="text-red-500">*</span>
                     </label>
                     <select v-model="otherProductForm.product_type" required
-                        class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 ...">
-                        <option disabled value="">Select a Product Type</option>
+                        class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                        <option disabled value="" selected>Select a Product Type</option>
                         <option :value="0">Wound Supplies</option>
                         <option :value="1">Devices</option>
                     </select>
@@ -1083,7 +1083,7 @@
                         </label>
                         <div class="relative">
                             <PencilLine class="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-                            <input v-model="otherProductForm.name" type="text" required
+                            <input v-model="otherProductForm.product_name" type="text" required
                                 placeholder="e.g., Sterile Gloves, Wound Dressing Kit"
                                 class="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
                         </div>
@@ -1220,7 +1220,7 @@ const isEditingOtherProduct = ref(false)
 const otherProductForm = ref({
     product_id: '' as string | undefined,
     product_type: null as number | null,
-    name: '',
+    product_name: '',
     price: 0,
     stock: 0,
     description: ''
@@ -1291,7 +1291,7 @@ function editOtherProduct(product: any) {
     otherProductForm.value = {
         product_id: product.other_product_id,
         product_type: product.product_type,
-        name: product.product_name || '',
+        product_name: product.product_name || '',
         price: Number(product.price) || 0,
         stock: Number(product.stock) || 0,
         description: product.description || ''
@@ -1341,10 +1341,10 @@ function clearOtherProductForm() {
     otherProductForm.value = {
         product_id: undefined,
         product_type: null,
-        name: '',
+        product_name: '',
         price: 0,
         stock: 0,
-        low_stock_threshold: 10,
+        // low_stock_threshold: 10,
         description: ''
     }
     isEditingOtherProduct.value = false
@@ -1356,10 +1356,9 @@ function closeOtherProductForm() {
     clearOtherProductForm()
 }
 async function handleOtherProductSubmit() {
-    // Basic validation (client-side)
     if (
-        !otherProductForm.value.product_type ||
-        !otherProductForm.value.name?.trim() ||
+        otherProductForm.value.product_type == null ||
+        !otherProductForm.value.product_name?.trim() ||
         otherProductForm.value.price <= 0 ||
         otherProductForm.value.stock < 0
     ) {
@@ -1370,11 +1369,13 @@ async function handleOtherProductSubmit() {
     try {
         const payload = {
             product_type: otherProductForm.value.product_type,
-            product_name: otherProductForm.value.name.trim(),
+            product_name: otherProductForm.value.product_name.trim(),
             price: Number(otherProductForm.value.price),
             stock: Number(otherProductForm.value.stock),
             description: otherProductForm.value.description?.trim() || null,
         }
+
+        console.log('Sending payload for type', otherProductForm.value.product_type, payload);
 
         let response
 
@@ -1410,55 +1411,6 @@ async function handleOtherProductSubmit() {
             err.response?.data?.message ||
             err.message ||
             (isEditingOtherProduct.value ? 'Failed to update product.' : 'Failed to create product.')
-        toast.error(msg)
-    }
-}
-
-async function handleOtherProductSubmit11() {
-    // Basic client-side check (optional but recommended)
-    if (!otherProductForm.value.product_type ||
-        !otherProductForm.value.name?.trim() ||
-        otherProductForm.value.price <= 0 ||
-        otherProductForm.value.stock < 0) {
-        toast.error('Please fill in all required fields correctly.')
-        return
-    }
-
-    try {
-        const payload = {
-            product_type: otherProductForm.value.product_type,
-            product_name: otherProductForm.value.name.trim(),
-            price: Number(otherProductForm.value.price),
-            stock: Number(otherProductForm.value.stock),
-            description: otherProductForm.value.description?.trim() || null,
-        }
-
-        let response
-
-        if (isEditingOtherProduct.value) {
-            // For edit (you'll implement later)
-            response = await api.put(
-                `/management/other-products/${otherProductForm.value.product_id}`,
-                payload
-            )
-            toast.success('Product updated successfully!')
-        } else {
-            // Create new
-            response = await api.post('/management/other-products', payload)
-            toast.success('Product created successfully!')
-        }
-
-        // Optional: refresh list / stats when you have the table
-        await fetchOtherProducts()
-        // await fetchProductStats()  // or whatever you name it
-
-        closeOtherProductForm()
-
-    } catch (err: any) {
-        console.error(err)
-        const msg = err.response?.data?.message
-            || err.message
-            || 'Failed to save product. Please try again.'
         toast.error(msg)
     }
 }
