@@ -1405,7 +1405,7 @@ const downloadTemplate = () => {
     }
   ] 
 
-  const csvContent = `${headers}\n${sampleRows.join('\n')}`
+  const csvContent = `${headers}\n${sampleData.map(row => Object.values(row).map(value => `"${value}"`).join(','))  .join('\n')}`
 
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
   const url = window.URL.createObjectURL(blob)
