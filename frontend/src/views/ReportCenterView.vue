@@ -18,8 +18,6 @@ import ReportsModule from '@/components/Reports/ReportsModule.vue'
 
 function handleGenerateReport(filters: any) {
 	console.log('Generating report with filters:', filters)
-	// Implement report generation logic here
-	// For now, just show a success message
-	alert(`Report generated successfully with filters: ${JSON.stringify(filters)}`)
+	// Report generation is handled within ReportsModule component
 }
 </script> 
