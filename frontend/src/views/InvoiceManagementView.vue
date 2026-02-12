@@ -60,11 +60,7 @@
               <th
                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 Invoice Details
-              </th>
-              <!-- <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                Clinic & Order
-              </th> Temporarily Commented -->
+              </th> 
               <th
                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 Amount
@@ -74,7 +70,7 @@
                 Invoice Dates
               </th>
               <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 Actions
               </th>
             </tr>
@@ -83,50 +79,36 @@
             <tr v-for="invoice in invoices" :key="invoice.id" class="hover:bg-gray-50 dark:hover:bg-gray-700">
               <td class="px-6 py-4">
                 <div class="flex items-center space-x-3">
-                  <div v-if="invoice.needs_review" class="flex-shrink-0">
-                    <span
-                      class="inline-flex items-center justify-center w-6 h-6 bg-yellow-100 text-yellow-800 rounded-full text-xs">
-                      <Eye class="w-3 h-3" />
-                    </span>
-                  </div>
                   <div>
                     <div class="text-sm font-medium text-gray-900 dark:text-white">{{ invoice.invoice_number }}</div>
                     <div class="text-sm text-gray-500 dark:text-gray-400">{{ invoice.serials?.length || 0 }} serials
                     </div>
                   </div>
                 </div>
-              </td>
-              <!-- <td class="px-6 py-4">
-                <div class="text-sm text-gray-900 dark:text-white">{{ invoice.clinic.clinic_name }}</div>
-                <div class="text-sm text-gray-500 dark:text-gray-400">{{ invoice.clinic.clinic_code }}</div> 
-              </td> Temporarily Commented -->
+              </td> 
               <td class="px-6 py-4">
                 <div class="text-sm font-medium text-gray-900 dark:text-white">${{ invoice.amount.toLocaleString() }}
-                </div>
-                <div v-if="invoice.partial_payment" class="text-sm text-orange-600 dark:text-orange-400">
-                  Partial: ${{ invoice.paid_amount?.toLocaleString() }}
-                </div>
+                </div> 
               </td>
               <td class="px-6 py-4">
                 <div class="text-sm text-gray-900 dark:text-white">{{ formatDate(invoice.invoice_date) }}</div>
-                <div class="text-sm text-gray-500 dark:text-gray-400">Due: {{ formatDate(invoice.due_date) }}</div>
-                <div v-if="invoice.paid_date" class="text-sm text-green-600 dark:text-green-400">
-                  Paid: {{ formatDate(invoice.paid_date) }}
-                </div>
+                <div class="text-sm text-gray-500 dark:text-gray-400">Due: {{ formatDate(invoice.due_date) }}</div> 
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                <button @click="viewInvoiceDetails(invoice)"
-                  class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">
-                  <Eye class="w-4 h-4" />
-                </button>
-                <button @click="editInvoice(invoice)"
-                  class="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300">
-                  <Edit class="w-4 h-4" />
-                </button>
-                <button @click="confirmDeleteInvoice(invoice)"
-                  class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300">
-                  <Trash2 class="w-4 h-4" />
-                </button>
+              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2 text-center">
+                <div class="flex justify-center space-x-2">
+                  <button @click="viewInvoiceDetails(invoice)"
+                    class="text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400">
+                    <Eye class="w-4 h-4" />
+                  </button>
+                  <button @click="editInvoice(invoice)"
+                    class="text-gray-600 hover:text-green-600 dark:text-gray-400 dark:hover:text-green-400">
+                    <Edit class="w-4 h-4" />
+                  </button>
+                  <button @click="confirmDeleteInvoice(invoice)"
+                    class="text-gray-600 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400">
+                    <Trash2 class="w-4 h-4" />
+                  </button>
+                </div>
               </td>
             </tr>
           </tbody>
@@ -461,14 +443,24 @@
             v-if="selectedInvoice.has_line_items && selectedInvoice.line_items && selectedInvoice.line_items.length > 0">
             <div v-for="(item, index) in selectedInvoice.line_items" :key="index"
               class="py-2 border-b border-gray-200 dark:border-gray-700 text-sm">
-              <div class="font-medium text-gray-900 dark:text-white">{{ item.description }} <span v-if="item.size">({{
-                item.size }})</span></div>
-              <div v-if="item.serial" class="text-gray-600 dark:text-gray-400 text-xs">
-                S/N: {{ item.serial }}
+              <div class="flex justify-between items-start">
+                <div>
+                  <div class="font-medium text-gray-900 dark:text-white">{{ item.description }} <span v-if="item.size">({{
+                    item.size }})</span></div>
+                  <div v-if="item.serial" class="text-gray-600 dark:text-gray-400 text-xs">
+                    S/N: {{ item.serial }}
+                  </div>
+                  <div class="text-gray-600 dark:text-gray-400 text-xs">${{ item.amount ? item.amount.toFixed(2) : '0.00' }}
+                    x
+                    {{ item.quantity || 1 }} = ${{ (item.amount * (item.quantity || 1)).toFixed(2) }}</div>
+                </div>
+                <button v-if="item.serial"
+                  @click="markIndividualSerialAsPaid(item.serial)"
+                  :disabled="paidSerials[item.serial as string]"
+                  :class="getSerialPaymentButtonClass(item.serial)">
+                  {{ paidSerials[item.serial as string] ? 'Paid' : 'Mark as Paid' }}
+                </button>
               </div>
-              <div class="text-gray-600 dark:text-gray-400 text-xs">${{ item.amount ? item.amount.toFixed(2) : '0.00' }}
-                x
-                {{ item.quantity || 1 }} = ${{ (item.amount * (item.quantity || 1)).toFixed(2) }}</div>
             </div>
           </div>
           <!-- Fallback to parsing notes if no line items -->
@@ -480,8 +472,16 @@
                 :
                 product.name }}</div>
               <div v-for="(serial, sIndex) in product.serials" :key="sIndex"
-                class="text-gray-600 dark:text-gray-400 text-xs">
-                S/N: {{ serial }}
+                class="flex justify-between items-start">
+                <div class="text-gray-600 dark:text-gray-400 text-xs">
+                  S/N: {{ serial }}
+                </div>
+                <button
+                  @click="markIndividualSerialAsPaid(serial)"
+                  :disabled="paidSerials[serial]"
+                  :class="getSerialPaymentButtonClass(serial)">
+                  {{ paidSerials[serial] ? 'Paid' : 'Mark as Paid' }}
+                </button>
               </div>
               <div class="text-gray-600 dark:text-gray-400 text-xs">${{ product.unit_price ?
                 product.unit_price.toFixed(2)
@@ -495,9 +495,19 @@
           <div v-else-if="selectedInvoice.serials && selectedInvoice.serials.length > 0">
             <div v-for="(serial, index) in selectedInvoice.serials" :key="index"
               class="py-2 border-b border-gray-200 dark:border-gray-700 text-sm">
-              <div class="font-medium text-gray-900 dark:text-white">Graft Product</div>
-              <div class="text-gray-600 dark:text-gray-400 text-xs">S/N: {{ serial }}</div>
-              <div class="text-gray-600 dark:text-gray-400 text-xs">$0.00 x 1 = $0.00</div>
+              <div class="flex justify-between items-start">
+                <div>
+                  <div class="font-medium text-gray-900 dark:text-white">Graft Product</div>
+                  <div class="text-gray-600 dark:text-gray-400 text-xs">S/N: {{ serial }}</div>
+                  <div class="text-gray-600 dark:text-gray-400 text-xs">$0.00 x 1 = $0.00</div>
+                </div>
+                <button
+                  @click="markIndividualSerialAsPaid(serial)"
+                  :disabled="paidSerials[serial]"
+                  :class="getSerialPaymentButtonClass(serial)">
+                  {{ paidSerials[serial] ? 'Paid' : 'Mark as Paid' }}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -914,7 +924,8 @@ import {
   CheckCircle,
   Info,
   Edit,
-  Trash2
+  Trash2,
+  ChevronDown
 } from 'lucide-vue-next'
 
 // Updated Types for woundmed_clinics
@@ -1037,6 +1048,7 @@ const extractedInvoiceData = ref<any>(null)
 const invoiceToDelete = ref<Invoice | null>(null)
 const invoiceToEdit = ref<Invoice | null>(null)
 const originalInvoice = ref<Invoice | null>(null)
+const paidSerials = ref<Record<string, boolean>>({})
 
 // Upload state
 const uploadedFiles = ref<File[]>([])
@@ -1761,6 +1773,42 @@ async function confirmMarkAsPaid() {
   }
 }
 
+async function markIndividualSerialAsPaid(serialNumber: string) {
+  if (!selectedInvoice.value) return;
+  
+  try {
+    // Make API call to update the serial payment status
+    const response = await api.post(`/invoice-management/${selectedInvoice.value.id}/serial-payment`, {
+      serial_number: serialNumber,
+      status: 'paid',
+      payment_method: 'individual_serial_paid',
+      payment_reference: `Payment for serial ${serialNumber}`
+    });
+    
+    // Update the paidSerials state to reflect the change
+    paidSerials.value[serialNumber] = true;
+    
+    // Show success message
+    showAlert(`Serial ${serialNumber} marked as paid`, 'success');
+    
+    // Refresh the invoices list to get updated data
+    fetchInvoices();
+    fetchStats();
+    
+  } catch (error) {
+    console.error('Error marking serial as paid:', error);
+    showAlert(error instanceof Error ? error.message : 'Failed to mark serial as paid', 'error');
+  }
+}
+
+function getSerialPaymentButtonClass(serialNumber: string) {
+  if (paidSerials.value[serialNumber]) {
+    return 'ml-2 px-2 py-1 text-xs bg-green-100 text-green-800 rounded dark:bg-green-900/30 dark:text-green-300 cursor-default opacity-75';
+  } else {
+    return 'ml-2 px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded hover:bg-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300 dark:hover:bg-yellow-900/50 cursor-pointer';
+  }
+}
+
 function reviewExtractedData(invoice: Invoice) {
   invoiceUnderReview.value = JSON.parse(JSON.stringify(invoice))
   showReviewModal.value = true
@@ -1978,6 +2026,61 @@ watch(() => invoiceToEdit.value?.line_items, () => {
   // The amount will be updated when the form is submitted
 }, { deep: true });
 
+// Watch for changes in selected invoice to initialize payment tracking
+watch(selectedInvoice, async (newInvoice) => {
+  if (newInvoice) {
+    // Reset the payment status tracking when a new invoice is selected
+    paidSerials.value = {};
+    
+    // Initialize all serials as unpaid by default
+    // Then fetch actual payment status from backend
+    
+    // Check serials in line items
+    if (newInvoice.line_items && newInvoice.line_items.length > 0) {
+      newInvoice.line_items.forEach(item => {
+        if (item.serial) {
+          paidSerials.value[item.serial as string] = false; // Default to unpaid
+        }
+      });
+    }
+    
+    // Check serials in parsed notes
+    if (newInvoice.notes && (newInvoice.notes.includes('Line Items:') || newInvoice.notes.includes('Line Items :'))) {
+      const parsedItems = parseLineItems(newInvoice.notes);
+      parsedItems.forEach(product => {
+        if (product.serials && product.serials.length > 0) {
+          product.serials.forEach(serial => {
+            paidSerials.value[serial] = false; // Default to unpaid
+          });
+        }
+      });
+    }
+    
+    // Check serials in fallback array
+    if (newInvoice.serials && newInvoice.serials.length > 0) {
+      newInvoice.serials.forEach(serial => {
+        paidSerials.value[serial] = false; // Default to unpaid
+      });
+    }
+    
+    // Fetch actual serial payment status from backend
+    try {
+      const response = await api.get(`/invoice-management/${newInvoice.id}/serial-payments`);
+      const serialPayments = response.data;
+      
+      // Update the paidSerials state based on actual payment status
+      serialPayments.forEach((payment: any) => {
+        if (payment.status === 'paid') {
+          paidSerials.value[payment.serial_number] = true;
+        }
+      });
+    } catch (error) {
+      console.error('Error fetching serial payments:', error);
+      // Keep default values if API call fails
+    }
+  }
+}, { immediate: true });
+
 // Lifecycle
 onMounted(() => {
   fetchClinics().then(() => {
@@ -1986,3 +2089,45 @@ onMounted(() => {
   })
 })
 </script>
+
+<style>
+/* Global scrollbar styles for invoice modal */
+.max-h-96.overflow-y-auto::-webkit-scrollbar {
+  width: 6px;
+  border-radius: 30% !important;
+}
+
+.max-h-96.overflow-y-auto::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 30% !important;
+}
+
+.max-h-96.overflow-y-auto::-webkit-scrollbar-thumb {
+  background-color: #cbd5e0;
+  border-radius: 30% !important;
+  transition: background-color 0.2s ease;
+}
+
+.max-h-96.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+  background-color: #a0aec0;
+}
+
+/* Dark mode styles */
+.dark .max-h-96.overflow-y-auto::-webkit-scrollbar-thumb {
+  background-color: #4a5568;
+}
+
+.dark .max-h-96.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+  background-color: #718096;
+}
+
+/* Firefox support */
+.max-h-96.overflow-y-auto {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e0 transparent;
+}
+
+.dark .max-h-96.overflow-y-auto {
+  scrollbar-color: #4a5568 transparent;
+}
+</style>

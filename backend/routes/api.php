@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\ResetPassword;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\SampleController;
 use App\Http\Controllers\Api\ReturnsController;
+use App\Http\Controllers\Api\BillerTrackingController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\InventoryController;
@@ -68,6 +69,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/invoice-management/{invoice}', [InvoiceController::class, 'update']);
     Route::delete('/invoice-management/{invoice}', [InvoiceController::class, 'destroy']);
     Route::post('/invoice-management/{invoice}/status', [InvoiceController::class, 'updateStatus']);
+    Route::post('/invoice-management/{invoice}/serial-payment', [InvoiceController::class, 'updateSerialPayment']);
+    Route::get('/invoice-management/{invoice}/serial-payments', [InvoiceController::class, 'getSerialPayments']);
     Route::post('/invoice-management/upload-pdf', [InvoiceController::class, 'uploadPdf']);
     Route::post('/invoice-management/sync-google-sheet', [InvoiceController::class, 'syncWithGoogleSheet']);
 
@@ -188,3 +191,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/management/returns/{id}', [ReturnsController::class, 'deleteReturn']);
     Route::get('/management/returns/stats', [ReturnsController::class, 'getReturnStats']);
 });
+
+// Biller Tracking (public access for testing)
+Route::get('/biller/tracking', [BillerTrackingController::class, 'index']);
+Route::post('/biller/tracking', [BillerTrackingController::class, 'store']);
+Route::get('/biller/tracking/{id}', [BillerTrackingController::class, 'show']);
+Route::put('/biller/tracking/{id}', [BillerTrackingController::class, 'update']);
+Route::delete('/biller/tracking/{id}', [BillerTrackingController::class, 'destroy']);
+Route::get('/biller/form-config', [BillerTrackingController::class, 'getFormConfig']);
+Route::post('/biller/tracking/bulk', [BillerTrackingController::class, 'bulkImport']);

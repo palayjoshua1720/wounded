@@ -49,4 +49,9 @@ class Invoice extends Model
         return $this->belongsTo(Clinic::class, 'clinic_id');
     }
 
+    public function serialPayments()
+    {
+        return $this->hasMany(SerialPayment::class, 'invoice_id');
+    }
+
 }

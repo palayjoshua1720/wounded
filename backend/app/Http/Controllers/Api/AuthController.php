@@ -56,25 +56,13 @@ class AuthController extends Controller
 
             DB::table('woundmed_audit_logs')->insert($log);
 
-            // Return response indicating verification code is required
+            // Return response indicating invalid credentials
             return response()->json([
-                'message' => 'Verification code sent to your email. Please check your inbox.',
-                'requires_verification' => true,
-                'user_id' => $user->id,
-                'email' => $user->email,
-            ], 200);
+                'message' => 'Invalid credentials.',
+                'requires_verification' => false,
+            ], 401);
         }
         
-        // Check if user has enabled backup codes but not one-time email verification
-        if ($user->backup_codes_enabled && !$user->one_time_email_verification && !$user->tfa_enabled) {
-            // Return response indicating backup code is required
-            return response()->json([
-                'message' => 'Backup code required for login. Please enter one of your backup codes.',
-                'requires_backup_code' => true,
-                'user_id' => $user->id,
-            ], 200);
-        }
-
         if (! Hash::check($request->password, $user->password)) {
             $log = [
                 'user_id' => $user->id,
@@ -94,8 +82,8 @@ class AuthController extends Controller
             DB::table('woundmed_audit_logs')->insert($log);
 
             return response()->json([
-                'message' => 'Invalid or expired verification code.',
-            ], 400);
+                'message' => 'Invalid password.',
+            ], 401);
         }
 
         // Check if user has enabled one-time email verification
@@ -131,7 +119,17 @@ class AuthController extends Controller
             ], 200);
         }
         
-        // Check if user has enabled backup codes but not one-time email verification
+        // Check if user has enabled TFA
+        if ($user->tfa_enabled) {
+            // Return response indicating TFA code is required
+            return response()->json([
+                'message' => 'Two-factor authentication code required for login. Please enter your TFA code.',
+                'requires_tfa' => true,
+                'user_id' => $user->id,
+            ], 200);
+        }
+        
+        // Check if user has enabled backup codes but not other verification methods
         if ($user->backup_codes_enabled && !$user->one_time_email_verification && !$user->tfa_enabled) {
             // Return response indicating backup code is required
             return response()->json([
