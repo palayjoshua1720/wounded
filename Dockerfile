@@ -6,7 +6,7 @@ RUN npm ci
 COPY frontend/ .
 RUN npm run build
 
-# Stage 2: Composer dependencies (use Composer 2.x with PHP 8.2 to match runtime)
+# Stage 2: Composer dependencies (use Composer 2.x tag with PHP 8.2 to match runtime)
 FROM composer:2 AS backend-build
 WORKDIR /app/backend
 COPY backend/composer.json backend/composer.lock ./
