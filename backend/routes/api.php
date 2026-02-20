@@ -181,6 +181,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/management/order/add/neworderbyclinic', [OrderController::class, 'addNewOrderByClinic']);
     Route::put('/management/order/update/{id}/updateorderbyclinic', [OrderController::class, 'updateOrderByClinic']);
 
+    Route::get('/management/order/getotherproducts', [OrderController::class, 'getAllOtherProducts']);
+    Route::get('/management/order/getotherproducts/{id}', [OrderController::class, 'getAllOtherProductsById']);
+
     // Inventory & Usage Logs
     Route::get('/inventory/all', [InventoryController::class, 'getInventory']);
     Route::get('/inventory/serial/{serialNumber}', [InventoryController::class, 'getInventoryBySerial']);

@@ -27,6 +27,7 @@ class Orders extends Model
         'tracking_code',
         'tracking_link',
         'items',
+        'other_product_items',
         'order_status',
         'notes',
         'ordered_at',
@@ -36,6 +37,7 @@ class Orders extends Model
 
     protected $casts = [
         'items' => 'array',
+        'other_product_items' => 'array',
         'ordered_at' => 'datetime',
         'followup_last_sent_at' => 'datetime',
     ];

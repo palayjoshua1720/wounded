@@ -10,6 +10,7 @@ use App\Models\Clinic;
 use App\Models\IVR;
 use App\Models\GraftSize;
 use App\Models\Manufacturer;
+use App\Models\OtherProduct;
 use App\Models\Orders;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -153,144 +154,296 @@ class OrderController extends Controller
         ]);
     }
 
+    public function getAllOtherProducts(Request $request)
+    {
+        $otherProductData = OtherProduct::whereNull('deleted_at')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'other_product_data' => $otherProductData,
+        ]);
+    }
+
+    public function getAllOtherProductsById(Request $request, $otherProductId)
+    {
+        $otherProduct = OtherProduct::where('other_product_id', $otherProductId)
+            ->whereNull('deleted_at')
+            ->first();
+
+        if (!$otherProduct) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Other product not found.'
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'other_product_data' => $otherProduct
+        ]);
+    }
+
     public function addNewOrder(Request $request)
     {
         $request->merge([
-            'items' => json_decode($request->items, true)
+            'items' => json_decode($request->items, true),
+            'products' => collect(json_decode($request->products, true) ?? [])
+                ->filter(function ($product) {
+                    return isset($product['other_product_id']) 
+                        && $product['other_product_id'] !== null
+                        && $product['other_product_id'] !== '';
+                })
+                ->values()
+                ->toArray(),
         ]);
 
-        try {
-            $validated = $request->validate([
-                'clinic_id' => 'required|int|max:255',
-                'clinician_id' => 'required|int|max:255',
-                'patient_id' => 'required|int|max:255',
-                'notes' => 'nullable|string',
-                'items' => 'required|array|min:1',
-                'items.*.brand_id' => 'required|integer|exists:woundmed_brands,brand_id',
-                'items.*.graft_id' => 'required|integer|exists:woundmed_graft_sizes,graft_size_id',
-                'items.*.ivr_id' => 'required|integer|exists:woundmed_ivr,ivr_id',
-                'items.*.quantity' => 'required|integer|min:1',
-                'items.*.asp' => 'required|numeric|min:0',
-                'items.*.product_type' => 'required|integer|in:0,1',
-                'items.*.device_type' => 'nullable|string|max:255',
-                'ivr_id' => 'required|integer|exists:woundmed_ivr,ivr_id',
-                'manufacturer_id' => 'required|integer|exists:woundmed_manufacturers,manufacturer_id',
-                'order_file' => 'file|mimes:pdf,doc,docx|max:10240',
-            ]);
+        $validated = $request->validate([
+            'clinic_id'       => 'required|integer|exists:woundmed_clinics,clinic_id',
+            'clinician_id'    => 'required|integer|exists:woundmed_users,id',
+            'patient_id'      => 'required|integer|exists:woundmed_patient_info,patient_id',
+            'ivr_id'          => 'required|integer|exists:woundmed_ivr,ivr_id',
+            'manufacturer_id' => 'required|integer|exists:woundmed_manufacturers,manufacturer_id',
+            'notes'           => 'nullable|string|max:1500',
+            'order_file'      => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:10240',
 
-            // $path = $request->file('order_file')->store('order', 'public');
-            $path = null;
-            if ($request->hasFile('order_file')) {
-                $filename = time().'.'.$request->file('order_file')->getClientOriginalExtension();
-                $path = $request->file('order_file')->storeAs('order', $filename, 'private');
+            'items'           => 'required_without:products|array|min:1',
+            'items.*.brand_id'     => 'required|integer|exists:woundmed_brands,brand_id',
+            'items.*.graft_id'     => 'required|integer|exists:woundmed_graft_sizes,graft_size_id',
+            'items.*.ivr_id'       => 'required|integer|exists:woundmed_ivr,ivr_id',
+            'items.*.quantity'     => 'required|integer|min:1',
+            'items.*.asp'          => 'required|numeric|min:0',
+            'items.*.product_type' => 'required|integer|in:0,1',
+            'items.*.device_type'  => 'nullable|string|max:255',
+
+            'products' => 'nullable|array',
+            'products.*.other_product_id' => 'integer|exists:woundmed_other_products,other_product_id',
+            'products.*.quantity' => 'integer|min:1',
+            'products.*.price' => 'numeric|min:0',
+        ]);
+
+        # Validate Stocks graft items and product items
+        $graftIds = collect($validated['items'])->pluck('graft_id')->unique()->all();
+        $grafts = GraftSize::whereIn('graft_size_id', $graftIds)->get()->keyBy('graft_size_id');
+
+        $productIds = collect($validated['products'] ?? [])->pluck('other_product_id')->filter()->unique()->all();
+        $otherProducts = OtherProduct::whereIn('other_product_id', $productIds)->get()->keyBy('other_product_id');
+
+        $errors = [];
+
+        foreach ($validated['items'] as $idx => $item) {
+            $graft = $grafts->get($item['graft_id']);
+            if (!$graft) {
+                $errors["items.$idx.graft_id"] = "Selected graft size not found.";
+                continue;
             }
+            if ($graft->stock < $item['quantity']) {
+                $errors["items.$idx.quantity"] =
+                    "Insufficient stock for {$graft->size} (available: {$graft->stock}, requested: {$item['quantity']})";
+            }
+        }
 
-            $orderCode = 'ORD-' . strtoupper(uniqid());
-            $trackingNum = 'TRK-' . strtoupper(Str::random(10));
+        foreach ($validated['products'] ?? [] as $idx => $prod) {
+            if (empty($prod['other_product_id'])) continue;
+            $product = $otherProducts->get($prod['other_product_id']);
+            if (!$product) {
+                $errors["products.$idx.other_product_id"] = "Selected product not found.";
+                continue;
+            }
+            if ($product->stock < $prod['quantity']) {
+                $errors["products.$idx.quantity"] =
+                    "Insufficient stock for '{$product->product_name}' (available: {$product->stock}, requested: {$prod['quantity']})";
+            }
+        }
 
-            $order = Orders::create([
-                'order_code' => $orderCode,
-                'clinic_id' => $validated['clinic_id'],
-                'user_id' => $validated['clinician_id'],
-                'patient_id' => $validated['patient_id'],
-                'ivr_id' => $validated['ivr_id'],
-                'manufacturer_id' => $validated['manufacturer_id'],
-                'tracking_num' => $trackingNum,
-                'notes' => $validated['notes'],
-                'items' => $validated['items'],
-                'order_file' => $path,
-                'order_status' => 0,
-                'ordered_at' => now(),
-            ]);
+        if ($errors) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cannot place order – insufficient stock or invalid items',
+                'errors'  => $errors,
+            ], 422);
+        }
 
-            # update stock by subtracting the current graft stock from quantity for each graftsizes
-            DB::transaction(function() use ($validated) {
+        # process order in db:transaction
+        $order = null;
+
+        try {
+            $order = DB::transaction(function () use ($validated, $request) {
+
+                # 1. Atomic decrement with safety check
                 foreach ($validated['items'] as $item) {
+                    $affected = GraftSize::where('graft_size_id', $item['graft_id'])
+                        ->where('stock', '>=', $item['quantity'])
+                        ->decrement('stock', $item['quantity']);
 
-                    $graft = GraftSize::lockForUpdate()->find($item['graft_id']);
-
-                    if ($graft->stock < $item['quantity']) {
-                        throw new \Exception("Insufficient stock for " . $graft->size);
+                    if ($affected === 0) {
+                        throw new \RuntimeException(
+                            "Stock no longer available for graft ID {$item['graft_id']}"
+                        );
                     }
-
-                    $graft->stock -= $item['quantity'];
-                    $graft->save();
                 }
+
+                foreach ($validated['products'] ?? [] as $prod) {
+                    if (empty($prod['other_product_id'])) continue;
+
+                    $affected = OtherProduct::where('other_product_id', $prod['other_product_id'])
+                        ->where('stock', '>=', $prod['quantity'])
+                        ->decrement('stock', $prod['quantity']);
+
+                    if ($affected === 0) {
+                        throw new \RuntimeException(
+                            "Stock no longer available for product ID {$prod['other_product_id']}"
+                        );
+                    }
+                }
+
+                # 2. All reservations succeeded -> create order
+                $orderCode   = 'ORD-' . strtoupper(uniqid());
+                $trackingNum = 'TRK-' . strtoupper(Str::random(10));
+
+                $filePath = null;
+                if ($request->hasFile('order_file')) {
+                    $filename = time() . '_' . $request->file('order_file')->getClientOriginalName();
+                    $filePath = $request->file('order_file')->storeAs('order', $filename, 'private');
+                }
+
+                return Orders::create([
+                    'order_code'         => $orderCode,
+                    'clinic_id'          => $validated['clinic_id'],
+                    'user_id'            => $validated['clinician_id'],
+                    'patient_id'         => $validated['patient_id'],
+                    'ivr_id'             => $validated['ivr_id'],
+                    'manufacturer_id'    => $validated['manufacturer_id'],
+                    'tracking_num'       => $trackingNum,
+                    'notes'              => $validated['notes'] ?? null,
+                    'items'              => $validated['items'],
+                    'other_product_items'=> $validated['products'] ?? null,
+                    'order_file'         => $filePath,
+                    'order_status'       => 0,
+                    'ordered_at'         => now(),
+                ]);
             });
 
-            $token = Str::random(64);
-
-            DB::table('magic_tokens')->insert([
-                'manufacturer_id' => $validated['manufacturer_id'],
-                'order_id'        => $order->order_id,
-                'token'           => hash('sha256', $token),
-                'expires_at'      => now()->addDays(60),
-                'created_at'      => now(),
-            ]);
-
-            $email = $request->order_email;
-            $orderUrl = config('app.frontend_url')
-                . '/woundmed-order?token=' . $token
-                . '&order_id=' . $order->order_id;
-
-            $totalAsp = 0;
-            foreach ($validated['items'] as $item) {
-                $totalAsp += $item['asp'] * $item['quantity'];
-            }
-
-            $emailBody = OrderNotificationEmail::getTemplate([
-                'order_code'        => $orderCode,
-                'tracking_number'   => $trackingNum,
-                'clinic_name'       => OrderHelper::getClinicName($validated['clinic_id']),
-                'clinician_name'    => OrderHelper::getClinicianName($validated['clinician_id']),
-                'manufacturer_name' => OrderHelper::getManufacturerName($validated['manufacturer_id']),
-                'patient_name'      => OrderHelper::getPatientName($validated['patient_id']),
-                'items'             => array_map(function ($item) {
-                    return [
-                        'brand_name' => OrderHelper::getBrandName($item['brand_id']),
-                        'size_name'  => OrderHelper::getGraftSizeName($item['graft_id']),
-                        'quantity'   => $item['quantity'],
-                        'asp'        => $item['asp'],
-                        'subtotal'   => $item['asp'] * $item['quantity'],
-                    ];
-                }, $validated['items']),
-                'total_asp'       => $totalAsp,
-                'order_link'      => $orderUrl,
-            ]);
-
-            $emailService = new EmailService();
-
-            $params = [
-                'to'        => $email,
-                'from'      => 'noreply@woundmed.com',
-                'from_name' => 'WoundMed Orders',
-                'subject'   => "New Order Created: {$orderCode}",
-                'body'      => $emailBody,
-            ];
-
-            $response = $emailService->send_email(
-                $params,
-                'Order created',
-                'Order created'
-            );
-
+        } catch (\RuntimeException $e) {
             return response()->json([
-                'success' => true,
-                'message' => 'Order created successfully!',
-            ]);
-            
+                'success' => false,
+                'message' => 'Order could not be placed – stock was taken by another order. Please try again.',
+                'error'   => $e->getMessage(),
+            ], 409);
         } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            \Log::error('Order creation failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'data'  => $request->except('order_file'),
+            ]);
+
             return response()->json([
                 'success' => false,
-                'message' => 'Validation failed',
-                'errors' => $e->errors(),
-            ], 422);
-        } catch (\Throwable $th) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to create order: ' . $th->getMessage(),
+                'message' => 'Failed to create order. Please try again or contact support.',
             ], 500);
         }
+
+        # start for email notification after order creation
+        $token = Str::random(64);
+
+        DB::table('magic_tokens')->insert([
+            'manufacturer_id' => $validated['manufacturer_id'],
+            'order_id'        => $order->order_id,
+            'token'           => hash('sha256', $token),
+            'expires_at'      => now()->addDays(60),
+            'created_at'      => now(),
+        ]);
+
+        $email = $request->order_email;
+        $orderUrl = config('app.frontend_url')
+            . '/woundmed-order?token=' . $token
+            . '&order_id=' . $order->order_id;
+
+        $totalAsp = 0;
+        foreach ($validated['items'] as $item) {
+            $totalAsp += $item['asp'] * $item['quantity'];
+        }
+
+        $graftItems = [];
+        foreach ($validated['items'] ?? [] as $item) {
+            $graftItems[] = [
+                'brand_name' => OrderHelper::getBrandName($item['brand_id'] ?? null) ?? '—',
+                'size_name'  => OrderHelper::getGraftSizeName($item['graft_id'] ?? null) ?? '—',
+                'quantity'   => (int) ($item['quantity'] ?? 0),
+                'asp'        => (float) ($item['asp'] ?? 0),
+                'subtotal'   => (float) ($item['asp'] ?? 0) * (int) ($item['quantity'] ?? 0),
+            ];
+        }
+
+        $otherProductItems = [];
+        $otherSubtotal = 0;
+
+        foreach ($validated['products'] ?? [] as $prod) {
+            if (empty($prod['other_product_id'])) continue;
+
+            $product = OtherProduct::find($prod['other_product_id']);
+            if (!$product) continue;
+
+            $price = (float) ($product->price ?? $product->asp ?? 0);
+            $qty   = (int) ($prod['quantity'] ?? 0);
+            $sub   = $price * $qty;
+
+            $otherProductItems[] = [
+                'product_name' => $product->product_name ?? 'Unknown Product',
+                'quantity'     => $qty,
+                'price'        => $price,
+                'subtotal'     => $sub,
+            ];
+
+            $otherSubtotal += $sub;
+        }
+
+        $graftSubtotal = array_sum(array_column($graftItems, 'subtotal'));
+        $totalAsp = $graftSubtotal + $otherSubtotal;
+
+        # Pass prepared data to email template
+        $emailBody = OrderNotificationEmail::getTemplate([
+            'order_code'          => $order['order_code'],
+            'tracking_number'     => $order['tracking_num'],
+            'clinic_name'         => OrderHelper::getClinicName($validated['clinic_id']),
+            'clinician_name'      => OrderHelper::getClinicianName($validated['clinician_id']),
+            'manufacturer_name'   => OrderHelper::getManufacturerName($validated['manufacturer_id']),
+            'patient_name'        => OrderHelper::getPatientName($validated['patient_id']),
+
+            'items'               => $graftItems,
+            'graft_subtotal'      => $graftSubtotal,
+
+            'other_product_items' => $otherProductItems,
+            'other_subtotal'      => $otherSubtotal,
+
+            'total_asp'           => $totalAsp,
+            'order_link'          => $orderUrl,
+        ]);
+
+        $emailService = new EmailService();
+
+        $params = [
+            'to'        => $email,
+            'from'      => 'noreply@woundmed.com',
+            'from_name' => 'WoundMed Orders',
+            'subject'   => "New Order Created: {$order->orderCode}",
+            'body'      => $emailBody,
+        ];
+
+        $response = $emailService->send_email(
+            $params,
+            'Order created',
+            'Order created'
+        );
+
+        return response()->json([
+            'success'  => true,
+            'message'  => 'Order created successfully!',
+            'order_id' => $order->order_id,
+        ], 201);
     }
 
     public function updateOrder(Request $request, $orderId)
