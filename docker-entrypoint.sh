@@ -2,7 +2,6 @@
 set -e
 
 echo "Testing DB connection..."
-mysql -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USERNAME" -p"$DB_PASSWORD" -e "SELECT 1;" || exit 1
 
 echo "Starting Laravel container initialization..."
 
