@@ -50,9 +50,13 @@ RUN composer dump-autoload --optimize --no-dev
 RUN chown -R www-data:www-data storage bootstrap/cache public \
     && chmod -R 775 storage bootstrap/cache
 
+# Copy entrypoint and make it executable
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
 # Environment
 ENV APP_ENV=production \
     APP_DEBUG=false
 
 EXPOSE 80
-CMD ["apache2-foreground"]
+CMD ["docker-entrypoint.sh"]
