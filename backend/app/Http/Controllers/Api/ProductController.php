@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\GraftSize;
+use App\Models\OtherProduct;
 use App\Models\Brand;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
@@ -12,7 +13,6 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 use App\Traits\AuditLogger;
 use Illuminate\Support\Arr;
-use App\Models\Product;
 
 class ProductController extends Controller
 {
@@ -60,6 +60,7 @@ class ProductController extends Controller
             return [
                 'graft_size_id' => (string) $graft->graft_size_id,
                 'brand_id' => (string) $graft->brand_id,
+                'item_no'       => $graft->item_no ?? '',
                 'size' => $graft->size ?? 'N/A',
                 'area' => (float) ($graft->area ?? 0),
                 'price' => (float) ($graft->price ?? 0),
@@ -127,6 +128,7 @@ class ProductController extends Controller
             foreach ($graftSizesData as $sizeData) {
                 $graft = GraftSize::create([
                     'brand_id' => $validated['brand_id'],
+                    'item_no'   => $sizeData['item_no'],
                     'size' => $sizeData['size'],
                     'area' => $sizeData['area'],
                     'price' => $sizeData['price'],
@@ -179,7 +181,8 @@ class ProductController extends Controller
         $oldSize = $graft->size;
 
         $validated = $request->validate([
-            'brand_id' => ['sometimes', 'integer', 'exists:woundmed_brands,brand_id'], // Optional, but validated if present
+            'brand_id' => ['sometimes', 'integer', 'exists:woundmed_brands,brand_id'],
+            'item_no'   => ['sometimes', 'required', 'string', 'max:50'],
             'size' => ['required', 'string', 'max:255'],
             'area' => ['required', 'numeric', 'min:0'],
             'price' => ['required', 'numeric', 'min:0'],
@@ -373,5 +376,272 @@ class ProductController extends Controller
                 'error' => $e->getMessage(),
             ], 500);
         }
+    }
+
+    # --- Other Product Methods (New) ---
+    public function getAllOtherProducts(Request $request)
+    {
+        $perPage = $request->query('per_page', 10);
+        $page = $request->query('page', 1);
+        $status = $request->query('status');
+        $search = $request->query('search');
+
+        $query = OtherProduct::orderBy('created_at', 'desc');
+
+        if ($status !== null) {
+            $query->where('status', (int) $status); // Assuming 'status' field added
+        }
+
+        if ($search) {
+            $like = "%{$search}%";
+            $query->where(function ($q) use ($like) {
+                $q->where('product_name', 'like', $like)
+                    ->orWhere('description', 'like', $like)
+                    ->orWhereRaw('CAST(price AS CHAR) LIKE ?', [$like])
+                    ->orWhereRaw('CAST(stock AS CHAR) LIKE ?', [$like]);
+            });
+        }
+
+        $products = $query->paginate($perPage, ['*'], 'page', $page);
+
+        $formattedProducts = $products->map(function ($product) {
+            return [
+                'other_product_id' => (string) $product->other_product_id,
+                'product_type' => (int) $product->product_type,
+                'product_name' => $product->product_name,
+                'price' => (float) ($product->price ?? 0),
+                'stock' => (int) ($product->stock ?? 0),
+                'description' => $product->description,
+                'status' => (int) ($product->status ?? 0), // Assuming status field
+                'created_at' => $product->created_at?->toDateTimeString() ?? now()->toDateTimeString(),
+                'updated_at' => $product->updated_at?->toDateTimeString() ?? 'N/A',
+            ];
+        });
+
+        return response()->json([
+            'otherProductData' => $formattedProducts,
+            'meta' => [
+                'current_page' => $products->currentPage(),
+                'last_page' => $products->lastPage(),
+                'per_page' => $products->perPage(),
+                'total' => $products->total(),
+            ]
+        ]);
+    }
+
+    public function addOtherProduct(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'product_type' => ['required', 'integer', 'in:0,1'], // 0=Wound Supplies, 1=Devices
+                'product_name' => ['required', 'string', 'max:255'],
+                'price' => ['required', 'numeric', 'min:0'],
+                'stock' => ['required', 'integer', 'min:0'],
+                'description' => ['nullable', 'string'],
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            $validated = $validator->validated();
+
+            $product = OtherProduct::create([
+                'product_type' => $validated['product_type'],
+                'product_name' => $validated['product_name'],
+                'price' => $validated['price'],
+                'stock' => $validated['stock'],
+                'description' => $validated['description'] ?? null,
+                'status' => 0,
+            ]);
+
+            $formatted = [
+                'other_product_id' => (string) $product->other_product_id,
+                // ... (add other fields as in getAllOtherProducts)
+            ];
+
+            $this->logAudit($request, 'other_product_create', "Other product created: {$validated['product_name']}", $product->other_product_id, 0, null, 'woundmed_other_products', 'other_product');
+
+            return response()->json([
+                'message' => 'Other product created successfully',
+                'data' => $formatted
+            ], 201);
+        } catch (\Exception $e) {
+            Log::error('OtherProduct create failed: ' . $e->getMessage(), ['request' => $request->all()]);
+            return response()->json([
+                'message' => 'Failed to create other product: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function updateOtherProduct(Request $request, $id)
+    {
+        $product = OtherProduct::findOrFail($id);
+
+        try {
+            $validator = Validator::make($request->all(), [
+                'product_type'  => ['sometimes', 'required', 'integer', 'in:0,1'],
+                'product_name'  => ['sometimes', 'required', 'string', 'max:255'],
+                'price'         => ['sometimes', 'required', 'numeric', 'min:0'],
+                'stock'         => ['sometimes', 'required', 'integer', 'min:0'],
+                'description'   => ['nullable', 'string', 'max:1000'],
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'message' => 'Validation failed',
+                    'errors'  => $validator->errors()
+                ], 422);
+            }
+
+            $validated = $validator->validated();
+
+            // Only update fields that were actually sent
+            $product->fill($validated);
+            $product->save();
+
+            // Optional: reload fresh data with relations if needed
+            $product->refresh();
+
+            // Format response similar to your getAllOtherProducts
+            $formatted = [
+                'other_product_id' => (string) $product->other_product_id,
+                'product_type'     => (int) $product->product_type,
+                'product_name'     => $product->product_name,
+                'price'            => (float) ($product->price ?? 0),
+                'stock'            => (int) ($product->stock ?? 0),
+                'description'      => $product->description ?? null,
+                'status'           => (int) ($product->status ?? 0),
+                'created_at'       => $product->created_at?->toDateTimeString() ?? now()->toDateTimeString(),
+                'updated_at'       => $product->updated_at?->toDateTimeString() ?? 'N/A',
+            ];
+
+            // Audit log
+            $this->logAudit(
+                $request,
+                'other_product_update',
+                "Other product updated: {$product->product_name}",
+                $product->other_product_id
+            );
+
+            return response()->json([
+                'message' => 'Other product updated successfully',
+                'data'    => $formatted
+            ]);
+        } catch (\Exception $e) {
+            Log::error('OtherProduct update failed: ' . $e->getMessage(), [
+                'id'      => $id,
+                'request' => $request->all()
+            ]);
+
+            return response()->json([
+                'message' => 'Failed to update other product: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function getOtherProductsStats()
+    {
+        $total    = OtherProduct::count();
+        $active   = OtherProduct::where('status', 0)->count();   // assuming you add status column
+        $inactive = OtherProduct::where('status', 1)->count();
+        $archived = OtherProduct::where('status', 2)->count();
+
+        // Optional: breakdown by product_type
+        $types = OtherProduct::selectRaw('product_type, COUNT(*) as count')
+            ->groupBy('product_type')
+            ->get()
+            ->map(function ($row) {
+                return [
+                    'type'  => (int) $row->product_type,
+                    'label' => $row->product_type === 0 ? 'Wound Supplies' : 'Devices',
+                    'count' => (int) $row->count,
+                ];
+            });
+
+        return response()->json([
+            'total'    => $total,
+            'active'   => $active,
+            'inactive' => $inactive,
+            'archived' => $archived,
+            'types'    => $types,           // similar to brands breakdown
+        ]);
+    }
+
+    public function deactivateOtherProduct($id)
+    {
+        $product = OtherProduct::findOrFail($id);
+        if ($product->status !== 0) {
+            return response()->json(['message' => 'Cannot deactivate: not active'], 400);
+        }
+        $product->status = 1; // Set to Inactive
+        $product->save();
+        $this->logAudit(request(), 'other_product_deactivate', "Other product deactivated: {$product->product_name}", $id);
+        return response()->json([
+            'message' => 'Other product deactivated successfully',
+            'data' => ['status' => 1]
+        ]);
+    }
+
+    public function activateOtherProduct($id)
+    {
+        $product = OtherProduct::findOrFail($id);
+        if ($product->status !== 1) {
+            return response()->json(['message' => 'Cannot activate: not inactive'], 400);
+        }
+        $product->status = 0; // Set to Active
+        $product->save();
+        $this->logAudit(request(), 'other_product_activate', "Other product activated: {$product->product_name}", $id);
+        return response()->json([
+            'message' => 'Other product activated successfully',
+            'data' => ['status' => 0]
+        ]);
+    }
+
+    public function archiveOtherProduct($id)
+    {
+        $product = OtherProduct::findOrFail($id);
+        if ($product->status !== 0 && $product->status !== 1) { // Allow from Active or Inactive
+            return response()->json(['message' => 'Cannot archive: invalid status'], 400);
+        }
+        $product->status = 2; // Set to Archive
+        $product->save();
+        $this->logAudit(request(), 'other_product_archive', "Other product archived: {$product->product_name}", $id);
+        return response()->json([
+            'message' => 'Other product archived successfully',
+            'data' => ['status' => 2]
+        ]);
+    }
+
+    public function unarchiveOtherProduct($id)
+    {
+        $product = OtherProduct::findOrFail($id);
+        if ($product->status !== 2) {
+            return response()->json(['message' => 'Cannot unarchive: not archived'], 400);
+        }
+        $product->status = 0; // Restore to Active
+        $product->save();
+        $this->logAudit(request(), 'other_product_unarchive', "Other product unarchived: {$product->product_name}", $id);
+        return response()->json([
+            'message' => 'Other product unarchived successfully',
+            'data' => ['status' => 0]
+        ]);
+    }
+
+    public function deleteOtherProduct($id)
+    {
+        $product = OtherProduct::findOrFail($id);
+        if ($product->status !== 2) {
+            return response()->json(['message' => 'Can only delete archived products'], 400);
+        }
+        $productName = $product->product_name;
+        $product->delete();
+        $this->logAudit(request(), 'other_product_delete', "Other product deleted: {$productName}", $id);
+        return response()->json([
+            'message' => 'Other product deleted successfully'
+        ]);
     }
 }

@@ -31,10 +31,11 @@ import SettingsView from '@/views/SettingsView.vue'
 import OrderMagicLinkView from '@/views/OrderMagicLinkView.vue'
 import IVRMagicLinkView from '@/views/IVRMagicLinkView.vue'
 import InvalidMagicLinkView from '@/views/InvalidMagicLinkView.vue'
+import BillerTrackingForm from '@/views/BillerTrackingForm.vue'
 import { pageLoader } from '@/composables/ui/usePageLoader'
 
 // Icons
-import { LayoutDashboard, UsersRound, Hospital, Factory, Package, ShieldCheck, ShoppingCart, ClipboardList, PencilRuler, ScanBarcode, BellRing, ChartColumn, CircleUserRound, Calculator, RotateCcw, Layers } from 'lucide-vue-next'
+import { LayoutDashboard, UsersRound, Hospital, Factory, Package, ShieldCheck, ShoppingCart, ClipboardList, PencilRuler, ScanBarcode, BellRing, ChartColumn, CircleUserRound, Calculator, RotateCcw, Layers, FileSpreadsheet  } from 'lucide-vue-next'
 
 // Types
 interface NavigationItem {
@@ -392,6 +393,17 @@ const routes: RouteRecordRaw[] = [
 					icon: ClipboardList
 				}
 			},
+			{
+				path: 'biller/tracking',
+				name: 'biller-tracking',
+				component: BillerTrackingForm,
+				meta: {
+					requiresAuth: true,
+					title: 'Biller Tracking',
+					icon: FileSpreadsheet,
+					role: 5
+				}
+			},
 			// Inventory Management
 			{
 				path: 'admin/inventory',
@@ -608,6 +620,7 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 		'clinician-ivr-management': [3],
 		'manufacturer-ivr-management': [4],
 		'biller-ivr-management': [5],
+		'biller-tracking': [5],
 		// Order Management
 		'admin-order-management': [0],
 		'office-staff-order-management': [1],
@@ -717,6 +730,7 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 				return [
 					'biller-ivr-management',
 					'biller-invoice-management',
+					'biller-tracking',
 				].includes(route.name as string)
 			}
 

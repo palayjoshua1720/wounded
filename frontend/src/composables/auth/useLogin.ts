@@ -39,7 +39,7 @@ export function useLogin() {
 	const verificationCode = ref('')
 	const verificationLoading = ref(false)
 	const verificationUserId = ref<number | null>(null)
-	
+
 	// Backup code properties
 	const backupCodeModal = ref(false)
 	const backupCode = ref('')
@@ -79,11 +79,19 @@ export function useLogin() {
 				backupUserId.value = responseData.user_id
 				backupCodeModal.value = true
 				toast.info('Backup code required for login. Please enter one of your backup codes.')
+			} else if (responseData.requires_tfa) {
+				// Handle TFA requirement
+				// tempUser.value = { id: responseData.user_id } 
+				tempUser.value = { id: responseData.user_id, email: email.value }
+
+				continue2FA.value = true
+				proceedLogin.value = false
+				toast.info('Please enter your 2FA code to complete login.')
 			} else {
 				// Normal login flow
 				const { user, token } = responseData
-				
-				if (user.tfa_enabled) {
+
+				if (user?.tfa_enabled) {
 					tempUser.value = user
 					tempToken.value = token
 
@@ -134,19 +142,26 @@ export function useLogin() {
 		}
 
 		try {
-			await api.post('/auth/validation/validate-tfauth', {
+			const response = await api.post('/auth/validation/validate-tfauth', {
+				// pin: pin,
+				// user_id: tempUser.value?.id,
 				pinBoxes: pin,
-				email: tempUser.value?.email,
+				email: tempUser.value?.email || '',
 			});
 
 			// Clear inputs
-			pinBoxes.value = ['', '', '', ''];
+			(pinBoxes.value as string[]) = ['', '', '', ''];
 
-			if (tempUser.value && tempToken.value) {
-				saveData(tempUser.value, tempToken.value);
-				tempUser.value = null;
-				tempToken.value = '';
-			}
+			// On successful TFA validation, we should get user and token
+			const { user, token } = response.data;
+
+			saveData(user, token);
+			tempUser.value = null;
+			tempToken.value = '';
+
+			// Set flags to show main content again
+			continue2FA.value = false;
+			proceedLogin.value = true;
 
 			redirectBasedOnRole(authStore.user?.user_role || 0);
 		} catch (err: unknown) {
@@ -159,7 +174,6 @@ export function useLogin() {
 				toast.error('Login failed: An unknown error occurred')
 			}
 		} finally {
-			continue2FA.value = true;
 			loading2FA.value = false
 		}
 	}
@@ -235,7 +249,7 @@ export function useLogin() {
 		const value = input.value.replace(/\D/g, '').substring(0, 6) // Only allow digits, max 6 chars
 		verificationCode.value = value
 	}
-			
+
 	// Functions for backup code modal
 	const closeBackupCodeModal = () => {
 		backupCodeModal.value = false
@@ -243,21 +257,21 @@ export function useLogin() {
 		backupCodeLoading.value = false
 		backupUserId.value = null
 	}
-			
+
 	const verifyBackupCode = async () => {
 		if (backupCode.value.length !== 8) { // 8 character backup codes
 			toast.error('Please enter an 8-character backup code')
 			return
 		}
-			
+
 		backupCodeLoading.value = true
-			
+
 		try {
 			const response = await api.post('/auth/login/verify-backup-code', {
 				user_id: backupUserId.value,
 				code: backupCode.value
 			})
-			
+
 			const { user, token } = response.data
 			saveData(user, token)
 			closeBackupCodeModal()
@@ -277,7 +291,7 @@ export function useLogin() {
 			backupCodeLoading.value = false
 		}
 	}
-			
+
 	const onBackupCodeInput = (e: Event) => {
 		const input = e.target as HTMLInputElement
 		const value = input.value.toUpperCase().substring(0, 8) // Only allow up to 8 chars, convert to uppercase

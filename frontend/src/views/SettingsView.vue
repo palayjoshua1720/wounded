@@ -51,21 +51,49 @@
 						<div
 							class="bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl shadow-lg p-8 w-full border border-gray-100 dark:border-gray-700">
 							<h2 class="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
-								<SlidersHorizontal class="w-5 h-5 mr-2 text-blue-500 dark:text-blue-400" />
+								<Palette class="w-5 h-5 mr-3 text-gray-500 dark:text-gray-400" />
 								Appearance
 							</h2>
 							<div
 								class="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-6 p-4 bg-white dark:bg-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-600">
 								<div class="flex items-center">
-									<Palette class="w-5 h-5 mr-3 text-gray-500 dark:text-gray-400" />
 									<span class="text-base font-medium text-gray-700 dark:text-gray-200">Theme:</span>
 								</div>
-								<button @click="toggleTheme"
-									class="flex items-center px-5 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-600 transition-all duration-200 shadow-sm hover:shadow-md">
-									<span v-if="isDarkMode" class="mr-3 text-lg">🌙</span>
-									<span v-else class="mr-3 text-lg">🌞</span>
-									<span class="font-medium">{{ isDarkMode ? 'Dark Mode' : 'Light Mode' }}</span>
-								</button>
+								<div class="relative w-20 h-12 rounded-full overflow-hidden border border-gray-300 dark:border-gray-600 shadow-inner"
+									:style="{
+										backgroundImage: `url(${isDarkMode ? DarkBg : LightBg})`,
+										backgroundSize: 'cover',
+										backgroundPosition: 'center',
+										backgroundRepeat: 'no-repeat',
+									}">
+									<div class="absolute bg-black bg-opacity-40"></div>
+									<button @click="toggleTheme"
+										:class="[
+											'absolute top-1 bottom-1 w-1/2 rounded-full bg-white shadow-md transition-all duration-300 flex items-center justify-center',
+											isDarkMode ? 'right-1' : 'left-1'
+										]">
+										<div class="flex items-center space-x-1">
+											<div 
+												:class="[
+													'w-2 h-2 rounded-full transition-colors duration-300',
+													isDarkMode ? 'bg-gray-400' : 'bg-yellow-400'
+												]">
+												</div>
+											<span 
+												:class="[
+													'font-medium text-sm transition-colors duration-300',
+													isDarkMode ? 'text-gray-600' : 'text-yellow-600'
+												]">
+												<Moon v-if="isDarkMode" class="w-4 h-4" />
+																								<Sun v-else class="w-4 h-4" />
+											</span>
+										</div>
+									</button>
+									<div class="absolute inset-0 flex items-center justify-between px-4 pointer-events-none">
+										<span class="font-medium text-white drop-shadow text-sm"></span>
+										<span class="font-medium text-white drop-shadow text-sm"></span>
+									</div>
+								</div>
 							</div>
 						</div>
 					</div>
@@ -461,6 +489,8 @@ import { toast } from 'vue3-toastify'
 import axios from 'axios'
 import api from '@/services/api'
 import 'vue3-toastify/dist/index.css'
+const LightBg = new URL('@/assets/Day.jpg', import.meta.url).href
+const DarkBg = new URL('@/assets/Night.jpg', import.meta.url).href
 import {
 	SquareAsterisk,
 	CloudDownload,
@@ -472,8 +502,12 @@ import {
 	RefreshCcw, 
 	Copy,
 	TriangleAlert,
-	ChevronsLeft
+	ChevronsLeft,
+	Sun,
+	Moon
 } from 'lucide-vue-next'; 
+
+
 
 const section = ref<'preferences' | 'personal' | 'security'>('personal')
 const sectionTitle = computed(() => {
@@ -922,6 +956,9 @@ function cancelGenerateBackupCodes() {
 
 const themeStore = useThemeStore()
 const isDarkMode = computed(() => themeStore.isDarkMode)
+
+
+
 function toggleTheme() {
 	themeStore.toggleTheme()
 }
@@ -1018,4 +1055,4 @@ onMounted(async () => {
 });
 
 
-</script>
+</script> 

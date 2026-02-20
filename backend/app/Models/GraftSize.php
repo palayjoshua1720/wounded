@@ -17,10 +17,11 @@ class GraftSize extends Model
     protected $fillable = [
         'graft_number',
         'brand_id',
+        'item_no',
         'size',
         'area',
         'price',
-        'stock', // Ensure stock is fillable
+        'stock',
         'graft_status',
     ];
     protected $casts = [
@@ -28,6 +29,7 @@ class GraftSize extends Model
         'price' => 'decimal:2',
         'stock' => 'integer',
         'graft_status' => 'integer',
+        'item_no'      => 'string',
     ];
 
     public function brand()

@@ -291,4 +291,28 @@ export const dashboardService = {
   }
 };
 
+export const invoiceService = {
+  getAllInvoices(params?: { page?: number; per_page?: number }) {
+    return api.get('/invoice-management', { params });
+  },
+  getInvoiceStats() {
+    return api.get('/invoice-management/stats');
+  }
+};
+
+export const ivrService = {
+  getAllIVRRequests(params?: { page?: number; per_page?: number }) {
+    return api.get('/management/ivr/ivrrequests', { params });
+  }
+};
+
+export const returnsService = {
+  getAllReturns(params?: { page?: number; per_page?: number }) {
+    return api.get('/management/returns', { params });
+  },
+  getReturnStats() {
+    return api.get('/management/returns/stats');
+  }
+};
+
 export default api 

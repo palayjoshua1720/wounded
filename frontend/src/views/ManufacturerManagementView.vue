@@ -318,8 +318,12 @@
     </div>
 
     <template v-if="!tableLoader">
-      <Pagination v-if="filteredManufacturers && filteredManufacturers.length > 0" :pagination="pagination"
-        @update:page="getAllManufacturers" />
+      <div
+        class="bg-white dark:bg-gray-800 mt-4 rounded-bl-2xl rounded-br-2xl shadow-sm dark:shadow-gray-900 border border-gray-200 dark:border-gray-700">
+
+        <Pagination v-if="filteredManufacturers && filteredManufacturers.length > 0" :pagination="pagination"
+          @update:page="getAllManufacturers" />
+      </div>
     </template>
 
     <!-- Create/Edit Form Modal -->
@@ -684,6 +688,7 @@
         <div class="space-y-6">
           <!-- Header -->
           <div class="flex items-center space-x-4">
+            <!-- Logo -->
             <div v-if="viewManufacturer.logoUrl" class="w-16 h-16 rounded-full overflow-hidden bg-gray-100">
               <img :src="viewManufacturer.logoUrl" :alt="`${viewManufacturer.manufacturerName} logo`"
                 class="w-full h-full object-cover" />
