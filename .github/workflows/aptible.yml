@@ -45,7 +45,7 @@ jobs:
 
       - name: Deploy to Aptible
         run: |
-          aptible login --token "${{ secrets.APTIBLE_AUTH_TOKEN }}"
+          aptible login --email="${{ secrets.APTIBLE_USERNAME }}" --password="${{ secrets.APTIBLE_PASSWORD }}"
           aptible deploy --app woundmed \
             --docker-image ${{ env.IMAGE_TAG }} \
             --private-registry-username ${{ github.actor }} \
