@@ -62,6 +62,10 @@ return [
                 PDO::MYSQL_ATTR_SSL_CA => false,                  // No CA file required
                 // Optional: PDO::MYSQL_ATTR_SSL_CIPHER => 'DHE-RSA-AES256-SHA',  // If needed for cipher compatibility
             ]) : [],
+            // 'options' => extension_loaded('pdo_mysql') ? [
+            //     PDO::MYSQL_ATTR_SSL_CIPHER => 'DHE-RSA-AES256-SHA',
+            //     PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => false,
+            // ] : [],
         ],
 
         'mariadb' => [
