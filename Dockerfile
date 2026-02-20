@@ -46,7 +46,7 @@ COPY --from=frontend-build /app/frontend/dist/ ./public/
 # Final Composer optimizations
 RUN composer dump-autoload --optimize --no-dev
 
-# Permissions
+# Permission
 RUN chown -R www-data:www-data storage bootstrap/cache public \
     && chmod -R 775 storage bootstrap/cache
 
