@@ -259,35 +259,23 @@ export const patientService = {
 };
 
 export const dashboardService = {
-  async getMetrics() {
-    try {
-      const res = await api.get('/dashboard/stats');
-      return res.data?.data || {
-        brands: { total: 0, active: 0, new: 0 },
-        manufacturers: { total: 0, active: 0, new: 0 },
-        clinics: { total: 0, active: 0, new: 0 },
-        orders: { total: 0, new: 0 }
-      };
-    } catch (err) {
-      console.error('Failed to load dashboard metrics', err);
-      return {
-        brands: { total: 0, active: 0, new: 0 },
-        manufacturers: { total: 0, active: 0, new: 0 },
-        clinics: { total: 0, active: 0, new: 0 },
-        orders: { total: 0, new: 0 }
-      };
-    }
+  getMetrics() {
+    return api.get('/dashboard/stats');
   },
+  getRecentActivity() {
+    return api.get('/dashboard/recent-activity');
+  },
+  getSystemAlerts() {
+    return api.get('/dashboard/system-alerts');
+  }
+};
 
-  async getRecentActivity() {
-    try {
-      const res = await api.get('/dashboard/recent-activity');
-      console.log(res);
-      return res.data?.data || [];
-    } catch (err) {
-      console.error('Failed to load recent activity', err);
-      return [];
-    }
+export const clinicDashboardService = {
+  getOverview() {
+    return api.get('/clinic-dashboard/order-overview');
+  },
+  getSystemAlerts() {
+    return api.get('/clinic-dashboard/system-alerts');
   }
 };
 

@@ -1002,6 +1002,8 @@
       </template>
     </BaseModal>
   </div>
+
+  <UploadLoader :is-visible="isLoadingFile" :progress="loadProgress" context="brand" title="Preparing..." />
 </template>
 
 <script setup lang="ts">
@@ -1020,6 +1022,7 @@ import ContentLoader from '@/components/ui/ContentLoader.vue'
 import FileUploadSection from '@/components/common/FileUploadSection.vue'
 import api from '@/services/api'
 import axios from "axios"
+import UploadLoader from '@/components/ui/UploadLoader.vue'
 
 const toast = useToast()
 
@@ -1114,6 +1117,22 @@ const logoIsPanning = ref(false)
 const logoLastPanPoint = ref({ x: 0, y: 0 })
 const logoLastTouchDistance = ref(0)
 let logoPendingFile: File | null = null
+
+const isLoadingFile = ref(false)
+const loadProgress = ref(0)
+
+const simulateLoading = () => {
+  isLoadingFile.value = true
+  loadProgress.value = 0
+  const interval = setInterval(() => {
+    if (loadProgress.value >= 100) {
+      clearInterval(interval)
+      isLoadingFile.value = false
+      return
+    }
+    loadProgress.value += 10
+  }, 80)
+}
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Computed
@@ -1868,6 +1887,8 @@ function logoSelectNewImage() {
 
 async function logoConfirmCrop() {
   if (!logoCanvas.value || !logoSelectedImage.value || !logoPendingFile) return
+  simulateLoading()
+
   const canvas = logoCanvas.value
   canvas.toBlob((blob) => {
     if (!blob) return

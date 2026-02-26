@@ -60,4 +60,30 @@ class UsageLog extends Model
     {
         return $this->belongsTo(GraftSize::class, 'graft_size_id', 'graft_size_id');
     }
+
+    /**
+     * Clinic — now using safer chain through patient
+     */
+    public function clinic()
+    {
+        return $this->hasOneThrough(
+            Clinic::class,
+            PatientInfo::class,
+            'patient_id',     // on PatientInfo
+            'clinic_id',      // on Clinic
+            'patient_id',     // on UsageLog
+            'clinic_id'       // on PatientInfo
+        )->withDefault([
+            'name' => 'Clinic not found',
+            'clinic_id' => null
+        ]);
+    }
+
+    // Optional: accessor for easier/fallback display
+    public function getClinicNameAttribute(): string
+    {
+        return $this->clinic?->name
+            ?? $this->patient?->clinic?->name
+            ?? ($this->patient_id ? "Clinic (patient {$this->patient_id})" : 'No patient linked');
+    }
 }
