@@ -37,27 +37,29 @@ RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' \
     /etc/apache2/apache2.conf \
     /etc/apache2/conf-available/*.conf
 
-# Install system dependencies and PHP extensions
-RUN set -eux; \
-    apt-get update; \
+# 1. Install system dependencies and PHP extensions
+RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        libfreetype6-dev \
+        libfreetype-dev \
         libjpeg62-turbo-dev \
         libpng-dev \
         libzip-dev \
+        libonig-dev \
+        pkg-config \
         unzip \
         git \
-        curl; \
-    docker-php-ext-configure gd --with-freetype --with-jpeg; \
-    docker-php-ext-install -j$(nproc) \
+        curl \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j$(nproc) \
         gd \
-        zip \
         pdo_mysql \
         mbstring \
         exif \
-        bcmath;
-    apt-get clean; \
-    rm -rf /var/lib/apt/lists/*
+        pcntl \
+        bcmath \
+        zip \
+    && apt-get clean && rm -rf /var/lib/apt/lists/* \
+    && rm -rf /tmp/* /var/tmp/*
 
 # Copy Composer binary
 COPY --from=backend-build /usr/bin/composer /usr/bin/composer
