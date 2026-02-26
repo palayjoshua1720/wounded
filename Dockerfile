@@ -38,28 +38,26 @@ RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' \
     /etc/apache2/conf-available/*.conf
 
 # Install system dependencies and PHP extensions
-RUN apt-get update && \
+RUN set -eux; \
+    apt-get update; \
     apt-get install -y --no-install-recommends \
-        libpng-dev \
-        libjpeg-dev \
         libfreetype6-dev \
+        libjpeg62-turbo-dev \
+        libpng-dev \
         libzip-dev \
         unzip \
         git \
-        curl \
-    && docker-php-ext-configure gd \
-        --enable-gd \
-        --with-freetype \
-        --with-jpeg \
-    && docker-php-ext-install -j$(nproc) \
+        curl; \
+    docker-php-ext-configure gd --with-freetype --with-jpeg; \
+    docker-php-ext-install -j$(nproc) \
+        gd \
+        zip \
         pdo_mysql \
         mbstring \
         exif \
         pcntl \
-        bcmath \
-        gd \
-        zip \
-    && apt-get clean && \
+        bcmath; \
+    apt-get clean; \
     rm -rf /var/lib/apt/lists/*
 
 # Copy Composer binary
