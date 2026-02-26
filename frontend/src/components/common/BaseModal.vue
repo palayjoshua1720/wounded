@@ -1,8 +1,8 @@
 <template>
 	<transition name="fade">
-		<div v-if="modelValue" class="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto">
+		<div v-if="modelValue" class="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto overflow-x-hidden">
 			<div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity" @click="close" />
-			<div :class="['relative rounded-xl bg-white dark:bg-gray-800 shadow-xl border border-gray-200 dark:border-gray-700 mx-4 my-8 overflow-hidden', widthClass]" class="max-h-[90vh] w-full flex flex-col">
+			<div :class="['relative rounded-xl bg-white dark:bg-gray-800 shadow-xl border border-gray-200 dark:border-gray-700 mx-4 my-8 overflow-hidden', widthClass]" class="max-h-[90vh] w-full flex flex-col" style="contain: layout style;">
 				<div class="flex items-center justify-between p-4 border-b flex-shrink-0">
 					<h2 class="text-xl font-semibold text-gray-900 dark:text-white">{{ title }}</h2>
 					<button @click="close" class="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 text-2xl leading-none">&times;</button>

@@ -31,7 +31,7 @@
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">User Statistics</h3>
 
                 <!-- Main Stats -->
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
                     <div class="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
                         <div
                             class="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
@@ -60,6 +60,16 @@
                         <div>
                             <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ stats.inactive }}</p>
                             <p class="text-sm text-gray-500 dark:text-gray-400">Inactive</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+                        <div
+                            class="w-10 h-10 rounded-lg bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center flex-shrink-0">
+                            <Archive class="w-5 h-5 text-orange-600 dark:text-orange-400" />
+                        </div>
+                        <div>
+                            <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ stats.archived }}</p>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">Archived</p>
                         </div>
                     </div>
                 </div>
@@ -145,6 +155,7 @@
                             <option value="all">All Status</option>
                             <option value="active">Active</option>
                             <option value="inactive">Inactive</option>
+                            <option value="archived">Archived</option>
                         </select>
                         <ChevronDown
                             class="absolute right-3 top-3.5 h-4 w-4 text-gray-500 dark:text-gray-400 pointer-events-none" />
@@ -207,9 +218,12 @@
                             </td>
                             <td class="px-6 py-5 whitespace-nowrap">
                                 <span
-                                    :class="['inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200', user.isActive ? 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400' : 'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400']">
-                                    <component :is="user.isActive ? CheckCircle2 : XCircle" class="w-3 h-3 mr-1.5" />
-                                    {{ user.isActive ? 'Active' : 'Inactive' }}
+                                    :class="['inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200', 
+                                        user.isArchived ? 'bg-orange-50 text-orange-700 dark:bg-orange-900/20 dark:text-orange-400' :
+                                        user.isActive ? 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400' : 
+                                        'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400']">
+                                    <component :is="user.isArchived ? Archive : (user.isActive ? CheckCircle2 : XCircle)" class="w-3 h-3 mr-1.5" />
+                                    {{ user.isArchived ? 'Archived' : (user.isActive ? 'Active' : 'Inactive') }}
                                 </span>
                             </td>
                             <td class="px-6 py-5 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
@@ -241,7 +255,7 @@
                                         title="Archive User">
                                         <Archive class="w-4 h-4" />
                                     </button>
-                                    <button v-else @click="handleDeleteUser(user.id)"
+                                    <button v-else-if="!isOfficeStaff" @click="handleDeleteUser(user.id)"
                                         class="p-2 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all duration-200"
                                         title="Delete User">
                                         <Trash2 class="w-4 h-4" />
@@ -296,152 +310,174 @@
         </div>
 
         <!-- User Details Modal -->
-        <BaseModal v-model="showUserDetailsModal" title="User Details" size="lg">
+        <BaseModal v-model="showUserDetailsModal" title="User Information" size="lg">
             <template v-if="selectedUser">
                 <div class="space-y-6">
-                    <div class="flex items-center space-x-4">
-                        <div
-                            class="h-16 w-16 bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-xl flex items-center justify-center text-blue-600 dark:text-blue-400 font-medium text-lg">
-                            {{ getUserInitials(selectedUser) }}
-                        </div>
-                        <div>
-                            <h2 class="text-xl font-bold text-gray-900 dark:text-white">{{ formatFullName(selectedUser)
-                                }}</h2>
-                            <p class="text-gray-500 dark:text-gray-400">{{ selectedUser.email }}</p>
-                            <p v-if="selectedUser.phone" class="text-gray-500 dark:text-gray-400 text-sm mt-1">
-                                <span class="font-medium">Phone:</span> {{ selectedUser.phone }}
-                            </p>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="space-y-4">
-                            <div>
-                                <label
-                                    class="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Role</label>
-                                <span
-                                    :class="['inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium', getRoleColor(selectedUser.role)]">
-                                    {{ formatRoleName(selectedUser.role) }}
-                                </span>
+                    <!-- Header Card -->
+                    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-2xl p-6">
+                        <div class="flex items-center space-x-5">
+                            <div
+                                class="h-20 w-20 bg-white dark:bg-gray-800 rounded-2xl shadow-sm flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold text-2xl">
+                                {{ getUserInitials(selectedUser) }}
                             </div>
-                            <div>
-                                <label
-                                    class="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Status</label>
-                                <span
-                                    :class="['inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium', selectedUser.isActive ? 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400' : 'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400']">
-                                    <component :is="selectedUser.isActive ? CheckCircle2 : XCircle"
-                                        class="w-4 h-4 mr-1.5" />
-                                    {{ selectedUser.isActive ? 'Active' : 'Inactive' }}
-                                </span>
-                            </div>
-                            
-                            <!-- <div v-if="selectedUser.phone">
-                                <label
-                                    class="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Phone</label>
-                                <p class="text-sm text-gray-900 dark:text-white">{{ selectedUser.phone }}</p>
-                            </div> -->
-                            </div>
-                        <div class="space-y-4">
-                            <div>
-                                <label
-                                    class="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Created</label>
-                                <p class="text-sm text-gray-900 dark:text-white">{{ formatDate(selectedUser.createdAt)
-                                    }}</p>
-                            </div>
-                            <div v-if="selectedUser.isArchived">
-                                <label class="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Archive
-                                    Status</label>
-                                <span
-                                    class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-orange-50 text-orange-700 dark:bg-orange-900/20 dark:text-orange-400">
-                                    <Archive class="w-4 h-4 mr-1.5" />
-                                    Archived
-                                </span>
+                            <div class="flex-1">
+                                <h2 class="text-2xl font-bold text-gray-900 dark:text-white">{{ formatFullName(selectedUser) }}</h2>
+                                <div class="flex items-center mt-2 space-x-4">
+                                    <span class="inline-flex items-center text-sm text-gray-600 dark:text-gray-400">
+                                        <Mail class="w-4 h-4 mr-1.5 text-gray-400" />
+                                        {{ selectedUser.email }}
+                                    </span>
+                                    <span v-if="selectedUser.phone" class="inline-flex items-center text-sm text-gray-600 dark:text-gray-400">
+                                        <Phone class="w-4 h-4 mr-1.5 text-gray-400" />
+                                        {{ selectedUser.phone }}
+                                    </span>
+                                </div>
+                                <div class="mt-3 flex items-center space-x-2">
+                                    <span :class="['px-3 py-1 text-xs font-medium rounded-full', getRoleColor(selectedUser.role)]">
+                                        {{ formatRoleName(selectedUser.role) }}
+                                    </span>
+                                    <span :class="['px-3 py-1 text-xs font-medium rounded-full', 
+                                        selectedUser.isArchived ? 'bg-orange-100 dark:bg-orange-800 text-orange-700 dark:text-orange-300' :
+                                        selectedUser.isActive ? 'bg-green-100 dark:bg-green-800 text-green-700 dark:text-green-300' : 
+                                        'bg-red-100 dark:bg-red-800 text-red-700 dark:text-red-300']">
+                                        {{ selectedUser.isArchived ? 'Archived' : (selectedUser.isActive ? 'Active' : 'Inactive') }}
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <div v-if="selectedUser.department" class="pt-4 border-t border-gray-200 dark:border-gray-700">
-                        <label class="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
-                            <span v-if="selectedUser.role === 'clinic'">Managing Clinic Facility</span>
-                            <span v-else-if="selectedUser.role === 'clinician'">Works at Clinic Facility</span>
-                            <span v-else-if="selectedUser.role === 'manufacturer'">Associated Manufacturer</span>
-                        </label>
-                        <p class="text-sm text-gray-900 dark:text-white font-medium">{{ selectedUser.department }}</p>
-                        <p v-if="selectedUser.role === 'clinic'" class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                            This user is the administrator of this clinic facility.
-                        </p>
-                        <p v-else-if="selectedUser.role === 'clinician'" class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                            This clinician provides medical services at this facility.
-                        </p>
-                         <p v-else-if="selectedUser.role === 'manufacturer'" class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                            This user is associated with the specified manufacturer.
-                        </p>
-                    </div>
+                    <!-- Info Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Role -->
+                        <div class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
+                            <div class="flex items-center space-x-3">
+                                <div class="h-10 w-10 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
+                                    <ShieldCheck class="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                                </div>
+                                <div>
+                                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Role</p>
+                                    <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ formatRoleName(selectedUser.role) }}</p>
+                                </div>
+                            </div>
+                        </div>
 
-                    <div v-if="selectedUser.clinicCode" class="pt-4 border-t border-gray-200 dark:border-gray-700">
-                        <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">
-                            Associated Clinic Code
-                        </label>
-                        <div class="flex items-center justify-between mt-1 p-2.5 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                            <code class="text-sm text-gray-700 dark:text-gray-300 truncate pr-2">{{ selectedUser.clinicCode }}</code>
-                            <div class="relative">
-                                <button @click="copyId(selectedUser.clinicCode)" 
-                                        class="p-1.5 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-md transition-all duration-200"
-                                        title="Copy Code">
-                                    <Copy class="w-4 h-4" />
-                                </button>
-                                <transition
-                                    enter-active-class="transition ease-out duration-200"
-                                    enter-from-class="transform opacity-0 scale-95"
-                                    enter-to-class="transform opacity-100 scale-100"
-                                    leave-active-class="transition ease-in duration-100"
-                                    leave-from-class="transform opacity-100 scale-100"
-                                    leave-to-class="transform opacity-0 scale-95">
-                                    <div v-if="copiedTooltip" class="absolute -top-10 right-0 px-2 py-1 text-xs text-white bg-gray-800 dark:bg-gray-900 rounded-md shadow-lg pointer-events-none">
-                                        Copied!
+                        <!-- Status -->
+                        <div class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
+                            <div class="flex items-center space-x-3">
+                                <div class="h-10 w-10 rounded-lg flex items-center justify-center"
+                                    :class="selectedUser.isArchived ? 'bg-orange-100 dark:bg-orange-900/30' : 
+                                            selectedUser.isActive ? 'bg-green-100 dark:bg-green-900/30' : 
+                                            'bg-red-100 dark:bg-red-900/30'">
+                                    <component :is="selectedUser.isArchived ? Archive : (selectedUser.isActive ? CheckCircle2 : XCircle)"
+                                        class="w-5 h-5" 
+                                        :class="selectedUser.isArchived ? 'text-orange-600 dark:text-orange-400' : 
+                                                selectedUser.isActive ? 'text-green-600 dark:text-green-400' : 
+                                                'text-red-600 dark:text-red-400'" />
+                                </div>
+                                <div>
+                                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Status</p>
+                                    <p class="text-sm font-semibold text-gray-900 dark:text-white">
+                                        {{ selectedUser.isArchived ? 'Archived' : (selectedUser.isActive ? 'Active' : 'Inactive') }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Created Date -->
+                        <div class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
+                            <div class="flex items-center space-x-3">
+                                <div class="h-10 w-10 bg-orange-100 dark:bg-orange-900/30 rounded-lg flex items-center justify-center">
+                                    <Calendar class="w-5 h-5 text-orange-600 dark:text-orange-400" />
+                                </div>
+                                <div>
+                                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Created Date</p>
+                                    <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ formatDate(selectedUser.createdAt) }}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- User ID -->
+                        <div class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
+                            <div class="flex items-center space-x-3">
+                                <div class="h-10 w-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
+                                    <Fingerprint class="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">User ID</p>
+                                    <div class="flex items-center space-x-2">
+                                        <code class="text-sm font-semibold text-gray-900 dark:text-white truncate">{{ selectedUser.id }}</code>
+                                        <button @click="copyId(selectedUser.id)" 
+                                                class="p-1 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                                                title="Copy ID">
+                                            <Copy class="w-3.5 h-3.5" />
+                                        </button>
                                     </div>
-                                </transition>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- <div v-if="selectedUser.manufacturerId" class="pt-4 border-t border-gray-200 dark:border-gray-700">
-                        <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">
-                            Associated Manufacturer ID
-                        </label>
-                        <div class="flex items-center justify-between mt-1 p-2.5 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                            <code class="text-sm text-gray-700 dark:text-gray-300 truncate pr-2">{{ selectedUser.manufacturerId }}</code>
-                            <div class="relative">
-                                <button @click="copyId(selectedUser.manufacturerId)"
-                                        class="p-1.5 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-md transition-all duration-200"
-                                        title="Copy ID">
-                                    <Copy class="w-4 h-4" />
-                                </button>
-                                <transition
-                                    enter-active-class="transition ease-out duration-200"
-                                    enter-from-class="transform opacity-0 scale-95"
-                                    enter-to-class="transform opacity-100 scale-100"
-                                    leave-active-class="transition ease-in duration-100"
-                                    leave-from-class="transform opacity-100 scale-100"
-                                    leave-to-class="transform opacity-0 scale-95">
-                                    <div v-if="copiedTooltip" class="absolute -top-10 right-0 px-2 py-1 text-xs text-white bg-gray-800 dark:bg-gray-900 rounded-md shadow-lg pointer-events-none">
-                                        Copied!
-                                    </div>
-                                </transition>
+                    <!-- Department/Facility Info -->
+                    <div v-if="selectedUser.department" class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
+                        <div class="flex items-start space-x-3">
+                            <div class="h-10 w-10 bg-teal-100 dark:bg-teal-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <Building class="w-5 h-5 text-teal-600 dark:text-teal-400" />
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                                    <span v-if="selectedUser.role === 'clinic'">Managing Clinic Facility</span>
+                                    <span v-else-if="selectedUser.role === 'clinician'">Works at Clinic Facility</span>
+                                    <span v-else-if="selectedUser.role === 'manufacturer'">Associated Manufacturer</span>
+                                    <span v-else>Department</span>
+                                </p>
+                                <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ selectedUser.department }}</p>
+                                <p v-if="selectedUser.role === 'clinic'" class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                    This user is the administrator of this clinic facility.
+                                </p>
+                                <p v-else-if="selectedUser.role === 'clinician'" class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                    This clinician provides medical services at this facility.
+                                </p>
+                                <p v-else-if="selectedUser.role === 'manufacturer'" class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                    This user is associated with the specified manufacturer.
+                                </p>
                             </div>
                         </div>
-                    </div> -->
+                    </div>
 
-                    <div v-if="selectedUser.role === 'clinic'" class="pt-6 border-t border-gray-200 dark:border-gray-700">
+                    <!-- Clinic Code -->
+                    <div v-if="selectedUser.clinicCode" class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
+                        <div class="flex items-center space-x-3">
+                            <div class="h-10 w-10 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg flex items-center justify-center">
+                                <Hash class="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Associated Clinic Code</p>
+                                <div class="flex items-center justify-between mt-1">
+                                    <code class="text-sm font-semibold text-gray-900 dark:text-white">{{ selectedUser.clinicCode }}</code>
+                                    <button @click="copyId(selectedUser.clinicCode)" 
+                                            class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors">
+                                        <Copy class="w-3.5 h-3.5 mr-1.5" />
+                                        Copy
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Clinicians Section (for Clinic Admins) -->
+                    <div v-if="selectedUser.role === 'clinic'" class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
                         <!-- Accordion Header -->
-                        <button @click="isCliniciansAccordionOpen = !isCliniciansAccordionOpen" class="w-full flex items-center justify-between text-left focus:outline-none group p-2 -m-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                            <h3 class="text-md font-semibold text-gray-900 dark:text-white flex items-center">
-                                <Stethoscope class="w-5 h-5 mr-2" :class="associatedClinicians.length > 0 ? 'text-teal-500' : 'text-gray-400'" />
-                                Clinicians at this Facility 
-                                <span class="ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 group-hover:bg-gray-300 dark:group-hover:bg-gray-500 transition-colors">
-                                    {{ associatedClinicians.length }}
-                                </span>
-                            </h3>
+                        <button @click="isCliniciansAccordionOpen = !isCliniciansAccordionOpen" class="w-full flex items-center justify-between text-left focus:outline-none group">
+                            <div class="flex items-center space-x-3">
+                                <div class="h-10 w-10 bg-teal-100 dark:bg-teal-900/30 rounded-lg flex items-center justify-center">
+                                    <Stethoscope class="w-5 h-5 text-teal-600 dark:text-teal-400" />
+                                </div>
+                                <div>
+                                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Clinicians at this Facility</p>
+                                    <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ associatedClinicians.length }} Medical Staff</p>
+                                </div>
+                            </div>
                             <ChevronDown class="w-5 h-5 text-gray-500 dark:text-gray-400 transition-transform duration-300 transform" :class="{ 'rotate-180': isCliniciansAccordionOpen }" />
                         </button>
                         
@@ -453,14 +489,14 @@
                             leave-active-class="transition ease-in duration-150"
                             leave-from-class="opacity-100 translate-y-0"
                             leave-to-class="opacity-0 -translate-y-2">
-                            <div v-if="isCliniciansAccordionOpen" class="mt-4">
+                            <div v-if="isCliniciansAccordionOpen" class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
                                 <div v-if="associatedClinicians.length > 0">
                                      <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
                                         Medical staff working at {{ selectedUser.department }}
                                     </p>
                                     <ul class="space-y-3">
                                         <li v-for="clinician in displayedClinicians" :key="clinician.id"
-                                            class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                                            class="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
                                             <div class="flex items-center">
                                                 <div
                                                     class="flex-shrink-0 h-8 w-8 bg-gradient-to-br from-green-100 to-teal-100 dark:from-green-900/30 dark:to-teal-900/30 rounded-full flex items-center justify-center text-green-600 dark:text-green-400 font-medium text-xs">
@@ -485,7 +521,7 @@
                                         </button>
                                     </div>
                                 </div>
-                                <div v-else class="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-4 border border-dashed border-gray-300 dark:border-gray-600">
+                                <div v-else class="bg-white dark:bg-gray-800 rounded-lg p-4 border border-dashed border-gray-300 dark:border-gray-600">
                                     <p class="text-sm text-gray-500 dark:text-gray-400 text-center">
                                         No clinicians are currently assigned to this clinic facility.
                                     </p>
@@ -494,6 +530,48 @@
                         </transition>
                     </div>
 
+                    <!-- Quick Actions -->
+                    <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
+                        <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">Quick Actions</p>
+                        <div class="flex flex-wrap gap-3">
+                            <button @click="editUser(selectedUser); selectedUser = null"
+                                class="inline-flex items-center px-4 py-2 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900/30 transition-colors text-sm font-medium">
+                                <FilePenLine class="w-4 h-4 mr-2" />
+                                Edit User
+                            </button>
+                            <button v-if="!selectedUser.isArchived" @click="handleToggleStatus(selectedUser.id); selectedUser = null"
+                                :class="['inline-flex items-center px-4 py-2 rounded-lg transition-colors text-sm font-medium', 
+                                    selectedUser.isActive 
+                                        ? 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/30' 
+                                        : 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 hover:bg-green-100 dark:hover:bg-green-900/30']">
+                                <component :is="selectedUser.isActive ? XCircle : CheckCircle2" class="w-4 h-4 mr-2" />
+                                {{ selectedUser.isActive ? 'Deactivate' : 'Activate' }}
+                            </button>
+                            <button v-if="!selectedUser.isArchived" @click="handleArchiveUser(selectedUser.id); selectedUser = null"
+                                class="inline-flex items-center px-4 py-2 bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300 rounded-lg hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-colors text-sm font-medium">
+                                <Archive class="w-4 h-4 mr-2" />
+                                Archive User
+                            </button>
+                            <button v-else-if="!isOfficeStaff" @click="handleDeleteUser(selectedUser.id); selectedUser = null"
+                                class="inline-flex items-center px-4 py-2 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors text-sm font-medium">
+                                <Trash2 class="w-4 h-4 mr-2" />
+                                Delete User
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Copy Tooltip -->
+                    <transition
+                        enter-active-class="transition ease-out duration-200"
+                        enter-from-class="transform opacity-0 scale-95"
+                        enter-to-class="transform opacity-100 scale-100"
+                        leave-active-class="transition ease-in duration-100"
+                        leave-from-class="transform opacity-100 scale-100"
+                        leave-to-class="transform opacity-0 scale-95">
+                        <div v-if="copiedTooltip" class="fixed bottom-4 right-4 px-4 py-2 text-sm text-white bg-gray-800 dark:bg-gray-900 rounded-lg shadow-lg">
+                            Copied to clipboard!
+                        </div>
+                    </transition>
                 </div>
             </template>
         </BaseModal>
@@ -501,45 +579,81 @@
         <!-- Create/Edit User Form Modal -->
         <BaseModal v-model="showFormModal" :title="showCreateForm ? 'Create New User' : 'Edit User'" size="2xl">
             <form @submit.prevent="handleSubmitForm" class="space-y-6">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">First Name<span
-                                class="text-red-500 ml-1">*</span></label>
-                        <input v-model="formData.firstName" type="text" required
-                            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200"
-                            placeholder="Enter first name" />
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Middle
-                            Name</label>
-                        <input v-model="formData.middleName" type="text"
-                            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200"
-                            placeholder="Enter middle name" />
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Last Name<span
-                                class="text-red-500 ml-1">*</span></label>
-                        <input v-model="formData.lastName" type="text" required
-                            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200"
-                            placeholder="Enter last name" />
+                <!-- User Header (only shown when editing) -->
+                <div v-if="!showCreateForm && selectedUser" class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-4">
+                    <div class="flex items-center space-x-4">
+                        <div class="h-12 w-12 bg-white dark:bg-gray-800 rounded-xl shadow-sm flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold text-lg">
+                            {{ getUserInitials(selectedUser) }}
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">Editing User</p>
+                            <p class="text-lg font-semibold text-gray-900 dark:text-white">{{ formatFullName(selectedUser) }}</p>
+                        </div>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Email<span
-                                class="text-red-500 ml-1">*</span></label>
-                        <input v-model="formData.email" type="email" required
-                            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200"
-                            placeholder="Enter email address" />
+                <!-- Form Fields -->
+                <div class="space-y-5">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                <span class="flex items-center">
+                                    <UserCircle class="w-4 h-4 mr-2 text-gray-400" />
+                                    First Name<span class="text-red-500 ml-1">*</span>
+                                </span>
+                            </label>
+                            <input v-model="formData.firstName" type="text" required
+                                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200"
+                                placeholder="Enter first name" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                <span class="flex items-center">
+                                    <UserCircle class="w-4 h-4 mr-2 text-gray-400" />
+                                    Middle Name
+                                </span>
+                            </label>
+                            <input v-model="formData.middleName" type="text"
+                                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200"
+                                placeholder="Enter middle name" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                <span class="flex items-center">
+                                    <UserCircle class="w-4 h-4 mr-2 text-gray-400" />
+                                    Last Name<span class="text-red-500 ml-1">*</span>
+                                </span>
+                            </label>
+                            <input v-model="formData.lastName" type="text" required
+                                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200"
+                                placeholder="Enter last name" />
+                        </div>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Phone</label>
-                        <input v-model="formData.phone" type="tel"
-                            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200"
-                            placeholder="Enter phone number" />
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                <span class="flex items-center">
+                                    <Mail class="w-4 h-4 mr-2 text-gray-400" />
+                                    Email<span class="text-red-500 ml-1">*</span>
+                                </span>
+                            </label>
+                            <input v-model="formData.email" type="email" required
+                                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200"
+                                placeholder="Enter email address" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                <span class="flex items-center">
+                                    <Phone class="w-4 h-4 mr-2 text-gray-400" />
+                                    Phone
+                                </span>
+                            </label>
+                            <input v-model="formData.phone" type="tel"
+                                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200"
+                                placeholder="Enter phone number" />
+                        </div>
                     </div>
-                </div>
 
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -623,14 +737,18 @@
                     </div>
                 </div>
 
-                <div class="flex justify-end space-x-3 pt-2">
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700">
                     <button type="button" @click="closeForm"
                         class="px-5 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200">
                         Cancel
                     </button>
                     <button type="submit"
-                        class="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-md">
-                        {{ showCreateForm ? 'Create User' : 'Update User' }}
+                        class="inline-flex items-center px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-md">
+                        <Save class="w-4 h-4 mr-2" />
+                        {{ showCreateForm ? 'Create User' : 'Save Changes' }}
                     </button>
                 </div>
             </form>
@@ -667,6 +785,13 @@ import {
     Briefcase,
     Stethoscope,
     Copy,
+    Mail,
+    Phone,
+    UserCircle,
+    Save,
+    Fingerprint,
+    Hash,
+    Calendar,
 } from 'lucide-vue-next'
 
 interface User {
@@ -734,6 +859,7 @@ const serverStats = ref({
     total: 0,
     active: 0,
     inactive: 0,
+    archived: 0,
     roles: {
         admin: 0,
         'office-staff': 0,
@@ -1197,7 +1323,6 @@ const totalPages = computed(() => {
 })
 
 const paginatedUsers = computed(() => {
-    // Since pagination is handled by the backend, we just return all users
     return filteredUsers.value
 })
 const paginationNumbers = computed(() => {
@@ -1356,6 +1481,7 @@ const fetchUserStats = async () => {
             total: Number(data.total ?? 0),
             active: Number(data.active ?? 0),
             inactive: Number(data.inactive ?? 0),
+            archived: Number(data.archived ?? 0),
             roles: {
                 admin: Number(data.roles?.admin ?? 0),
                 'office-staff': Number(data.roles?.['office-staff'] ?? 0),

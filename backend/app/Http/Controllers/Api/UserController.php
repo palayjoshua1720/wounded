@@ -60,7 +60,12 @@ class UserController extends Controller
         }
 
         if ($request->has('status') && $request->status !== 'all') {
-            $query->where('user_status', $request->status === 'active' ? 0 : 1);
+            $statusMap = [
+                'active' => 0,
+                'inactive' => 1,
+                'archived' => 2,
+            ];
+            $query->where('user_status', $statusMap[$request->status] ?? 1);
         }
 
         if ($request->has('search') && !empty($request->search)) {
@@ -112,7 +117,8 @@ class UserController extends Controller
 
         $total = (clone $baseQuery)->count();
         $active = (clone $baseQuery)->where('user_status', 0)->count();
-        $inactive = $total - $active;
+        $inactive = (clone $baseQuery)->where('user_status', 1)->count();
+        $archived = (clone $baseQuery)->where('user_status', 2)->count();
 
         $byRole = (clone $baseQuery)
             ->selectRaw('user_role, COUNT(*) as cnt')
@@ -132,6 +138,7 @@ class UserController extends Controller
             'total' => $total,
             'active' => $active,
             'inactive' => $inactive,
+            'archived' => $archived,
             'roles' => $roles,
         ]);
     }
