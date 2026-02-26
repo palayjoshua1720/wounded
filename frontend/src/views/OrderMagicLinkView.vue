@@ -27,7 +27,7 @@
 
                 <!-- Order Code + Tracking -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-                    <div v-if="displayOrder.statusLabel == 'submitted'" class="p-3 bg-gray-50 rounded-xl dark:bg-gray-800">
+                    <div v-if="displayOrder.statusLabel == 'submitted'" class="p-3 bg-gray-50 rounded-xl dark:bg-gray-800 order-number">
                         <div class="flex items-center gap-2 mb-2">
                             <FileText class="w-6 h-6 text-gray-900 dark:text-gray-300" />
                             <label class="text-sm text-gray-600 dark:text-gray-300 font-medium">
@@ -221,10 +221,10 @@
                         <tfoot class="bg-gray-50">
                             <tr>
                                 <td colspan="3" class="px-6 py-4 text-right font-semibold">
-                                Total Order Amount:
+                                Items Total:
                                 </td>
                                 <td class="px-6 py-4 text-right text-lg font-bold">
-                                ${{ Number(displayOrder.totalAmount).toFixed(2) }}
+                                ${{ Number(displayOrder.items.reduce((sum, item) => sum + item.subtotal, 0)).toFixed(2) }}
                                 </td>
                             </tr>
                         </tfoot>
@@ -232,8 +232,103 @@
                 </div>
             </div>
 
+            <!-- Product Items -->
+             <!-- REMOVED OTHER PRODUCT DISPLAY -->
+            <!-- <div v-if="displayOrder.other_product_items && displayOrder.other_product_items.length > 0" class="bg-white rounded-xl shadow-sm overflow-hidden mb-6">
+                <div class="p-6 border-b border-gray-200">
+                    <h2 class="text-xl font-semibold text-gray-900 inline-flex items-center gap-1">
+                        <Layers2 class="w-5 h-5" />
+                        Other Products
+                    </h2>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <td class="px-6 py-4">Product</td>
+                                <td class="px-6 py-4 text-center">Qty</td>
+                                <td class="px-6 py-4 text-right">Price</td>
+                            </tr>
+                        </thead>
+
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <tr v-for="item in displayOrder.other_product_items" :key="item.id" class="hover:bg-gray-50">
+                                <td class="px-6 py-4">{{ item.product }}</td>
+                                <td class="px-6 py-4 text-center">{{ item.quantity }}</td>
+                                <td class="px-6 py-4 text-right">${{ Number(item.price).toFixed(2) }}</td>
+                            </tr>
+                        </tbody>
+
+                        <tfoot class="bg-gray-50">
+                            <tr>
+                                <td colspan="2" class="px-6 py-4 text-right font-semibold">
+                                Product Items Subtotal:
+                                </td>
+                                <td class="px-6 py-4 text-right text-lg font-bold">
+                                    ${{ displayOrder.other_product_items
+                                        .reduce((sum, item) => sum + (item?.subtotal ?? 0), 0)
+                                        .toFixed(2)
+                                    }}
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div> -->
+
+            <!-- Total Order Amount -->
+             <!-- COMMENTED - REMOVED OTHER PRODUCTS AND OVERALL TOTAL INCLUDING OTHER PRODUCT AMOUNT -->
+            <!-- <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+                <div class="flex justify-end">
+                    <div class="text-right">
+                        <div class="mb-3">
+                            <p class="text-sm text-gray-600 font-medium">Items Subtotal:</p>
+                            <p class="text-lg text-gray-900 font-semibold">${{ Number(displayOrder.items.reduce((sum, item) => sum + item.subtotal, 0)).toFixed(2) }}</p>
+                        </div>
+                        <div v-if="displayOrder.other_product_items && displayOrder.other_product_items.length > 0" class="mb-4">
+                            <p class="text-sm text-gray-600 font-medium">Other Products Subtotal:</p>
+                            <p class="text-lg text-gray-900 font-semibold">${{ Number(displayOrder.other_product_items.reduce((sum, item) => sum + (item?.subtotal ?? 0), 0)).toFixed(2) }}</p>
+                        </div>
+                        <div class="border-t border-gray-200 pt-4">
+                            <p class="text-sm text-gray-600 font-medium">Total Order Amount:</p>
+                            <p class="text-2xl text-gray-900 font-bold">${{ Number(displayOrder.totalAmount).toFixed(2) }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div> -->
+
+            <!-- Actions -->
+            <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-1">Order Actions</h3>
+                        <p class="text-sm text-gray-600">Update the order status</p>
+                    </div>
+
+                    <div>
+                        <div v-if="orderActionConfig">
+                            <button
+                                v-if="orderActionConfig.nextStatus"
+                                :class="orderActionConfig.buttonClass"
+                                @click="handleAction(orderActionConfig.nextStatus)"
+                            >
+                                {{ orderActionConfig.label }}
+                            </button>
+                            <div
+                                v-else
+                                :class="orderActionConfig.finalMessageClass"
+                            >
+                                <component  :is='CircleCheckBig' class="w-4 h-4"/>
+                                <span>{{ orderActionConfig.label }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Order File Attachment -->
-            <div v-if="displayOrder.orderFile" class="bg-white rounded-xl shadow-sm p-6 mb-6">
+            <div v-if="displayOrder.orderFile" class="bg-white rounded-xl shadow-sm p-6">
                 <h2 class="text-xl font-semibold text-gray-900 mb-4 inline-flex items-center gap-1">
                     <Folder class="w-5 h-5" />
                     Order File Attachment
@@ -265,7 +360,7 @@
                     <div v-else-if="isPDFFile(filePreviewUrl)" class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4 bg-gray-50 dark:bg-gray-700/50">
                         <iframe 
                             :src="`${API_URL}/private-file/${displayOrder.orderFile}`"
-                            class="w-full h-96 rounded-lg"
+                            class="w-full h-[40rem] rounded-lg"
                             frameborder="0"
                         ></iframe>
                     </div>
@@ -273,35 +368,6 @@
                         <File class="w-16 h-16 text-gray-400 mx-auto mb-3" />
                         <p class="text-sm text-gray-500 dark:text-gray-400 font-medium">Preview not available for this file type</p>
                         <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Download to view the file</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Actions -->
-            <div class="bg-white rounded-xl shadow-sm p-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h3 class="text-lg font-semibold text-gray-900 mb-1">Order Actions</h3>
-                        <p class="text-sm text-gray-600">Update the order status</p>
-                    </div>
-
-                    <div>
-                        <div v-if="orderActionConfig">
-                            <button
-                                v-if="orderActionConfig.nextStatus"
-                                :class="orderActionConfig.buttonClass"
-                                @click="handleAction(orderActionConfig.nextStatus)"
-                            >
-                                {{ orderActionConfig.label }}
-                            </button>
-                            <div
-                                v-else
-                                :class="orderActionConfig.finalMessageClass"
-                            >
-                                <component  :is='CircleCheckBig' class="w-4 h-4"/>
-                                <span>{{ orderActionConfig.label }}</span>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -319,7 +385,8 @@ import {
     FileText, Truck, CircleCheckBig,
     BadgeCheck, TruckElectric, PackageCheck,
     PackageX, ReceiptText, ShoppingBag, Link,
-    ShoppingCart, Container, ExternalLink, Folder
+    ShoppingCart, Container, ExternalLink, Folder,
+    Layers2
 } from 'lucide-vue-next';
 import api from "@/services/api";
 import { toast } from 'vue3-toastify'
@@ -334,6 +401,7 @@ interface Order {
 	order_status: OrderStatus;
 	notes?: string;
 	items: OrderItem[];
+	other_product_items?: OtherProductItem[];
 	tracking_num?: string;
     tracking_code?: string;
     tracking_link?: string;
@@ -400,6 +468,11 @@ interface User {
 	brand: Brand[]
 }
 
+type OtherProductItem = {
+    other_product_id: number;
+    quantity: number;
+}
+
 type OrderItem = {
 	id: string;
 	brandId: string;
@@ -411,6 +484,20 @@ type OrderItem = {
 	totalAsp?: number;
 	deviceType?: string;
 	graftStock?: number
+	other_product_items?: OtherProductItem[]
+}
+
+type ProductItem = {
+    id: string;
+    brandId: string;
+    productType: 0 | 1
+    sizeId: string;
+    graft_id: number;
+    quantity: number;
+    asp: number;
+    totalAsp?: number;
+    deviceType?: string;
+    graftStock?: number
 }
 
 interface GraftSize {
@@ -431,6 +518,15 @@ interface DisplayOrderItem {
     subtotal: number;
 }
 
+interface DisplayProductItem {
+    id: string;
+    product: string;
+    quantity: number;
+    other_product_id?: number;
+    price?: number;
+    subtotal?: number;
+}
+
 interface DisplayOrder {
     orderId: number;
     orderCode: string;
@@ -442,6 +538,7 @@ interface DisplayOrder {
     patientName: string;
     createdAt: string;
     items: DisplayOrderItem[];
+    other_product_items: DisplayProductItem[];
     totalAmount: number;
     trackingCode?: string;
     orderFile?: string;
@@ -466,6 +563,7 @@ const isAuthorized = ref(false);
 const order = ref<Order | null>(null)
 const graftSizes = ref<GraftSize[]>([])
 const brands = ref<Brand[]>([])
+const otherProducts = ref<any[]>([])
 
 const token = route.query.token as string;
 const orderId = route.query.order_id as string;
@@ -481,7 +579,10 @@ async function accessMagicLink() {
     try {
         const { data } = await api.post("/magic-order-auth", { token, order_id: orderId });
 
-        order.value = transformOrderResponse(data.order);        
+        order.value = transformOrderResponse(data.order);
+
+        await getAllOtherProducts()
+
         isAuthorized.value = true;
     } catch (error) {
         router.replace({ name: "not-found-link" });
@@ -516,6 +617,43 @@ async function getAllGraftSizes() {
 	}
 }
 
+async function getAllOtherProducts(){
+    try {
+        // Use the same endpoint shape as OrderManagementView and accept both response keys
+        const { data } = await api.get(`/management/order/getotherproducts`, {
+            headers: {
+                Authorization: `Bearer ${localStorage.getItem('auth_token')}`
+            }
+        })
+        otherProducts.value = data.other_product_data || data.other_products || []
+        return otherProducts.value
+    } catch (error) {
+        console.error('Error loading other products:', error)
+        otherProducts.value = []
+        return []
+    }
+}
+
+function normalizeTopLevelOtherProducts(rawItems: any): OtherProductItem[] {
+    if (!rawItems) return [];
+
+    let items = rawItems;
+    if (typeof rawItems === 'string') {
+        try {
+            items = JSON.parse(rawItems);
+        } catch {
+            items = [];
+        }
+    }
+
+    if (!Array.isArray(items)) return [];
+
+    return items.map((op: any) => ({
+        other_product_id: Number(op.other_product_id ?? 0),
+        quantity: Number(op.quantity ?? 0)
+    }));
+}
+
 function transformOrderResponse(raw: any): Order {
     if (!raw) {
         return {
@@ -536,6 +674,7 @@ function transformOrderResponse(raw: any): Order {
         order_status: mapOrderStatus(raw.order_status),
         notes: raw.notes ?? '',
         items: normalizeOrderItems(raw.items),
+        other_product_items: normalizeTopLevelOtherProducts(raw.other_product_items),
         tracking_num: raw.tracking_num ?? raw.trackingNumber ?? '',
         clinic: raw.clinic,
         clinician: raw.clinician,
@@ -561,18 +700,31 @@ function normalizeOrderItems(rawItems: any): OrderItem[] {
 
     if (!Array.isArray(items)) return [];
 
-    return items.map((it: any, idx: number) => ({
-        id: String(it.id ?? idx),
-        brandId: String(it.brandId ?? it.brand_id ?? ''),
-        productType: Number(it.productType ?? it.product_type ?? 0) === 1 ? 1 : 0,
-        sizeId: String(it.sizeId ?? it.size_id ?? it.graft_id ?? ''),
-        graft_id: Number(it.graft_id ?? it.sizeId ?? it.size_id ?? 0),
-        quantity: Number(it.quantity ?? 0),
-        asp: Number(it.asp ?? 0),
-        totalAsp: Number(it.asp ?? 0) * Number(it.quantity ?? 0),
-        deviceType: it.deviceType ?? it.device_type ?? '',
-        graftStock: Number(it.graftStock ?? it.graft_stock ?? 0)
-    }))
+    return items.map((it: any, idx: number) => {
+        const otherProducts = it.other_product_items;
+        let normalizedOtherProducts: OtherProductItem[] = [];
+        
+        if (Array.isArray(otherProducts)) {
+            normalizedOtherProducts = otherProducts.map((op: any) => ({
+                other_product_id: Number(op.other_product_id ?? 0),
+                quantity: Number(op.quantity ?? 0)
+            }));
+        }
+
+        return {
+            id: String(it.id ?? idx),
+            brandId: String(it.brandId ?? it.brand_id ?? ''),
+            productType: Number(it.productType ?? it.product_type ?? 0) === 1 ? 1 : 0,
+            sizeId: String(it.sizeId ?? it.size_id ?? it.graft_id ?? ''),
+            graft_id: Number(it.graft_id ?? it.sizeId ?? it.size_id ?? 0),
+            quantity: Number(it.quantity ?? 0),
+            asp: Number(it.asp ?? 0),
+            totalAsp: Number(it.asp ?? 0) * Number(it.quantity ?? 0),
+            deviceType: it.deviceType ?? it.device_type ?? '',
+            graftStock: Number(it.graftStock ?? it.graft_stock ?? 0),
+            other_product_items: normalizedOtherProducts
+        }
+    })
 }
 
 function mapOrderStatus(status: any): OrderStatus {
@@ -609,6 +761,42 @@ const displayOrder = computed<DisplayOrder | null>(() => {
         };
     });
 
+    // Combine top-level and nested other_product_items
+    const topLevelOtherProducts = (current.other_product_items ?? []).map((op) => {
+        const prod = otherProducts.value.find(p => Number(p.other_product_id) === Number(op.other_product_id))
+        const name = prod?.product_name ?? `Other Product #${op.other_product_id}`
+        const price = Number(prod?.price ?? 0)
+        const qty = Number(op.quantity ?? 0)
+        return {
+            id: String(op.other_product_id),
+            product: name,
+            quantity: qty,
+            other_product_id: op.other_product_id,
+            price,
+            subtotal: price * qty
+        }
+    });
+
+    const nestedOtherProducts = (current.items ?? []).flatMap((item) => 
+        (item.other_product_items ?? []).map((op) => {
+            const prod = otherProducts.value.find(p => Number(p.other_product_id) === Number(op.other_product_id))
+            const name = prod?.product_name ?? `Other Product #${op.other_product_id}`
+            const price = Number(prod?.price ?? 0)
+            const qty = Number(op.quantity ?? 0)
+            return {
+                id: String(op.other_product_id),
+                product: name,
+                quantity: qty,
+                other_product_id: op.other_product_id,
+                price,
+                subtotal: price * qty
+            }
+        })
+    );
+
+    const otherProductItems = [...topLevelOtherProducts, ...nestedOtherProducts];
+    
+
     return {
         orderId: current.order_id || 0,
         orderCode: current.order_code || '—',
@@ -623,7 +811,8 @@ const displayOrder = computed<DisplayOrder | null>(() => {
         patientName: current.patient?.patient_name || '—',
         createdAt: formatDate(current.ordered_at),
         items,
-        totalAmount: items.reduce((sum, item) => sum + item.subtotal, 0),
+        other_product_items: otherProductItems,
+        totalAmount: items.reduce((sum, item) => sum + item.subtotal, 0) + otherProductItems.reduce((sum, p) => sum + (Number(p.subtotal ?? 0)), 0),
         orderFile: current.order_file || undefined
     };
 });
@@ -773,6 +962,21 @@ async function handleAction(newStatus: OrderStatus) {
                 confirmButtonColor: "#d33",
                 allowOutsideClick: false,
                 allowEscapeKey: true,
+                returnFocus: false
+            }).then(() => {
+                const orderDiv = document.querySelector('.order-number');
+
+                if (orderDiv) {
+                    orderDiv.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'center'
+                    });
+
+                    const input = orderDiv.querySelector('input');
+                    if (input) {
+                        setTimeout(() => input.focus(), 300);
+                    }
+                }
             });
             return;
         }
@@ -825,7 +1029,13 @@ async function handleAction(newStatus: OrderStatus) {
                     confirmButtonColor: '#d33',
                     allowOutsideClick: false,
                     allowEscapeKey: true,
-                })
+                    returnFocus: false
+                }).then(() => {
+                    window.scrollTo({
+                        top: 0,
+                        behavior: 'smooth'
+                    });
+                });
                 return
             }
         }
@@ -848,7 +1058,9 @@ async function handleAction(newStatus: OrderStatus) {
         showCancelButton: true,
         confirmButtonColor: "#3085d6",
         cancelButtonColor: "#d33",
-        confirmButtonText: "Yes, update status"
+        cancelButtonText: "No, I'll review it first",
+        confirmButtonText: "Yes, update status",
+        returnFocus: false
     });
 
     if (!result.isConfirmed) return;
@@ -886,5 +1098,6 @@ onMounted(
 
 onMounted(async () => {
 	await getAllGraftSizes()
+    await getAllOtherProducts()
 })
 </script>

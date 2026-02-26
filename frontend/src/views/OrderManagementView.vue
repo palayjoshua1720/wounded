@@ -264,7 +264,7 @@
 										<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Size</th>
 										<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Quantity</th>
 										<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">ASP</th>
-										<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Total</th>
+										<th class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Total</th>
 									</tr>
 								</thead>
 								<tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
@@ -273,16 +273,60 @@
 										<td class="px-4 py-3 text-sm text-gray-900 dark:text-white">{{ getSizeName(item.graft_id) }}</td>
 										<td class="px-4 py-3 text-sm text-gray-900 dark:text-white">{{ item.quantity }}</td>
 										<td class="px-4 py-3 text-sm text-gray-900 dark:text-white">${{ item.asp.toFixed(2) }}</td>
-										<td class="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">${{ (item.asp * item.quantity).toFixed(2) }}</td>
+										<td class="px-4 py-3 text-right text-sm font-medium text-gray-900 dark:text-white">${{ (item.asp * item.quantity).toFixed(2) }}</td>
 									</tr>
 								</tbody>
 								<tfoot class="bg-gray-50 dark:bg-gray-700">
 									<tr>
 										<td colspan="4" class="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white text-right">Total Amount:</td>
-										<td class="px-4 py-3 text-sm font-bold text-gray-900 dark:text-white">${{ selectedOrder.items.reduce((sum, item) => sum + (item.asp * item.quantity), 0).toFixed(2) }}</td>
+										<td class="px-4 py-3 text-right text-sm font-bold text-gray-900 dark:text-white">${{ selectedOrder.items.reduce((sum, item) => sum + (item.asp * item.quantity), 0).toFixed(2) }}</td>
 									</tr>
 								</tfoot>
 							</table>
+						</div>
+					</div>
+					<div>
+						<h3 class="text-lg font-medium border-t text-gray-900 dark:text-white mb-4">Product Items</h3>
+						<div class="overflow-x-auto">
+							<!-- Other Products Table -->
+							<div v-if="selectedOrder.other_product_items && selectedOrder.other_product_items.length > 0">
+								<table class="w-full">
+									<thead class="bg-gray-50 dark:bg-gray-700">
+										<tr>
+											<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Product Name</th>
+											<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Quantity</th>
+											<th class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Price</th>
+										</tr>
+									</thead>
+									<tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+										<tr v-for="(item, idx) in selectedOrder.other_product_items" :key="`other-${idx}`">
+											<td class="px-4 py-3 text-sm text-gray-900 dark:text-white">{{ getOtherProductName(item.other_product_id) }}</td>
+											<td class="px-4 py-3 text-sm text-gray-900 dark:text-white">{{ item.quantity }}</td>
+											<td class="px-4 py-3 text-right text-sm text-gray-900 dark:text-white">${{ item.price.toFixed(2) }}</td>
+										</tr>
+									</tbody>
+									<tfoot class="bg-gray-50 dark:bg-gray-700">
+										<tr>
+											<td colspan="2" class="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white text-right">Other Products Total:</td>
+											<td class="px-4 py-3 text-right text-sm font-bold text-gray-900 dark:text-white">${{ selectedOrder.other_product_items.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2) }}</td>
+										</tr>
+									</tfoot>
+								</table>
+							</div>
+
+							<!-- Overall Total -->
+							<div v-if="(selectedOrder.items && selectedOrder.items.length > 0) || (selectedOrder.other_product_items && selectedOrder.other_product_items.length > 0)" 
+								class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+								<div class="text-right">
+									<span class="text-lg font-bold text-gray-900 dark:text-white">
+										Overall Total: ${{ 
+											(
+												(selectedOrder.items?.reduce((sum, item) => sum + (item.asp * item.quantity), 0) || 0) + 
+												(selectedOrder.other_product_items?.reduce((sum, item) => sum + (item.price * item.quantity), 0) || 0)
+											).toFixed(2) }}
+									</span>
+								</div>
+							</div>
 						</div>
 					</div>
 					<div v-if="selectedOrder.notes">
@@ -331,12 +375,15 @@
 
 							<!-- RIGHT: FOLLOW-UP BUTTON + COOLDOWN -->
 							<div class="flex items-center space-x-3">
-								<p
-									v-if="isFollowUpCooldown && selectedOrder.order_status === 'submitted'"
-									class="text-sm text-gray-600 dark:text-gray-300"
-								>
-									Follow-up available in {{ followUpHoursLeft }}h
-								</p>
+								<div v-if="isFollowUpCooldown && selectedOrder.order_status === 'submitted'" class="flex items-center space-x-2">
+									<div class="relative group">
+										<CircleQuestionMark class="w-5 h-5 text-gray-500 dark:text-gray-400 cursor-help hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors" />
+										<div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 dark:bg-gray-950 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-10">
+											Last Follow-Up: {{ selectedOrder.followup_last_sent_at ? formatDateTime(selectedOrder.followup_last_sent_at) : 'No previous follow-up' }}
+										</div>
+									</div>
+									<p class="text-sm text-gray-600 dark:text-gray-300">Follow-up available in {{ followUpHoursLeft }}h</p>
+								</div>
 								<button
 									v-if="selectedOrder.order_status === 'submitted'"
 									:disabled="isFollowUpCooldown"
@@ -502,10 +549,10 @@
 					v-if="selectedIVR"
 					class="flex items-center gap-2 text-sm text-gray-700 mt-2 mb-2"
 					>
-						<span class="font-semibold text-gray-600">
+						<span class="font-semibold text-gray-600 dark:text-white">
 							Eligibility Notification Email:
 						</span>
-						<span class="text-gray-900">
+						<span class="text-gray-900 dark:text-white">
 							{{ selectedIVR.manufacturer?.order_email || '—' }}
 						</span>
 					</div>
@@ -596,14 +643,13 @@
 								>
 									<option value="">Select Size</option>
 									<option
-										v-for="size in getSizesByBrand(item.brandId)"
+										v-for="size in getAvailableSizesByBrand(item.brandId, idx)"
 										:key="size.graft_size_id"
 										:value="size.graft_size_id.toString()"
 										:disabled="size.stock <= 0"
 										:class="size.stock <= 0 ? 'text-gray-400' : ''"
 									>
-										{{ size.size }}
-										<span v-if="size.stock <= 0">(Out of Stock)</span>
+										{{ size.size }} (stock: {{ size.stock }})
 									</option>
 								</select>
 							</div>
@@ -635,7 +681,95 @@
 								</button>
 							</div>
 						</div>
-						<p v-if="!isQuantityValid(idx)" class="text-xs text-red-600 dark:text-red-400 mt-1">Exceeds MUE limit of {{ selectedBrand(idx)?.mue }} for this brand. You may still submit, but this will be flagged for review.</p>
+						<div class="mt-2 space-y-1 text-xs">
+							<!-- MUE warning -->
+							<p v-if="!isQuantityValid(idx)" class="text-xs text-red-600 dark:text-red-400 mt-1">Exceeds MUE limit of {{ selectedBrand(idx)?.mue }} for this brand. You may still submit, but this will be flagged for review.</p>
+
+							<!-- Stock warning -->
+							<p v-if="!isStockValid(idx) && item.sizeId" class="text-orange-600 dark:text-orange-400">
+								• Quantity ({{ item.quantity }}) > available stock ({{ getAvailableStock(idx) }})
+							</p>
+
+							<!-- Optional summary text -->
+							<p v-if="!isQuantityValid(idx) || !isStockValid(idx)" class="text-gray-500 dark:text-gray-400 italic">
+								Order can still be submitted, but may be flagged / rejected / partially filled.
+							</p>
+						</div>
+					</div>
+				</div>
+
+				<!-- Product Items -->
+				<div :class="{ 'opacity-40 pointer-events-none': !isSelectedIVREligible }">
+					<div class="flex items-center justify-between mb-4">
+						 <div class="flex items-center gap-2 mb-2">
+							<Layers class="w-5 h-5 text-green-500" />
+							<h3 class="text-lg font-medium text-gray-900 dark:text-white">Product Items</h3>
+						</div>
+						<button type="button" @click="addProductItem" class="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+							<CopyPlus class="w-4 h-4" />
+							<span>Add Product</span>
+						</button>
+					</div>
+
+					<div v-for="(product, idx) in formData.products" :key="product.id" class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 mb-4">
+						<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-[2fr_1fr_1fr_auto] gap-4 items-end">
+							<!-- Product Selection -->
+							<div>
+								<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Product <span class="text-red-500">*</span></label>
+								<select 
+									v-model="product.otherProductId"
+									@change="onOtherProductChange(idx)"
+									required
+									class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+								>
+									<option value="">Select Product</option>
+									<option 
+										v-for="prod in getAvailableProducts(idx)" 
+										:key="prod.other_product_id" 
+										:value="prod.other_product_id"
+									>
+										{{ prod.product_name }} ({{ otherProductTypeMap[prod.product_type] }}) ({{ prod.stock }})
+									</option>
+								</select>
+							</div>
+
+							<!-- Quantity -->
+							<div>
+								<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Quantity <span class="text-red-500">*</span></label>
+								<input v-model.number="product.quantity" type="number" min="1" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+							</div>
+
+							<!-- Price -->
+							<div>
+								<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+									Price
+								</label>
+								<input
+									type="text"
+									:value="getProductPrice(idx)"
+									class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-900/10"
+									placeholder="-----"
+									readonly
+								/>
+							</div>
+
+							<!-- Remove -->
+							<div class="flex justify-end md:justify-center items-end">
+								<button type="button" @click="removeProductItem(idx)" class="p-2 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/10 rounded-lg transition-colors">
+									<Trash2 class="w-4 h-4" />
+								</button>
+							</div>
+						</div>
+						<div class="mt-2 space-y-1 text-xs">
+							<!-- Stock warning -->
+							<p v-if="!isProductStockValid(idx) && product.otherProductId" class="text-orange-600 dark:text-orange-400">
+								• Quantity ({{ product.quantity }}) > available stock ({{ getAvailableStockOtherProduct(idx) }})
+							</p>
+							<!-- Optional summary text -->
+							<p v-if="!isProductStockValid(idx)" class="text-gray-500 dark:text-gray-400 italic">
+								Order can still be submitted, but may be flagged / rejected / partially filled.
+							</p>
+						</div>
 					</div>
 				</div>
 
@@ -810,7 +944,8 @@ import {
 	PackagePlus, ShoppingCart, Trash2,
 	ChevronDown, Package, Send, ShieldCheck,
 	Factory, TruckElectric, Folder, CloudUpload,
-	FileText, BaggageClaim, X, Blocks
+	FileText, BaggageClaim, X, Blocks,
+	Layers, CopyPlus, CircleQuestionMark
 } from 'lucide-vue-next';
 import api from '@/services/api'
 import { toast } from 'vue3-toastify'
@@ -826,6 +961,7 @@ interface Order {
 	order_status: OrderStatus;
 	notes?: string;
 	items: OrderItem[];
+	other_product_items?: OtherProductItem[];
 	tracking_num?: string;
 	tracking_code?: string;
 	ivr_num: string
@@ -837,6 +973,12 @@ interface Order {
 	patient: PatientInfo
 	ivr?: IVR
 	// brand: Brand
+}
+
+interface OtherProductItem {
+	other_product_id: number;
+	quantity: number;
+	price: number;
 }
 
 interface Clinic {
@@ -873,6 +1015,16 @@ interface Brand {
 	}
 }
 
+interface OtherProduct {
+	other_product_id: number
+	product_type: number
+	product_name: string
+	price: number
+	stock: number
+	description: string
+	status: number
+}
+
 interface GraftSize {
 	graft_size_id: number
 	size: string
@@ -902,6 +1054,17 @@ interface User {
 	first_name: string
 	last_name: string
 	brand: Brand[]
+}
+
+interface OrderIssue {
+	type: 'mue' | 'stock';
+	sourceType?: 'item' | 'product';
+	itemIndex: number;
+	brandName: string;
+	mue?: number;
+	requested: number;
+	size?: string;
+	available?: number;
 }
 
 type OrderItem = {
@@ -940,6 +1103,13 @@ const orderStatusReverseMap: Record<number, OrderStatus> = {
 	4: 'cancelled'
 }
 
+type otherProductType = 'Wound Supplies' | 'Devices'
+
+const otherProductTypeMap: Record<number, string> = {
+	0: 'Wound Supplies',
+	1: 'Devices',
+}
+
 const isRevertingIVR = ref(false)
 const tableLoader = ref(false);
 const orders = ref<Order[]>([])
@@ -947,6 +1117,7 @@ const clinics = ref<Clinic[]>([])
 const patients = ref<PatientInfo[]>([])
 const brands = ref<Brand[]>([])
 const graftSizes = ref<GraftSize[]>([])
+const otherProducts = ref<OtherProduct[]>([])
 const itemsPerPage = ref(10)
 const pagination = ref({
 	current_page: 1,
@@ -996,6 +1167,19 @@ const formData = ref({
 			totalAsp: 0,
 			deviceType: '',
 			graftStock: 0
+		}
+	],
+	products: [
+		{
+			id: Date.now().toString(),
+			otherProductId: '',
+			brandId: '',
+			manufacturerId: '',
+			otherProductType: 0,
+			otherProductName: '',
+			quantity: 1,
+			otherProductStock: 0,
+			price: 0
 		}
 	],
 	manufacturerId: '',
@@ -1099,6 +1283,12 @@ function getSizeName(graft_size: string | number) {
 	return graftSize?.size ?? `Size ${graft_size}`
 }
 
+function getOtherProductName(otherProductId: string | number) {
+	const id = Number(otherProductId)
+	const p = otherProducts.value.find(op => Number(op.other_product_id) === id)
+	return p?.product_name ?? p?.product_name ?? `Product ${otherProductId}`
+}
+
 function onBrandChange(idx: number) {
 	const brand = selectedBrand(idx)
 	if (brand) {
@@ -1116,6 +1306,42 @@ function isQuantityValid(idx: number) {
 	const brand = selectedBrand(idx)
 	const qty = formData.value.items[idx].quantity
 	return !brand || qty <= brand.mue
+}
+
+const isStockValid = (idx: number) => {
+    const item = formData.value.items[idx]
+    if (!item.sizeId) return true
+
+    const graft = graftSizes.value.find(g => g.graft_size_id.toString() === item.sizeId)
+    if (!graft) return true
+
+    const availableStock = graft.stock ?? 0
+    return item.quantity <= availableStock
+}
+
+const getAvailableStock = (idx: number) => {
+    const item = formData.value.items[idx]
+    if (!item.sizeId) return 0
+    const graft = graftSizes.value.find(g => g.graft_size_id.toString() === item.sizeId)
+    return graft?.stock ?? 0
+}
+
+const getAvailableStockOtherProduct = (idx: number) => {
+	const product = formData.value.products[idx]
+	if (!product.otherProductId) return 0
+	const otherProduct = otherProducts.value.find(p => p.other_product_id === Number(product.otherProductId))
+	return otherProduct?.stock ?? 0
+}
+
+const isProductStockValid = (idx: number) => {
+	const product = formData.value.products[idx]
+	if (!product.otherProductId) return true
+
+	const otherProduct = otherProducts.value.find(p => p.other_product_id === Number(product.otherProductId))
+	if (!otherProduct) return true
+
+	const availableStock = otherProduct.stock ?? 0
+	return product.quantity <= availableStock
 }
 
 function onClinicChange() {
@@ -1140,6 +1366,38 @@ function addOrderItem() {
 
 function removeOrderItem(idx: number) {
 	if (formData.value.items.length > 1) formData.value.items.splice(idx, 1)
+}
+
+function addProductItem() {
+	formData.value.products.push({
+		id: Date.now().toString(),
+		otherProductId: '',
+		brandId: '',
+		manufacturerId: '',
+		otherProductType: 0,
+		otherProductName: '',
+		quantity: 1,
+		otherProductStock: 0,
+		price: 0
+	})
+}
+
+function removeProductItem(idx: number) {
+	if (formData.value.products.length > 1) formData.value.products.splice(idx, 1)
+}
+
+function getProductPrice(idx: number) {
+	const product = formData.value.products[idx]
+	if (!product || !product.otherProductId) return '-----'
+
+	const otherProduct = otherProducts.value.find(p => p.other_product_id === Number(product.otherProductId))
+	if (!otherProduct) return '-----'
+
+	const qty = Number(product.quantity ?? 1) || 1
+	const unit = Number(otherProduct.price ?? 0) || 0
+
+	const totalPrice = (unit * qty).toFixed(2)
+	return `$${totalPrice}`
 }
 
 function resetOrderItems() {
@@ -1183,6 +1441,19 @@ function resetCreateForm() {
 			deviceType: '',
 			graftStock: 0
 		}],
+		products: [
+			{
+				id: Date.now().toString(),
+				otherProductId: '',
+				brandId: '',
+				manufacturerId: '',
+				otherProductType: 0,
+				otherProductName: '',
+				quantity: 1,
+				otherProductStock: 0,
+				price: 0
+			}
+		],
 		manufacturerId: '',
 		trackingNumber: '',
 		order_file: ''
@@ -1191,70 +1462,183 @@ function resetCreateForm() {
 }
 
 async function handleCreateOrder() {
-	if (!formData.value.clinicId) {
-		toast.error('Please select a clinic')
-		return
-	}
-	if (!formData.value.clinicianId) {
-		toast.error('Please select a clinician')
-		return
-	}
-	if (!formData.value.patientId) {
-		toast.error('Please select a patient')
-		return
-	}
-	if (!isPatientEligible.value) {
-		toast.error('Selected patient is not eligible for this order')
-		return
-	}
-	if (!formData.value.items.length) {
-		toast.error('Please add at least one item to the order')
-		return
-	}
-	
-	for (let i = 0; i < formData.value.items.length; i++) {
-		const item = formData.value.items[i]
-		if (!item.brandId) {
-			toast.error(`Please select a brand for item ${i + 1}`)
-			return
-		}
-		if (!item.sizeId) {
-			toast.error(`Please select a size for item ${i + 1}`)
-			return
-		}
-		if (!item.quantity || item.quantity <= 0) {
-			toast.error(`Please enter a valid quantity for item ${i + 1}`)
-			return
-		}
-	}
-	
-	// Check MUE limits
-	const exceedsMUE = formData.value.items.some((item, idx) => !isQuantityValid(idx))
-	if (exceedsMUE) {
-		const result = await Swal.fire({
-			title: '⚠️ MUE Limit Exceeded',
-			html: `
-				<p class="text-sm text-gray-700">
-					One or more items exceed their MUE (Maximum Units per Episode) limit.<br>
-					You may still submit this order, but it will be flagged for review.
-				</p>
-			`,
-			icon: 'warning',
-			showCancelButton: true,
-			confirmButtonText: 'Submit Anyway',
-			cancelButtonText: 'Cancel',
-			confirmButtonColor: '#facc15',
-			cancelButtonColor: '#6b7280',
-			reverseButtons: true,
-		})
+    if (!formData.value.clinicId) {
+        toast.error('Please select a clinic')
+        return
+    }
+    if (!formData.value.clinicianId) {
+        toast.error('Please select a clinician')
+        return
+    }
+    if (!formData.value.patientId) {
+        toast.error('Please select a patient')
+        return
+    }
+    if (!isPatientEligible.value) {
+        toast.error('Selected patient is not eligible for ordering')
+        return
+    }
+    if (!formData.value.items.length && !formData.value.products.length) {
+        toast.error('Please add at least one item or product to the order')
+        return
+    }
 
-		if (!result.isConfirmed) {
-			toast.info('Order submission cancelled due to MUE limit')
-			return
-		}
-	}
+    // ────────────────────────────────────────────────
+    //  Collect validation issues
+    // ────────────────────────────────────────────────
+    const mueIssues: OrderIssue[] = []
+    const stockIssues: OrderIssue[] = []
 
-	addNewOrder()
+    // Check grafts / main items
+    formData.value.items.forEach((item, idx) => {
+        const brand = selectedBrand(idx)
+        const graft = graftSizes.value.find(g => g.graft_size_id.toString() === item.sizeId)
+
+        if (!brand || !item.brandId) {
+            toast.error(`Item #${idx + 1}: Brand is required`)
+            return
+        }
+        if (!item.sizeId) {
+            toast.error(`Item #${idx + 1}: Size is required`)
+            return
+        }
+        if (!item.quantity || item.quantity < 1) {
+            toast.error(`Item #${idx + 1}: Quantity must be at least 1`)
+            return
+        }
+
+        // MUE violation (still allowed with confirmation)
+        if (brand && item.quantity > brand.mue) {
+            mueIssues.push({
+                type: 'mue',
+                itemIndex: idx + 1,
+                brandName: brand.brand_name,
+                mue: brand.mue,
+                requested: item.quantity
+            })
+        }
+
+        // Stock violation → BLOCK submission
+        if (graft && item.quantity > graft.stock) {
+            stockIssues.push({
+                type: 'stock',
+                sourceType: 'item',
+                itemIndex: idx + 1,
+                brandName: brand?.brand_name || '—',
+                size: graft.size,
+                available: graft.stock,
+                requested: item.quantity
+            })
+        }
+    })
+
+    // Check additional products
+    formData.value.products.forEach((product, idx) => {
+        if (!product.otherProductId) return
+
+        const otherProduct = otherProducts.value.find(p => p.other_product_id === Number(product.otherProductId))
+
+        if (!otherProduct) {
+            toast.error(`Product #${idx + 1}: Selected product not found`)
+            return
+        }
+
+        if (product.quantity < 1) {
+            toast.error(`Product #${idx + 1}: Quantity must be at least 1`)
+            return
+        }
+
+        if (product.quantity > otherProduct.stock) {
+            stockIssues.push({
+                type: 'stock',
+                sourceType: 'product',
+                itemIndex: idx + 1,
+                brandName: otherProduct.product_name,
+                size: `(${otherProductTypeMap[otherProduct.product_type]})`,
+                available: otherProduct.stock,
+                requested: product.quantity
+            })
+        }
+    })
+
+    // ────────────────────────────────────────────────
+    //  1. BLOCK if any stock issue exists
+    // ────────────────────────────────────────────────
+    if (stockIssues.length > 0) {
+        let message = '<div class="text-left space-y-3 text-sm text-red-700 dark:text-red-300">'
+        message += '<p class="font-semibold text-base mb-2">Insufficient stock — order cannot be placed</p>'
+
+        stockIssues.forEach(issue => {
+            const label = issue.sourceType === 'product' ? 'Product' : 'Item'
+            message += `
+                <div class="border-l-4 border-red-500 pl-3">
+                    <strong>${label} #${issue.itemIndex}</strong> – ${issue.brandName} ${issue.size || ''}<br>
+                    Requested: <strong>${issue.requested}</strong><br>
+                    Available: <strong>${issue.available}</strong>
+                </div>
+            `
+        })
+
+        message += '</div>'
+
+        await Swal.fire({
+            title: 'Cannot Submit Order',
+            html: message,
+            icon: 'error',
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#dc2626',
+            allowOutsideClick: false
+        })
+
+        return   // ← STOP here — do NOT proceed to submission
+    }
+
+    // ────────────────────────────────────────────────
+    //  2. If there are MUE violations → ask for confirmation
+    // ────────────────────────────────────────────────
+    if (mueIssues.length > 0) {
+        let html = '<div class="text-left space-y-3 text-sm">'
+        html += '<p class="font-semibold text-amber-700 dark:text-amber-300 mb-3">The following items exceed the MUE limit:</p>'
+
+        mueIssues.forEach(issue => {
+            html += `
+                <p class="text-amber-700 dark:text-amber-300">
+                    <strong>Item #${issue.itemIndex}</strong> – ${issue.brandName}<br>
+                    Requested: <strong>${issue.requested}</strong>  
+                    (MUE limit: <strong>${issue.mue}</strong>)
+                </p>
+            `
+        })
+
+        html += `
+            <p class="text-gray-600 dark:text-gray-400 pt-4 italic border-t border-gray-200 dark:border-gray-700">
+                You can still submit this order, but it <strong>will likely be flagged for review</strong>.
+            </p>
+        </div>`
+
+        const result = await Swal.fire({
+            title: 'MUE Limit Exceeded',
+            html: html,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Submit Anyway',
+            cancelButtonText: 'Review Order',
+            confirmButtonColor: '#f59e0b',
+            cancelButtonColor: '#6b7280',
+            reverseButtons: true
+        })
+
+        if (!result.isConfirmed) {
+            toast.info('Order submission cancelled — please adjust quantities')
+            return
+        }
+    }
+
+    // ────────────────────────────────────────────────
+    //  If we reached here → no blocking stock issues
+    //  (MUE was either ok or user confirmed)
+    // ────────────────────────────────────────────────
+    addNewOrder()
 }
 
 function openCreateForm() {
@@ -1288,6 +1672,7 @@ async function editOrder(order: Order) {
 		status: 'submitted',
 		notes: fullOrder.notes || '',
 		items: [],
+		products: [],
 		manufacturerId: fullOrder.manufacturer_id?.toString() || '',
 		trackingNumber: fullOrder.tracking_num || '',
 		order_file: fullOrder.order_file || ''
@@ -1309,6 +1694,18 @@ async function editOrder(order: Order) {
 		totalAsp: Number(item.asp ?? 0) * Number(item.quantity ?? 0),
 		deviceType: item.deviceType ?? item.device_type ?? '',
 		graftStock: Number(item.graftStock ?? 0)
+	}));
+
+	formData.value.products = (fullOrder.products ?? []).map((p: any, idx: number) => ({
+		id: String(p.id ?? idx),
+		otherProductId: String(p.other_product_id ?? ''),
+		brandId: String(p.brandId ?? p.brand_id ?? ''),
+		manufacturerId: String(p.manufacturer_id ?? ''),
+		otherProductType: Number(p.product_type ?? p.otherProductType ?? 1) as 0 | 1,
+		otherProductName: p.product_name ?? p.product_name ?? '',
+		quantity: Number(p.quantity ?? 0),
+		otherProductStock: Number(p.stock ?? 0),
+		price: Number(p.price ?? 0)
 	}));
 }
 
@@ -1398,28 +1795,72 @@ const formatDateTime = (dateStr: string) => {
 };
 
 const isFollowUpCooldown = computed(() => {
-	if (!selectedOrder.value?.followup_last_sent_at) return false;
+	// Use last follow-up timestamp if present; otherwise fall back to the order date.
+	const refDateStr = selectedOrder.value?.followup_last_sent_at || selectedOrder.value?.ordered_at;
+	if (!refDateStr) return false;
 
-	const last = new Date(selectedOrder.value.followup_last_sent_at).getTime();
+	const parseTimestamp = (s: string) => {
+		if (!s) return NaN;
+		// Normalize common formats (space -> T) so Date.parse treats it as ISO when possible
+		const normalized = typeof s === 'string' ? s.replace(' ', 'T') : s;
+		let t = Date.parse(normalized);
+		if (isNaN(t)) {
+			try { t = new Date(s).getTime(); } catch { t = NaN }
+		}
+		return isNaN(t) ? NaN : t;
+	};
+
+	const last = parseTimestamp(refDateStr);
+	if (isNaN(last)) return false;
+
 	const now = Date.now();
-
 	const hours = (now - last) / (1000 * 60 * 60);
 	return hours < 24;
 });
 
 const followUpHoursLeft = computed(() => {
-	if (!selectedOrder.value?.followup_last_sent_at) return 0;
+	const refDateStr = selectedOrder.value?.followup_last_sent_at || selectedOrder.value?.ordered_at;
+	if (!refDateStr) return 0;
 
-	const last = new Date(selectedOrder.value.followup_last_sent_at).getTime();
+	const parseTimestamp = (s: string) => {
+		if (!s) return NaN;
+		const normalized = typeof s === 'string' ? s.replace(' ', 'T') : s;
+		let t = Date.parse(normalized);
+		if (isNaN(t)) {
+			try { t = new Date(s).getTime(); } catch { t = NaN }
+		}
+		return isNaN(t) ? NaN : t;
+	};
+
+	const last = parseTimestamp(refDateStr);
+	if (isNaN(last)) return 0;
+
 	const now = Date.now();
-
-	const hours = (now - last) / (1000 * 60 * 60);
-	return Math.max(0, Math.ceil(24 - hours));
+	const hoursLeft = 24 - (now - last) / (1000 * 60 * 60);
+	return Math.ceil(hoursLeft > 0 ? hoursLeft : 0);
 });
 
 function getSizesByBrand(brandId: string) {
 	const sizes = graftSizes.value.filter(gs => gs.brand && gs.brand.brand_id == brandId)
 	return sizes
+}
+
+function getAvailableSizesByBrand(brandId: string, currentItemIdx: number) {
+	const sizes = graftSizes.value.filter(gs => gs.brand && gs.brand.brand_id == brandId)
+	
+	const selectedSizeIds = formData.value.items
+		.map((item, idx) => idx !== currentItemIdx ? item.sizeId : null)
+		.filter(id => id !== null && id !== '')
+	
+	return sizes.filter(size => !selectedSizeIds.includes(size.graft_size_id.toString()))
+}
+
+function getAvailableProducts(currentProductIdx: number) {
+	const selectedProductIds = formData.value.products
+		.map((product, idx) => idx !== currentProductIdx ? product.otherProductId?.toString() : null)
+		.filter(id => id !== null && id !== '')
+	
+	return otherProducts.value.filter(product => !selectedProductIds.includes(product.other_product_id.toString()))
 }
 
 function onSizeChange(idx: number) {
@@ -1444,10 +1885,29 @@ function onSizeChange(idx: number) {
 		return
 	}
 
-	// If IN STOCK → proceed
+	// If IN STOCK -> proceed
 	item.asp = graft.price
 	item.graft_id = graft.graft_size_id
 	item.graftStock = graft.stock
+}
+
+function onOtherProductChange(idx: number) {
+	const product = formData.value.products[idx]
+	if (!product || !product.otherProductId) {
+		if (product) product.price = 0
+		return
+	}
+
+	const otherProduct = otherProducts.value.find(p => p.other_product_id === Number(product.otherProductId))
+	if (!otherProduct) {
+		product.price = 0
+		return
+	}
+
+	product.price = Number(otherProduct.price ?? 0)
+	product.otherProductName = otherProduct.product_name ?? product.otherProductName
+	product.otherProductStock = otherProduct.stock ?? product.otherProductStock
+	product.otherProductType = Number(otherProduct.product_type ?? 0) as 0 | 1
 }
 
 function graftStockCheck(graftId: number) {
@@ -1556,6 +2016,16 @@ async function getAllOrders(page = 1)
 				deviceType: it.deviceType ?? it.device_type ?? ''
 			})) : []
 
+			let rawOtherProductItems = o.other_product_items
+			if (!Array.isArray(rawOtherProductItems) && typeof rawOtherProductItems === 'string') {
+				try { rawOtherProductItems = JSON.parse(rawOtherProductItems) } catch { rawOtherProductItems = [] }
+			}
+			const otherProductItems: OtherProductItem[] = Array.isArray(rawOtherProductItems) ? rawOtherProductItems.map((it: any) => ({
+				other_product_id: Number(it.other_product_id ?? 0),
+				quantity: Number(it.quantity ?? 0),
+				price: Number(it.price ?? 0)
+			})) : []
+
 			return {
 				order_id: Number(o.order_id ?? 0),
 				order_code: String(o.order_code ?? ''),
@@ -1564,6 +2034,7 @@ async function getAllOrders(page = 1)
 				order_status: (['submitted','acknowledged','shipped','delivered','cancelled'][Number(o.order_status ?? 0)] ?? 'submitted') as OrderStatus,
 				notes: o.notes ?? '',
 				items,
+				other_product_items: otherProductItems,
 				tracking_num: o.tracking_num ?? '',
 				order_number: o.order_number ?? '',
 				tracking_code: o.tracking_code ?? '',
@@ -1622,7 +2093,8 @@ async function getAllPatients()
     }
 }
 
-async function getAllGraftSizes() {
+async function getAllGraftSizes()
+{
 	try {
 		const { data } = await api.get(`/management/order/getgraftsizes`, {
 			headers: {
@@ -1642,6 +2114,38 @@ async function getAllGraftSizes() {
 	} catch (error) {
 		console.error('Error loading graft sizes:', error)
 		graftSizes.value = []
+	} finally {
+		tableLoader.value = false
+	}
+}
+
+async function getAllOtherProducts()
+{
+	try {
+		const { data } = await api.get(`/management/order/getotherproducts`, {
+			headers: {
+				Authorization: `Bearer ${localStorage.getItem('auth_token')}`
+			}
+		})
+		otherProducts.value = data.other_product_data || []
+	} catch (error) {
+		console.error('Error loading other products:', error)
+	} finally {
+		tableLoader.value = false
+	}
+}
+
+async function getAllOtherProductsById(otherProductId: string)
+{
+	try {
+		const { data } = await api.get(`/management/order/getotherproducts/${otherProductId}`, {
+			headers: {
+				Authorization: `Bearer ${localStorage.getItem('auth_token')}`
+			}
+		})
+		otherProducts.value = data.other_product_data || []
+	} catch (error) {
+		console.error('Error loading other products:', error)
 	} finally {
 		tableLoader.value = false
 	}
@@ -1670,6 +2174,18 @@ async function addNewOrder(){
 				product_type: item.productType,
 				device_type: item.deviceType,
 				graftStock: item.graftStock
+			}))
+		)
+	)
+
+	payload.append(
+		'products',
+		JSON.stringify(
+			formData.value.products.map(product => ({
+				other_product_id: product.otherProductId,
+				quantity: product.quantity,
+				product_type: product.otherProductType,
+				price: product.price
 			}))
 		)
 	)
@@ -1854,10 +2370,12 @@ async function applyOverride() {
 }
 
 async function sendFollowUp(order: Order){
+	console.log('order: ', order);
+	
 	try {
 		const result = await Swal.fire({
 			title: "Send Follow-Up Email?",
-			text: "This will notify the manufacturer again about this order.",
+			text: `This will notify ${order?.ivr?.manufacturer?.order_email || order?.manufacturer_name} again about this order.`,
 			icon: "warning",
 			showCancelButton: true,
 			confirmButtonColor: "#4f46e5",
@@ -1894,6 +2412,7 @@ onMounted(async () => {
     getAllOrders(1)
 	getAllClinics()
 	getAllPatients()
+	getAllOtherProducts()
 	await getAllGraftSizes()
 })
 

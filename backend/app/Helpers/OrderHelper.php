@@ -8,6 +8,7 @@ use App\Models\Clinic;
 use App\Models\PatientInfo;
 use App\Models\User;
 use App\Models\Manufacturer;
+use App\Models\OtherProduct;
 
 class OrderHelper
 {
@@ -47,5 +48,27 @@ class OrderHelper
     public static function getManufacturerName($manufacturerId)
     {
         return Manufacturer::where('manufacturer_id', $manufacturerId)->value('manufacturer_name') ?? 'Unknown Manufacturer';
+    }
+
+    public static function getProductName($otherProductId)
+    {
+        return OtherProduct::where('other_product_id', $otherProductId)->value('product_name') ?? 'Unknown Product';
+    }
+
+    public static function getProductType($otherProductId)
+    {
+        $productType = OtherProduct::where('other_product_id', $otherProductId)
+            ->value('product_type');
+
+        return match ($productType) {
+            0 => 'Wound Supplies',
+            1 => 'Devices',
+            default => 'Unknown Product',
+        };
+    }
+
+    public static function getProductPrice($otherProductId)
+    {
+        return OtherProduct::where('other_product_id', $otherProductId)->value('price') ?? 'Unknown Product Price';
     }
 }

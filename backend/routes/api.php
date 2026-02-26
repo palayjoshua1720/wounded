@@ -54,6 +54,11 @@ Route::get('/private-file/{path}', [IVRRequestController::class, 'viewIVRFile'])
 Route::get('/private-order-file/{path}', [OrderController::class, 'viewOrderFile'])
 ->where('path', '.*');
 
+// get CSRF cookie before login
+Route::get('/sanctum/csrf-cookie', function () {
+    return response()->json(['csrf' => 'ok']);
+});
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::get('/auth/me', [AuthController::class, 'user']);
@@ -180,6 +185,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/auth/me-with-clinic', [OrderController::class, 'userWithClinic']);
     Route::post('/management/order/add/neworderbyclinic', [OrderController::class, 'addNewOrderByClinic']);
     Route::put('/management/order/update/{id}/updateorderbyclinic', [OrderController::class, 'updateOrderByClinic']);
+
+    Route::get('/management/order/getotherproducts', [OrderController::class, 'getAllOtherProducts']);
+    Route::get('/management/order/getotherproducts/{id}', [OrderController::class, 'getAllOtherProductsById']);
 
     // Inventory & Usage Logs
     Route::get('/inventory/all', [InventoryController::class, 'getInventory']);
