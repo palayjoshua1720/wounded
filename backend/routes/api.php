@@ -17,8 +17,10 @@ use App\Http\Controllers\Api\BillerTrackingController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\InventoryController;
-use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\AdminDashboardController;
 use App\Http\Controllers\Api\ProductController;
+use App\Http\Controllers\Api\ClinicDashboardController;
+
 
 // System Info
 Route::get('/version', function (Request $request) {
@@ -52,7 +54,7 @@ Route::get('/private-file/{path}', [IVRRequestController::class, 'viewIVRFile'])
 
 // order file stream
 Route::get('/private-order-file/{path}', [OrderController::class, 'viewOrderFile'])
-->where('path', '.*');
+    ->where('path', '.*');
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
@@ -194,8 +196,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/inventory/usage-logs/{id}', [InventoryController::class, 'deleteUsageLog']);
 
     // Dashboard
-    Route::get('/dashboard/stats', [DashboardController::class, 'getStats']);
-    Route::get('/dashboard/recent-activity', [DashboardController::class, 'recentActivity']);
+    Route::get('/dashboard/stats', [AdminDashboardController::class, 'getStats']);
+    Route::get('/dashboard/recent-activity', [AdminDashboardController::class, 'recentActivity']);
+    Route::get('/dashboard/system-alerts', [AdminDashboardController::class, 'getSystemAlerts']);
+    Route::get('/clinic-dashboard/order-overview', [ClinicDashboardController::class, 'orderOverview']);
+    Route::get('/clinic-dashboard/system-alerts', [ClinicDashboardController::class, 'getSystemAlerts']);
 
     // Returns Management
     Route::get('/management/returns', [ReturnsController::class, 'getAllReturns']);

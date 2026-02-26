@@ -6,16 +6,14 @@
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Notifications</h1>
         <p class="text-gray-600 dark:text-gray-400">
           Stay updated with system alerts and important events
-          <span v-if="unreadCount > 0" class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-400">
+          <span v-if="unreadCount > 0"
+            class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-400">
             {{ unreadCount }} unread
           </span>
         </p>
       </div>
-      <button
-        v-if="unreadCount > 0"
-        @click="markAllAsRead"
-        class="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-      >
+      <button v-if="unreadCount > 0" @click="markAllAsRead"
+        class="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
         <CheckCircleIcon class="w-5 h-5 mr-2" />
         Mark All as Read
       </button>
@@ -64,19 +62,17 @@
     <!-- Filters -->
     <div class="flex flex-col md:flex-row md:items-center md:space-x-4 space-y-2 md:space-y-0">
       <div class="relative flex-1">
-        <input
-          v-model="searchTerm"
-          type="text"
-          placeholder="Search notifications..."
-          class="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-        />
+        <input v-model="searchTerm" type="text" placeholder="Search notifications..."
+          class="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
         <MagnifyingGlassIcon class="absolute left-3 top-2.5 w-5 h-5 text-gray-400 dark:text-gray-500" />
       </div>
-      <select v-model="typeFilter" class="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+      <select v-model="typeFilter"
+        class="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
         <option value="all">All Types</option>
         <option v-for="type in notificationTypes" :key="type.value" :value="type.value">{{ type.label }}</option>
       </select>
-      <select v-model="statusFilter" class="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+      <select v-model="statusFilter"
+        class="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
         <option value="all">All Status</option>
         <option value="unread">Unread</option>
         <option value="read">Read</option>
@@ -84,18 +80,16 @@
     </div>
 
     <!-- Notification List -->
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 divide-y divide-gray-100 dark:divide-gray-700">
-      <div
-        v-for="notification in filteredNotifications"
-        :key="notification.id"
-        :class="[
-          'flex items-start px-6 py-5 transition-colors',
-          notification.isRead
-            ? 'bg-white dark:bg-gray-800 text-gray-400 dark:text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700'
-            : 'bg-blue-50 dark:bg-blue-900/20 text-gray-900 dark:text-white border-l-4 border-blue-400 dark:border-blue-500 shadow-sm hover:bg-blue-100 dark:hover:bg-blue-900/30'
-        ]"
-      >
-        <div :class="['flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center mr-4', getTypeColor(notification.type)]">
+    <div
+      class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 divide-y divide-gray-100 dark:divide-gray-700">
+      <div v-for="notification in filteredNotifications" :key="notification.id" :class="[
+        'flex items-start px-6 py-5 transition-colors',
+        notification.isRead
+          ? 'bg-white dark:bg-gray-800 text-gray-400 dark:text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700'
+          : 'bg-blue-50 dark:bg-blue-900/20 text-gray-900 dark:text-white border-l-4 border-blue-400 dark:border-blue-500 shadow-sm hover:bg-blue-100 dark:hover:bg-blue-900/30'
+      ]">
+        <div
+          :class="['flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center mr-4', getTypeColor(notification.type)]">
           <component :is="getTypeIcon(notification.type)" class="w-5 h-5" />
         </div>
         <div class="flex-1">
@@ -105,24 +99,16 @@
           </div>
           <p class="text-sm text-gray-700 dark:text-gray-300 mt-1">{{ notification.message }}</p>
           <div class="flex items-center space-x-2 mt-2">
-            <router-link
-              v-if="notification.actionUrl"
-              :to="notification.actionUrl"
-              class="text-blue-600 dark:text-blue-400 hover:underline text-xs font-medium"
-            >
+            <router-link v-if="notification.actionUrl" :to="notification.actionUrl"
+              class="text-blue-600 dark:text-blue-400 hover:underline text-xs font-medium">
               View Details
             </router-link>
-            <button
-              v-if="!notification.isRead"
-              @click="markAsRead(notification.id)"
-              class="text-green-600 dark:text-green-400 hover:underline text-xs font-medium"
-            >
+            <button v-if="!notification.isRead" @click="markAsRead(notification.id)"
+              class="text-green-600 dark:text-green-400 hover:underline text-xs font-medium">
               Mark as Read
             </button>
-            <button
-              @click="showNotificationDetails(notification)"
-              class="text-purple-600 dark:text-purple-400 hover:underline text-xs font-medium"
-            >
+            <button @click="showNotificationDetails(notification)"
+              class="text-purple-600 dark:text-purple-400 hover:underline text-xs font-medium">
               More Info
             </button>
           </div>
@@ -141,7 +127,8 @@
         <div>
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Type</label>
           <div class="mt-1 flex items-center">
-            <span :class="`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getTypeColor(selectedNotification.type)}`">
+            <span
+              :class="`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getTypeColor(selectedNotification.type)}`">
               <component :is="getTypeIcon(selectedNotification.type)" class="w-4 h-4 mr-1" />
               {{ getTypeLabel(selectedNotification.type) }}
             </span>
@@ -150,7 +137,8 @@
         <div>
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
           <div class="mt-1">
-            <span :class="selectedNotification.isRead ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'">
+            <span
+              :class="selectedNotification.isRead ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'">
               {{ selectedNotification.isRead ? 'Read' : 'Unread' }}
             </span>
           </div>
@@ -194,10 +182,8 @@
       </div>
     </div>
     <template #actions>
-      <button
-        @click="showDetailsModal = false"
-        class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
-      >
+      <button @click="showDetailsModal = false"
+        class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
         Close
       </button>
     </template>
@@ -416,9 +402,9 @@ const formatDate = (dateStr: string) => {
 
 const formatDateTime = (dateStr: string) => {
   const date = new Date(dateStr)
-  return date.toLocaleString(undefined, { 
-    dateStyle: 'full', 
-    timeStyle: 'long' 
+  return date.toLocaleString(undefined, {
+    dateStyle: 'full',
+    timeStyle: 'long'
   })
 }
-</script> 
+</script>

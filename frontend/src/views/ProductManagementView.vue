@@ -4,9 +4,9 @@
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div class="space-y-2">
                 <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Product Management</h1>
-                <p class="text-gray-600 dark:text-gray-400 max-w-2xl">Manage products, their stock levels, and
-                    availability
-                    in one streamlined interface</p>
+                <p class="text-gray-600 dark:text-gray-400 max-w-2xl">
+                    Manage products, their stock levels, and availability in one streamlined interface
+                </p>
             </div>
             <div class="flex items-center gap-4">
                 <button @click="showStats = !showStats"
@@ -14,7 +14,6 @@
                     <BarChart2 class="w-5 h-5 mr-2" />
                     {{ showStats ? 'Hide' : 'Show' }} Stats
                 </button>
-
                 <button @click="openAddProductModal"
                     class="flex items-center px-5 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg group">
                     <ListPlus class="w-5 h-5 mr-2 group-hover:scale-110 transition-transform" />
@@ -34,11 +33,10 @@
                 ]">
                     Graft Sizes
                     <span
-                        class="ml-2  px-2.5 py-0.5  rounded-full  text-xs font-medium bg-gray-200/70 dark:bg-gray-700/70 text-gray-700 dark:text-gray-200">
+                        class="ml-2 px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-200/70 dark:bg-gray-700/70 text-gray-700 dark:text-gray-200">
                         {{ stats.total || 0 }}
                     </span>
                 </button>
-
                 <button @click="activeTab = 'other'" :class="[
                     activeTab === 'other'
                         ? 'border-green-500 text-green-600 dark:text-green-400'
@@ -47,20 +45,19 @@
                 ]">
                     Other Products
                     <span
-                        class="ml-2  px-2.5 py-0.5  rounded-full  text-xs font-medium bg-gray-200/70 dark:bg-gray-700/70 text-gray-700 dark:text-gray-200">
+                        class="ml-2 px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-200/70 dark:bg-gray-700/70 text-gray-700 dark:text-gray-200">
                         {{ otherStats.total || 0 }}
                     </span>
                 </button>
             </nav>
         </div>
 
-        <!-- Stats Panel – Modern & Polished Version with Hidden Hover Scrollbar -->
+        <!-- Stats Panel -->
         <TransitionGroup enter-active-class="transition ease-out duration-400" enter-from-class="opacity-0 scale-95"
             enter-to-class="opacity-100 scale-100" leave-active-class="transition ease-in duration-300"
             leave-from-class="opacity-100 scale-100" leave-to-class="opacity-0 scale-95">
             <div v-if="showStats"
                 class="bg-gradient-to-b from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 p-6 md:p-8 rounded-2xl shadow-lg border border-gray-200/60 dark:border-gray-700/60 backdrop-blur-sm">
-                <!-- Header -->
                 <div class="flex items-center justify-between mb-6">
                     <h3 class="text-xl md:text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
                         {{ activeTab === 'grafts' ? 'Graft Size Overview' : 'Other Products Overview' }}
@@ -69,7 +66,6 @@
 
                 <!-- Main Stats Cards -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 md:gap-6">
-                    <!-- Total -->
                     <div
                         class="group relative bg-white dark:bg-gray-800 rounded-xl p-5 shadow-md border border-gray-200 dark:border-gray-700 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden">
                         <div
@@ -92,7 +88,6 @@
                         </div>
                     </div>
 
-                    <!-- Active -->
                     <div
                         class="group relative bg-white dark:bg-gray-800 rounded-xl p-5 shadow-md border border-gray-200 dark:border-gray-700 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden">
                         <div
@@ -112,7 +107,6 @@
                         </div>
                     </div>
 
-                    <!-- Inactive -->
                     <div
                         class="group relative bg-white dark:bg-gray-800 rounded-xl p-5 shadow-md border border-gray-200 dark:border-gray-700 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden">
                         <div
@@ -132,7 +126,6 @@
                         </div>
                     </div>
 
-                    <!-- Archived -->
                     <div
                         class="group relative bg-white dark:bg-gray-800 rounded-xl p-5 shadow-md border border-gray-200 dark:border-gray-700 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden">
                         <div
@@ -153,7 +146,7 @@
                     </div>
                 </div>
 
-                <!-- Breakdown Section – Horizontal Scrollable Carousel with Hover-Only Thin Scrollbar -->
+                <!-- Breakdown Section -->
                 <div class="mt-8">
                     <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                         <component :is="breakdownIcon" class="w-5 h-5 text-purple-500" />
@@ -162,10 +155,8 @@
 
                     <div v-if="(activeTab === 'grafts' && stats.brands.length > 0) || (activeTab === 'other' && otherStats.types.length > 0)"
                         class="relative">
-                        <!-- Scroll container – scrollbar hidden by default, thin & visible only on hover -->
                         <div class="overflow-x-auto pb-4 breakdown-scroll snap-x snap-mandatory">
                             <div class="inline-flex gap-4 min-w-max px-1">
-                                <!-- Graft Brands -->
                                 <template v-if="activeTab === 'grafts'">
                                     <div v-for="brand in stats.brands.slice(0, 12)" :key="brand.id"
                                         class="snap-start flex-shrink-0 w-64 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md hover:border-purple-300 dark:hover:border-purple-600 transition-all duration-300 overflow-hidden group">
@@ -186,7 +177,6 @@
                                     </div>
                                 </template>
 
-                                <!-- Other Product Types -->
                                 <template v-if="activeTab === 'other'">
                                     <div v-for="t in otherStats.types.slice(0, 12)" :key="t.type"
                                         class="snap-start flex-shrink-0 w-64 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md hover:border-blue-300 dark:hover:border-blue-600 transition-all duration-300 overflow-hidden group">
@@ -198,7 +188,7 @@
                                                     {{ t.label }}
                                                 </span>
                                                 <span class="text-lg font-bold text-gray-900 dark:text-white">{{ t.count
-                                                    }}</span>
+                                                }}</span>
                                             </div>
                                             <div class="text-xs text-gray-500 dark:text-gray-400">
                                                 {{ Math.round((t.count / otherStats.total) * 100) }}% of total
@@ -209,10 +199,14 @@
                             </div>
                         </div>
 
-                        <!-- Count indicator -->
                         <p class="text-xs text-gray-500 dark:text-gray-400 mt-3 text-center">
-                            Showing {{ activeTab === 'grafts' ? Math.min(stats.brands.length, 12) :
-                                Math.min(otherStats.types.length, 12) }} of
+                            Showing
+                            {{
+                                activeTab === 'grafts'
+                                    ? Math.min(stats.brands.length, 12)
+                                    : Math.min(otherStats.types.length, 12)
+                            }}
+                            of
                             {{ activeTab === 'grafts' ? stats.brands.length : otherStats.types.length }}
                             {{ activeTab === 'grafts' ? 'brands' : 'types' }}
                             <span
@@ -221,7 +215,6 @@
                         </p>
                     </div>
 
-                    <!-- Empty state -->
                     <div v-else
                         class="text-center py-10 text-gray-500 dark:text-gray-400 italic bg-gray-50 dark:bg-gray-800/40 rounded-xl border border-dashed border-gray-300 dark:border-gray-600">
                         No breakdown data available yet.
@@ -231,6 +224,7 @@
         </TransitionGroup>
 
         <!-- TABLES -->
+
         <!-- Graft Sizes view section -->
         <div v-if="activeTab === 'grafts'" class="space-y-6">
             <!-- Filters Card for grafts -->
@@ -315,19 +309,21 @@
                                             <PencilRuler class="w-5 h-5" />
                                         </div>
                                         <div class="ml-4">
-                                            <div class="text-sm font-semibold text-gray-900 dark:text-white">{{
-                                                graft.manufacturer?.manufacturer_name }}</div>
-                                            <div class="text-sm text-gray-500 dark:text-gray-400">{{
-                                                graft.brand?.brand_name }}</div>
+                                            <div class="text-sm font-semibold text-gray-900 dark:text-white">
+                                                {{ graft.manufacturer?.manufacturer_name }}
+                                            </div>
+                                            <div class="text-sm text-gray-500 dark:text-gray-400">
+                                                {{ graft.brand?.brand_name }}
+                                            </div>
                                         </div>
                                     </div>
                                 </td>
                                 <td class="px-6 py-5 whitespace-nowrap">
                                     <div class="text-sm font-medium text-gray-900 dark:text-white">{{ graft.size }}
                                     </div>
-                                    <div class="text-sm text-gray-500 dark:text-gray-400">{{ graft.area ? graft.area +
-                                        'cm²'
-                                        : 'No data found' }}</div>
+                                    <div class="text-sm text-gray-500 dark:text-gray-400">
+                                        {{ graft.area ? graft.area + 'cm²' : 'No data found' }}
+                                    </div>
                                 </td>
                                 <td class="px-6 py-5 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                                     {{ graft.stock || 0 }} in stock
@@ -386,6 +382,7 @@
                         </tbody>
                     </table>
                 </div>
+
                 <!-- Empty State -->
                 <div v-if="filteredGraftRequest.length === 0 && !tableLoader" class="text-center py-12">
                     <div
@@ -393,18 +390,26 @@
                         <PencilRuler class="h-8 w-8 text-gray-400 dark:text-gray-500" />
                     </div>
                     <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-1">No graft sizes found</h3>
-                    <p class="text-gray-500 dark:text-gray-400 max-w-md mx-auto">Try adjusting your search or filter to
-                        find
-                        what you're looking for.</p>
+                    <p class="text-gray-500 dark:text-gray-400 max-w-md mx-auto">
+                        Try adjusting your search or filter to find what you're looking for.
+                    </p>
                 </div>
+
                 <!-- Pagination -->
                 <div v-if="filteredGraftRequest.length > 0 && !tableLoader"
                     class="flex items-center justify-between px-6 py-4 border-t border-gray-200 dark:border-gray-700">
                     <p class="text-sm text-gray-600 dark:text-gray-400">
-                        Showing <span class="font-semibold text-gray-800 dark:text-white">{{ (currentPage - 1) *
-                            itemsPerPage + 1 }}</span> to <span class="font-semibold text-gray-800 dark:text-white">{{
-                                Math.min(currentPage * itemsPerPage, totalResults) }}</span> of <span
-                            class="font-semibold text-gray-800 dark:text-white">{{ totalResults }}</span> results
+                        Showing
+                        <span class="font-semibold text-gray-800 dark:text-white">
+                            {{ (currentPage - 1) * itemsPerPage + 1 }}
+                        </span>
+                        to
+                        <span class="font-semibold text-gray-800 dark:text-white">
+                            {{ Math.min(currentPage * itemsPerPage, totalResults) }}
+                        </span>
+                        of
+                        <span class="font-semibold text-gray-800 dark:text-white">{{ totalResults }}</span>
+                        results
                     </p>
                     <nav class="flex items-center space-x-2">
                         <button @click="previousPage" :disabled="currentPage === 1"
@@ -414,9 +419,15 @@
                         <div class="flex items-center space-x-1">
                             <template v-for="(page, index) in paginationNumbers" :key="index">
                                 <span v-if="page === '...'"
-                                    class="px-3 py-1.5 text-sm text-gray-500 dark:text-gray-400">...</span>
-                                <button v-else @click="goToPage(page as number)"
-                                    :class="['px-3 py-1.5 text-sm font-medium rounded-lg transition-colors', currentPage === page ? 'bg-green-600 text-white' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700']">
+                                    class="px-3 py-1.5 text-sm text-gray-500 dark:text-gray-400">
+                                    ...
+                                </span>
+                                <button v-else @click="goToPage(page as number)" :class="[
+                                    'px-3 py-1.5 text-sm font-medium rounded-lg transition-colors',
+                                    currentPage === page
+                                        ? 'bg-green-600 text-white'
+                                        : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                ]">
                                     {{ page }}
                                 </button>
                             </template>
@@ -432,8 +443,7 @@
 
         <!-- Other Products view section -->
         <div v-if="activeTab === 'other'" class="space-y-6">
-
-            <!-- Filters (you can keep the same or customize later) -->
+            <!-- Filters -->
             <div
                 class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
                 <div class="flex flex-col lg:flex-row gap-6">
@@ -445,7 +455,6 @@
                         </div>
                     </div>
                     <div class="flex flex-col sm:flex-row gap-4">
-                        <!-- You can add product type filter later -->
                         <div class="relative">
                             <select v-model="itemsPerPage"
                                 class="pl-4 pr-8 py-3.5 border-0 bg-gray-50 dark:bg-gray-700/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-gray-700 text-gray-900 dark:text-white appearance-none transition-all duration-200">
@@ -499,10 +508,8 @@
                         </thead>
                         <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                             <TableLoader v-if="otherTableLoader" :colspan="7" />
-
                             <tr v-else v-for="product in paginatedOtherProducts" :key="product.other_product_id"
                                 class="hover:bg-gray-50/70 dark:hover:bg-gray-700/50 transition-colors duration-150">
-
                                 <td class="px-6 py-5 whitespace-nowrap">
                                     <div class="flex items-center">
                                         <div
@@ -510,27 +517,28 @@
                                             <Package class="w-5 h-5" />
                                         </div>
                                         <div class="ml-4">
-                                            <div class="text-sm font-semibold text-gray-900 dark:text-white">{{
-                                                product.product_name }}</div>
+                                            <div class="text-sm font-semibold text-gray-900 dark:text-white">
+                                                {{ product.product_name }}
+                                            </div>
                                         </div>
                                     </div>
                                 </td>
-
                                 <td class="px-6 py-5 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                                    {{ product.product_type === 0 ? 'Wound Supplies' : product.product_type === 1
-                                        ? 'Devices'
-                                        : 'Unknown' }}
+                                    {{
+                                        product.product_type === 0
+                                            ? 'Wound Supplies'
+                                            : product.product_type === 1
+                                                ? 'Devices'
+                                                : 'Unknown'
+                                    }}
                                 </td>
-
                                 <td
                                     class="px-6 py-5 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
                                     ${{ product.price?.toFixed(2) || '0.00' }}
                                 </td>
-
                                 <td class="px-6 py-5 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                                     {{ product.stock || 0 }} in stock
                                 </td>
-
                                 <td class="px-6 py-5 whitespace-nowrap">
                                     <span :class="[
                                         'inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium',
@@ -540,11 +548,9 @@
                                         {{ getStatusLabel(product.status) }}
                                     </span>
                                 </td>
-
                                 <td class="px-6 py-5 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                                     {{ formatDate(product.created_at) }}
                                 </td>
-
                                 <td class="px-6 py-5 whitespace-nowrap text-sm font-medium">
                                     <div class="flex items-center space-x-2">
                                         <button @click="viewOtherProduct(product)"
@@ -567,7 +573,6 @@
                                             <component :is="product.status === 0 ? XCircle : CheckCircle2"
                                                 class="w-4 h-4" />
                                         </button>
-
                                         <button @click="confirmArchiveOther(product)" :class="[
                                             'p-2 rounded-lg transition-all duration-200',
                                             product.status === 2
@@ -577,8 +582,6 @@
                                             <component :is="product.status === 2 ? ArchiveRestore : Archive"
                                                 class="w-4 h-4" />
                                         </button>
-
-                                        <!-- Delete (only when archived) -->
                                         <button v-if="product.status === 2" @click="confirmDeleteOther(product)"
                                             class="p-2 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all duration-200"
                                             title="Delete Archived Product">
@@ -598,46 +601,56 @@
                         <Package class="h-8 w-8 text-gray-400 dark:text-gray-500" />
                     </div>
                     <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-1">No other products found</h3>
-                    <p class="text-gray-500 dark:text-gray-400">Try adjusting your search or add a new product.</p>
+                    <p class="text-gray-500 dark:text-gray-400">
+                        Try adjusting your search or add a new product.
+                    </p>
                 </div>
 
-                <!-- Pagination (almost identical to grafts) -->
+                <!-- Pagination -->
                 <div v-if="otherProducts.length > 0 && !otherTableLoader"
                     class="flex items-center justify-between px-6 py-4 border-t border-gray-200 dark:border-gray-700">
                     <p class="text-sm text-gray-600 dark:text-gray-400">
-                        Showing <span class="font-semibold">{{ (otherCurrentPage - 1) * itemsPerPage + 1 }}</span> to
-                        <span class="font-semibold">{{ Math.min(otherCurrentPage * itemsPerPage, otherTotalResults)
-                        }}</span> of
-                        <span class="font-semibold">{{ otherTotalResults }}</span> results
+                        Showing
+                        <span class="font-semibold">
+                            {{ (otherCurrentPage - 1) * itemsPerPage + 1 }}
+                        </span>
+                        to
+                        <span class="font-semibold">
+                            {{ Math.min(otherCurrentPage * itemsPerPage, otherTotalResults) }}
+                        </span>
+                        of
+                        <span class="font-semibold">{{ otherTotalResults }}</span>
+                        results
                     </p>
                     <nav class="flex items-center space-x-2">
                         <button @click="otherCurrentPage--" :disabled="otherCurrentPage === 1"
-                            class="...">Previous</button>
-                        <!-- You can reuse or copy the paginationNumbers logic, or simplify to prev/next only for now -->
+                            class="px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                            Previous
+                        </button>
                         <button @click="otherCurrentPage++"
-                            :disabled="otherCurrentPage * itemsPerPage >= otherTotalResults" class="...">Next</button>
+                            :disabled="otherCurrentPage * itemsPerPage >= otherTotalResults"
+                            class="px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                            Next
+                        </button>
                     </nav>
                 </div>
             </div>
         </div>
 
-        <!-- VIEW DETAILS -->
+        <!-- VIEW DETAILS MODALS -->
+
         <!-- Graft Details Modal -->
         <BaseModal v-model="showDetailsModal" title="Graft Size Details" size="lg">
             <template v-if="selectedGraftRequest">
                 <div class="p-6 space-y-8">
-                    <!-- Header Section -->
                     <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-6">
                         <div class="flex items-center gap-5">
-                            <!-- Icon -->
                             <div class="flex-shrink-0">
                                 <div
                                     class="w-20 h-20 rounded-xl bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/30 dark:to-green-800/30 flex items-center justify-center border border-green-200 dark:border-green-700 shadow-sm">
                                     <PencilRuler class="w-10 h-10 text-green-600 dark:text-green-400" />
                                 </div>
                             </div>
-
-                            <!-- Title & Status -->
                             <div>
                                 <h2 class="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
                                     {{ selectedGraftRequest.size || 'Unnamed Size' }}
@@ -653,8 +666,6 @@
                                 </div>
                             </div>
                         </div>
-
-                        <!-- Quick Info Badges – Added Item No here -->
                         <div class="flex flex-wrap gap-3">
                             <div
                                 class="inline-flex items-center px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
@@ -670,7 +681,6 @@
                                     {{ selectedGraftRequest.brand?.brand_name || 'No Records Found' }}
                                 </span>
                             </div>
-                            <!-- NEW: Item No badge -->
                             <div
                                 class="inline-flex items-center px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                                 <Tag class="w-5 h-5 text-teal-500 dark:text-teal-400 mr-2" />
@@ -681,7 +691,6 @@
                         </div>
                     </div>
 
-                    <!-- Key Stats Grid (3 stats as before) -->
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div class="bg-gray-100 dark:bg-gray-700/70 rounded-xl p-5 text-center shadow-sm">
                             <div class="text-2xl font-bold text-gray-900 dark:text-white">
@@ -703,14 +712,12 @@
                         </div>
                     </div>
 
-                    <!-- Low Stock Alert -->
                     <div v-if="isLowStock(selectedGraftRequest.stock)"
                         class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl p-4 flex items-center gap-3 text-yellow-800 dark:text-yellow-300">
                         <AlertCircle class="w-6 h-6 flex-shrink-0" />
                         <span>Low stock alert: only {{ selectedGraftRequest.stock }} units remaining</span>
                     </div>
 
-                    <!-- Notes / Description (optional) -->
                     <div v-if="selectedGraftRequest.notes || selectedGraftRequest.description">
                         <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">Notes</h3>
                         <div
@@ -721,7 +728,6 @@
                         </div>
                     </div>
 
-                    <!-- Dates Footer -->
                     <div
                         class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-center bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl border border-gray-200 dark:border-gray-700">
                         <div>
@@ -739,16 +745,11 @@
                     </div>
                 </div>
             </template>
-
             <template #actions>
                 <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
                     <button @click="showDetailsModal = false"
                         class="px-6 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-medium">
                         Close
-                    </button>
-                    <button @click="editGraft(selectedGraftRequest)"
-                        class="px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-blue-600 text-white rounded-lg hover:from-indigo-700 hover:to-blue-700 transition-colors shadow-sm font-medium">
-                        Edit Graft Size
                     </button>
                 </div>
             </template>
@@ -758,18 +759,14 @@
         <BaseModal v-model="showOtherDetailsModal" title="Product Details" size="lg">
             <template v-if="selectedOtherProduct">
                 <div class="p-6 space-y-8">
-                    <!-- Header Section -->
                     <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-6">
                         <div class="flex items-center gap-5">
-                            <!-- Icon -->
                             <div class="flex-shrink-0">
                                 <div
                                     class="w-20 h-20 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-800/30 flex items-center justify-center border border-blue-200 dark:border-blue-700 shadow-sm">
                                     <Package class="w-10 h-10 text-blue-600 dark:text-blue-400" />
                                 </div>
                             </div>
-
-                            <!-- Title & Status -->
                             <div>
                                 <h2 class="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
                                     {{ selectedOtherProduct.product_name }}
@@ -785,8 +782,6 @@
                                 </div>
                             </div>
                         </div>
-
-                        <!-- Quick Info Badges -->
                         <div class="flex flex-wrap gap-3">
                             <div
                                 class="inline-flex items-center px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
@@ -803,25 +798,19 @@
                         </div>
                     </div>
 
-                    <!-- Key Stats Grid -->
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <!-- Stock -->
                         <div class="bg-gray-100 dark:bg-gray-700/70 rounded-xl p-5 text-center shadow-sm">
                             <div class="text-2xl font-bold text-gray-900 dark:text-white">
                                 {{ selectedOtherProduct.stock || 0 }}
                             </div>
                             <div class="text-sm text-gray-600 dark:text-gray-300 mt-1">Current Stock</div>
                         </div>
-
-                        <!-- Price -->
                         <div class="bg-green-50 dark:bg-green-900/20 rounded-xl p-5 text-center">
                             <div class="text-2xl font-bold text-green-700 dark:text-green-300">
                                 ${{ selectedOtherProduct.price?.toFixed(2) || '0.00' }}
                             </div>
                             <div class="text-sm text-gray-600 dark:text-gray-400 mt-1">Unit Price</div>
                         </div>
-
-                        <!-- Availability -->
                         <div class="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-5 text-center">
                             <div class="text-2xl font-bold text-blue-700 dark:text-blue-300">
                                 {{ selectedOtherProduct.stock > 0 ? 'In Stock' : 'Out of Stock' }}
@@ -830,14 +819,12 @@
                         </div>
                     </div>
 
-                    <!-- Low Stock Alert -->
                     <div v-if="isLowStock(selectedOtherProduct.stock)"
                         class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl p-4 flex items-center gap-3 text-yellow-800 dark:text-yellow-300">
                         <AlertCircle class="w-6 h-6 flex-shrink-0" />
                         <span>Low stock warning: only {{ selectedOtherProduct.stock }} units left</span>
                     </div>
 
-                    <!-- Description -->
                     <div>
                         <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">Description</h3>
                         <div
@@ -852,7 +839,6 @@
                         </div>
                     </div>
 
-                    <!-- Dates Footer -->
                     <div
                         class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-center bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl border border-gray-200 dark:border-gray-700">
                         <div>
@@ -870,7 +856,6 @@
                     </div>
                 </div>
             </template>
-
             <template #actions>
                 <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
                     <button @click="showOtherDetailsModal = false"
@@ -881,13 +866,13 @@
             </template>
         </BaseModal>
 
-        <!-- CREATE AND EDIT -->
+        <!-- CREATE AND EDIT MODALS -->
+
         <!-- Product Selection Modal -->
         <BaseModal v-model="showAddProductModal" title="Add New Product">
             <div class="space-y-4">
                 <p class="text-gray-600 dark:text-gray-400">Choose the type of product you want to add:</p>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-                    <!-- Graft Size Product -->
                     <button @click="selectGraftProduct"
                         class="flex flex-col items-center justify-center p-8 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl hover:border-green-500 hover:bg-green-50 dark:hover:bg-gray-700 transition-all duration-200 group">
                         <PencilRuler
@@ -898,7 +883,6 @@
                         </span>
                     </button>
 
-                    <!-- Other / Regular Product -->
                     <button @click="selectOtherProduct"
                         class="flex flex-col items-center justify-center p-8 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-gray-700 transition-all duration-200 group">
                         <Package
@@ -910,7 +894,6 @@
                     </button>
                 </div>
             </div>
-
             <template #actions>
                 <div class="flex justify-end w-full p-5">
                     <button @click="showAddProductModal = false"
@@ -924,7 +907,6 @@
         <!-- Create/Edit Graft Form Modal -->
         <BaseModal v-model="showFormModal" :title="showCreateForm ? 'New Graft Size(s)' : 'Edit Graft Size'" size="2xl">
             <form @submit.prevent="handleSubmitForm" class="space-y-6">
-                <!-- Brand Selection -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Brand <span class="text-red-500 ml-1">*</span>
@@ -933,13 +915,12 @@
                         class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white appearance-none transition-all duration-200">
                         <option disabled value="">Select a Brand</option>
                         <option v-for="brand in brandData" :key="brand.brand_id" :value="brand.brand_id">
-                            {{ brand.manufacturer?.manufacturer_name || 'Unknown Manufacturer' }} - {{ brand.brand_name
-                            }}
+                            {{ brand.manufacturer?.manufacturer_name || 'Unknown Manufacturer' }} -
+                            {{ brand.brand_name }}
                         </option>
                     </select>
                 </div>
 
-                <!-- Graft Sizes Section -->
                 <div>
                     <div class="flex items-center gap-2 mb-4">
                         <PencilRuler class="w-5 h-5 text-green-500" />
@@ -951,7 +932,6 @@
                     <div class="space-y-6">
                         <div v-for="(graftSize, index) in formData.graftSizes" :key="graftSize.id || index"
                             class="relative p-5 sm:p-6 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800/50">
-                            <!-- Header: entry label + remove button -->
                             <div class="flex items-center justify-between mb-4">
                                 <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
                                     Size Entry {{ index + 1 }}
@@ -963,9 +943,7 @@
                                 </button>
                             </div>
 
-                            <!-- Fields – responsive horizontal layout -->
                             <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 lg:gap-5">
-                                <!-- Item No -->
                                 <div>
                                     <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">
                                         Item No <span class="text-red-500">*</span>
@@ -977,7 +955,6 @@
                                     </div>
                                 </div>
 
-                                <!-- Size -->
                                 <div>
                                     <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">
                                         Size <span class="text-red-500">*</span>
@@ -990,7 +967,6 @@
                                     </div>
                                 </div>
 
-                                <!-- Area -->
                                 <div>
                                     <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">
                                         Area (cm²) <span class="text-red-500">*</span>
@@ -1004,7 +980,6 @@
                                     </div>
                                 </div>
 
-                                <!-- Price -->
                                 <div>
                                     <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">
                                         Price <span class="text-red-500">*</span>
@@ -1018,7 +993,6 @@
                                     </div>
                                 </div>
 
-                                <!-- Stock -->
                                 <div>
                                     <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">
                                         Stock <span class="text-red-500">*</span>
@@ -1035,7 +1009,6 @@
                         </div>
                     </div>
 
-                    <!-- Add Another Size Button (only in create mode) -->
                     <button v-if="showCreateForm" type="button" @click="addGraftSize"
                         class="mt-4 flex items-center justify-center w-full px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl transition-colors font-medium">
                         <Plus class="w-5 h-5 mr-2" />
@@ -1045,9 +1018,10 @@
 
                 <!-- Form Actions -->
                 <div class="flex justify-end space-x-3 pt-4">
-                    <button type="button" @click="closeForm"
-                        class="px-5 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200">
-                        Cancel
+                    <button v-if="showCreateForm" type="button" @click="goBackToProductSelection"
+                        class="px-5 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 flex items-center gap-2">
+                        <ArrowLeft class="w-4 h-4" />
+                        Back
                     </button>
                     <button type="submit"
                         class="px-5 py-2.5 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 transition-all duration-200 shadow-md">
@@ -1068,7 +1042,7 @@
                     </label>
                     <select v-model="otherProductForm.product_type" required
                         class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
-                        <option disabled value="" selected>Select a Product Type</option>
+                        <option :value="null" disabled>Select a Product Type</option>
                         <option :value="0">Wound Supplies</option>
                         <option :value="1">Devices</option>
                     </select>
@@ -1076,7 +1050,6 @@
 
                 <!-- Product Information -->
                 <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
-                    <!-- Product Name -->
                     <div class="md:col-span-5">
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             Product Name <span class="text-red-500">*</span>
@@ -1089,7 +1062,6 @@
                         </div>
                     </div>
 
-                    <!-- Unit Price -->
                     <div class="md:col-span-4">
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             Price <span class="text-red-500">*</span>
@@ -1102,7 +1074,6 @@
                         </div>
                     </div>
 
-                    <!-- Stock Quantity -->
                     <div class="md:col-span-3">
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             Stock <span class="text-red-500">*</span>
@@ -1116,7 +1087,7 @@
                     </div>
                 </div>
 
-                <!-- Description / Notes -->
+                <!-- Description -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Description (optional)
@@ -1128,10 +1099,12 @@
 
                 <!-- Action Buttons -->
                 <div class="flex justify-end space-x-3 pt-4">
-                    <button type="button" @click="closeOtherProductForm"
-                        class="px-5 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200">
-                        Cancel
+                    <button v-if="!isEditingOtherProduct" type="button" @click="goBackToProductSelection"
+                        class="px-5 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 flex items-center gap-2">
+                        <ArrowLeft class="w-4 h-4" />
+                        Back
                     </button>
+
                     <button type="submit"
                         class="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg">
                         {{ isEditingOtherProduct ? 'Update Product' : 'Create Product' }}
@@ -1150,7 +1123,7 @@ import TableLoader from '@/components/ui/TableLoader.vue'
 import {
     Search, Eye, SquarePen, Trash2, Package, Archive, ArchiveRestore, PencilRuler, ListPlus,
     RulerDimensionLine, Diameter, DollarSign, Plus, BarChart2, CheckCircle2, Filter,
-    ChevronDown, Factory, XCircle, AlertCircle, PackageCheck, CalendarPlus, PencilLine, Tag
+    ChevronDown, Factory, XCircle, AlertCircle, ArrowLeft, PencilLine, Tag
 } from 'lucide-vue-next'
 import api from '@/services/api'
 import { toast } from 'vue3-toastify'
@@ -1183,24 +1156,14 @@ interface GraftRequest {
     graft_status: number
     created_at: string
     updated_at: string
-    // Nested relations
-    brand?: {
-        brand_id: string
-        brand_name: string
-    }
-    manufacturer?: {
-        manufacturer_id: string
-        manufacturer_name: string
-    }
+    brand?: { brand_id: string; brand_name: string }
+    manufacturer?: { manufacturer_id: string; manufacturer_name: string }
 }
 
 interface Brand {
     brand_id: string
     brand_name: string
-    manufacturer?: {
-        manufacturer_id: string
-        manufacturer_name: string
-    }
+    manufacturer?: { manufacturer_id: string; manufacturer_name: string }
 }
 
 const graftRequest = ref<GraftRequest[]>([])
@@ -1217,8 +1180,9 @@ const showEditForm = ref(false)
 const showStats = ref(false)
 const showOtherProductModal = ref(false)
 const isEditingOtherProduct = ref(false)
+
 const otherProductForm = ref({
-    product_id: '' as string | undefined,
+    product_id: undefined as string | undefined,
     product_type: null as number | null,
     product_name: '',
     price: 0,
@@ -1236,13 +1200,14 @@ const formData = ref({
     brand_id: '',
     graftSizes: [{
         id: undefined as string | undefined,
-        item_no: '',          // ← NEW: Item No field
+        item_no: '',
         size: '',
         area: null as number | null,
         price: null as number | null,
         stock: 0
     }] as GraftSize[]
 })
+
 const serverStats = ref({
     total: 0,
     active: 0,
@@ -1266,23 +1231,32 @@ const otherTableLoader = ref(false)
 
 const stats = computed(() => serverStats.value)
 const statsPollingInterval = ref<number | null>(null)
-const isLowStock = (stock: number) => stock < 10 // Threshold: Customize as needed
+const isLowStock = (stock: number) => stock < 10
 
-// Add near other modal refs
 const showAddProductModal = ref(false)
-// Other Product Details Modal
 const showOtherDetailsModal = ref(false)
 const selectedOtherProduct = ref<any>(null)
 
+// ────────────────────────────────────────────────
+// Shared Back function for both forms
+// ────────────────────────────────────────────────
+function goBackToProductSelection() {
+    showFormModal.value = false
+    showOtherProductModal.value = false
+    nextTick(() => {
+        showAddProductModal.value = true
+    })
+}
 
-// Replace the current "New Product" button click handler logic with this:
+// ────────────────────────────────────────────────
+// Modal / Selection Handlers
+// ────────────────────────────────────────────────
 function openAddProductModal() {
     showAddProductModal.value = true
 }
 
 function viewOtherProduct(product: any) {
-    console.log(product);
-
+    console.log(product)
     selectedOtherProduct.value = product
     showOtherDetailsModal.value = true
 }
@@ -1296,7 +1270,6 @@ function editOtherProduct(product: any) {
         stock: Number(product.stock) || 0,
         description: product.description || ''
     }
-
     isEditingOtherProduct.value = true
     showOtherProductModal.value = true
 }
@@ -1306,7 +1279,6 @@ function selectGraftProduct() {
     clearForm()
     selectedGraftRequest.value = null
     showCreateForm.value = true
-    // Existing graft form will open (multi-size support stays exactly as is)
 }
 
 function addGraftSize() {
@@ -1323,12 +1295,10 @@ function addGraftSize() {
 function removeGraftSize(index: number) {
     formData.value.graftSizes.splice(index, 1)
     if (formData.value.graftSizes.length === 0) {
-        // formData.value.graftSizes.push({ size: '', area: null, price: null, stock: 0, id: undefined })
         addGraftSize()
     }
 }
 
-// Open Other Product form (called from selection modal)
 function selectOtherProduct() {
     showAddProductModal.value = false
     isEditingOtherProduct.value = false
@@ -1336,7 +1306,6 @@ function selectOtherProduct() {
     showOtherProductModal.value = true
 }
 
-// Clear/reset form
 function clearOtherProductForm() {
     otherProductForm.value = {
         product_id: undefined,
@@ -1344,17 +1313,16 @@ function clearOtherProductForm() {
         product_name: '',
         price: 0,
         stock: 0,
-        // low_stock_threshold: 10,
         description: ''
     }
     isEditingOtherProduct.value = false
 }
 
-// Close modal
 function closeOtherProductForm() {
     showOtherProductModal.value = false
     clearOtherProductForm()
 }
+
 async function handleOtherProductSubmit() {
     if (
         otherProductForm.value.product_type == null ||
@@ -1375,35 +1343,25 @@ async function handleOtherProductSubmit() {
             description: otherProductForm.value.description?.trim() || null,
         }
 
-        console.log('Sending payload for type', otherProductForm.value.product_type, payload);
-
         let response
-
         if (isEditingOtherProduct.value) {
-            // UPDATE
             if (!otherProductForm.value.product_id) {
                 throw new Error('Missing product ID for update')
             }
-
             response = await api.put(
                 `/management/other-products/${otherProductForm.value.product_id}/updateotherproduct`,
                 payload
             )
             toast.success('Product updated successfully!')
         } else {
-            // CREATE
             response = await api.post('/management/other-products', payload)
             toast.success('Product created successfully!')
         }
 
-        // Refresh data
         if (activeTab.value === 'other') {
-            fetchOtherProducts(otherCurrentPage.value)   // or page 1 if you prefer reset
+            fetchOtherProducts(otherCurrentPage.value)
         }
-        // Optional: refresh stats too
         fetchOtherStats()
-
-        // Close & reset form
         closeOtherProductForm()
     } catch (err: any) {
         console.error(err)
@@ -1417,25 +1375,17 @@ async function handleOtherProductSubmit() {
 
 async function fetchOtherProducts(page = 1) {
     if (activeTab.value !== 'other') return
-
     otherTableLoader.value = true
     try {
         const params = {
             page,
             per_page: itemsPerPage.value,
             search: searchTerm.value || undefined,
-            // status: statusFilter.value !== 'all' ? statusFilter.value : undefined,
-            // → add later when OtherProduct has status field
         }
-
         const { data } = await api.get('/management/other-products', { params })
-
         otherProducts.value = data.otherProductData || []
         otherTotalResults.value = Number(data.meta?.total || 0)
         otherCurrentPage.value = Number(data.meta?.current_page || 1)
-
-        console.log(otherProducts.value);
-
     } catch (err) {
         console.error(err)
         toast.error('Failed to load other products')
@@ -1467,7 +1417,7 @@ async function editGraft(graft: GraftRequest) {
     showCreateForm.value = false
     showEditForm.value = true
     await nextTick()
-    const brandId = graft.brand_id || (graft.brand?.brand_id || '') // Fallback to nested
+    const brandId = graft.brand_id || (graft.brand?.brand_id || '')
     formData.value = {
         brand_id: brandId,
         graftSizes: [{
@@ -1479,40 +1429,34 @@ async function editGraft(graft: GraftRequest) {
             stock: graft.stock
         }]
     }
-    // Optional: Validate brand exists in brandData
     if (!brandData.value.some(b => b.brand_id === brandId)) {
         toast.warning('Brand not found in list. Please refresh or check Brand Management.')
-        // Fallback: Set to empty to prompt selection
         formData.value.brand_id = ''
     }
 }
 
 async function confirmDelete(graft: GraftRequest) {
-    try {
-        const result = await Swal.fire({
-            title: "Deleting Graft Size",
-            text: "You won't be able to revert this!",
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonColor: "#dc2626",
-            cancelButtonColor: "#6b7280",
-            confirmButtonText: "Yes, delete it!"
+    const result = await Swal.fire({
+        title: "Deleting Graft Size",
+        text: "You won't be able to revert this!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#dc2626",
+        cancelButtonColor: "#6b7280",
+        confirmButtonText: "Yes, delete it!"
+    })
+    if (result.isConfirmed) {
+        await api.put(`/management/delete/${graft.graft_size_id}/deletegraftsize`)
+        await Swal.fire({
+            title: "Deleted!",
+            text: "Graft Size has been deleted.",
+            icon: "success",
+            timer: 2000,
+            showConfirmButton: false
         })
-        if (result.isConfirmed) {
-            await api.put(`/management/delete/${graft.graft_size_id}/deletegraftsize`)
-            await Swal.fire({
-                title: "Deleted!",
-                text: "Graft Size has been deleted.",
-                icon: "success",
-                timer: 2000,
-                showConfirmButton: false
-            })
-            toast.success('Graft deleted successfully!')
-            await getAllGraftRequests()
-            await fetchGraftStats()
-        }
-    } catch (error) {
-        toast.error('Failed to delete Graft.')
+        toast.success('Graft deleted successfully!')
+        await getAllGraftRequests()
+        await fetchGraftStats()
     }
 }
 
@@ -1523,85 +1467,74 @@ async function confirmToggleStatus(graft: GraftRequest) {
     const text = isActive
         ? 'Are you sure you want to deactivate this graft size? It will no longer be available for orders.'
         : 'Are you sure you want to activate this graft size? It will be available for orders again.'
-    try {
-        const result = await Swal.fire({
-            title: actionTitle,
-            text: text,
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonColor: isActive ? "#dc2626" : "#16a34a",
-            cancelButtonColor: "#6b7280",
-            confirmButtonText: `Yes, ${action} it!`,
+    const result = await Swal.fire({
+        title: actionTitle,
+        text,
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: isActive ? "#dc2626" : "#16a34a",
+        cancelButtonColor: "#6b7280",
+        confirmButtonText: `Yes, ${action} it!`,
+    })
+    if (result.isConfirmed) {
+        const endpoint = isActive
+            ? `/management/deactivate/${graft.graft_size_id}/deactivategraftsize`
+            : `/management/activate/${graft.graft_size_id}/activategraftsize`
+        await api.put(endpoint)
+        await Swal.fire({
+            title: 'Success!',
+            text: `Graft Size has been ${action}d.`,
+            icon: 'success',
+            timer: 2000,
+            showConfirmButton: false
         })
-        if (result.isConfirmed) {
-            const endpoint = isActive
-                ? `/management/deactivate/${graft.graft_size_id}/deactivategraftsize`
-                : `/management/activate/${graft.graft_size_id}/activategraftsize`
-            await api.put(endpoint)
-            await Swal.fire({
-                title: 'Success!',
-                text: `Graft Size has been ${action}ed.`,
-                icon: 'success',
-                timer: 2000,
-                showConfirmButton: false
-            })
-            toast.success(`Graft ${action}ed successfully!`)
-            await getAllGraftRequests()
-            await fetchGraftStats()
-        }
-    } catch (error) {
-        toast.error(`Failed to ${action} Graft.`)
+        toast.success(`Graft ${action}d successfully!`)
+        await getAllGraftRequests()
+        await fetchGraftStats()
     }
 }
 
 async function confirmArchive(graft: GraftRequest) {
-    try {
-        const isArchived = graft.graft_status === 2;
-        const action = isArchived ? 'unarchive' : 'archive';
-        const actionTitle = `${action.charAt(0).toUpperCase() + action.slice(1)} Graft Size`;
-        const text = isArchived
-            ? 'Are you sure you want to unarchive this graft size? It will be restored to active.'
-            : 'Are you sure you want to archive this graft size?';
-        const result = await Swal.fire({
-            title: actionTitle,
-            text: text,
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonColor: isArchived ? "#16a34a" : "#ea580c",
-            cancelButtonColor: "#6b7280",
-            confirmButtonText: `Yes, ${action} it!`
+    const isArchived = graft.graft_status === 2
+    const action = isArchived ? 'unarchive' : 'archive'
+    const actionTitle = `${action.charAt(0).toUpperCase() + action.slice(1)} Graft Size`
+    const text = isArchived
+        ? 'Are you sure you want to unarchive this graft size? It will be restored to active.'
+        : 'Are you sure you want to archive this graft size?'
+    const result = await Swal.fire({
+        title: actionTitle,
+        text,
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: isArchived ? "#16a34a" : "#ea580c",
+        cancelButtonColor: "#6b7280",
+        confirmButtonText: `Yes, ${action} it!`
+    })
+    if (result.isConfirmed) {
+        const endpoint = isArchived
+            ? `/management/archive/${graft.graft_size_id}/unarchivegraftsize`
+            : `/management/archive/${graft.graft_size_id}/archivegraftsize`
+        await api.put(endpoint)
+        await Swal.fire({
+            title: `${action.charAt(0).toUpperCase() + action.slice(1)}d!`,
+            text: `Graft Size has been ${action}d.`,
+            icon: 'success',
+            timer: 2000,
+            showConfirmButton: false
         })
-        if (result.isConfirmed) {
-            const endpoint = isArchived
-                ? `/management/archive/${graft.graft_size_id}/unarchivegraftsize`
-                : `/management/archive/${graft.graft_size_id}/archivegraftsize`
-            await api.put(endpoint)
-            await Swal.fire({
-                title: `${action.charAt(0).toUpperCase() + action.slice(1)}ed!`,
-                text: `Graft Size has been ${action}ed.`,
-                icon: 'success',
-                timer: 2000,
-                showConfirmButton: false
-            })
-            toast.success(`Graft ${action}ed successfully!`)
-            await getAllGraftRequests()
-            await fetchGraftStats()
-        }
-    } catch (error) {
-        toast.error(`Failed to ${graft.graft_status === 2 ? 'unarchive' : 'archive'} Graft.`)
+        toast.success(`Graft ${action}d successfully!`)
+        await getAllGraftRequests()
+        await fetchGraftStats()
     }
 }
 
-// Toggle status (activate / deactivate)
 async function confirmToggleOtherStatus(product: any) {
     const isActive = product.status === 0
     const action = isActive ? 'deactivate' : 'activate'
     const actionTitle = `${action.charAt(0).toUpperCase() + action.slice(1)} Product`
-
     const text = isActive
         ? 'Are you sure you want to deactivate this product? It will no longer be available.'
         : 'Are you sure you want to activate this product? It will become available again.'
-
     const result = await Swal.fire({
         title: actionTitle,
         text,
@@ -1611,17 +1544,13 @@ async function confirmToggleOtherStatus(product: any) {
         cancelButtonColor: '#6b7280',
         confirmButtonText: `Yes, ${action} it!`,
     })
-
     if (result.isConfirmed) {
         try {
             const endpoint = isActive
                 ? `/management/other-products/${product.other_product_id}/deactivate`
                 : `/management/other-products/${product.other_product_id}/activate`
-
             await api.put(endpoint)
             toast.success(`Product ${action}d successfully!`)
-
-            // Refresh table & stats
             await fetchOtherProducts(otherCurrentPage.value)
             await fetchOtherStats()
         } catch (err) {
@@ -1630,16 +1559,13 @@ async function confirmToggleOtherStatus(product: any) {
     }
 }
 
-// Archive / Unarchive
 async function confirmArchiveOther(product: any) {
     const isArchived = product.status === 2
     const action = isArchived ? 'unarchive' : 'archive'
     const actionTitle = `${action.charAt(0).toUpperCase() + action.slice(1)} Product`
-
     const text = isArchived
         ? 'Are you sure you want to unarchive this product? It will be restored to active.'
         : 'Are you sure you want to archive this product?'
-
     const result = await Swal.fire({
         title: actionTitle,
         text,
@@ -1649,16 +1575,13 @@ async function confirmArchiveOther(product: any) {
         cancelButtonColor: '#6b7280',
         confirmButtonText: `Yes, ${action} it!`,
     })
-
     if (result.isConfirmed) {
         try {
             const endpoint = isArchived
                 ? `/management/other-products/${product.other_product_id}/unarchive`
                 : `/management/other-products/${product.other_product_id}/archive`
-
             await api.put(endpoint)
             toast.success(`Product ${action}d successfully!`)
-
             await fetchOtherProducts(otherCurrentPage.value)
             await fetchOtherStats()
         } catch (err) {
@@ -1667,7 +1590,6 @@ async function confirmArchiveOther(product: any) {
     }
 }
 
-// Delete (only allowed when archived)
 async function confirmDeleteOther(product: any) {
     const result = await Swal.fire({
         title: 'Delete Product',
@@ -1678,7 +1600,6 @@ async function confirmDeleteOther(product: any) {
         cancelButtonColor: '#6b7280',
         confirmButtonText: 'Yes, delete it!',
     })
-
     if (result.isConfirmed) {
         try {
             await api.delete(`/management/other-products/${product.other_product_id}`)
@@ -1713,10 +1634,7 @@ async function handleSubmitForm() {
                     stock: gs.stock ?? 0
                 }))
             }
-            const { data } = await api.post(
-                '/management/graft-sizes',
-                payload
-            )
+            const { data } = await api.post('/management/graft-sizes', payload)
             toast.success(data.message || 'Graft Size added successfully!')
             await getAllGraftRequests()
             await fetchGraftStats()
@@ -1726,10 +1644,7 @@ async function handleSubmitForm() {
                 toast.error('Size is required.')
                 return
             }
-
-            // Track original brand for comparison
             const originalBrandId = selectedGraftRequest.value?.brand_id || ''
-
             const payload = {
                 brand_id: formData.value.brand_id || originalBrandId,
                 item_no: graftSize.item_no.trim(),
@@ -1738,12 +1653,10 @@ async function handleSubmitForm() {
                 price: graftSize.price ?? 0,
                 stock: graftSize.stock ?? 0,
             }
-
             const { data } = await api.put(
                 `/management/update/${selectedGraftRequest.value?.graft_size_id}/updategraftsize`,
                 payload
             )
-
             toast.success(data.message || 'Graft Size Updated Successfully!')
             await getAllGraftRequests()
             await fetchGraftStats()
@@ -1777,7 +1690,7 @@ function closeForm() {
 function clearForm() {
     formData.value = {
         brand_id: '',
-        graftSizes: [{ size: '', area: null, price: null, stock: 0, id: undefined }]
+        graftSizes: [{ size: '', item_no: '', area: null, price: null, stock: 0, id: undefined, }]
     }
 }
 
@@ -1821,25 +1734,19 @@ const paginationNumbers = computed(() => {
         return pages
     }
     pages.push(1)
-    if (current > siblingCount + 2) {
-        pages.push('...')
-    }
+    if (current > siblingCount + 2) pages.push('...')
     const startPage = Math.max(2, current - siblingCount)
     const endPage = Math.min(total - 1, current + siblingCount)
     for (let i = startPage; i <= endPage; i++) {
         pages.push(i)
     }
-    if (current < total - siblingCount - 1) {
-        pages.push('...')
-    }
+    if (current < total - siblingCount - 1) pages.push('...')
     pages.push(total)
     return pages
 })
 
 const paginatedOtherProducts = computed(() => {
-    // Because we fetch paginated from backend, we just return the current page data
     return otherProducts.value
-    // If you ever switch to client-side pagination → slice like paginatedGrafts
 })
 
 function goToPage(page: number) {
@@ -1847,15 +1754,11 @@ function goToPage(page: number) {
 }
 
 function previousPage() {
-    if (currentPage.value > 1) {
-        currentPage.value--
-    }
+    if (currentPage.value > 1) currentPage.value--
 }
 
 function nextPage() {
-    if (currentPage.value < totalPages.value) {
-        currentPage.value++
-    }
+    if (currentPage.value < totalPages.value) currentPage.value++
 }
 
 const formatDate = (dateStr: string | null) => {
@@ -1867,9 +1770,7 @@ const formatDate = (dateStr: string | null) => {
 const showFormModal = computed({
     get: () => showCreateForm.value || showEditForm.value,
     set: (value: boolean) => {
-        if (!value) {
-            closeForm()
-        }
+        if (!value) closeForm()
     }
 })
 
@@ -1878,7 +1779,7 @@ const showDetailsModal = computed({
     set: (value: boolean) => {
         if (!value) {
             selectedGraftRequest.value = null
-            showEditForm.value = false // Prevent overlap
+            showEditForm.value = false
         }
     }
 })
@@ -1886,9 +1787,7 @@ const showDetailsModal = computed({
 async function fetchGraftStats() {
     try {
         const { data } = await api.get('/management/graft-sizes/stats', {
-            headers: {
-                Authorization: `Bearer ${localStorage.getItem('auth_token')}`
-            }
+            headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` }
         })
         serverStats.value = {
             total: Number(data.total ?? 0),
@@ -1907,60 +1806,22 @@ async function fetchGraftStats() {
 }
 
 function startStatsPolling() {
-    if (statsPollingInterval.value) return; // Already running
-
-    statsPollingInterval.value = setInterval(() => {
-        fetchGraftStats();
-    }, 30000); // Poll every 30 seconds
+    if (statsPollingInterval.value) return
+    statsPollingInterval.value = setInterval(fetchGraftStats, 30000)
 }
 
 function stopStatsPolling() {
     if (statsPollingInterval.value) {
-        clearInterval(statsPollingInterval.value);
-        statsPollingInterval.value = null;
+        clearInterval(statsPollingInterval.value)
+        statsPollingInterval.value = null
     }
 }
-
-watch(showStats, (show) => {
-    if (show) {
-        fetchGraftStats()           // refresh grafts when panel shown
-        if (activeTab.value === 'other') {
-            fetchOtherStats()
-        }
-    }
-})
-
-watch(activeTab, (tab) => {
-    if (tab === 'other' && showStats.value && otherStats.value.total === 0) {
-        fetchOtherStats()
-    }
-})
-
-watch(showStats, (newVal) => {
-    if (newVal) {
-        // fetchGraftStats(); 
-        startStatsPolling(); // Start polling
-    } else {
-        stopStatsPolling(); // Stop to save resources
-    }
-});
-
-watch(activeTab, (newTab) => {
-    currentPage.value = 1
-    searchTerm.value = ''
-})
-
-onUnmounted(() => {
-    stopStatsPolling();
-});
 
 async function getAllBrands() {
     tableLoader.value = true
     try {
         const { data } = await api.get(`/management/graft-sizes/getAllBrands`, {
-            headers: {
-                Authorization: `Bearer ${localStorage.getItem('auth_token')}`
-            }
+            headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` }
         })
         brandData.value = (data.brand_data || data.brands || data.data || []).map((brand: any) => ({
             brand_id: brand.brand_id,
@@ -1985,14 +1846,11 @@ async function getAllBrands() {
 async function getAllGraftRequests(page = 1) {
     tableLoader.value = true
     try {
-        let statusParam: number | undefined;
-        if (statusFilter.value === 'active') {
-            statusParam = 0;
-        } else if (statusFilter.value === 'inactive') {
-            statusParam = 1;
-        } else if (statusFilter.value === 'archived') {
-            statusParam = 2;
-        }
+        let statusParam: number | undefined
+        if (statusFilter.value === 'active') statusParam = 0
+        else if (statusFilter.value === 'inactive') statusParam = 1
+        else if (statusFilter.value === 'archived') statusParam = 2
+
         const params = {
             page,
             per_page: itemsPerPage.value,
@@ -2000,9 +1858,8 @@ async function getAllGraftRequests(page = 1) {
             status: statusParam
         }
         const { data } = await api.get(`/management/graft-sizes`, {
-            params, headers: {
-                Authorization: `Bearer ${localStorage.getItem('auth_token')}`
-            }
+            params,
+            headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` }
         })
         graftRequest.value = data.graftData || []
         totalResults.value = Number(data.meta?.total || 0)
@@ -2017,6 +1874,9 @@ async function getAllGraftRequests(page = 1) {
     }
 }
 
+// ────────────────────────────────────────────────
+// Lifecycle & Watchers
+// ────────────────────────────────────────────────
 onMounted(async () => {
     await Promise.all([
         getAllBrands(),
@@ -2035,7 +1895,6 @@ watch(currentPage, () => {
     getAllGraftRequests(currentPage.value)
 })
 
-// Call when tab changes to 'other' or when filters change while on that tab
 watch([activeTab, searchTerm, itemsPerPage, statusFilter], ([newTab]) => {
     if (newTab === 'other') {
         otherCurrentPage.value = 1
@@ -2043,14 +1902,25 @@ watch([activeTab, searchTerm, itemsPerPage, statusFilter], ([newTab]) => {
     }
 })
 
-// Also support pagination changes for other tab
 watch(otherCurrentPage, (newPage) => {
     if (activeTab.value === 'other') {
         fetchOtherProducts(newPage)
     }
 })
 
+watch(showStats, (newVal) => {
+    if (newVal) {
+        startStatsPolling()
+    } else {
+        stopStatsPolling()
+    }
+})
+
+onUnmounted(() => {
+    stopStatsPolling()
+})
 </script>
+
 
 <style scoped>
 @keyframes ping-slow {
@@ -2094,25 +1964,20 @@ watch(otherCurrentPage, (newPage) => {
 .breakdown-scroll {
     overflow-x: auto;
     scrollbar-width: none;
-    /* Firefox */
     -ms-overflow-style: none;
-    /* IE/Edge */
 }
 
 .breakdown-scroll::-webkit-scrollbar {
     display: none;
-    /* Chrome/Safari/Opera */
 }
 
 .breakdown-scroll:hover {
     scrollbar-width: thin;
     scrollbar-color: rgba(107, 114, 128, 0.5) transparent;
-    /* gray-500/50 */
 }
 
 .dark .breakdown-scroll:hover {
     scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
-    /* gray-400/50 */
 }
 
 .breakdown-scroll:hover::-webkit-scrollbar {

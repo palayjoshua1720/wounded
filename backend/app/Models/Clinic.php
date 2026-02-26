@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
@@ -63,7 +64,7 @@ class Clinic extends Model
     public function clinicians()
     {
         return $this->hasMany(User::class, 'clinic_id', 'clinic_id')
-                    ->where('user_role', 3); // 3 = Clinician role
+            ->where('user_role', 3); // 3 = Clinician role
     }
 
     public function getAllClinicianIdsAttribute()
@@ -82,5 +83,13 @@ class Clinic extends Model
     public function invoices()
     {
         return $this->hasMany(Invoice::class, 'clinic_id', 'clinic_id');
+    }
+
+    /**
+     * Accessor: make $clinic->name work even though column is clinic_name
+     */
+    public function getNameAttribute()
+    {
+        return $this->clinic_name;
     }
 }
