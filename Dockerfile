@@ -55,8 +55,7 @@ RUN set -eux; \
         pdo_mysql \
         mbstring \
         exif \
-        pcntl \
-        bcmath; \
+        bcmath;
     apt-get clean; \
     rm -rf /var/lib/apt/lists/*
 
