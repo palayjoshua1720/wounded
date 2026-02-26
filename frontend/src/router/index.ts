@@ -24,6 +24,7 @@ import IVRManagementViewManufacturer from '@/views/IVRManagementViewManufacturer
 import OrderManagementviewManufacturer from '@/views/OrderManagementviewManufacturer.vue'
 import OrderManagementViewClinic from '@/views/OrderManagementViewClinic.vue'
 import BrandManagementView from '@/views/BrandManagementView.vue'
+import PatientManagement from '@/views/PatientManagement.vue'
 import ProfileView from '@/views/ProfileView.vue'
 import ChangeAccountView from '@/views/ChangeAccountView.vue'
 import ResetPasswordView from '@/views/ResetPasswordView.vue'
@@ -35,7 +36,7 @@ import BillerTrackingForm from '@/views/BillerTrackingForm.vue'
 import { pageLoader } from '@/composables/ui/usePageLoader'
 
 // Icons
-import { LayoutDashboard, UsersRound, Hospital, Factory, Package, ShieldCheck, ShoppingCart, ClipboardList, PencilRuler, ScanBarcode, BellRing, ChartColumn, CircleUserRound, Calculator, RotateCcw, Layers, FileSpreadsheet  } from 'lucide-vue-next'
+import { LayoutDashboard, UsersRound, Hospital, Factory, Package, ShieldCheck, ShoppingCart, ClipboardList, PencilRuler, ScanBarcode, BellRing, ChartColumn, CircleUserRound, Calculator, RotateCcw, Layers, FileSpreadsheet, UserCircle  } from 'lucide-vue-next'
 
 // Types
 interface NavigationItem {
@@ -121,17 +122,17 @@ const routes: RouteRecordRaw[] = [
 					role: 1
 				}
 			},
-			{
-				path: 'clinic/users',
-				name: 'clinic-users',
-				component: UserManagementView,
-				meta: {
-					requiresAuth: true,
-					title: 'Clinicians',
-					icon: UsersRound,
-					role: 2
-				}
-			},
+			// {
+			// 	path: 'clinic/users',
+			// 	name: 'clinic-users',
+			// 	component: UserManagementView,
+			// 	meta: {
+			// 		requiresAuth: true,
+			// 		title: 'Clinicians',
+			// 		icon: UsersRound,
+			// 		role: 2
+			// 	}
+			// },
 			{
 				path: 'user-clinicians',
 				name: 'user-clinicians',
@@ -140,6 +141,29 @@ const routes: RouteRecordRaw[] = [
 					requiresAuth: true,
 					title: 'Clinicians',
 					icon: UsersRound
+				}
+			},
+			// Patient Management - Only for Clinic role (user_role = 2)
+			{
+				path: 'clinic/patients',
+				name: 'clinic-patients',
+				component: PatientManagement,
+				meta: {
+					requiresAuth: true,
+					title: 'Patients',
+					icon: UserCircle,
+					role: 2
+				}
+			},
+			{
+				path: 'admin/patients',
+				name: 'admin-patients',
+				component: PatientManagement,
+				meta: {
+					requiresAuth: true,
+					title: 'Patients',
+					icon: UserCircle,
+					role: 0
 				}
 			},
 			// *****
@@ -427,17 +451,17 @@ const routes: RouteRecordRaw[] = [
 					role: 1
 				}
 			},
-			{
-				path: 'manufacturer/inventory',
-				name: 'manufacturer-inventory',
-				component: InventoryManagementView,
-				meta: {
-					requiresAuth: true,
-					title: 'Inventory',
-					icon: ScanBarcode,
-					role: 4
-				}
-			},
+			// {
+			// 	path: 'manufacturer/inventory',
+			// 	name: 'manufacturer-inventory',
+			// 	component: InventoryManagementView,
+			// 	meta: {
+			// 		requiresAuth: true,
+			// 		title: 'Inventory',
+			// 		icon: ScanBarcode,
+			// 		role: 4
+			// 	}
+			// },
 			{
 				path: 'biller/inventory',
 				name: 'biller-inventory',
@@ -606,7 +630,9 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 		// User Management
 		'admin-users': [0],
 		'office-staff-users': [1],
-		'clinic-users': [2],
+		// 'clinic-users': [2],
+		'clinic-patients': [2],
+		'admin-patients': [0],
 		// Clinic/Manufacturers/Brands/Graft Size Management
 		'clinic-management': [0, 1],
 		'manufacturer-management': [0, 1],
@@ -637,7 +663,7 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 		// Inventory Management
 		'admin-inventory': [0],
 		'office-staff-inventory': [1],
-		'manufacturer-inventory': [4],
+		// 'manufacturer-inventory': [4],
 		'biller-inventory': [5],
 		'invoice-management': [0, 1, 2],
 		'ivr-management': [0, 1, 2, 4],
@@ -663,6 +689,7 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 				return [
 					'admin-dashboard',
 					'admin-users',
+					'admin-patients',
 					'clinic-management',
 					'manufacturer-management',
 					'brand-management',
@@ -698,7 +725,8 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 			if (role === 2) {
 				return [
 					'clinic-dashboard',
-					'clinic-users',
+					// 'clinic-users',
+					'clinic-patients',
 					'clinic-ivr-management',
 					'clinic-order-management',
 					'clinic-invoice-management'
@@ -721,7 +749,7 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 					'manufacturer-ivr-management',
 					'manufacturer-order-management',
 					'manufacturer-invoice-management',
-					'office-staff-inventory'
+					// 'office-staff-inventory'
 				].includes(route.name as string)
 			}
 

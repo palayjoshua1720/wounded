@@ -972,9 +972,6 @@ async function handleSubmitForm() {
 		payload.append('eligibility_status', formData.value.eligibility_status.toString())
 		payload.append('eligibility_email', formData.value.eligibility_email)
 
-		console.log('payload: ');
-		console.log(payload);
-
 		// For create: file is required. For edit: allow keeping existing uploaded file
 		if (showCreateForm.value) {
 			if (!selectedFile.value) {
@@ -1090,7 +1087,6 @@ async function applyOverride() {
 		await getAllIVRRequests(1);
 		closeForm();
 	} catch (error) {
-		console.error(error);
 		toast.error("Failed to override status.");
 	}
 }
@@ -1270,7 +1266,7 @@ async function getAllPatients() {
 
         patientData.value = data.patient_data
     } catch (error) {
-        console.error('Error fetching clinic users:', error)
+		//
     } finally {
         tableLoader.value = false
     }
@@ -1280,11 +1276,13 @@ async function getAllPatients() {
 async function getAllIVRRequests(page= 1){
 	tableLoader.value = true
     try {
-        const { data } = await api.get(`/management/ivr/ivrrequests?page=${page}&per_page=${itemsPerPage.value}`, {
-            headers: {
-                Authorization: `Bearer ${localStorage.getItem('auth_token')}`
-            }
-        })
+        const { data } = await api.get('/management/ivr/ivrrequests', {
+			params: {
+				page,
+				per_page: itemsPerPage.value,
+				include: 'patient,clinic,manufacturer'
+			}
+		})
 
         ivrRequest.value = data.data
 		pagination.value = {
@@ -1294,7 +1292,7 @@ async function getAllIVRRequests(page= 1){
             total: data.meta.total,
         }
     } catch (error) {
-        console.error('Error fetching clinic users:', error)
+        //
     } finally {
         tableLoader.value = false
     }
@@ -1312,7 +1310,7 @@ async function getAllBrands(){
 
         brandData.value = data.brand_data		
     } catch (error) {
-        console.error('Error fetching brands:', error)
+        //
     } finally {
         tableLoader.value = false
     }
@@ -1330,7 +1328,7 @@ async function getAllManufacturers(){
 
         manufacturerData.value = data.manufacturer_data
     } catch (error) {
-        console.error('Error fetching brands:', error)
+        //
     } finally {
         tableLoader.value = false
     }
@@ -1354,7 +1352,7 @@ async function getAllClinics(page= 1){
             total: data.meta.total,
         }
     } catch (error) {
-        console.error('Error fetching clinic users:', error)
+        //
     } finally {
         tableLoader.value = false
     }
@@ -1373,7 +1371,7 @@ const downloadIVRForm = async (id: string) => {
 		link.click();
 		URL.revokeObjectURL(link.href);
 	} catch (error) {
-		console.error('Download failed:', error);
+		// 
 	}
 };
 
@@ -1415,7 +1413,6 @@ watch(selectedManufacturer, (manufacturer) => {
 	if (manufacturer) {
 		formData.value.manufacturer_id = manufacturer.manufacturer_id
 		formData.value.eligibility_email = manufacturer.eligibility_email ?? ''
-		console.log(formData.value.eligibility_email);
 		formData.value.brand_id = selectedIvrRequest.value?.brand_id ?? '';
 		
 	} else {
@@ -1426,7 +1423,6 @@ watch(selectedManufacturer, (manufacturer) => {
 	if (manufacturer) {
 		formData.value.manufacturer_id = manufacturer.manufacturer_id
 		formData.value.eligibility_email = manufacturer.eligibility_email ?? ''
-		console.log(formData.value.eligibility_email);
 		formData.value.brand_id = selectedIvrRequest.value?.brand_id ?? '';
 		
 	} else {
@@ -1436,9 +1432,7 @@ watch(selectedManufacturer, (manufacturer) => {
 
 watch(selectedPatient, (patient) => {
 	const clinic = patient?.clinic;
-	const ivr = patient?.ivrs?.[0];
-
-	console.log('clinic: ' + clinic?.clinic_id);	
+	const ivr = patient?.ivrs?.[0];	
 
 	if (clinic) {
 		formData.value.clinic_id = clinic.clinic_id;

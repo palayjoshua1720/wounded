@@ -11,14 +11,18 @@ use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\GraftSizeController;
 use App\Http\Controllers\Api\ResetPassword;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\ReportExportController;
 use App\Http\Controllers\Api\SampleController;
 use App\Http\Controllers\Api\ReturnsController;
 use App\Http\Controllers\Api\BillerTrackingController;
+use App\Http\Controllers\Api\PatientController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\InventoryController;
-use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\AdminDashboardController;
 use App\Http\Controllers\Api\ProductController;
+use App\Http\Controllers\Api\ClinicDashboardController;
+
 
 // System Info
 Route::get('/version', function (Request $request) {
@@ -52,7 +56,12 @@ Route::get('/private-file/{path}', [IVRRequestController::class, 'viewIVRFile'])
 
 // order file stream
 Route::get('/private-order-file/{path}', [OrderController::class, 'viewOrderFile'])
-->where('path', '.*');
+    ->where('path', '.*');
+
+// get CSRF cookie before login
+Route::get('/sanctum/csrf-cookie', function () {
+    return response()->json(['csrf' => 'ok']);
+});
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
@@ -181,6 +190,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/management/order/add/neworderbyclinic', [OrderController::class, 'addNewOrderByClinic']);
     Route::put('/management/order/update/{id}/updateorderbyclinic', [OrderController::class, 'updateOrderByClinic']);
 
+    Route::get('/management/order/getotherproducts', [OrderController::class, 'getAllOtherProducts']);
+    Route::get('/management/order/getotherproducts/{id}', [OrderController::class, 'getAllOtherProductsById']);
+
     // Inventory & Usage Logs
     Route::get('/inventory/all', [InventoryController::class, 'getInventory']);
     Route::get('/inventory/serial/{serialNumber}', [InventoryController::class, 'getInventoryBySerial']);
@@ -192,17 +204,37 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/inventory/usage-logs/{id}', [InventoryController::class, 'updateUsageLog']);
     Route::patch('/inventory/{id}/status', [InventoryController::class, 'updateInventoryStatus']);
     Route::delete('/inventory/usage-logs/{id}', [InventoryController::class, 'deleteUsageLog']);
+    Route::post('/inventory/usage-logs/{id}/restore', [InventoryController::class, 'restoreUsageLog']);
 
     // Dashboard
-    Route::get('/dashboard/stats', [DashboardController::class, 'getStats']);
-    Route::get('/dashboard/recent-activity', [DashboardController::class, 'recentActivity']);
+    Route::get('/dashboard/stats', [AdminDashboardController::class, 'getStats']);
+    Route::get('/dashboard/recent-activity', [AdminDashboardController::class, 'recentActivity']);
+    Route::get('/dashboard/system-alerts', [AdminDashboardController::class, 'getSystemAlerts']);
+    Route::get('/clinic-dashboard/order-overview', [ClinicDashboardController::class, 'orderOverview']);
+    Route::get('/clinic-dashboard/system-alerts', [ClinicDashboardController::class, 'getSystemAlerts']);
 
     // Returns Management
     Route::get('/management/returns', [ReturnsController::class, 'getAllReturns']);
+    Route::get('/management/returns/{id}', [ReturnsController::class, 'getReturnById']);
     Route::post('/management/returns', [ReturnsController::class, 'createReturn']);
     Route::put('/management/returns/{id}', [ReturnsController::class, 'updateReturn']);
     Route::delete('/management/returns/{id}', [ReturnsController::class, 'deleteReturn']);
+    Route::post('/management/returns/{id}/restore', [ReturnsController::class, 'restoreReturn']);
     Route::get('/management/returns/stats', [ReturnsController::class, 'getReturnStats']);
+
+    // Patient Management
+    Route::get('/patients', [PatientController::class, 'index']);
+    Route::get('/patients/stats', [PatientController::class, 'stats']);
+    Route::post('/patients', [PatientController::class, 'store']);
+    Route::get('/patients/{id}', [PatientController::class, 'show']);
+    Route::put('/patients/{id}', [PatientController::class, 'update']);
+    Route::delete('/patients/{id}', [PatientController::class, 'destroy']);
+    Route::patch('/patients/{id}/restore', [PatientController::class, 'restore']);
+    Route::get('/patients/clinics/list', [PatientController::class, 'getClinics']);
+
+    // Report Exports
+    Route::post('/reports/export/pdf', [ReportExportController::class, 'exportPdf']);
+    Route::post('/reports/export/excel', [ReportExportController::class, 'exportExcel']);
 });
 
 // Biller Tracking (public access for testing)

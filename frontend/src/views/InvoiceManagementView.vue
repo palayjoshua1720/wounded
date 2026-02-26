@@ -104,7 +104,7 @@
                     class="text-gray-600 hover:text-green-600 dark:text-gray-400 dark:hover:text-green-400">
                     <Edit class="w-4 h-4" />
                   </button>
-                  <button @click="confirmDeleteInvoice(invoice)"
+                  <button v-if="isAdmin" @click="confirmDeleteInvoice(invoice)"
                     class="text-gray-600 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400">
                     <Trash2 class="w-4 h-4" />
                   </button>
@@ -904,6 +904,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, nextTick, watch } from 'vue'
+import { useAuthStore } from '@/stores/auth'
 import BaseModal from '@/components/common/BaseModal.vue'
 import api from '@/services/api'
 import axios from 'axios'
@@ -1002,6 +1003,9 @@ interface Product {
   quantity: number
   serials: string[]
 }
+
+// Auth store
+const authStore = useAuthStore()
 
 // Reactive state
 const invoices = ref<Invoice[]>([])
@@ -1138,6 +1142,11 @@ const hasInvoiceChanges = computed(() => {
 
   // No changes detected
   return false;
+})
+
+// Check if current user is admin (user_role = 0)
+const isAdmin = computed(() => {
+  return authStore.currentUser?.user_role === 0;
 })
 
 // Format clinic display name for dropdowns

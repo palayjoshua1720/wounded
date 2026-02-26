@@ -740,30 +740,7 @@
 		</BaseModal>
 	</div>
 
-	<div v-if="isLoadingFile"
-		class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm">
-		<div
-			class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 max-w-sm w-full mx-4 animate-in fade-in zoom-in duration-200">
-			<div class="flex flex-col items-center space-y-6">
-				<div class="relative">
-					<svg class="w-16 h-16 text-blue-600" viewBox="0 0 58 58">
-						<circle cx="29" cy="29" r="26" stroke="currentColor" stroke-opacity="0.2" stroke-width="4"
-							fill="none" />
-						<circle cx="29" cy="29" r="26" stroke="currentColor" stroke-width="4" fill="none"
-							stroke-dasharray="164" :stroke-dashoffset="164 - (164 * loadProgress / 100)"
-							class="origin-center -rotate-90 transition-all duration-300 ease-out" />
-					</svg>
-					<div class="absolute inset-0 flex items-center justify-center">
-						<Package class="w-8 h-8 text-blue-600 animate-pulse" />
-					</div>
-				</div>
-				<div class="text-center">
-					<h3 class="text-lg font-semibold text-gray-900 dark:text-white">Preparing file...</h3>
-					<p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ loadProgress }}% complete</p>
-				</div>
-			</div>
-		</div>
-	</div>
+	<UploadLoader :is-visible="isLoadingFile" :progress="loadProgress" context="brand" title="Preparing..." />
 </template>
 
 <script setup lang="ts">
@@ -773,6 +750,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import BaseModal from '@/components/common/BaseModal.vue'
 import Pagination from '@/components/ui/Pagination.vue'
 import ContentLoader from '@/components/ui/ContentLoader.vue'
+import UploadLoader from '@/components/ui/UploadLoader.vue'
 import { Package, PackagePlus, Eye, SquarePen, Trash2, Archive, CircleCheck, CircleX, Factory, TriangleAlert, Hash, RulerDimensionLine, Diameter, DollarSign, PencilRuler, Plus, Search, Funnel, Globe, Ruler, PackageOpen, PackageSearch, ChevronDown, Image, UploadCloud, X, RefreshCw, Minus, Barcode } from 'lucide-vue-next'
 import api from '@/services/api'
 import axios from "axios";
@@ -1390,38 +1368,6 @@ async function logoConfirmCrop() {
 		isLoadingFile.value = false
 	}
 }
-
-// async function logoConfirmCrop() {
-//     if (!logoCanvas.value || !logoSelectedImage.value || !logoPendingFile) return
-
-//     const canvasEl = logoCanvas.value
-
-//     canvasEl.toBlob((blob) => {
-//         if (!blob) return
-
-//         const newFile = new File([blob], logoPendingFile!.name, { type: 'image/png' })
-
-//         selectedLogoFile.value = newFile
-//         revokeLogoObjectUrl() // clean any previous blob
-//         logoObjectUrl.value = URL.createObjectURL(newFile)
-
-//         // This is the crucial line – show the cropped image in the form preview
-//         formData.value.logoUrl = logoObjectUrl.value
-
-//         removeLogoFlag.value = false
-//         showLogoCropModal.value = false
-
-//         // Cleanup temporary image
-//         if (logoImageSrc.value && logoImageSrc.value.startsWith('blob:')) {
-//             URL.revokeObjectURL(logoImageSrc.value)
-//         }
-//         logoImageSrc.value = null
-//         logoSelectedImage.value = null
-//         logoPendingFile = null
-//     }, 'image/png')
-
-//     simulateLoading() // if you want the same progress bar
-// }
 
 function logoCancelCrop() {
 	showLogoCropModal.value = false

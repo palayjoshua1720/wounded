@@ -159,6 +159,13 @@ export const inventoryService = {
   },
 
   /**
+   * Get all usage logs
+   */
+  getUsageLogs() {
+    return api.get('/inventory/all');
+  },
+
+  /**
    * Get inventory by serial number
    */
   getInventoryBySerial(serialNumber: string) {
@@ -251,7 +258,56 @@ export const brandService = {
 
 export const patientService = {
   /**
-   * Get all patients
+   * Get all patients with optional filters (minimal data for list view)
+   */
+  getPatients(params?: { search?: string; clinic_id?: string; page?: number }) {
+    return api.get('/patients', { params });
+  },
+
+  /**
+   * Get patient by ID with full details (HIPAA compliant with audit logging)
+   */
+  getPatientById(id: number) {
+    return api.get(`/patients/${id}`);
+  },
+
+  /**
+   * Get patient statistics
+   */
+  getPatientStats() {
+    return api.get('/patients/stats');
+  },
+
+  /**
+   * Create a new patient
+   */
+  createPatient(data: { patient_name: string; email: string; clinic_id?: string | null; user_id?: string | null }) {
+    return api.post('/patients', data);
+  },
+
+  /**
+   * Update a patient
+   */
+  updatePatient(id: number, data: { patient_name: string; email: string; clinic_id?: string | null }) {
+    return api.put(`/patients/${id}`, data);
+  },
+
+  /**
+   * Delete a patient
+   */
+  deletePatient(id: number) {
+    return api.delete(`/patients/${id}`);
+  },
+
+  /**
+   * Get clinics for patient dropdown
+   */
+  getPatientClinics() {
+    return api.get('/patients/clinics/list');
+  },
+
+  /**
+   * Get all patients (legacy endpoint)
    */
   getAllPatients() {
     return api.get('/management/patients/patientinfo');
@@ -259,35 +315,23 @@ export const patientService = {
 };
 
 export const dashboardService = {
-  async getMetrics() {
-    try {
-      const res = await api.get('/dashboard/stats');
-      return res.data?.data || {
-        brands: { total: 0, active: 0, new: 0 },
-        manufacturers: { total: 0, active: 0, new: 0 },
-        clinics: { total: 0, active: 0, new: 0 },
-        orders: { total: 0, new: 0 }
-      };
-    } catch (err) {
-      console.error('Failed to load dashboard metrics', err);
-      return {
-        brands: { total: 0, active: 0, new: 0 },
-        manufacturers: { total: 0, active: 0, new: 0 },
-        clinics: { total: 0, active: 0, new: 0 },
-        orders: { total: 0, new: 0 }
-      };
-    }
+  getMetrics() {
+    return api.get('/dashboard/stats');
   },
+  getRecentActivity() {
+    return api.get('/dashboard/recent-activity');
+  },
+  getSystemAlerts() {
+    return api.get('/dashboard/system-alerts');
+  }
+};
 
-  async getRecentActivity() {
-    try {
-      const res = await api.get('/dashboard/recent-activity');
-      console.log(res);
-      return res.data?.data || [];
-    } catch (err) {
-      console.error('Failed to load recent activity', err);
-      return [];
-    }
+export const clinicDashboardService = {
+  getOverview() {
+    return api.get('/clinic-dashboard/order-overview');
+  },
+  getSystemAlerts() {
+    return api.get('/clinic-dashboard/system-alerts');
   }
 };
 
@@ -315,4 +359,5 @@ export const returnsService = {
   }
 };
 
+export { api }
 export default api 

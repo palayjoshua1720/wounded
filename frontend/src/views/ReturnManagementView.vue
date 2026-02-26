@@ -98,18 +98,24 @@
       :manufacturers="manufacturers"
       :graft-sizes="graftSizes"
       :loading="isLoadingReturns"
+      :pagination="pagination"
+      :items-per-page="itemsPerPage"
+      :current-page="currentPage"
       @submit-return="handleSubmitReturn"
       @upload-return-document="handleUploadReturnDocument"
       @view-return="handleViewReturn"
       @delete-return="handleDeleteReturn"
+      @update:page="handlePageChange"
+      @update:items-per-page="handleItemsPerPageChange"
     />
 
-    <!-- New Return Modal -->
+<!-- New Return Modal -->
     <NewReturnModal
       v-model="showNewReturnForm"
       :brands="brands"
       :manufacturers="manufacturers"
       :graft-sizes="graftSizes"
+      :usage-logs="usageLogs"
       @submit-return="handleSubmitReturn"
     />
     <BaseModal v-model="showDetailsModal" title="" width="max-w-5xl">
@@ -281,7 +287,7 @@ import ReturnsManagement from '@/components/Returns/ReturnsManagement.vue'
 import NewReturnModal from '@/components/Returns/NewReturnModal.vue'
 import BaseModal from '@/components/common/BaseModal.vue'
 import { RefreshCcw, Upload, CheckCircle2, Eye, Undo2, BarChart3, Plus } from 'lucide-vue-next'
-import api from '@/services/api'
+import api, { inventoryService } from '@/services/api'
 import Swal from 'sweetalert2'
 
 interface ReturnItem {
@@ -325,6 +331,11 @@ interface GraftSize {
   brandId: string
 }
 
+interface UsageLog {
+  id: string
+  reference: string
+}
+
 const brands = ref<Brand[]>([])
 
 const manufacturers = ref<Manufacturer[]>([])
@@ -332,6 +343,18 @@ const manufacturers = ref<Manufacturer[]>([])
 const graftSizes = ref<GraftSize[]>([])
 
 const returns = ref<ReturnItem[]>([])
+
+// Pagination state
+const itemsPerPage = ref(10)
+const currentPage = ref(1)
+const pagination = ref({
+  current_page: 1,
+  last_page: 1,
+  per_page: 10,
+  total: 0,
+})
+
+const usageLogs = ref<UsageLog[]>([])
 
 const showDetailsModal = ref(false)
 const selectedReturn = ref<ReturnItem | null>(null)
@@ -397,11 +420,15 @@ async function fetchGraftSizes() {
   }
 }
 
-// Fetch returns from database
-async function fetchReturns() {
+// Fetch returns from database with pagination
+async function fetchReturns(page = 1) {
   try {
     isLoadingReturns.value = true
     const { data } = await api.get('/management/returns', {
+      params: {
+        page: page,
+        per_page: itemsPerPage.value
+      },
       headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` }
     })
     // Map the API response to match our component's expected structure
@@ -433,10 +460,36 @@ async function fetchReturns() {
       ocrExpiryDate: ret.ocrExpiryDate || '',
       ocrProductCode: ret.ocrProductCode || ''
     }))
+    
+    // Update pagination metadata from backend
+    if (data.meta) {
+      pagination.value = {
+        current_page: data.meta.current_page,
+        last_page: data.meta.last_page,
+        per_page: data.meta.per_page,
+        total: data.meta.total,
+      }
+      currentPage.value = data.meta.current_page
+    }
   } catch (error) {
     console.error('Error fetching returns:', error)
   } finally {
     isLoadingReturns.value = false
+  }
+}
+
+// Fetch usage logs from database
+async function fetchUsageLogs() {
+  try {
+    const { data } = await inventoryService.getUsageLogs()
+    
+    // Transform API response to match expected format
+    usageLogs.value = data.data.map((log: any) => ({
+      id: log.id?.toString() || '',
+      reference: `${log.serialNumber || 'Unknown'} - ${log.patientName || 'Unknown Patient'}`
+    }))
+  } catch (error) {
+    console.error('Error fetching usage logs:', error)
   }
 }
 
@@ -446,11 +499,12 @@ onMounted(() => {
   fetchManufacturers()
   fetchGraftSizes()
   fetchReturns()
+  fetchUsageLogs()
 })
 
-// Computed statistics
+// Computed statistics (use pagination total for accurate count)
 const stats = computed(() => {
-  const total = returns.value.length
+  const total = pagination.value.total
   const manual = returns.value.filter(r => r.entryType === 'manual').length
   const upload = returns.value.filter(r => r.entryType === 'upload').length
   
@@ -527,7 +581,22 @@ async function handleSubmitReturn(data: any) {
         updatePayload.ocrSize = data.size
       }
       
-      const response = await api.put(`/management/returns/${data.id}`, updatePayload, {
+      // Extract numeric ID from inv- format for backend validation
+      let numericGraftLogId = null
+      if (data.graftLogId) {
+        const extractedId = String(data.graftLogId).replace(/^inv-/, '')
+        numericGraftLogId = Number(extractedId)
+        if (isNaN(numericGraftLogId) || numericGraftLogId <= 0) {
+          numericGraftLogId = null
+        }
+      }
+      
+      const submitUpdatePayload = {
+        ...updatePayload,
+        graftLogId: numericGraftLogId
+      }
+      
+      const response = await api.put(`/management/returns/${data.id}`, submitUpdatePayload, {
         headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` }
       })
       
@@ -571,7 +640,40 @@ async function handleSubmitReturn(data: any) {
       })
     } else {
       // Create new return
-      const response = await api.post('/management/returns', data, {
+      // Map field names to match backend expectations
+      // NewReturnModal sends 'reason', backend expects 'reason'
+      // NewReturnModal sends 'other', backend expects 'other'
+      
+      // Extract numeric ID from inv- format for backend validation
+      let numericGraftLogId = null
+      if (data.graftLogId) {
+        const extractedId = String(data.graftLogId).replace(/^inv-/, '')
+        numericGraftLogId = Number(extractedId)
+        // Validate that we got a valid number
+        if (isNaN(numericGraftLogId) || numericGraftLogId <= 0) {
+          await Swal.fire({
+            icon: 'error',
+            title: 'Invalid Usage Log ID',
+            text: 'The usage log ID format is invalid. Please select a valid usage log from the dropdown.',
+            confirmButtonColor: '#dc2626'
+          })
+          return
+        }
+      }
+      
+      // Ensure we're sending the correct field names
+      const submitData = {
+        brandId: data.brandId,
+        graftSizeId: data.graftSizeId,
+        reason: data.reason || data.returnReason, // Handle both field names
+        other: data.other || data.otherReason || null,
+        entryType: data.entryType || 'manual',
+        graftLogId: numericGraftLogId
+      }
+      
+      console.log('Submitting return data:', submitData)
+          
+      const response = await api.post('/management/returns', submitData, {
         headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` }
       })
       
@@ -657,6 +759,19 @@ async function handleSubmitReturn(data: any) {
     })
   }
 }
+// Handle page change from pagination component
+function handlePageChange(page: number) {
+  currentPage.value = page
+  fetchReturns(page)
+}
+
+// Handle items per page change
+function handleItemsPerPageChange(newItemsPerPage: number) {
+  itemsPerPage.value = newItemsPerPage
+  currentPage.value = 1
+  fetchReturns(1)
+}
+
 function handleUploadReturnDocument(file: File, returnData: any) {
   // Simulate OCR extraction and add a new return
   const newReturn: ReturnItem = {

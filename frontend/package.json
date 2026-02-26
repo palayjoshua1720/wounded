@@ -36,7 +36,7 @@
     "@vue/cli-plugin-typescript": "^5.0.9",
     "@vue/cli-service": "~5.0.0",
     "@vue/eslint-config-typescript": "^14.6.0",
-    "autoprefixer": "^10.4.17", 
+    "autoprefixer": "^10.4.17",
     "eslint": "^9.0.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-prettier": "^4.0.0",
