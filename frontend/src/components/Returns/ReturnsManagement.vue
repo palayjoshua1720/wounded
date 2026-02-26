@@ -24,6 +24,17 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
             </svg>
           </div>
+          <div class="relative">
+            <select
+              v-model="itemsPerPage"
+              class="pl-4 pr-8 py-3.5 border-0 bg-gray-50 dark:bg-gray-700/50 rounded-xl focus:ring-2 focus:ring-orange-500 focus:bg-white dark:focus:bg-gray-700 text-gray-900 dark:text-white appearance-none transition-all duration-200"
+            >
+              <option value="10">10 per page</option>
+              <option value="25">25 per page</option>
+              <option value="50">50 per page</option>
+            </select>
+            <ChevronDown class="absolute right-3 top-3.5 h-4 w-4 text-gray-500 dark:text-gray-400 pointer-events-none" />
+          </div>
         </div>
       </div>
     </div>
@@ -53,7 +64,7 @@
               </td>
             </tr>
             <template v-else>
-              <tr v-for="item in filteredReturns" :key="item.id" class="hover:bg-gray-50/70 dark:hover:bg-gray-700/50 transition-colors duration-150">
+              <tr v-for="item in returns" :key="item.id" class="hover:bg-gray-50/70 dark:hover:bg-gray-700/50 transition-colors duration-150">
               <td class="px-6 py-5 whitespace-nowrap">
                 <div class="flex items-center">
                   <div class="flex-shrink-0 h-10 w-10 bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-lg flex items-center justify-center">
@@ -130,142 +141,162 @@
         <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">No returns found</h3>
         <p class="text-gray-600 dark:text-gray-400">No return records match your current filters.</p>
       </div>
+      
+      <!-- Pagination -->
+      <Pagination 
+        v-if="pagination.total > 0"
+        :pagination="pagination"
+        @update:page="changePage"
+      />
     </div>
-    <BaseModal v-model="showViewModal" title="" width="max-w-5xl">
-      <div v-if="selectedReturn" class="space-y-5">
-        <!-- Clean Card Layout -->
-        <div class="space-y-5">
-          <!-- Header -->
-          <div class="relative bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-700 dark:to-indigo-800 rounded-2xl p-5 shadow-md overflow-hidden">
-            <!-- Simple decorative accent -->
-            <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12"></div>
+    <BaseModal v-model="showViewModal" title="Return Details" width="max-w-3xl">
+      <div v-if="selectedReturn" class="space-y-6">
+        <!-- Loading Indicator -->
+        <div v-if="isLoadingDetails" class="flex items-center justify-center py-8">
+          <div class="w-6 h-6 rounded-full border-4 border-blue-200 border-t-blue-600 animate-spin mr-3"></div>
+          <span class="text-sm text-gray-600 dark:text-gray-400">Loading details...</span>
+        </div>
+
+        <!-- Blue Banner (Serial Part) - Keep as is -->
+        <div class="relative bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-700 dark:to-indigo-800 rounded-2xl p-5 shadow-md overflow-hidden">
+          <!-- Simple decorative accent -->
+          <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12"></div>
+          
+          <div class="relative flex items-center justify-between gap-4">
+            <!-- Left: Serial Number -->
+            <div class="flex-1 min-w-0">
+              <p class="text-blue-100 dark:text-blue-200 text-xs font-medium mb-1">Serial Number</p>
+              <p class="text-white text-xl font-bold font-mono break-all">{{ selectedReturn.serialNumber || '-' }}</p>
+            </div>
             
-            <div class="relative flex items-center justify-between gap-4">
-              <!-- Left: Serial Number -->
-              <div class="flex-1 min-w-0">
-                <p class="text-blue-100 dark:text-blue-200 text-xs font-medium mb-1">Serial Number</p>
-                <p class="text-white text-xl font-bold font-mono break-all">{{ selectedReturn.serialNumber || '-' }}</p>
-              </div>
+            <!-- Right: Badges -->
+            <div class="flex items-center gap-2 flex-shrink-0">
+              <!-- Entry Type Badge -->
+              <span v-if="selectedReturn.entryType === 'upload'" 
+                class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-white/20 text-white backdrop-blur-sm border border-white/30">
+                Upload
+              </span>
+              <span v-else 
+                class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-white/20 text-white backdrop-blur-sm border border-white/30">
+                Manual
+              </span>
               
-              <!-- Right: Badges -->
-              <div class="flex items-center gap-2 flex-shrink-0">
-                <!-- Entry Type Badge -->
-                <span v-if="selectedReturn.entryType === 'upload'" 
-                  class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-white/20 text-white backdrop-blur-sm border border-white/30">
-                  Upload
-                </span>
-                <span v-else 
-                  class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-white/20 text-white backdrop-blur-sm border border-white/30">
-                  Manual
-                </span>
-                
-                <!-- Product Code Badge -->
-                <span v-if="selectedReturn.productCode" class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-mono font-semibold bg-white/20 text-white backdrop-blur-sm border border-white/30">
-                  {{ selectedReturn.productCode }}
-                </span>
-                
-                <!-- Return Date Badge -->
-                <div class="bg-white/20 backdrop-blur-sm rounded-md px-3 py-1 border border-white/30">
-                  <p class="text-xs font-semibold text-white">{{ formatDate(selectedReturn.returnDate) }}</p>
-                </div>
+              <!-- Product Code Badge -->
+              <span v-if="selectedReturn.productCode" class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-mono font-semibold bg-white/20 text-white backdrop-blur-sm border border-white/30">
+                {{ selectedReturn.productCode }}
+              </span>
+              
+              <!-- Return Date Badge -->
+              <div class="bg-white/20 backdrop-blur-sm rounded-md px-3 py-1 border border-white/30">
+                <p class="text-xs font-semibold text-white">{{ formatDate(selectedReturn.returnDate) }}</p>
               </div>
             </div>
           </div>
-          <!-- Product Details -->
-          <div>
-            <h3 class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">Product Details</h3>
-            <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-              <div class="divide-y divide-gray-100 dark:divide-gray-700">
-                <!-- Brand Row -->
-                <div class="px-5 py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                  <div class="flex items-center gap-2.5">
-                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
-                      <Tag class="w-4 h-4 text-white" />
-                    </div>
-                    <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Brand</span>
-                  </div>
-                  <div class="text-right">
-                    <div class="text-base font-semibold text-gray-900 dark:text-white">{{ getBrandName(selectedReturn.brandId) }}</div>
-                    <div v-if="selectedReturn.manufacturer" class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ selectedReturn.manufacturer }}</div>
-                  </div>
-                </div>
+        </div>
 
-                <!-- Size Row -->
-                <div class="px-5 py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                  <div class="flex items-center gap-2.5">
-                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center">
-                      <Maximize2 class="w-4 h-4 text-white" />
-                    </div>
-                    <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Size</span>
-                  </div>
-                  <span class="text-base font-semibold text-gray-900 dark:text-white">{{ selectedReturn.size || '-' }}</span>
-                </div>
-
-                <!-- Expiry Date Row -->
-                <div class="px-5 py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                  <div class="flex items-center gap-2.5">
-                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
-                      <Calendar class="w-4 h-4 text-white" />
-                    </div>
-                    <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Expiry Date</span>
-                  </div>
-                  <span class="text-base font-semibold text-gray-900 dark:text-white">{{ selectedReturn.expiryDate ? formatDate(selectedReturn.expiryDate) : '-' }}</span>
-                </div>
+        <!-- Info Grid - Patient Management Style -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Brand -->
+          <div class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
+            <div class="flex items-center space-x-3">
+              <div class="h-10 w-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
+                <Tag class="w-5 h-5 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div>
+                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Brand</p>
+                <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ getBrandName(selectedReturn.brandId) }}</p>
+                <p v-if="selectedReturn.manufacturer" class="text-xs text-gray-500 dark:text-gray-400">{{ selectedReturn.manufacturer }}</p>
               </div>
             </div>
           </div>
 
-          <!-- Return Information -->
-          <div>
-            <h3 class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">Return Information</h3>
-            <div class="bg-gradient-to-br from-red-50 to-rose-50 dark:from-red-950/20 dark:to-rose-950/20 rounded-2xl border-2 border-red-200 dark:border-red-900/50 p-5">
-              <div class="flex items-start gap-3">
-                <div class="w-9 h-9 rounded-full bg-gradient-to-br from-red-500 to-rose-600 flex items-center justify-center flex-shrink-0 shadow-lg">
-                  <AlertTriangle class="w-5 h-5 text-white" />
-                </div>
-                <div class="flex-1">
-                  <div class="text-xs font-semibold text-red-600 dark:text-red-400 uppercase tracking-wider mb-1.5">Reason for Return</div>
-                  <div class="text-base font-semibold text-red-900 dark:text-red-100">{{ selectedReturn.returnReason }}</div>
-                  <div v-if="selectedReturn.otherReason" class="mt-2.5 pt-2.5 border-t border-red-200 dark:border-red-900/50">
-                    <div class="text-xs font-medium text-red-700 dark:text-red-300 mb-1">Additional Details</div>
-                    <div class="text-sm text-red-800 dark:text-red-200 leading-relaxed">{{ selectedReturn.otherReason }}</div>
-                  </div>
-                </div>
+          <!-- Size -->
+          <div class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
+            <div class="flex items-center space-x-3">
+              <div class="h-10 w-10 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
+                <Maximize2 class="w-5 h-5 text-purple-600 dark:text-purple-400" />
+              </div>
+              <div>
+                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Size</p>
+                <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ selectedReturn.size || '-' }}</p>
               </div>
             </div>
           </div>
 
-          <!-- Uploaded File Preview (if exists) -->
-          <div v-if="selectedReturn.extractedFromImage && selectedReturn.uploadedFileName && selectedReturn.uploadedFileUrl">
-            <h3 class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">Uploaded Document</h3>
-            <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-              <div class="px-5 py-3 bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700">
-                <div class="flex items-center gap-2.5">
-                  <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center">
-                    <ImageIcon class="w-4 h-4 text-white" />
-                  </div>
-                  <div>
-                    <div class="text-sm font-medium text-gray-900 dark:text-white">{{ selectedReturn.uploadedFileName }}</div>
-                    <div class="text-xs text-gray-500 dark:text-gray-400">{{ selectedReturn.uploadedFileType || 'File' }}</div>
-                  </div>
-                </div>
+          <!-- Expiry Date -->
+          <div class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
+            <div class="flex items-center space-x-3">
+              <div class="h-10 w-10 bg-orange-100 dark:bg-orange-900/30 rounded-lg flex items-center justify-center">
+                <Calendar class="w-5 h-5 text-orange-600 dark:text-orange-400" />
               </div>
-              <div class="p-4">
-                <template v-if="selectedReturn.uploadedFileType && selectedReturn.uploadedFileType.startsWith('image/')">
-                  <img :src="selectedReturn.uploadedFileUrl" :alt="selectedReturn.uploadedFileName" 
-                    class="max-h-64 rounded-lg mx-auto shadow-sm" />
-                </template>
-                <template v-else-if="selectedReturn.uploadedFileType === 'application/pdf'">
-                  <iframe :src="selectedReturn.uploadedFileUrl" class="w-full h-64 border rounded-lg" />
-                </template>
-                <template v-else>
+              <div>
+                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Expiry Date</p>
+                <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ selectedReturn.expiryDate ? formatDate(selectedReturn.expiryDate) : '-' }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Entry Type -->
+          <div class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
+            <div class="flex items-center space-x-3">
+              <div class="h-10 w-10 bg-teal-100 dark:bg-teal-900/30 rounded-lg flex items-center justify-center">
+                <Upload class="w-5 h-5 text-teal-600 dark:text-teal-400" />
+              </div>
+              <div>
+                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Entry Type</p>
+                <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ selectedReturn.entryType === 'upload' ? 'File Upload' : 'Manual Entry' }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Return Reason - Highlighted Section -->
+        <div class="bg-gradient-to-br from-red-50 to-rose-50 dark:from-red-950/20 dark:to-rose-950/20 rounded-2xl border-2 border-red-200 dark:border-red-900/50 p-5">
+          <div class="flex items-start gap-3">
+            <div class="h-10 w-10 bg-red-100 dark:bg-red-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
+              <AlertTriangle class="w-5 h-5 text-red-600 dark:text-red-400" />
+            </div>
+            <div class="flex-1">
+              <p class="text-xs font-medium text-red-600 dark:text-red-400 uppercase tracking-wide mb-1">Reason for Return</p>
+              <p class="text-base font-semibold text-red-900 dark:text-red-100">{{ selectedReturn.returnReason }}</p>
+              <div v-if="selectedReturn.otherReason" class="mt-3 pt-3 border-t border-red-200 dark:border-red-900/50">
+                <p class="text-xs font-medium text-red-700 dark:text-red-300 mb-1">Additional Details</p>
+                <p class="text-sm text-red-800 dark:text-red-200 leading-relaxed">{{ selectedReturn.otherReason }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Uploaded File Preview (if exists) -->
+        <div v-if="selectedReturn.extractedFromImage && selectedReturn.uploadedFileName && selectedReturn.uploadedFileUrl">
+          <h3 class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">Uploaded Document</h3>
+          <div class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
+            <div class="flex items-center space-x-3 mb-4">
+              <div class="h-10 w-10 bg-teal-100 dark:bg-teal-900/30 rounded-lg flex items-center justify-center">
+                <ImageIcon class="w-5 h-5 text-teal-600 dark:text-teal-400" />
+              </div>
+              <div>
+                <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ selectedReturn.uploadedFileName }}</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">{{ selectedReturn.uploadedFileType || 'File' }}</p>
+              </div>
+            </div>
+            <div class="bg-white dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700">
+              <template v-if="selectedReturn.uploadedFileType && selectedReturn.uploadedFileType.startsWith('image/')">
+                <img :src="selectedReturn.uploadedFileUrl" :alt="selectedReturn.uploadedFileName" 
+                  class="max-h-64 mx-auto" />
+              </template>
+              <template v-else-if="selectedReturn.uploadedFileType === 'application/pdf'">
+                <iframe :src="selectedReturn.uploadedFileUrl" class="w-full h-64" />
+              </template>
+              <template v-else>
+                <div class="p-4 text-center">
                   <a :href="selectedReturn.uploadedFileUrl" target="_blank" 
                     class="inline-flex items-center px-4 py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors">
                     <Download class="w-4 h-4 mr-2" />
                     Download/View File
                   </a>
-                </template>
-              </div>
+                </div>
+              </template>
             </div>
           </div>
         </div>
@@ -283,6 +314,11 @@
     <!-- Edit Return Modal -->
     <BaseModal v-model="showEditModal" title="Edit Return" width="max-w-2xl">
       <div v-if="editedReturn" class="space-y-6">
+        <!-- Loading Indicator -->
+        <div v-if="isLoadingDetails" class="flex items-center justify-center py-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
+          <div class="w-6 h-6 rounded-full border-4 border-blue-200 border-t-blue-600 animate-spin mr-3"></div>
+          <span class="text-sm text-gray-600 dark:text-gray-400">Loading fresh data...</span>
+        </div>
         <!-- Serial Number Header -->
         <div class="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl p-5 text-white shadow-lg">
           <div class="flex items-center justify-between">
@@ -499,8 +535,10 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { RefreshCcw, Upload, CheckCircle2, Eye, Search, Edit3, Trash2, Tag, Maximize2, Calendar, AlertTriangle, Image as ImageIcon, Download } from 'lucide-vue-next'
+import { RefreshCcw, Upload, CheckCircle2, Eye, Search, Edit3, Trash2, Tag, Maximize2, Calendar, AlertTriangle, Image as ImageIcon, Download, ChevronDown } from 'lucide-vue-next'
 import BaseModal from '@/components/common/BaseModal.vue'
+import Pagination from '@/components/ui/Pagination.vue'
+import api from '@/services/api'
 
 interface Props {
   returns?: ReturnItem[]
@@ -509,6 +547,14 @@ interface Props {
   graftSizes?: GraftSize[]
   showForm?: boolean
   loading?: boolean
+  pagination?: {
+    current_page: number
+    last_page: number
+    per_page: number
+    total: number
+  }
+  itemsPerPage?: number
+  currentPage?: number
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -517,13 +563,23 @@ const props = withDefaults(defineProps<Props>(), {
   manufacturers: () => [],
   graftSizes: () => [],
   showForm: false,
-  loading: false
+  loading: false,
+  pagination: () => ({
+    current_page: 1,
+    last_page: 1,
+    per_page: 10,
+    total: 0,
+  }),
+  itemsPerPage: 10,
+  currentPage: 1
 })
 
 const emit = defineEmits<{
   'submit-return': [data: any]
   'view-return': [item: ReturnItem]
   'delete-return': [item: ReturnItem]
+  'update:page': [page: number]
+  'update:items-per-page': [itemsPerPage: number]
 }>()
 
 interface ReturnItem {
@@ -572,6 +628,19 @@ const graftSizes = ref<GraftSize[]>(props.graftSizes || [])
 
 const returns = ref<ReturnItem[]>(props.returns || [])
 
+// Use props for server-side pagination
+const itemsPerPage = computed({
+  get: () => props.itemsPerPage,
+  set: (val) => emit('update:items-per-page', val)
+})
+
+const currentPage = computed({
+  get: () => props.currentPage,
+  set: (val) => emit('update:page', val)
+})
+
+const pagination = computed(() => props.pagination)
+
 // Watch for prop changes and update local refs
 watch(() => props.returns, (newReturns) => {
   returns.value = newReturns
@@ -592,25 +661,14 @@ watch(() => props.graftSizes, (newGraftSizes) => {
 const searchQuery = ref('')
 const statusFilter = ref('all')
 
-const filteredReturns = computed(() => {
-  let filtered = returns.value
-  if (statusFilter.value !== 'all') {
-    filtered = filtered.filter(item => item.entryType === statusFilter.value)
-  }
-  if (searchQuery.value.trim()) {
-    const q = searchQuery.value.trim().toLowerCase()
-    filtered = filtered.filter(item =>
-      (item.serialNumber && item.serialNumber.toLowerCase().includes(q)) ||
-      (item.productCode && item.productCode.toLowerCase().includes(q)) ||
-      (item.size && item.size.toLowerCase().includes(q)) ||
-      (item.returnReason && item.returnReason.toLowerCase().includes(q)) ||
-      (item.manufacturer && item.manufacturer.toLowerCase().includes(q)) ||
-      (getBrandName(item.brandId) && getBrandName(item.brandId).toLowerCase().includes(q))
-    )
-  }
-  
-  return filtered
-})
+// Note: Server-side filtering/searching should be implemented in the backend
+// For now, returns are already paginated from the server
+const filteredReturns = computed(() => returns.value)
+
+function changePage(page: number) {
+  if (page < 1 || page > pagination.value.last_page) return
+  emit('update:page', page)
+}
 
 function getBrandName(brandId: string) {
   return brands.value.find(b => b.id === brandId)?.name || 'Unknown Brand'
@@ -658,6 +716,7 @@ const showDeleteModal = ref(false)
 const returnToDelete = ref<ReturnItem | null>(null)
 const showEditModal = ref(false)
 const editedReturn = ref<ReturnItem | null>(null)
+const isLoadingDetails = ref(false)
 
 // Edit form fields
 const editBrandId = ref('')
@@ -668,19 +727,41 @@ const editProductCode = ref('')
 const editExpiryDate = ref('')
 const editSize = ref('')
 
-function viewReturn(item: ReturnItem) {
+async function viewReturn(item: ReturnItem) {
+  // Open modal immediately with basic data for better UX
   selectedReturn.value = item
   showViewModal.value = true
+  isLoadingDetails.value = true
+
+  try {
+    // Fetch full details from server (HIPAA compliant with audit logging)
+    const { data } = await api.get(`/management/returns/${item.id}`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` }
+    })
+
+    // Update with full details
+    if (data.data) {
+      selectedReturn.value = {
+        ...item,
+        ...data.data
+      }
+    }
+  } catch (error) {
+    console.error('Error fetching return details:', error)
+    // Keep the basic data visible even if detail fetch fails
+  } finally {
+    isLoadingDetails.value = false
+  }
 }
 
-function editReturn(item: ReturnItem) {
-  // Populate edit form with current data
+async function editReturn(item: ReturnItem) {
+  // Open modal immediately with basic data for better UX
   editedReturn.value = { ...item }
   editBrandId.value = item.brandId
   editReturnReason.value = item.returnReason
   editOtherReason.value = item.otherReason || ''
   
-  // For upload entries, allow editing all OCR fields
+  // For upload entries, allow editing all OCR fields (with initial data)
   if (item.entryType === 'upload') {
     editSerialNumber.value = item.serialNumber || ''
     editProductCode.value = item.productCode || ''
@@ -689,6 +770,38 @@ function editReturn(item: ReturnItem) {
   }
   
   showEditModal.value = true
+  isLoadingDetails.value = true
+
+  try {
+    // Fetch full details from server (HIPAA compliant with audit logging)
+    const { data } = await api.get(`/management/returns/${item.id}`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` }
+    })
+
+    // Update with fresh data from server
+    if (data.data) {
+      const freshData = data.data
+      editedReturn.value = { ...item, ...freshData }
+      
+      // Update form fields with fresh data
+      editBrandId.value = freshData.brandId || item.brandId
+      editReturnReason.value = freshData.reason || item.returnReason
+      editOtherReason.value = freshData.other || item.otherReason || ''
+      
+      // For upload entries, update OCR fields with fresh data
+      if (item.entryType === 'upload') {
+        editSerialNumber.value = freshData.ocrSerialNumber || freshData.serialNumber || item.serialNumber || ''
+        editProductCode.value = freshData.ocrProductCode || freshData.productCode || item.productCode || ''
+        editExpiryDate.value = freshData.ocrExpiryDate || freshData.expiryDate || item.expiryDate || ''
+        editSize.value = freshData.graftSize || item.size || ''
+      }
+    }
+  } catch (error) {
+    console.error('Error fetching return details for edit:', error)
+    // Keep the basic data in the form even if detail fetch fails
+  } finally {
+    isLoadingDetails.value = false
+  }
 }
 
 function confirmDelete(item: ReturnItem) {
@@ -752,4 +865,34 @@ function cancelEdit() {
   editExpiryDate.value = ''
   editSize.value = ''
 }
+
+// HIPAA Compliance: Clear sensitive data from memory when view modal closes
+watch(showViewModal, (isOpen) => {
+  if (!isOpen) {
+    // Clear selected return data after a short delay to allow modal close animation
+    setTimeout(() => {
+      selectedReturn.value = null
+    }, 300)
+  }
+})
+
+// HIPAA Compliance: Clear sensitive data from memory when edit modal closes
+watch(showEditModal, (isOpen) => {
+  if (!isOpen) {
+    // Clear edited return data after a short delay to allow modal close animation
+    setTimeout(() => {
+      editedReturn.value = null
+      // Also clear all form fields
+      editBrandId.value = ''
+      editReturnReason.value = ''
+      editOtherReason.value = ''
+      editSerialNumber.value = ''
+      editProductCode.value = ''
+      editExpiryDate.value = ''
+      editSize.value = ''
+    }, 300)
+  }
+})
+
+// Note: Server-side pagination is now used - pagination state comes from parent via props
 </script> 

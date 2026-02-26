@@ -9,9 +9,21 @@ use App\Models\GraftSize;
 use App\Models\PatientInfo;
 use App\Models\User;
 use Illuminate\Http\Request;
+use App\Traits\AuditLogger;
 
 class InventoryController extends Controller
 {
+    use AuditLogger;
+
+    protected function getEntityName()
+    {
+        return 'woundmed_usage_log';
+    }
+
+    protected function getEntityType()
+    {
+        return 'usage_log';
+    }
     /**
      * Get all inventory items from usage logs with related data
      */
@@ -158,6 +170,14 @@ class InventoryController extends Controller
 
         $usageLog = UsageLog::create($validated);
 
+        // Log audit trail
+        $this->logAudit(
+            $request,
+            'usage_log_create',
+            "Usage log created for serial: {$validated['serial_number']}, patient_id: {$validated['patient_id']}",
+            $usageLog->graft_log_id
+        );
+
         return response()->json([
             'success' => true,
             'message' => 'Usage log created successfully',
@@ -186,7 +206,16 @@ class InventoryController extends Controller
             'filepath' => 'sometimes|string|nullable'
         ]);
 
+        $oldSerial = $usageLog->serial_number;
         $usageLog->update($validated);
+
+        // Log audit trail
+        $this->logAudit(
+            $request,
+            'usage_log_update',
+            "Usage log updated for serial: {$oldSerial}, changes: " . implode(', ', array_keys($validated)),
+            $id
+        );
 
         return response()->json([
             'success' => true,
@@ -196,16 +225,61 @@ class InventoryController extends Controller
     }
 
     /**
-     * Delete a usage log entry
+     * Soft delete a usage log entry
      */
-    public function deleteUsageLog($id)
+    public function deleteUsageLog(Request $request, $id)
     {
         $usageLog = UsageLog::findOrFail($id);
+        $serialNumber = $usageLog->serial_number;
+        $patientId = $usageLog->patient_id;
+
+        // Soft delete the usage log (record is retained for audit purposes)
         $usageLog->delete();
+
+        // Log audit trail
+        $this->logAudit(
+            $request,
+            'usage_log_delete',
+            "Usage log soft-deleted for serial: {$serialNumber}, patient_id: {$patientId}",
+            $id
+        );
 
         return response()->json([
             'success' => true,
             'message' => 'Usage log deleted successfully'
+        ]);
+    }
+
+    /**
+     * Restore a soft-deleted usage log entry
+     */
+    public function restoreUsageLog(Request $request, $id)
+    {
+        $usageLog = UsageLog::withTrashed()->findOrFail($id);
+
+        if (!$usageLog->trashed()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Usage log is not deleted',
+            ], 400);
+        }
+
+        $serialNumber = $usageLog->serial_number;
+
+        // Restore the soft-deleted usage log
+        $usageLog->restore();
+
+        // Log audit trail
+        $this->logAudit(
+            $request,
+            'usage_log_restore',
+            "Usage log restored for serial: {$serialNumber}",
+            $id
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Usage log restored successfully',
         ]);
     }
 

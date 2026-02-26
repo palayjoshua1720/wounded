@@ -270,11 +270,32 @@
                                     </span>
                                 </td>
                                 <td class="px-6 py-5 whitespace-nowrap">
-                                    <div class="text-sm text-gray-900 dark:text-white"
-                                        :class="isExpiringSoon(item.expiryDate) ? 'text-red-600' : ''">
-                                        {{ formatDate(item.expiryDate) }}
-                                        <span v-if="isExpiringSoon(item.expiryDate)"
-                                            class="text-xs text-red-500 block">Expiring Soon</span>
+                                    <div class="flex flex-col gap-1">
+                                        <span class="text-sm text-gray-900 dark:text-white">{{ formatDate(item.expiryDate) }}</span>
+                                        <!-- Expiry Status Badge -->
+                                        <span v-if="getExpiryStatus(item.expiryDate)" 
+                                            :class="[
+                                                'inline-flex items-center w-fit px-2 py-0.5 rounded-full text-xs font-medium',
+                                                getExpiryStatus(item.expiryDate)?.bgClass,
+                                                getExpiryStatus(item.expiryDate)?.colorClass
+                                            ]">
+                                            <template v-if="getExpiryStatus(item.expiryDate)?.status === 'expired'">
+                                                <XCircle class="w-3 h-3 mr-1" />
+                                            </template>
+                                            <template v-else-if="getExpiryStatus(item.expiryDate)?.status === 'critical'">
+                                                <AlertCircle class="w-3 h-3 mr-1" />
+                                            </template>
+                                            <template v-else-if="getExpiryStatus(item.expiryDate)?.status === 'warning'">
+                                                <AlertTriangle class="w-3 h-3 mr-1" />
+                                            </template>
+                                            <template v-else-if="getExpiryStatus(item.expiryDate)?.status === 'caution'">
+                                                <Clock class="w-3 h-3 mr-1" />
+                                            </template>
+                                            <template v-else>
+                                                <CheckCircle2 class="w-3 h-3 mr-1" />
+                                            </template>
+                                            {{ getExpiryStatus(item.expiryDate)?.label }}
+                                        </span>
                                     </div>
                                 </td>
                                 <td class="px-6 py-5 whitespace-nowrap text-sm font-medium">
@@ -579,10 +600,10 @@
         </BaseModal>
 
         <!-- Item Details Modal -->
-        <BaseModal v-model="showItemModal" title="Inventory Details" width="max-w-5xl">
-            <div v-if="selectedItem" class="space-y-4">
-                <!-- Header Section -->
-                <div class="relative bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-700 dark:to-indigo-800 rounded-lg p-5 shadow-md overflow-hidden">
+        <BaseModal v-model="showItemModal" title="Inventory Details" width="max-w-3xl">
+            <div v-if="selectedItem" class="space-y-6">
+                <!-- Blue Banner (Serial Part) - Keep as is -->
+                <div class="relative bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-700 dark:to-indigo-800 rounded-2xl p-5 shadow-md overflow-hidden">
                     <!-- Simple decorative accent -->
                     <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12"></div>
                     
@@ -608,175 +629,259 @@
                     </div>
                 </div>
 
-                <!-- Main Information Card -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <!-- Expiry Countdown Notification -->
+                <div v-if="selectedItem.expiryDate && getExpiryStatus(selectedItem.expiryDate)" 
+                    :class="[
+                        'rounded-xl p-4 border-2',
+                        getExpiryStatus(selectedItem.expiryDate)?.bgClass,
+                        getExpiryStatus(selectedItem.expiryDate)?.borderClass
+                    ]">
+                    <div class="flex items-center gap-3">
+                        <div :class="[
+                            'h-10 w-10 rounded-lg flex items-center justify-center flex-shrink-0',
+                            getExpiryStatus(selectedItem.expiryDate)?.status === 'expired' ? 'bg-red-200 dark:bg-red-800' :
+                            getExpiryStatus(selectedItem.expiryDate)?.status === 'critical' ? 'bg-red-200 dark:bg-red-800' :
+                            getExpiryStatus(selectedItem.expiryDate)?.status === 'warning' ? 'bg-orange-200 dark:bg-orange-800' :
+                            getExpiryStatus(selectedItem.expiryDate)?.status === 'caution' ? 'bg-amber-200 dark:bg-amber-800' :
+                            'bg-green-200 dark:bg-green-800'
+                        ]">
+                            <template v-if="getExpiryStatus(selectedItem.expiryDate)?.status === 'expired'">
+                                <XCircle class="w-5 h-5 text-red-700 dark:text-red-300" />
+                            </template>
+                            <template v-else-if="getExpiryStatus(selectedItem.expiryDate)?.status === 'critical'">
+                                <AlertCircle class="w-5 h-5 text-red-700 dark:text-red-300" />
+                            </template>
+                            <template v-else-if="getExpiryStatus(selectedItem.expiryDate)?.status === 'warning'">
+                                <AlertTriangle class="w-5 h-5 text-orange-700 dark:text-orange-300" />
+                            </template>
+                            <template v-else-if="getExpiryStatus(selectedItem.expiryDate)?.status === 'caution'">
+                                <Clock class="w-5 h-5 text-amber-700 dark:text-amber-300" />
+                            </template>
+                            <template v-else>
+                                <CheckCircle2 class="w-5 h-5 text-green-700 dark:text-green-300" />
+                            </template>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p :class="[
+                                'text-sm font-semibold',
+                                getExpiryStatus(selectedItem.expiryDate)?.colorClass
+                            ]">
+                                {{ getExpiryStatus(selectedItem.expiryDate)?.label }}
+                            </p>
+                            <p :class="[
+                                'text-xs',
+                                getExpiryStatus(selectedItem.expiryDate)?.colorClass
+                            ]">
+                                Expires on {{ formatDate(selectedItem.expiryDate) }}
+                            </p>
+                        </div>
+                    </div>
+                    <!-- Visual Progress Bar for non-expired items -->
+                    <div v-if="getExpiryStatus(selectedItem.expiryDate)?.status !== 'expired' && getExpiryStatus(selectedItem.expiryDate)?.daysUntil !== undefined" class="mt-3">
+                        <div class="w-full bg-white/50 dark:bg-black/20 rounded-full h-2">
+                            <div :class="[
+                                'h-2 rounded-full transition-all duration-500',
+                                getExpiryStatus(selectedItem.expiryDate)?.status === 'critical' ? 'bg-red-500 w-[95%]' :
+                                getExpiryStatus(selectedItem.expiryDate)?.status === 'warning' ? 'bg-orange-500 w-[75%]' :
+                                getExpiryStatus(selectedItem.expiryDate)?.status === 'caution' ? 'bg-amber-500 w-[50%]' :
+                                'bg-green-500 w-[25%]'
+                            ]"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Info Grid - Patient Management Style -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <!-- Brand -->
-                    <div class="px-6 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors border-b border-gray-100 dark:border-gray-700">
-                        <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center flex-shrink-0">
-                                <Package class="w-4 h-4 text-white" />
+                    <div class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
+                        <div class="flex items-center space-x-3">
+                            <div class="h-10 w-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
+                                <Package class="w-5 h-5 text-blue-600 dark:text-blue-400" />
                             </div>
-                            <div class="flex-1 min-w-0 flex items-center justify-between">
-                                <span class="text-sm text-gray-600 dark:text-gray-400">Brand</span>
-                                <span class="text-sm font-semibold text-gray-900 dark:text-white">{{ getBrandName(selectedItem.brandId) }}</span>
+                            <div>
+                                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Brand</p>
+                                <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ getBrandName(selectedItem.brandId) }}</p>
                             </div>
                         </div>
                     </div>
 
                     <!-- Size -->
-                    <div class="px-6 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors border-b border-gray-100 dark:border-gray-700">
-                        <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center flex-shrink-0">
-                                <Maximize2 class="w-4 h-4 text-white" />
+                    <div class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
+                        <div class="flex items-center space-x-3">
+                            <div class="h-10 w-10 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
+                                <Maximize2 class="w-5 h-5 text-purple-600 dark:text-purple-400" />
                             </div>
-                            <div class="flex-1 min-w-0 flex items-center justify-between">
-                                <span class="text-sm text-gray-600 dark:text-gray-400">Size</span>
-                                <span class="text-sm font-semibold text-gray-900 dark:text-white">{{ getSizeName(selectedItem.brandId, selectedItem.sizeId) }}</span>
+                            <div>
+                                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Size</p>
+                                <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ getSizeName(selectedItem.brandId, selectedItem.sizeId) }}</p>
                             </div>
                         </div>
                     </div>
 
                     <!-- Clinic -->
-                    <div class="px-6 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors border-b border-gray-100 dark:border-gray-700">
-                        <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center flex-shrink-0">
-                                <MapPin class="w-4 h-4 text-white" />
+                    <div class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
+                        <div class="flex items-center space-x-3">
+                            <div class="h-10 w-10 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
+                                <MapPin class="w-5 h-5 text-green-600 dark:text-green-400" />
                             </div>
-                            <div class="flex-1 min-w-0 flex items-center justify-between">
-                                <span class="text-sm text-gray-600 dark:text-gray-400">Clinic</span>
-                                <span class="text-sm font-semibold text-gray-900 dark:text-white">{{ getClinicName(selectedItem.clinicId) }}</span>
+                            <div>
+                                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Clinic</p>
+                                <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ getClinicName(selectedItem.clinicId) }}</p>
                             </div>
                         </div>
                     </div>
 
                     <!-- Patient -->
-                    <div class="px-6 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors border-b border-gray-100 dark:border-gray-700">
-                        <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center flex-shrink-0">
-                                <User class="w-4 h-4 text-white" />
+                    <div class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
+                        <div class="flex items-center space-x-3">
+                            <div class="h-10 w-10 bg-teal-100 dark:bg-teal-900/30 rounded-lg flex items-center justify-center">
+                                <User class="w-5 h-5 text-teal-600 dark:text-teal-400" />
                             </div>
-                            <div class="flex-1 min-w-0 flex items-center justify-between">
-                                <span class="text-sm text-gray-600 dark:text-gray-400">Patient</span>
-                                <span class="text-sm font-semibold text-gray-900 dark:text-white">{{ selectedItem.patientName || 'N/A' }}</span>
+                            <div>
+                                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Patient</p>
+                                <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ selectedItem.patientName || 'N/A' }}</p>
                             </div>
                         </div>
                     </div>
 
                     <!-- Order Code -->
-                    <div v-if="selectedItem.orderCode" class="px-6 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors border-b border-gray-100 dark:border-gray-700">
-                        <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center flex-shrink-0">
-                                <FileText class="w-4 h-4 text-white" />
+                    <div v-if="selectedItem.orderCode" class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
+                        <div class="flex items-center space-x-3">
+                            <div class="h-10 w-10 bg-orange-100 dark:bg-orange-900/30 rounded-lg flex items-center justify-center">
+                                <FileText class="w-5 h-5 text-orange-600 dark:text-orange-400" />
                             </div>
-                            <div class="flex-1 min-w-0 flex items-center justify-between">
-                                <span class="text-sm text-gray-600 dark:text-gray-400">Order Code</span>
-                                <span class="text-sm font-mono font-semibold text-gray-900 dark:text-white">{{ selectedItem.orderCode }}</span>
+                            <div>
+                                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Order Code</p>
+                                <p class="text-sm font-mono font-semibold text-gray-900 dark:text-white">{{ selectedItem.orderCode }}</p>
                             </div>
                         </div>
                     </div>
 
                     <!-- Order ID -->
-                    <div v-if="selectedItem.orderId" class="px-6 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors border-b border-gray-100 dark:border-gray-700">
-                        <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-400 to-orange-500 flex items-center justify-center flex-shrink-0">
-                                <Hash class="w-4 h-4 text-white" />
+                    <div v-if="selectedItem.orderId" class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
+                        <div class="flex items-center space-x-3">
+                            <div class="h-10 w-10 bg-amber-100 dark:bg-amber-900/30 rounded-lg flex items-center justify-center">
+                                <Hash class="w-5 h-5 text-amber-600 dark:text-amber-400" />
                             </div>
-                            <div class="flex-1 min-w-0 flex items-center justify-between">
-                                <span class="text-sm text-gray-600 dark:text-gray-400">Order ID</span>
-                                <span class="text-sm font-mono font-semibold text-gray-900 dark:text-white">#{{ selectedItem.orderId }}</span>
+                            <div>
+                                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Order ID</p>
+                                <p class="text-sm font-mono font-semibold text-gray-900 dark:text-white">#{{ selectedItem.orderId }}</p>
                             </div>
                         </div>
                     </div>
 
                     <!-- Date of Service -->
-                    <div v-if="selectedItem.deliveryDate" class="px-6 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors border-b border-gray-100 dark:border-gray-700">
-                        <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center flex-shrink-0">
-                                <Calendar class="w-4 h-4 text-white" />
+                    <div v-if="selectedItem.deliveryDate" class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
+                        <div class="flex items-center space-x-3">
+                            <div class="h-10 w-10 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg flex items-center justify-center">
+                                <Calendar class="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                             </div>
-                            <div class="flex-1 min-w-0 flex items-center justify-between">
-                                <span class="text-sm text-gray-600 dark:text-gray-400">Date of Service</span>
-                                <span class="text-sm font-semibold text-gray-900 dark:text-white">{{ formatDate(selectedItem.deliveryDate) }}</span>
+                            <div>
+                                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Date of Service</p>
+                                <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ formatDate(selectedItem.deliveryDate) }}</p>
                             </div>
                         </div>
                     </div>
 
                     <!-- Expiry Date -->
-                    <div v-if="selectedItem.expiryDate" class="px-6 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                        <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-rose-500 to-rose-600 flex items-center justify-center flex-shrink-0">
-                                <AlertTriangle class="w-4 h-4 text-white" />
+                    <div v-if="selectedItem.expiryDate && getExpiryStatus(selectedItem.expiryDate)" 
+                        :class="[
+                            'rounded-xl p-4 border-2',
+                            getExpiryStatus(selectedItem.expiryDate)?.bgClass,
+                            getExpiryStatus(selectedItem.expiryDate)?.borderClass
+                        ]">
+                        <div class="flex items-center space-x-3">
+                            <div :class="[
+                                'h-10 w-10 rounded-lg flex items-center justify-center flex-shrink-0',
+                                getExpiryStatus(selectedItem.expiryDate)?.status === 'expired' ? 'bg-red-200 dark:bg-red-800' :
+                                getExpiryStatus(selectedItem.expiryDate)?.status === 'critical' ? 'bg-red-200 dark:bg-red-800' :
+                                getExpiryStatus(selectedItem.expiryDate)?.status === 'warning' ? 'bg-orange-200 dark:bg-orange-800' :
+                                getExpiryStatus(selectedItem.expiryDate)?.status === 'caution' ? 'bg-amber-200 dark:bg-amber-800' :
+                                'bg-green-200 dark:bg-green-800'
+                            ]">
+                                <template v-if="getExpiryStatus(selectedItem.expiryDate)?.status === 'expired'">
+                                    <XCircle class="w-5 h-5 text-red-700 dark:text-red-300" />
+                                </template>
+                                <template v-else-if="getExpiryStatus(selectedItem.expiryDate)?.status === 'critical'">
+                                    <AlertCircle class="w-5 h-5 text-red-700 dark:text-red-300" />
+                                </template>
+                                <template v-else-if="getExpiryStatus(selectedItem.expiryDate)?.status === 'warning'">
+                                    <AlertTriangle class="w-5 h-5 text-orange-700 dark:text-orange-300" />
+                                </template>
+                                <template v-else-if="getExpiryStatus(selectedItem.expiryDate)?.status === 'caution'">
+                                    <Clock class="w-5 h-5 text-amber-700 dark:text-amber-300" />
+                                </template>
+                                <template v-else>
+                                    <CheckCircle2 class="w-5 h-5 text-green-700 dark:text-green-300" />
+                                </template>
                             </div>
-                            <div class="flex-1 min-w-0 flex items-center justify-between">
-                                <span class="text-sm text-gray-600 dark:text-gray-400">Expiry Date</span>
-                                <div class="flex items-center gap-2">
-                                    <span :class="`text-sm font-semibold ${isExpiringSoon(selectedItem.expiryDate) ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-white'}`">
-                                        {{ formatDate(selectedItem.expiryDate) }}
-                                    </span>
-                                    <span v-if="isExpiringSoon(selectedItem.expiryDate)" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-200">
-                                        Expiring Soon
-                                    </span>
+                            <div>
+                                <p :class="[
+                                    'text-xs font-medium uppercase tracking-wide',
+                                    getExpiryStatus(selectedItem.expiryDate)?.colorClass
+                                ]">Expiry Date</p>
+                                <p :class="[
+                                    'text-sm font-semibold',
+                                    getExpiryStatus(selectedItem.expiryDate)?.colorClass
+                                ]">
+                                    {{ formatDate(selectedItem.expiryDate) }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Usage Information - Highlighted Section -->
+                <div v-if="selectedItem.woundPart || selectedItem.quantity" class="bg-gradient-to-br from-pink-50 to-rose-50 dark:from-pink-950/20 dark:to-rose-950/20 rounded-2xl border-2 border-pink-200 dark:border-pink-900/50 p-5">
+                    <div class="flex items-start gap-3">
+                        <div class="h-10 w-10 bg-pink-100 dark:bg-pink-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <FileStack class="w-5 h-5 text-pink-600 dark:text-pink-400" />
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-xs font-medium text-pink-600 dark:text-pink-400 uppercase tracking-wide mb-1">Usage Information</p>
+                            <div class="space-y-2">
+                                <div v-if="selectedItem.woundPart" class="flex items-center justify-between">
+                                    <span class="text-sm text-pink-700 dark:text-pink-300">Wound Part</span>
+                                    <span class="text-sm font-semibold text-pink-900 dark:text-pink-100">{{ selectedItem.woundPart }}</span>
+                                </div>
+                                <div v-if="selectedItem.quantity" class="flex items-center justify-between">
+                                    <span class="text-sm text-pink-700 dark:text-pink-300">Quantity Used</span>
+                                    <span class="text-sm font-semibold text-pink-900 dark:text-pink-100">{{ selectedItem.quantity }}</span>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Usage Information -->
-                <div v-if="selectedItem.woundPart || selectedItem.quantity" class="relative bg-gradient-to-br from-pink-50 to-rose-50 dark:from-pink-900/20 dark:to-rose-900/20 rounded-xl p-5 border border-pink-100 dark:border-pink-800/30 overflow-hidden">
-                    <div class="absolute top-0 right-0 w-32 h-32 bg-pink-200 dark:bg-pink-800 rounded-full -mr-16 -mt-16 opacity-20"></div>
-                    <div class="relative">
-                        <div class="flex items-center gap-2 mb-3">
-                            <div class="w-7 h-7 rounded-lg bg-gradient-to-br from-pink-500 to-rose-600 flex items-center justify-center flex-shrink-0">
-                                <FileStack class="w-4 h-4 text-white" />
-                            </div>
-                            <h3 class="text-sm font-semibold text-pink-900 dark:text-pink-200">Usage Information</h3>
+                <!-- Description/Notes - Highlighted Section -->
+                <div v-if="selectedItem.description" class="bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-amber-950/20 dark:to-yellow-950/20 rounded-2xl border-2 border-amber-200 dark:border-amber-900/50 p-5">
+                    <div class="flex items-start gap-3">
+                        <div class="h-10 w-10 bg-amber-100 dark:bg-amber-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <MessageSquare class="w-5 h-5 text-amber-600 dark:text-amber-400" />
                         </div>
-                        <div class="space-y-2">
-                            <div v-if="selectedItem.woundPart" class="flex items-center justify-between">
-                                <span class="text-sm text-pink-700 dark:text-pink-300">Wound Part</span>
-                                <span class="text-sm font-semibold text-pink-900 dark:text-pink-100">{{ selectedItem.woundPart }}</span>
-                            </div>
-                            <div v-if="selectedItem.quantity" class="flex items-center justify-between">
-                                <span class="text-sm text-pink-700 dark:text-pink-300">Quantity Used</span>
-                                <span class="text-sm font-semibold text-pink-900 dark:text-pink-100">{{ selectedItem.quantity }}</span>
-                            </div>
+                        <div class="flex-1">
+                            <p class="text-xs font-medium text-amber-600 dark:text-amber-400 uppercase tracking-wide mb-1">Notes & Description</p>
+                            <p class="text-sm text-amber-800 dark:text-amber-200 whitespace-pre-wrap leading-relaxed">{{ selectedItem.description }}</p>
                         </div>
-                    </div>
-                </div>
-
-                <!-- Description/Notes -->
-                <div v-if="selectedItem.description" class="relative bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 rounded-xl p-5 border border-amber-100 dark:border-amber-800/30 overflow-hidden">
-                    <div class="absolute bottom-0 left-0 w-32 h-32 bg-amber-200 dark:bg-amber-800 rounded-full -ml-16 -mb-16 opacity-20"></div>
-                    <div class="relative">
-                        <div class="flex items-center gap-2 mb-2.5">
-                            <div class="w-7 h-7 rounded-lg bg-gradient-to-br from-amber-500 to-yellow-600 flex items-center justify-center flex-shrink-0">
-                                <MessageSquare class="w-4 h-4 text-white" />
-                            </div>
-                            <h3 class="text-sm font-semibold text-amber-900 dark:text-amber-200">Notes & Description</h3>
-                        </div>
-                        <p class="text-sm text-amber-800 dark:text-amber-200 whitespace-pre-wrap leading-relaxed">{{ selectedItem.description }}</p>
                     </div>
                 </div>
 
                 <!-- Attached File -->
-                <div v-if="selectedItem.filepath" class="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0">
-                                <ImageIcon class="w-5 h-5 text-white" />
-                            </div>
-                            <div>
-                                <p class="text-xs text-gray-500 dark:text-gray-400">Attached Document</p>
-                                <p class="text-sm font-semibold text-gray-900 dark:text-white">File Available</p>
-                            </div>
+                <div v-if="selectedItem.filepath" class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
+                    <div class="flex items-center space-x-3 mb-4">
+                        <div class="h-10 w-10 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg flex items-center justify-center">
+                            <ImageIcon class="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                         </div>
-                        <a :href="selectedItem.filepath" target="_blank" rel="noopener noreferrer"
-                            class="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white rounded-lg transition-colors text-sm font-medium shadow-sm">
-                            <Eye class="w-4 h-4 mr-1.5" />
-                            View File
-                        </a>
+                        <div>
+                            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Attached Document</p>
+                            <p class="text-sm font-semibold text-gray-900 dark:text-white">File Available</p>
+                        </div>
                     </div>
+                    <a :href="selectedItem.filepath" target="_blank" rel="noopener noreferrer"
+                        class="inline-flex items-center px-4 py-2 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900/30 transition-colors text-sm font-medium">
+                        <Eye class="w-4 h-4 mr-2" />
+                        View File
+                    </a>
                 </div>
 
                 <!-- Usage History -->
@@ -1166,10 +1271,12 @@ import {
     MapPin,
     CheckCircle2,
     Calendar,
-    // Clock,
+    Clock,
     Repeat2,
     CornerUpLeft,
     AlertTriangle,
+    AlertCircle,
+    XCircle,
     BarChart3,
     Search,
     Filter,
@@ -1696,13 +1803,98 @@ function formatDate(dateString?: string) {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
-function isExpiringSoon(expiryDateString?: string) {
-    if (!expiryDateString) return false
+// Expiry status types
+type ExpiryStatus = 'expired' | 'critical' | 'warning' | 'caution' | 'good'
+
+interface ExpiryInfo {
+    status: ExpiryStatus
+    daysUntil: number
+    label: string
+    colorClass: string
+    bgClass: string
+    borderClass: string
+    icon: string
+}
+
+function getExpiryStatus(expiryDateString?: string): ExpiryInfo | null {
+    if (!expiryDateString) return null
+    
     const expiryDate = new Date(expiryDateString)
+    expiryDate.setHours(23, 59, 59, 999)
+    
     const today = new Date()
-    const diffTime = Math.abs(expiryDate.getTime() - today.getTime())
+    today.setHours(0, 0, 0, 0)
+    
+    const diffTime = expiryDate.getTime() - today.getTime()
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-    return diffDays <= 30 && diffDays > 0
+    
+    if (diffDays < 0) {
+        return {
+            status: 'expired',
+            daysUntil: Math.abs(diffDays),
+            label: 'Expired',
+            colorClass: 'text-red-700 dark:text-red-300',
+            bgClass: 'bg-red-100 dark:bg-red-900/30',
+            borderClass: 'border-red-300 dark:border-red-700',
+            icon: 'XCircle'
+        }
+    } else if (diffDays === 0) {
+        return {
+            status: 'critical',
+            daysUntil: 0,
+            label: 'Expires Today',
+            colorClass: 'text-red-700 dark:text-red-300',
+            bgClass: 'bg-red-100 dark:bg-red-900/30',
+            borderClass: 'border-red-300 dark:border-red-700',
+            icon: 'AlertCircle'
+        }
+    } else if (diffDays === 1) {
+        return {
+            status: 'critical',
+            daysUntil: 1,
+            label: '1 Day Left',
+            colorClass: 'text-red-700 dark:text-red-300',
+            bgClass: 'bg-red-100 dark:bg-red-900/30',
+            borderClass: 'border-red-300 dark:border-red-700',
+            icon: 'AlertCircle'
+        }
+    } else if (diffDays <= 3) {
+        return {
+            status: 'warning',
+            daysUntil: diffDays,
+            label: `${diffDays} Days Left`,
+            colorClass: 'text-orange-700 dark:text-orange-300',
+            bgClass: 'bg-orange-100 dark:bg-orange-900/30',
+            borderClass: 'border-orange-300 dark:border-orange-700',
+            icon: 'AlertTriangle'
+        }
+    } else if (diffDays <= 7) {
+        return {
+            status: 'caution',
+            daysUntil: diffDays,
+            label: `${diffDays} Days Left`,
+            colorClass: 'text-amber-700 dark:text-amber-300',
+            bgClass: 'bg-amber-100 dark:bg-amber-900/30',
+            borderClass: 'border-amber-300 dark:border-amber-700',
+            icon: 'Clock'
+        }
+    } else {
+        return {
+            status: 'good',
+            daysUntil: diffDays,
+            label: `${diffDays} Days Left`,
+            colorClass: 'text-green-700 dark:text-green-300',
+            bgClass: 'bg-green-100 dark:bg-green-900/30',
+            borderClass: 'border-green-300 dark:border-green-700',
+            icon: 'CheckCircle2'
+        }
+    }
+}
+
+// Legacy function for backward compatibility
+function isExpiringSoon(expiryDateString?: string): boolean {
+    const status = getExpiryStatus(expiryDateString)
+    return status !== null && ['expired', 'critical', 'warning', 'caution'].includes(status.status)
 }
 
 function getClinicName(clinicId?: string) {

@@ -24,16 +24,23 @@ class PatientInfo extends Model
         'patient_name',
         'email',
         'clinic_id',
+        'updated_by',
     ];
 
     /**
      * Relationships
      */
 
-    // Patient belongs to a User (clinician)
+    // Patient belongs to a User (clinician) - creator
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id', 'id');
+    }
+
+    // Patient was last updated by this User
+    public function updatedBy()
+    {
+        return $this->belongsTo(User::class, 'updated_by', 'id');
     }
 
     // Patient belongs to a Clinic

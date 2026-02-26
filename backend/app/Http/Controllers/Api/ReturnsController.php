@@ -27,7 +27,7 @@ class ReturnsController extends Controller
     }
 
     /**
-     * Get all returns with pagination
+     * Get all returns with pagination (minimal data for list view)
      */
     public function getAllReturns(Request $request)
     {
@@ -38,6 +38,7 @@ class ReturnsController extends Controller
             ->orderBy('returned_at', 'desc')
             ->paginate($perPage, ['*'], 'page', $page);
 
+        // Minimal data for list view - excludes sensitive details
         $formattedReturns = $returns->map(function ($return) {
             return [
                 'id' => (string) $return->return_id,
@@ -68,6 +69,48 @@ class ReturnsController extends Controller
                 'last_page' => $returns->lastPage(),
                 'per_page' => $returns->perPage(),
                 'total' => $returns->total(),
+            ]
+        ]);
+    }
+
+    /**
+     * Get a single return by ID with full details (HIPAA compliant with audit logging)
+     */
+    public function getReturnById(Request $request, $id)
+    {
+        $return = Returns::with(['brand.manufacturer', 'graftSize', 'usageLog'])
+            ->findOrFail($id);
+
+        // Log audit trail for HIPAA compliance - record who viewed what and when
+        $brand = $return->brand;
+        $this->logAudit(
+            $request,
+            'return_view',
+            "Return details viewed for brand: {$brand->brand_name}, return_id: {$id}",
+            $id
+        );
+
+        // Full detail response
+        return response()->json([
+            'data' => [
+                'id' => (string) $return->return_id,
+                'entryType' => $return->entry_type,
+                'brandId' => (string) $return->brand_id,
+                'brandName' => $return->brand->brand_name ?? null,
+                'manufacturerName' => $return->brand->manufacturer->manufacturer_name ?? null,
+                'graftSizeId' => (string) $return->graft_size_id,
+                'graftSize' => $return->graftSize->size ?? null,
+                'graftArea' => $return->graftSize ? (float) $return->graftSize->area : null,
+                'reason' => $return->reason,
+                'other' => $return->other,
+                'graftLogId' => $return->graft_log_id ? (string) $return->graft_log_id : null,
+                'serialNumber' => $return->usageLog ? $return->usageLog->serial_number : null,
+                'expiryDate' => $return->usageLog && $return->usageLog->expired_at ? $return->usageLog->expired_at->format('Y-m-d') : null,
+                'ocrSerialNumber' => $return->ocr_serial_number,
+                'ocrExpiryDate' => $return->ocr_expiry_date ? $return->ocr_expiry_date->format('Y-m-d') : null,
+                'ocrProductCode' => $return->ocr_product_code,
+                'returnedAt' => $return->returned_at->format('Y-m-d H:i:s'),
+                'updatedAt' => $return->updated_at->format('Y-m-d H:i:s'),
             ]
         ]);
     }
@@ -107,6 +150,42 @@ class ReturnsController extends Controller
             throw ValidationException::withMessages([
                 'graftSizeId' => 'The selected graft size does not belong to the selected brand.'
             ]);
+        }
+
+        // Check for duplicates based on entry type
+        if ($validated['entryType'] === 'manual') {
+            // For manual entries: Check if graft_log_id is already linked to a return
+            $existingReturn = Returns::where('graft_log_id', $validated['graftLogId'])->first();
+            if ($existingReturn) {
+                // Get the usage log serial number for the error message
+                $usageLog = UsageLog::where('graft_log_id', $validated['graftLogId'])->first();
+                $serialNumber = $usageLog ? $usageLog->serial_number : 'Unknown';
+                throw ValidationException::withMessages([
+                    'graftLogId' => "A return record already exists for this usage log (Serial Number: {$serialNumber})."
+                ]);
+            }
+        } elseif ($validated['entryType'] === 'upload') {
+            // For upload entries: Check if ocr_serial_number or ocr_product_code already exists
+            $ocrSerialNumber = $validated['ocrSerialNumber'] ?? null;
+            $ocrProductCode = $validated['ocrProductCode'] ?? null;
+
+            if ($ocrSerialNumber) {
+                $existingBySerial = Returns::where('ocr_serial_number', $ocrSerialNumber)->first();
+                if ($existingBySerial) {
+                    throw ValidationException::withMessages([
+                        'ocrSerialNumber' => "A return record already exists with this OCR Serial Number ({$ocrSerialNumber})."
+                    ]);
+                }
+            }
+
+            if ($ocrProductCode) {
+                $existingByProductCode = Returns::where('ocr_product_code', $ocrProductCode)->first();
+                if ($existingByProductCode) {
+                    throw ValidationException::withMessages([
+                        'ocrProductCode' => "A return record already exists with this OCR Product Code ({$ocrProductCode})."
+                    ]);
+                }
+            }
         }
 
         // Create the return
@@ -199,6 +278,47 @@ class ReturnsController extends Controller
             }
         }
 
+        // Check for duplicates based on entry type (exclude current record)
+        if ($return->entry_type === 'manual' && !empty($validated['graftLogId'])) {
+            // For manual entries: Check if graft_log_id is already linked to another return
+            $existingReturn = Returns::where('graft_log_id', $validated['graftLogId'])
+                ->where('return_id', '!=', $id)
+                ->first();
+            if ($existingReturn) {
+                $usageLog = UsageLog::where('graft_log_id', $validated['graftLogId'])->first();
+                $serialNumber = $usageLog ? $usageLog->serial_number : 'Unknown';
+                throw ValidationException::withMessages([
+                    'graftLogId' => "A return record already exists for this usage log (Serial Number: {$serialNumber})."
+                ]);
+            }
+        } elseif ($return->entry_type === 'upload') {
+            // For upload entries: Check if ocr_serial_number or ocr_product_code already exists
+            $ocrSerialNumber = $validated['ocrSerialNumber'] ?? null;
+            $ocrProductCode = $validated['ocrProductCode'] ?? null;
+
+            if ($ocrSerialNumber) {
+                $existingBySerial = Returns::where('ocr_serial_number', $ocrSerialNumber)
+                    ->where('return_id', '!=', $id)
+                    ->first();
+                if ($existingBySerial) {
+                    throw ValidationException::withMessages([
+                        'ocrSerialNumber' => "A return record already exists with this OCR Serial Number ({$ocrSerialNumber})."
+                    ]);
+                }
+            }
+
+            if ($ocrProductCode) {
+                $existingByProductCode = Returns::where('ocr_product_code', $ocrProductCode)
+                    ->where('return_id', '!=', $id)
+                    ->first();
+                if ($existingByProductCode) {
+                    throw ValidationException::withMessages([
+                        'ocrProductCode' => "A return record already exists with this OCR Product Code ({$ocrProductCode})."
+                    ]);
+                }
+            }
+        }
+
         $oldReason = $return->reason;
         
         // Prepare update data
@@ -263,7 +383,7 @@ class ReturnsController extends Controller
     }
 
     /**
-     * Delete a return entry
+     * Soft delete a return entry
      */
     public function deleteReturn(Request $request, $id)
     {
@@ -273,18 +393,51 @@ class ReturnsController extends Controller
         $graftSize = $return->graftSize;
         $reason = $return->reason;
 
+        // Soft delete the return (record is retained for audit purposes)
         $return->delete();
 
         // Log audit trail
         $this->logAudit(
             $request,
             'return_delete',
-            "Return deleted for brand: {$brand->brand_name}, size: {$graftSize->size}, reason: {$reason}",
+            "Return soft-deleted for brand: {$brand->brand_name}, size: {$graftSize->size}, reason: {$reason}",
             $id
         );
 
         return response()->json([
             'message' => 'Return deleted successfully',
+        ]);
+    }
+
+    /**
+     * Restore a soft-deleted return entry
+     */
+    public function restoreReturn(Request $request, $id)
+    {
+        $return = Returns::withTrashed()->findOrFail($id);
+
+        if (!$return->trashed()) {
+            return response()->json([
+                'message' => 'Return is not deleted',
+            ], 400);
+        }
+
+        $brand = $return->brand;
+        $graftSize = $return->graftSize;
+
+        // Restore the soft-deleted return
+        $return->restore();
+
+        // Log audit trail
+        $this->logAudit(
+            $request,
+            'return_restore',
+            "Return restored for brand: {$brand->brand_name}, size: {$graftSize->size}",
+            $id
+        );
+
+        return response()->json([
+            'message' => 'Return restored successfully',
         ]);
     }
 

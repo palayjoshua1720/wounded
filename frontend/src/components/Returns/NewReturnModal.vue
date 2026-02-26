@@ -202,9 +202,35 @@
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Link to Usage Log *</label>
-            <input v-model="graftLogId" type="text"
-              class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-              placeholder="Enter usage log ID" required />
+            <div class="relative" ref="graftLogDropdownContainer">
+              <input
+                v-model="graftLogSearch"
+                @input="filterGraftLogs"
+                @focus="showGraftLogDropdown = true"
+                @keydown.enter.prevent="acceptFirstGraftLog"
+                type="text"
+                autocomplete="off"
+                placeholder="Search by usage log ID..."
+                class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                required
+                aria-label="Search usage log"
+              />
+
+              <!-- Dropdown rendered via teleport to avoid modal overflow issues -->
+              <Teleport to="body" v-if="showGraftLogDropdown && filteredGraftLogs.length > 0">
+                <div
+                  ref="graftLogDropdownEl"
+                  class="fixed z-[9999] bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+                  :style="graftLogDropdownStyle"
+                >
+                  <div v-for="log in filteredGraftLogs" :key="log.id" @click="selectGraftLog(log)"
+                    class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer text-gray-900 dark:text-white text-sm">
+                    <div class="font-mono">{{ log.id }}</div>
+                  </div>
+                </div>
+              </Teleport>
+            </div>
+            <input type="hidden" v-model="graftLogId" />
           </div>
         </div>
 
@@ -340,6 +366,7 @@ interface Props {
   brands: Brand[]
   manufacturers: Manufacturer[]
   graftSizes: GraftSize[]
+  usageLogs?: { id: string; reference: string }[]
 }
 
 interface Brand {
@@ -403,6 +430,24 @@ const manufacturerSearch = ref('')
 const showManufacturerDropdown = ref(false)
 const filteredManufacturers = ref<Manufacturer[]>([])
 const graftLogId = ref('') // Optional link to usage log
+// Searchable usage log dropdown
+const graftLogSearch = ref('')
+const showGraftLogDropdown = ref(false)
+const filteredGraftLogs = ref<{ id: string; reference: string }[]>([])
+const graftLogDropdownContainer = ref<HTMLElement | null>(null)
+const graftLogDropdownEl = ref<HTMLElement | null>(null)
+
+// Dropdown positioning style
+const graftLogDropdownStyle = computed(() => {
+  if (!graftLogDropdownContainer.value) return {}
+  const rect = graftLogDropdownContainer.value.getBoundingClientRect()
+  return {
+    top: `${rect.bottom + 4}px`,
+    left: `${rect.left}px`,
+    width: `${rect.width}px`,
+    maxHeight: '240px'
+  }
+})
 
 // OCR fields
 const ocrLoading = ref(false)
@@ -465,6 +510,7 @@ function filterBrands() {
     filteredBrands.value = brandsToFilter
   }
   showBrandDropdown.value = true
+  // Removed positioning for now since we're using absolute positioning
 }
 
 function selectBrand(brand: Brand) {
@@ -499,6 +545,7 @@ function filterGraftSizes() {
     filteredGraftSizes.value = brandGraftSizes
   }
   showGraftSizeDropdown.value = true
+  // Removed positioning for now since we're using absolute positioning
 }
 
 function selectGraftSize(graftSize: GraftSize) {
@@ -517,6 +564,7 @@ function filterManufacturers() {
     filteredManufacturers.value = props.manufacturers
   }
   showManufacturerDropdown.value = true
+  // Removed positioning for now since we're using absolute positioning
 }
 
 function selectManufacturer(mfr: Manufacturer) {
@@ -533,6 +581,51 @@ function selectManufacturer(mfr: Manufacturer) {
   
   // Filter brands based on selected manufacturer
   filterBrands()
+}
+
+
+function filterGraftLogs() {
+  const q = graftLogSearch.value.trim().toLowerCase()
+  const source = props.usageLogs || []
+  if (!q) {
+    filteredGraftLogs.value = source.slice(0, 50)
+  } else {
+    filteredGraftLogs.value = source.filter(l =>
+      l.id.toLowerCase().includes(q)
+    ).slice(0, 50)
+  }
+  showGraftLogDropdown.value = true
+  // Removed positioning for now since we're using absolute positioning
+}
+
+function selectGraftLog(log: { id: string; reference: string }) {
+  graftLogId.value = log.id
+  graftLogSearch.value = log.reference
+  showGraftLogDropdown.value = false
+}
+
+// Dropdown positioning function removed - using absolute positioning
+
+function acceptFirstGraftLog() {
+  if (filteredGraftLogs.value.length > 0) {
+    selectGraftLog(filteredGraftLogs.value[0])
+    return
+  }
+
+  const q = graftLogSearch.value.trim()
+  if (!q) return
+
+  const match = (props.usageLogs || []).find(l =>
+    l.id === q || l.reference.toLowerCase() === q.toLowerCase()
+  )
+
+  if (match) {
+    selectGraftLog(match)
+  } else {
+    // fallback: allow entering raw id
+    graftLogId.value = q
+    showGraftLogDropdown.value = false
+  }
 }
 
 async function handleFileUpload(event: Event) {
@@ -703,6 +796,9 @@ function resetForm() {
   manufacturerSearch.value = ''
   showManufacturerDropdown.value = false
   graftLogId.value = ''
+  graftLogSearch.value = ''
+  showGraftLogDropdown.value = false
+  filteredGraftLogs.value = []
   ocrResult.value = ''
   ocrExtracted.value = null
   ocrOtherReason.value = ''
@@ -725,11 +821,23 @@ function closeModal() {
 watch(isOpen, (newVal) => {
   if (!newVal) {
     resetForm()
+    // Close all dropdowns when modal closes
+    showManufacturerDropdown.value = false
+    showBrandDropdown.value = false
+    showGraftSizeDropdown.value = false
+    showGraftLogDropdown.value = false
   } else {
     // Initialize lists when modal opens
     filteredManufacturers.value = props.manufacturers
     filteredBrands.value = props.brands
+    // initialize usage logs suggestions when modal opens
+    filteredGraftLogs.value = (props.usageLogs || []).slice(0, 50)
   }
+})
+
+// Update suggestions if parent provides usage logs after mount
+watch(() => props.usageLogs, (newLogs) => {
+  filteredGraftLogs.value = (newLogs || []).slice(0, 50)
 })
 
 // Watch manufacturer changes to filter brands
@@ -758,10 +866,12 @@ watch(selectedBrand, (newBrandId) => {
 if (typeof window !== 'undefined') {
   document.addEventListener('click', (e) => {
     const target = e.target as HTMLElement
-    if (!target.closest('.relative')) {
+    // Only close if click is outside dropdown container and not on the input
+    if (!target.closest('.relative') && !target.closest('[ref="graftLogDropdownEl"]')) {
       showManufacturerDropdown.value = false
       showBrandDropdown.value = false
       showGraftSizeDropdown.value = false
+      showGraftLogDropdown.value = false
     }
   })
 }

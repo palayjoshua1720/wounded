@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Returns extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $table = 'woundmed_returns';
     protected $primaryKey = 'return_id';
@@ -33,6 +34,7 @@ class Returns extends Model
         'returned_at' => 'datetime',
         'updated_at' => 'datetime',
         'ocr_expiry_date' => 'date',
+        'deleted_at' => 'datetime',
     ];
 
     /**
