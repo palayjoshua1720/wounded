@@ -9,6 +9,16 @@ RUN npm run build
 # Stage 2: Composer dependencies (use Composer 2.x with PHP 8.2 to match runtime)
 FROM composer:2 AS backend-build
 WORKDIR /app/backend
+
+# Install GD first
+RUN apt-get update && apt-get install -y \
+    libpng-dev \
+    libjpeg62-turbo-dev \
+    libfreetype6-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install gd \
+    && docker-php-ext-enable gd
+
 COPY backend/composer.json backend/composer.lock ./
 RUN composer install --no-dev --no-scripts --no-autoloader --optimize-autoloader
 
