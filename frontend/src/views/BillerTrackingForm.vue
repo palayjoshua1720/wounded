@@ -422,8 +422,7 @@ const loadFormFields = async () => {
     // Update required columns from API response
     requiredColumns.value = Array.isArray(response.data.requiredColumns) 
       ? response.data.requiredColumns 
-      : []
-    
+      : [] 
   } catch (error) {
     console.error('Failed to load form fields:', error)
     toast.error('Failed to load form configuration')
@@ -462,7 +461,7 @@ const loadFormFields = async () => {
       },
       {
         key: 'medicareAmount',
-        label: 'Medicare Amount ($)',
+        label: 'Medicare Amount',
         type: 'number',
         required: true,
         step: '0.01',
@@ -472,7 +471,7 @@ const loadFormFields = async () => {
       },
       {
         key: 'providerAmount',
-        label: 'Provider Amount ($)',
+        label: 'Provider Amount',
         type: 'number',
         required: true,
         step: '0.01',
@@ -514,7 +513,7 @@ const loadFormFields = async () => {
     ]
 
     manualFormFields.value = mockFields
-    updateRequiredColumns()
+    updateRequiredColumns() 
   }
 }
 
@@ -602,7 +601,7 @@ const requiredColumns = ref<string[]>([])
 const updateRequiredColumns = () => {
   requiredColumns.value = manualFormFields.value
     .filter(field => field.required)
-    .map(field => field.label)
+    .map(field => field.label) 
 }
 
 // Helper function to format dates for HTML input (YYYY-MM-DD)
@@ -796,11 +795,54 @@ const submitManualEntry = async () => {
   manualSubmitting.value = true
 
   try {
-    // Validate required fields
-    if (!manualForm.patientName || !manualForm.invoiceNumber ||
-      !manualForm.serviceDate || manualForm.medicareAmount == null ||
-      manualForm.providerAmount == null || !manualForm.status) {
-      toast.error('Please fill in all required fields')
+    // Enhanced validation
+    const errors = []
+    
+    // Required field validation
+    if (!manualForm.patientName?.trim()) {
+      errors.push('Patient Name is required')
+    }
+    if (!manualForm.invoiceNumber?.trim()) {
+      errors.push('Invoice Number is required')
+    }
+    if (!manualForm.serviceDate) {
+      errors.push('Service Date is required')
+    }
+    if (manualForm.medicareAmount == null || isNaN(manualForm.medicareAmount) || manualForm.medicareAmount < 0) {
+      errors.push('Valid Medicare Amount is required')
+    }
+    if (manualForm.providerAmount == null || isNaN(manualForm.providerAmount) || manualForm.providerAmount < 0) {
+      errors.push('Valid Provider Amount is required')
+    }
+    if (!manualForm.status) {
+      errors.push('Status is required')
+    }
+    
+    // Date validation
+    if (manualForm.serviceDate) {
+      const serviceDate = new Date(manualForm.serviceDate)
+      if (isNaN(serviceDate.getTime())) {
+        errors.push('Invalid Service Date format')
+      }
+    }
+    
+    if (manualForm.submissionDate) {
+      const submissionDate = new Date(manualForm.submissionDate)
+      if (isNaN(submissionDate.getTime())) {
+        errors.push('Invalid Submission Date format')
+      }
+      // Optional: validate that submission date is not before service date
+      if (manualForm.serviceDate) {
+        const serviceDate = new Date(manualForm.serviceDate)
+        const subDate = new Date(manualForm.submissionDate)
+        if (subDate < serviceDate) {
+          errors.push('Submission Date cannot be before Service Date')
+        }
+      }
+    }
+    
+    if (errors.length > 0) {
+      toast.error(`Validation errors:\n${errors.join('\n')}`)
       return
     }
 
@@ -908,8 +950,7 @@ const resetManualForm = () => {
 }
 
 // Edit and delete functions
-const editItem = (item: any) => {
-  console.log('Editing item:', item)
+const editItem = (item: any) => { 
   editingItem.value = { ...item }
 
   // Reset form first
@@ -954,10 +995,7 @@ const editItem = (item: any) => {
     status: manualForm.status,
     clinician: manualForm.clinician,
     notes: manualForm.notes
-  }
-
-  console.log('Form data after editing:', manualForm)
-  console.log('Original form data:', originalFormData.value)
+  } 
   showManualModal.value = true
 }
 
@@ -998,10 +1036,7 @@ const deleteItem = async (item: any) => {
   }
 }
 
-const refreshData = () => {
-  loadTableData(pagination.value?.current_page || 1)
-  toast.info('Data refreshed successfully!')
-}
+
 
 // Spreadsheet upload functions
 const handleFileSelect = (event: Event) => {
@@ -1040,15 +1075,31 @@ const processFile = async (file: File) => {
     // Populate available columns from the first row of data
     if (previewData.value.length > 0) {
       const firstRow = previewData.value[0]
-      availableColumns.value = Object.keys(firstRow)
+      availableColumns.value = Object.keys(firstRow) 
 
       // Ensure requiredColumns is an array
       const safeRequiredColumns = Array.isArray(requiredColumns.value) ? requiredColumns.value : []
       
       // Initialize column mappings with intelligent matching
+      // First pass: Handle specific mappings for amount fields
+      availableColumns.value.forEach(col => {
+        const normalizedCol = col.toLowerCase().replace(/[^a-zA-Z0-9]/g, '')
+        
+        // Handle specific amount field mappings to avoid conflicts
+        if (normalizedCol.includes('medicare') && normalizedCol.includes('amount')) {
+          columnMappings.value['Medicare Amount ($)'] = col
+        } else if (normalizedCol.includes('provider') && normalizedCol.includes('amount')) {
+          columnMappings.value['Provider Amount ($)'] = col
+        }
+      })
+      
+      // Second pass: Handle other fields and remaining unmapped amount fields
       availableColumns.value.forEach(col => {
         const normalizedCol = col.toLowerCase().replace(/[^a-zA-Z0-9]/g, '')
         safeRequiredColumns.forEach(requiredCol => {
+          // Skip if already mapped
+          if (columnMappings.value[requiredCol]) return
+          
           const normalizedRequired = requiredCol.toLowerCase().replace(/[^a-zA-Z0-9]/g, '')
           
           // Multiple matching strategies for flexibility
@@ -1057,10 +1108,13 @@ const processFile = async (file: File) => {
             normalizedCol === normalizedRequired,
             // Partial match (contains)
             normalizedCol.includes(normalizedRequired) || normalizedRequired.includes(normalizedCol),
-            // Special handling for amount fields
+            // Special handling for amount fields - only if not already mapped
             (normalizedRequired.includes('medicare') && normalizedCol.includes('medicare')) ||
             (normalizedRequired.includes('provider') && normalizedCol.includes('provider')) ||
             (normalizedRequired.includes('amount') && normalizedCol.includes('amount')),
+            // Special handling for specific fields to avoid conflicts
+            (normalizedRequired.includes('medicareamount') && (normalizedCol.includes('medicare') || normalizedCol.includes('paidamount') || normalizedCol.includes('invoicepaidamount'))) ||
+            (normalizedRequired.includes('provideramount') && (normalizedCol.includes('provider') || normalizedCol.includes('owed') || normalizedCol.includes('balance'))) ||
             // Handle date fields - more specific matching
             (normalizedRequired.includes('servicedate') && (normalizedCol.includes('servicedate') || normalizedCol.includes('serviced'))) ||
             (normalizedRequired.includes('submissiondate') && (normalizedCol.includes('submissiondate') || normalizedCol.includes('submission') || normalizedCol.includes('paiddate') || normalizedCol.includes('invoicedate'))) ||
@@ -1083,15 +1137,7 @@ const processFile = async (file: File) => {
             columnMappings.value[requiredCol] = col
           }
         })
-      })
-
-      // Show mapping suggestions and allow manual adjustment
-      console.log('Column mappings suggested:', columnMappings.value)
-      console.log('Available columns in file:', availableColumns.value)
-      console.log('Required columns:', safeRequiredColumns)
-      
-      // Instead of throwing error, we'll let the user adjust mappings in the UI
-      // The validation will happen during the actual import process
+      }) 
       
       // Show toast with mapping suggestions
       const mappedCount = Object.keys(columnMappings.value).length
@@ -1297,21 +1343,89 @@ const processUpload = async () => {
     }
     
     // Map the data according to column mappings
-    const mappedData = previewData.value.map((item: any) => {
-      const mappedItem: any = {}
+    const mappedData = previewData.value.map((item: any, index: number) => {
+      const mappedItem: any = {} 
       
-      // Map each required column using the column mappings
+      // First, map all required columns
       safeRequiredColumns.forEach(requiredCol => {
-        const sourceColumn = columnMappings.value[requiredCol]
-        // Use the mapped source column if available, otherwise use the required column name
-        const value = item[sourceColumn] !== undefined ? item[sourceColumn] : item[requiredCol]
-        mappedItem[requiredCol] = value || ''
+        const sourceColumn = columnMappings.value[requiredCol]     
+        const value = item[sourceColumn] !== undefined ? item[sourceColumn] : item[requiredCol] 
+         
+        if (requiredCol === 'Submission Date') { 
+          const processedValue = (value === '' || value === null || value === undefined) ? null : value
+          mappedItem[requiredCol] = processedValue 
+        } else if (requiredCol === 'Medicare Amount ($)' || requiredCol === 'Provider Amount ($)') {
+          // Ensure numeric values are properly formatted
+          const numericValue = parseFloat(value)
+          mappedItem[requiredCol] = isNaN(numericValue) ? 0 : numericValue
+        } else {
+          mappedItem[requiredCol] = value || ''
+        }
       })
       
+      // Then, map any additional available columns that weren't in required columns
+      // This includes optional fields like Submission Date, Clinician, Notes
+      availableColumns.value.forEach(col => {
+        // Skip if this column was already mapped as a required column
+        const isRequiredColumn = safeRequiredColumns.some(requiredCol => {
+          const sourceColumn = columnMappings.value[requiredCol];
+          return sourceColumn === col || requiredCol === col;
+        });
+        
+        if (!isRequiredColumn && item.hasOwnProperty(col)) { 
+          // Handle special cases for optional fields
+          if (col === 'Submission Date' || col === 'Submission_Date' || col === 'submission_date') {
+            const processedValue = (item[col] === '' || item[col] === null || item[col] === undefined) ? null : item[col];
+            mappedItem['Submission Date'] = processedValue; 
+          } else if (col === 'Clinician' || col === 'clinician') {
+            mappedItem['Clinician'] = item[col] || '';
+          } else if (col === 'Notes' || col === 'notes') {
+            mappedItem['Notes'] = item[col] || '';
+          } else {
+            // For other optional columns, just pass them through
+            mappedItem[col] = item[col];
+          }
+        }
+      }); 
       return mappedItem
     })
     
-    // Send to backend API
+    // Check for duplicates in the mapped data
+    const seenRecords = new Map<string, number>();
+    const duplicates: Array<{currentIndex: number, firstIndex: number, item: any}> = [];
+    
+    mappedData.forEach((item, index) => { 
+      const uniqueKey = [
+        (item['Patient Name'] || '').toLowerCase().trim(),
+        (item['Invoice Number'] || '').trim(),
+        (item['Service Date'] || '').trim(),
+        item['Medicare Amount ($)'],
+        item['Provider Amount ($)']
+      ].join('|');
+      
+      if (seenRecords.has(uniqueKey)) {
+        const firstIndex = seenRecords.get(uniqueKey)!;  
+        duplicates.push({
+          currentIndex: index + 1,
+          firstIndex: firstIndex + 1,
+          item: item
+        });
+      } else {
+        seenRecords.set(uniqueKey, index);
+      }
+    });
+    
+    // If duplicates found, show error before sending to backend
+    if (duplicates.length > 0) {
+      const duplicateMessages = duplicates.map(dup => 
+        `Row ${dup.currentIndex} is a duplicate of Row ${dup.firstIndex}`
+      );
+      
+      toast.error(`Duplicate records found:\n${duplicateMessages.join('\n')}\n\nPlease remove duplicates and try again.`);
+      return;
+    }
+    
+    // Send to backend API 
     const response = await api.post('/biller/tracking/bulk', { data: mappedData })
     
     // Add successfully imported items to local table
@@ -1364,67 +1478,13 @@ const processUpload = async () => {
     
     // Log full error for debugging
     console.error('Error response:', error.response?.data)
+    console.error('Full error:', error)
   } finally {
     uploading.value = false
   }
 }
 
-const downloadTemplate = () => {
-  // Ensure requiredColumns is an array
-  const safeRequiredColumns = Array.isArray(requiredColumns.value) ? requiredColumns.value : []
-  
-  // Create dynamic CSV template based on form configuration
-  const headers = safeRequiredColumns.map(col => `"${col}"`).join(',')
-  
-  // Generate sample data dynamically
-  const sampleData = [
-    {
-      'Patient Name': 'John Doe',
-      'Invoice Number': 'INV-001',
-      'Service Date': '2024-01-15',
-      'Submission Date': '2024-01-20',
-      'Medicare Amount ($)': '1500.00',
-      'Provider Amount ($)': '500.00',
-      'Status': 'processed',
-      'Clinician': 'Dr. Smith',
-      'Notes': 'Routine wound care'
-    },
-    {
-      'Patient Name': 'Jane Smith',
-      'Invoice Number': 'INV-002',
-      'Service Date': '2024-01-16',
-      'Submission Date': '',
-      'Medicare Amount ($)': '2800.00',
-      'Provider Amount ($)': '1200.00',
-      'Status': 'submitted',
-      'Clinician': 'Dr. Johnson',
-      'Notes': 'Complex wound treatment'
-    },
-    {
-      'Patient Name': 'Robert Wilson',
-      'Invoice Number': 'INV-003',
-      'Service Date': '2024-01-17',
-      'Submission Date': '2024-01-22',
-      'Medicare Amount ($)': '950.00',
-      'Provider Amount ($)': '300.00',
-      'Status': 'paid',
-      'Clinician': 'Dr. Brown',
-      'Notes': 'Follow-up care'
-    }
-  ] 
 
-  const csvContent = `${headers}\n${sampleData.map(row => Object.values(row).map(value => `"${value}"`).join(','))  .join('\n')}`
-
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
-  const url = window.URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = 'biller_tracking_template.csv'
-  a.click()
-  window.URL.revokeObjectURL(url)
-
-  toast.success('Template downloaded successfully!')
-}
 
 // Utility functions
 const formatFileSize = (bytes: number): string => {

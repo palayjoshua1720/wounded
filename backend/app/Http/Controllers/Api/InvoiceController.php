@@ -168,6 +168,14 @@ class InvoiceController extends Controller
 
     public function destroy(Invoice $invoice): JsonResponse
     {
+        // Authorization: Only admin users (user_role = 0) can delete invoices
+        $user = auth()->user();
+        if (!$user || $user->user_role !== 0) {
+            return response()->json([
+                'message' => 'Access denied. Only administrators can delete invoices.'
+            ], 403);
+        }
+
         // Delete associated PDF file if exists
         if ($invoice->pdf_path && Storage::exists($invoice->pdf_path)) {
             Storage::delete($invoice->pdf_path);

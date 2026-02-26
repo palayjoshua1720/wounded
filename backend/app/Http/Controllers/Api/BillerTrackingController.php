@@ -35,6 +35,21 @@ class BillerTrackingController extends Controller
             'notes' => 'nullable|string'
         ]);
         
+        // Additional validation: submission date should not be before service date
+        if (!empty($validated['submission_date']) && !empty($validated['service_date'])) {
+            $serviceDate = new \DateTime($validated['service_date']);
+            $submissionDate = new \DateTime($validated['submission_date']);
+            
+            if ($submissionDate < $serviceDate) {
+                return response()->json([
+                    'message' => 'Validation failed',
+                    'errors' => [
+                        'submission_date' => ['Submission date cannot be before service date']
+                    ]
+                ], 422);
+            }
+        }
+        
         $biller = BillerTracking::create($validated);
         return response()->json($biller, 201);
     }
@@ -147,23 +162,214 @@ class BillerTrackingController extends Controller
      */
     public function bulkImport(Request $request)
     {
-        $validated = $request->validate([
-            'data' => 'required|array',
-            'data.*.Patient Name' => 'required|string|max:255',
-            'data.*.Invoice Number' => 'required|string|max:255',
-            'data.*.Service Date' => 'required|string',
-            'data.*.Submission Date' => 'nullable|string',
-            'data.*.Medicare Amount ($)' => 'required|numeric|min:0',
-            'data.*.Provider Amount ($)' => 'required|numeric|min:0',
-            'data.*.Status' => 'required|string',
-            'data.*.Clinician' => 'nullable|string|max:255',
-            'data.*.Notes' => 'nullable|string'
+        // Log the incoming request data for debugging
+        \Log::info('Biller tracking bulk import request', [
+            'data_count' => count($request->data ?? []),
+            'first_row' => $request->data[0] ?? null,
+            'all_keys' => $request->data ? array_keys($request->data[0] ?? []) : [],
+            'raw_request' => $request->all()
         ]);
+        
+        // Debug: Print all column names received
+        if (!empty($request->data)) {
+            $firstRowKeys = array_keys($request->data[0]);
+            \Log::info('Received column names:', $firstRowKeys);
+        }
+        
+        // Custom validation for numeric fields to handle various formats
+        $data = $request->data ?? [];
+        $validator = \Validator::make(['data' => $data], [
+            'data' => 'required|array',
+        ]);
+        
+        // If basic data validation passes, validate each row individually
+        if (!$validator->fails() && !empty($data)) {
+            // Check the first row to see what columns exist
+            $firstRow = $data[0];
+            $availableColumns = array_keys($firstRow);
+            
+            \Log::info('Available columns in CSV:', $availableColumns);
+            
+            // Check for required columns with flexible naming
+            $requiredColumns = ['Patient Name', 'Invoice Number', 'Service Date', 'Status'];
+            $optionalColumns = ['Submission Date', 'Clinician', 'Notes'];
+            $amountColumns = ['Medicare Amount', 'Provider Amount', 'Medicare Amount ($)', 'Provider Amount ($)'];
+            
+            // Check if any of the amount column variants exist
+            $medicareAmountCol = null;
+            $providerAmountCol = null;
+            
+            foreach ($amountColumns as $col) {
+                if (in_array($col, $availableColumns)) {
+                    if (strpos($col, 'Medicare') !== false) {
+                        $medicareAmountCol = $col;
+                    } elseif (strpos($col, 'Provider') !== false) {
+                        $providerAmountCol = $col;
+                    }
+                }
+            }
+            
+            // Validate each row with flexible column names
+            foreach ($data as $index => $row) {
+                $errors = [];
+                
+                // Check required columns
+                foreach ($requiredColumns as $reqCol) {
+                    if (!array_key_exists($reqCol, $row)) {
+                        $errors["data.{$index}.{$reqCol}"] = ["The data.{$index}.{$reqCol} field is required."];
+                    }
+                }
+                
+                // Check amount columns
+                if ($medicareAmountCol && !array_key_exists($medicareAmountCol, $row)) {
+                    $errors["data.{$index}.{$medicareAmountCol}"] = ["The data.{$index}.{$medicareAmountCol} field is required."];
+                } elseif (!$medicareAmountCol) {
+                    // Check for both possible formats
+                    if (!array_key_exists('Medicare Amount', $row) && !array_key_exists('Medicare Amount ($)', $row)) {
+                        $errors["data.{$index}.Medicare Amount"] = ["The data.{$index}.Medicare Amount field is required."];
+                    }
+                }
+                
+                if ($providerAmountCol && !array_key_exists($providerAmountCol, $row)) {
+                    $errors["data.{$index}.{$providerAmountCol}"] = ["The data.{$index}.{$providerAmountCol} field is required."];
+                } elseif (!$providerAmountCol) {
+                    // Check for both possible formats
+                    if (!array_key_exists('Provider Amount', $row) && !array_key_exists('Provider Amount ($)', $row)) {
+                        $errors["data.{$index}.Provider Amount"] = ["The data.{$index}.Provider Amount field is required."];
+                    }
+                }
+                
+                if (!empty($errors)) {
+                    return response()->json([
+                        'message' => 'Validation failed',
+                        'errors' => $errors
+                    ], 422);
+                }
+            }
+        }
+         
+        $processedData = [];
+        $seenRecords = [];  
+        foreach ($data as $index => $item) { 
+            $medicareAmountCol = null;
+            $providerAmountCol = null;
+             
+            foreach (['Medicare Amount', 'Medicare Amount ($)', 'Medicare_Amount', 'medicare_amount', 'Invoice Paid Amount'] as $col) {
+                if (isset($item[$col])) {
+                    $medicareAmountCol = $col;
+                    break;
+                }
+            }
+             
+            foreach (['Provider Amount', 'Provider Amount ($)', 'Provider_Amount', 'provider_amount', 'Provider Balance', 'Provider Balance Owed', 'Provider Amount Owed'] as $col) {
+                if (isset($item[$col])) {
+                    $providerAmountCol = $col;
+                    break;
+                }
+            }
+             
+            if (!$providerAmountCol) { 
+                $providerAmountCol = $medicareAmountCol ?: null;
+            }
+            
+            if (!$medicareAmountCol || !$providerAmountCol) {
+                $missingCols = [];
+                if (!$medicareAmountCol) $missingCols[] = 'Medicare Amount';
+                if (!$providerAmountCol) $missingCols[] = 'Provider Amount';
+                
+                return response()->json([
+                    'message' => 'Missing required data',
+                    'errors' => [
+                        "data.{$index}" => ['Missing required columns: ' + implode(', ', $missingCols)]
+                    ]
+                ], 422);
+            }
+            
+            // Clean and convert numeric values
+            $medicareAmount = $this->cleanNumericValue($item[$medicareAmountCol] ?? '');
+            // If both amounts use the same column, use the same value; otherwise use the provider-specific column
+            $providerAmount = ($providerAmountCol === $medicareAmountCol) ? $medicareAmount : $this->cleanNumericValue($item[$providerAmountCol] ?? '');
+            
+            \Log::info('Processing row ' . ($index + 1), [
+                'original_medicare' => $item[$medicareAmountCol] ?? 'NULL',
+                'medicare_column' => $medicareAmountCol,
+                'cleaned_medicare' => $medicareAmount,
+                'original_provider' => $item[$providerAmountCol] ?? 'NULL',
+                'provider_column' => $providerAmountCol,
+                'cleaned_provider' => $providerAmount
+            ]);
+            
+            if ($medicareAmount === false || $providerAmount === false) {
+                $errors = [];
+                if ($medicareAmount === false) {
+                    $errors["data.{$index}"] = ['Medicare Amount is not a valid number'];
+                }
+                if ($providerAmount === false && $providerAmountCol !== $medicareAmountCol) {
+                    $errors["data.{$index}"] = ['Provider Amount is not a valid number'];
+                }
+                
+                return response()->json([
+                    'message' => 'Invalid number format',
+                    'errors' => $errors
+                ], 422);
+            }
+            
+            // Create a unique key for duplicate detection
+            // Using patient name, invoice number, service date, and amounts as the uniqueness criteria
+            $uniqueKey = md5(
+                strtolower(trim($item['Patient Name'] ?? '')) . '|' .
+                trim($item['Invoice Number'] ?? '') . '|' .
+                trim($item['Service Date'] ?? '') . '|' .
+                $medicareAmount . '|' .
+                $providerAmount
+            );
+            
+            // Check for duplicates
+            if (isset($seenRecords[$uniqueKey])) {
+                $existingIndex = $seenRecords[$uniqueKey];
+                return response()->json([
+                    'message' => 'Validation failed',
+                    'errors' => [
+                        "data.{$index}" => ["Duplicate record found. This record matches row {$existingIndex} (same patient, invoice, service date, and amounts)"]
+                    ]
+                ], 422);
+            }
+            
+            $seenRecords[$uniqueKey] = $index + 1; // Store 1-based index for user-friendly error messages
+            
+            // Map the values to standard column names
+            $processedRow = $item;
+            $processedRow['Medicare Amount'] = $medicareAmount;
+            $processedRow['Provider Amount'] = $providerAmount;
+            
+            // Handle optional fields
+            if (isset($item['Submission Date'])) {
+                $processedRow['Submission Date'] = $item['Submission Date'];
+            } elseif (isset($item['Submission_Date'])) {
+                $processedRow['Submission Date'] = $item['Submission_Date'];
+            } elseif (isset($item['submission_date'])) {
+                $processedRow['Submission Date'] = $item['submission_date'];
+            }
+            
+            if (isset($item['Clinician'])) {
+                $processedRow['Clinician'] = $item['Clinician'];
+            } elseif (isset($item['clinician'])) {
+                $processedRow['Clinician'] = $item['clinician'];
+            }
+            
+            if (isset($item['Notes'])) {
+                $processedRow['Notes'] = $item['Notes'];
+            } elseif (isset($item['notes'])) {
+                $processedRow['Notes'] = $item['notes'];
+            }
+            
+            $processedData[] = $processedRow;
+        }
 
         $imported = [];
         $errors = [];
 
-        foreach ($request->data as $index => $item) {
+        foreach ($processedData as $index => $item) {
             try {
                 // Normalize status values
                 $status = strtolower(trim($item['Status']));
@@ -196,6 +402,23 @@ class BillerTrackingController extends Controller
                 $serviceDate = $this->convertDateFormat($item['Service Date'] ?? '');
                 $submissionDate = $this->convertDateFormat($item['Submission Date'] ?? '');
                 
+                // Check for duplicates in the database (cross-file validation)
+                $existingRecord = BillerTracking::where('patient_name', trim($item['Patient Name'] ?? ''))
+                    ->where('invoice_number', trim($item['Invoice Number'] ?? ''))
+                    ->where('service_date', $serviceDate)
+                    ->where('medicare_amount', $medicareAmount)
+                    ->where('provider_amount', $providerAmount)
+                    ->first();
+                
+                if ($existingRecord) {
+                    return response()->json([
+                        'message' => 'Duplicate entry detected',
+                        'errors' => [
+                            "data.{$index}" => ["This record already exists in the system. Please check your data and try again."]
+                        ]
+                    ], 422);
+                }
+                
                 // Validate converted dates
                 if (empty($serviceDate) && !empty($item['Service Date'])) {
                     throw new \Exception("Invalid Service Date format: {$item['Service Date']}. Expected format like MM-DD-YYYY.");
@@ -205,8 +428,8 @@ class BillerTrackingController extends Controller
                     throw new \Exception("Invalid Submission Date format: {$item['Submission Date']}.");
                 }
                 
-                // Set submission date to null if it's empty after conversion
-                if (empty($submissionDate) || $submissionDate === 'null') {
+                // Set submission date to null if it's empty, null, or invalid
+                if (empty($submissionDate) || $submissionDate === 'null' || $submissionDate === '' || $submissionDate === '""') {
                     $submissionDate = null;
                 }
                 
@@ -219,15 +442,21 @@ class BillerTrackingController extends Controller
                     'patient_name' => $item['Patient Name'],
                     'invoice_number' => $item['Invoice Number'],
                     'service_date' => $serviceDate,
-                    'submission_date' => (empty($submissionDate) || $submissionDate === 'null') ? null : $submissionDate,
-                    'medicare_amount' => $item['Medicare Amount ($)'],
-                    'provider_amount' => $item['Provider Amount ($)'],
+                    'submission_date' => $submissionDate, // Will be null if empty/invalid
+                    'medicare_amount' => $item['Medicare Amount ($)'] ?? $item['Medicare Amount'],  
+                    'provider_amount' => $item['Provider Amount ($)'] ?? $item['Provider Amount'],  
                     'status' => $normalizedStatus,
                     'clinician' => $item['Clinician'] ?? null,
                     'notes' => $item['Notes'] ?? null
                 ];
 
                 $biller = BillerTracking::create($billerData);
+                \Log::info('Biller tracking record created', [
+                    'id' => $biller->id,
+                    'patient_name' => $biller->patient_name,
+                    'submission_date' => $biller->submission_date,
+                    'original_submission_date' => $item['Submission Date'] ?? 'NOT_PROVIDED'
+                ]);
                 $imported[] = $biller;
             } catch (\Exception $e) {
                 $errors[] = [
@@ -246,7 +475,28 @@ class BillerTrackingController extends Controller
         ]);
     }
     
-    private function convertDateFormat($dateString) {
+    private function cleanNumericValue($value) {
+            if ($value === '' || $value === null) {
+                return false;
+            }
+            
+            // Remove currency symbols, commas, and whitespace
+            $cleaned = preg_replace('/[,$\s]/', '', trim($value));
+            
+            // Handle negative values
+            $isNegative = strpos($cleaned, '-') === 0;
+            $cleaned = ltrim($cleaned, '-');
+            
+            // Validate it's a number
+            if (!is_numeric($cleaned)) {
+                return false;
+            }
+            
+            $number = floatval($cleaned);
+            return $isNegative ? -$number : $number;
+        }
+        
+        private function convertDateFormat($dateString) {
         if (empty($dateString)) {
             return null;
         }
@@ -319,6 +569,24 @@ class BillerTrackingController extends Controller
             'clinician' => 'nullable|string|max:255',
             'notes' => 'nullable|string'
         ]);
+        
+        // Additional validation: submission date should not be before service date
+        $serviceDate = $validated['service_date'] ?? $biller->service_date;
+        $submissionDate = $validated['submission_date'] ?? $biller->submission_date;
+        
+        if (!empty($submissionDate) && !empty($serviceDate)) {
+            $serviceDateTime = new \DateTime($serviceDate);
+            $submissionDateTime = new \DateTime($submissionDate);
+            
+            if ($submissionDateTime < $serviceDateTime) {
+                return response()->json([
+                    'message' => 'Validation failed',
+                    'errors' => [
+                        'submission_date' => ['Submission date cannot be before service date']
+                    ]
+                ], 422);
+            }
+        }
         
         $biller->update($validated);
         return response()->json($biller);
