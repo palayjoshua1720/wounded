@@ -19,6 +19,7 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use App\Services\EmailService;
 use App\Template\OrderNotificationEmail;
+use App\Template\OtherProductOrderNotificationEmail;
 use App\Template\FollowupOrderNotificationEmail;
 use App\Helpers\OrderHelper;
 use Illuminate\Support\Facades\Storage;
@@ -221,6 +222,7 @@ class OrderController extends Controller
             'products.*.other_product_id' => 'integer|exists:woundmed_other_products,other_product_id',
             'products.*.quantity' => 'integer|min:1',
             'products.*.price' => 'numeric|min:0',
+            'products.*.product_type' => 'numeric|min:0',
         ]);
 
         # Validate Stocks graft items and product items
@@ -358,9 +360,16 @@ class OrderController extends Controller
         ]);
 
         $email = $request->order_email;
-        $orderUrl = config('app.frontend_url')
-            . '/woundmed-order?token=' . $token
-            . '&order_id=' . $order->order_id;
+        $orderUrl = config('app.frontend_url') . '/woundmed-order?' . http_build_query([
+            'token'       => $token,
+            'order_id'    => $order->order_id,
+        ]);
+
+        $productOnlyUrl = config('app.frontend_url') . '/woundmed-order?' . http_build_query([
+            'token'        => $token,
+            'order_id'     => $order->order_id,
+            'productonly'  => 'true',
+        ]);
 
         $totalAsp = 0;
         foreach ($validated['items'] as $item) {
@@ -387,13 +396,21 @@ class OrderController extends Controller
             $product = OtherProduct::find($prod['other_product_id']);
             if (!$product) continue;
 
-            $price = (float) ($product->price ?? $product->asp ?? 0);
-            $qty   = (int) ($prod['quantity'] ?? 0);
-            $sub   = $price * $qty;
+            $price          = (float) ($product->price ?? $product->asp ?? 0);
+            $qty            = (int) ($prod['quantity'] ?? 0);
+            $productType    = (int) ($prod['product_type'] ?? 0);
+            $sub            = $price * $qty;
+
+            $productTypeLabel = match ($productType) {
+                0 => 'Wound Supplies',
+                1 => 'Devices',
+                default => 'Unknown Product',
+            };
 
             $otherProductItems[] = [
                 'product_name' => $product->product_name ?? 'Unknown Product',
                 'quantity'     => $qty,
+                'product_type' => $productTypeLabel,
                 'price'        => $price,
                 'subtotal'     => $sub,
             ];
@@ -423,6 +440,25 @@ class OrderController extends Controller
             'order_link'          => $orderUrl,
         ]);
 
+        # prepare other product data to email template
+        $otherProductEmailBody = OtherProductOrderNotificationEmail::getTemplate([
+            'order_code'          => $order['order_code'],
+            'tracking_number'     => $order['tracking_num'],
+            'clinic_name'         => OrderHelper::getClinicName($validated['clinic_id']),
+            'clinician_name'      => OrderHelper::getClinicianName($validated['clinician_id']),
+            'manufacturer_name'   => OrderHelper::getManufacturerName($validated['manufacturer_id']),
+            'patient_name'        => OrderHelper::getPatientName($validated['patient_id']),
+
+            'items'               => $graftItems,
+            'graft_subtotal'      => $graftSubtotal,
+
+            'other_product_items' => $otherProductItems,
+            'other_subtotal'      => $otherSubtotal,
+
+            'total_asp'           => $totalAsp,
+            'order_link'          => $productOnlyUrl,
+        ]);
+
         $emailService = new EmailService();
 
         $params = [
@@ -433,11 +469,44 @@ class OrderController extends Controller
             'body'      => $emailBody,
         ];
 
-        $response = $emailService->send_email(
+        $OtherProductParams = [
+            'to'        => $email,
+            // 'to'        => 'office@woundmedinc.com', // live
+            // 'cc'        => ['woundmedinc@gmail.com', 'info@woundmedinc.com'], // live
+            'cc'        => ['prospteam@gmail.com', 'joshuapalay.web2@gmail.com'], // test
+            'from'      => 'noreply@woundmed.com',
+            'from_name' => 'WoundMed Orders',
+            'subject'   => "Other Product Order Details: {$order->orderCode}",
+            'body'      => $otherProductEmailBody,
+        ];
+
+        $emailResults = [];
+
+        $emailResults['main'] = $emailService->send_email(
             $params,
             'Order created',
             'Order created'
         );
+
+        if (!empty($otherProductItems)) {
+            $emailResults['other'] = $emailService->send_email(
+                $OtherProductParams,
+                'Other Product Order created',
+                'Other Product Order created'
+            );
+        }
+
+        # error logging
+        foreach ($emailResults as $type => $result) {
+            if (!$result) {
+                \Log::error('Email failed', [
+                    'type'      => $type,
+                    'order_id'  => $order->order_id,
+                    'orderCode' => $order->orderCode,
+                    'to'        => $email,
+                ]);
+            }
+        }
 
         return response()->json([
             'success'  => true,
@@ -725,6 +794,8 @@ class OrderController extends Controller
                     'subtotal'   => ($item['asp'] ?? 0) * ($item['quantity'] ?? 1),
                 ];
             }, $order->items);
+
+            // flag - continue here
 
             $totalAsp = array_reduce($items, fn($sum, $i) => $sum + $i['subtotal'], 0);
 

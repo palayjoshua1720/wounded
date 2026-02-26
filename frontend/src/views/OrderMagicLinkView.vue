@@ -27,7 +27,7 @@
 
                 <!-- Order Code + Tracking -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-                    <div v-if="displayOrder.statusLabel == 'submitted'" class="p-3 bg-gray-50 rounded-xl dark:bg-gray-800">
+                    <div v-if="displayOrder.statusLabel == 'submitted'" class="p-3 bg-gray-50 rounded-xl dark:bg-gray-800 order-number">
                         <div class="flex items-center gap-2 mb-2">
                             <FileText class="w-6 h-6 text-gray-900 dark:text-gray-300" />
                             <label class="text-sm text-gray-600 dark:text-gray-300 font-medium">
@@ -221,7 +221,7 @@
                         <tfoot class="bg-gray-50">
                             <tr>
                                 <td colspan="3" class="px-6 py-4 text-right font-semibold">
-                                Items Subtotal:
+                                Items Total:
                                 </td>
                                 <td class="px-6 py-4 text-right text-lg font-bold">
                                 ${{ Number(displayOrder.items.reduce((sum, item) => sum + item.subtotal, 0)).toFixed(2) }}
@@ -233,10 +233,11 @@
             </div>
 
             <!-- Product Items -->
-            <div v-if="displayOrder.other_product_items && displayOrder.other_product_items.length > 0" class="bg-white rounded-xl shadow-sm overflow-hidden mb-6">
+             <!-- REMOVED OTHER PRODUCT DISPLAY -->
+            <!-- <div v-if="displayOrder.other_product_items && displayOrder.other_product_items.length > 0" class="bg-white rounded-xl shadow-sm overflow-hidden mb-6">
                 <div class="p-6 border-b border-gray-200">
                     <h2 class="text-xl font-semibold text-gray-900 inline-flex items-center gap-1">
-                        <ShoppingBag class="w-5 h-5" />
+                        <Layers2 class="w-5 h-5" />
                         Other Products
                     </h2>
                 </div>
@@ -248,7 +249,6 @@
                                 <td class="px-6 py-4">Product</td>
                                 <td class="px-6 py-4 text-center">Qty</td>
                                 <td class="px-6 py-4 text-right">Price</td>
-                                <td class="px-6 py-4 text-right">Subtotal</td>
                             </tr>
                         </thead>
 
@@ -257,13 +257,12 @@
                                 <td class="px-6 py-4">{{ item.product }}</td>
                                 <td class="px-6 py-4 text-center">{{ item.quantity }}</td>
                                 <td class="px-6 py-4 text-right">${{ Number(item.price).toFixed(2) }}</td>
-                                <td class="px-6 py-4 text-right">${{ Number(item.subtotal).toFixed(2) }}</td>
                             </tr>
                         </tbody>
 
                         <tfoot class="bg-gray-50">
                             <tr>
-                                <td colspan="3" class="px-6 py-4 text-right font-semibold">
+                                <td colspan="2" class="px-6 py-4 text-right font-semibold">
                                 Product Items Subtotal:
                                 </td>
                                 <td class="px-6 py-4 text-right text-lg font-bold">
@@ -276,10 +275,11 @@
                         </tfoot>
                     </table>
                 </div>
-            </div>
+            </div> -->
 
             <!-- Total Order Amount -->
-            <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+             <!-- COMMENTED - REMOVED OTHER PRODUCTS AND OVERALL TOTAL INCLUDING OTHER PRODUCT AMOUNT -->
+            <!-- <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
                 <div class="flex justify-end">
                     <div class="text-right">
                         <div class="mb-3">
@@ -296,10 +296,39 @@
                         </div>
                     </div>
                 </div>
+            </div> -->
+
+            <!-- Actions -->
+            <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-1">Order Actions</h3>
+                        <p class="text-sm text-gray-600">Update the order status</p>
+                    </div>
+
+                    <div>
+                        <div v-if="orderActionConfig">
+                            <button
+                                v-if="orderActionConfig.nextStatus"
+                                :class="orderActionConfig.buttonClass"
+                                @click="handleAction(orderActionConfig.nextStatus)"
+                            >
+                                {{ orderActionConfig.label }}
+                            </button>
+                            <div
+                                v-else
+                                :class="orderActionConfig.finalMessageClass"
+                            >
+                                <component  :is='CircleCheckBig' class="w-4 h-4"/>
+                                <span>{{ orderActionConfig.label }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Order File Attachment -->
-            <div v-if="displayOrder.orderFile" class="bg-white rounded-xl shadow-sm p-6 mb-6">
+            <div v-if="displayOrder.orderFile" class="bg-white rounded-xl shadow-sm p-6">
                 <h2 class="text-xl font-semibold text-gray-900 mb-4 inline-flex items-center gap-1">
                     <Folder class="w-5 h-5" />
                     Order File Attachment
@@ -331,7 +360,7 @@
                     <div v-else-if="isPDFFile(filePreviewUrl)" class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4 bg-gray-50 dark:bg-gray-700/50">
                         <iframe 
                             :src="`${API_URL}/private-file/${displayOrder.orderFile}`"
-                            class="w-full h-96 rounded-lg"
+                            class="w-full h-[40rem] rounded-lg"
                             frameborder="0"
                         ></iframe>
                     </div>
@@ -339,35 +368,6 @@
                         <File class="w-16 h-16 text-gray-400 mx-auto mb-3" />
                         <p class="text-sm text-gray-500 dark:text-gray-400 font-medium">Preview not available for this file type</p>
                         <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Download to view the file</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Actions -->
-            <div class="bg-white rounded-xl shadow-sm p-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h3 class="text-lg font-semibold text-gray-900 mb-1">Order Actions</h3>
-                        <p class="text-sm text-gray-600">Update the order status</p>
-                    </div>
-
-                    <div>
-                        <div v-if="orderActionConfig">
-                            <button
-                                v-if="orderActionConfig.nextStatus"
-                                :class="orderActionConfig.buttonClass"
-                                @click="handleAction(orderActionConfig.nextStatus)"
-                            >
-                                {{ orderActionConfig.label }}
-                            </button>
-                            <div
-                                v-else
-                                :class="orderActionConfig.finalMessageClass"
-                            >
-                                <component  :is='CircleCheckBig' class="w-4 h-4"/>
-                                <span>{{ orderActionConfig.label }}</span>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -385,7 +385,8 @@ import {
     FileText, Truck, CircleCheckBig,
     BadgeCheck, TruckElectric, PackageCheck,
     PackageX, ReceiptText, ShoppingBag, Link,
-    ShoppingCart, Container, ExternalLink, Folder
+    ShoppingCart, Container, ExternalLink, Folder,
+    Layers2
 } from 'lucide-vue-next';
 import api from "@/services/api";
 import { toast } from 'vue3-toastify'
@@ -580,7 +581,6 @@ async function accessMagicLink() {
 
         order.value = transformOrderResponse(data.order);
 
-        // Ensure other products are loaded so product names/prices are available
         await getAllOtherProducts()
 
         isAuthorized.value = true;
@@ -962,6 +962,21 @@ async function handleAction(newStatus: OrderStatus) {
                 confirmButtonColor: "#d33",
                 allowOutsideClick: false,
                 allowEscapeKey: true,
+                returnFocus: false
+            }).then(() => {
+                const orderDiv = document.querySelector('.order-number');
+
+                if (orderDiv) {
+                    orderDiv.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'center'
+                    });
+
+                    const input = orderDiv.querySelector('input');
+                    if (input) {
+                        setTimeout(() => input.focus(), 300);
+                    }
+                }
             });
             return;
         }
@@ -1014,7 +1029,13 @@ async function handleAction(newStatus: OrderStatus) {
                     confirmButtonColor: '#d33',
                     allowOutsideClick: false,
                     allowEscapeKey: true,
-                })
+                    returnFocus: false
+                }).then(() => {
+                    window.scrollTo({
+                        top: 0,
+                        behavior: 'smooth'
+                    });
+                });
                 return
             }
         }
@@ -1037,7 +1058,9 @@ async function handleAction(newStatus: OrderStatus) {
         showCancelButton: true,
         confirmButtonColor: "#3085d6",
         cancelButtonColor: "#d33",
-        confirmButtonText: "Yes, update status"
+        cancelButtonText: "No, I'll review it first",
+        confirmButtonText: "Yes, update status",
+        returnFocus: false
     });
 
     if (!result.isConfirmed) return;

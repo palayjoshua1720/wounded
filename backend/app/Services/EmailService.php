@@ -18,6 +18,10 @@ class EmailService
             }
 
             $parameter['to'] = (is_array($parameter['to'])) ? implode(',', $parameter['to']) : $parameter['to'];
+            if (!empty($parameter['cc'])) {
+                $parameter['cc'] = is_array($parameter['cc']) ? implode(',', $parameter['cc']) : $parameter['cc'];
+            }
+
             $ch              = curl_init();
             $mode            = ($parameter['debug'] == true) ? 'test_send_email' : 'send_email';
 

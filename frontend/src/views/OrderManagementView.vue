@@ -264,7 +264,7 @@
 										<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Size</th>
 										<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Quantity</th>
 										<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">ASP</th>
-										<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Total</th>
+										<th class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Total</th>
 									</tr>
 								</thead>
 								<tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
@@ -273,13 +273,13 @@
 										<td class="px-4 py-3 text-sm text-gray-900 dark:text-white">{{ getSizeName(item.graft_id) }}</td>
 										<td class="px-4 py-3 text-sm text-gray-900 dark:text-white">{{ item.quantity }}</td>
 										<td class="px-4 py-3 text-sm text-gray-900 dark:text-white">${{ item.asp.toFixed(2) }}</td>
-										<td class="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">${{ (item.asp * item.quantity).toFixed(2) }}</td>
+										<td class="px-4 py-3 text-right text-sm font-medium text-gray-900 dark:text-white">${{ (item.asp * item.quantity).toFixed(2) }}</td>
 									</tr>
 								</tbody>
 								<tfoot class="bg-gray-50 dark:bg-gray-700">
 									<tr>
 										<td colspan="4" class="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white text-right">Total Amount:</td>
-										<td class="px-4 py-3 text-sm font-bold text-gray-900 dark:text-white">${{ selectedOrder.items.reduce((sum, item) => sum + (item.asp * item.quantity), 0).toFixed(2) }}</td>
+										<td class="px-4 py-3 text-right text-sm font-bold text-gray-900 dark:text-white">${{ selectedOrder.items.reduce((sum, item) => sum + (item.asp * item.quantity), 0).toFixed(2) }}</td>
 									</tr>
 								</tfoot>
 							</table>
@@ -288,32 +288,45 @@
 					<div>
 						<h3 class="text-lg font-medium border-t text-gray-900 dark:text-white mb-4">Product Items</h3>
 						<div class="overflow-x-auto">
-							<table class="w-full">
-								<thead class="bg-gray-50 dark:bg-gray-700">
-									<tr>
-										<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Brand</th>
-										<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Size</th>
-										<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Quantity</th>
-										<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">ASP</th>
-										<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Total</th>
-									</tr>
-								</thead>
-								<tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-									<tr v-for="(item, idx) in selectedOrder.items" :key="idx">
-										<td class="px-4 py-3 text-sm text-gray-900 dark:text-white">{{ getBrandName(item.brandId) }}</td>
-										<td class="px-4 py-3 text-sm text-gray-900 dark:text-white">{{ getSizeName(item.graft_id) }}</td>
-										<td class="px-4 py-3 text-sm text-gray-900 dark:text-white">{{ item.quantity }}</td>
-										<td class="px-4 py-3 text-sm text-gray-900 dark:text-white">${{ item.asp.toFixed(2) }}</td>
-										<td class="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">${{ (item.asp * item.quantity).toFixed(2) }}</td>
-									</tr>
-								</tbody>
-								<tfoot class="bg-gray-50 dark:bg-gray-700">
-									<tr>
-										<td colspan="4" class="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white text-right">Total Amount:</td>
-										<td class="px-4 py-3 text-sm font-bold text-gray-900 dark:text-white">${{ selectedOrder.items.reduce((sum, item) => sum + (item.asp * item.quantity), 0).toFixed(2) }}</td>
-									</tr>
-								</tfoot>
-							</table>
+							<!-- Other Products Table -->
+							<div v-if="selectedOrder.other_product_items && selectedOrder.other_product_items.length > 0">
+								<table class="w-full">
+									<thead class="bg-gray-50 dark:bg-gray-700">
+										<tr>
+											<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Product Name</th>
+											<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Quantity</th>
+											<th class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Price</th>
+										</tr>
+									</thead>
+									<tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+										<tr v-for="(item, idx) in selectedOrder.other_product_items" :key="`other-${idx}`">
+											<td class="px-4 py-3 text-sm text-gray-900 dark:text-white">{{ getOtherProductName(item.other_product_id) }}</td>
+											<td class="px-4 py-3 text-sm text-gray-900 dark:text-white">{{ item.quantity }}</td>
+											<td class="px-4 py-3 text-right text-sm text-gray-900 dark:text-white">${{ item.price.toFixed(2) }}</td>
+										</tr>
+									</tbody>
+									<tfoot class="bg-gray-50 dark:bg-gray-700">
+										<tr>
+											<td colspan="2" class="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white text-right">Other Products Total:</td>
+											<td class="px-4 py-3 text-right text-sm font-bold text-gray-900 dark:text-white">${{ selectedOrder.other_product_items.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2) }}</td>
+										</tr>
+									</tfoot>
+								</table>
+							</div>
+
+							<!-- Overall Total -->
+							<div v-if="(selectedOrder.items && selectedOrder.items.length > 0) || (selectedOrder.other_product_items && selectedOrder.other_product_items.length > 0)" 
+								class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+								<div class="text-right">
+									<span class="text-lg font-bold text-gray-900 dark:text-white">
+										Overall Total: ${{ 
+											(
+												(selectedOrder.items?.reduce((sum, item) => sum + (item.asp * item.quantity), 0) || 0) + 
+												(selectedOrder.other_product_items?.reduce((sum, item) => sum + (item.price * item.quantity), 0) || 0)
+											).toFixed(2) }}
+									</span>
+								</div>
+							</div>
 						</div>
 					</div>
 					<div v-if="selectedOrder.notes">
@@ -362,12 +375,15 @@
 
 							<!-- RIGHT: FOLLOW-UP BUTTON + COOLDOWN -->
 							<div class="flex items-center space-x-3">
-								<p
-									v-if="isFollowUpCooldown && selectedOrder.order_status === 'submitted'"
-									class="text-sm text-gray-600 dark:text-gray-300"
-								>
-									Follow-up available in {{ followUpHoursLeft }}h
-								</p>
+								<div v-if="isFollowUpCooldown && selectedOrder.order_status === 'submitted'" class="flex items-center space-x-2">
+									<div class="relative group">
+										<CircleQuestionMark class="w-5 h-5 text-gray-500 dark:text-gray-400 cursor-help hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors" />
+										<div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 dark:bg-gray-950 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-10">
+											Last Follow-Up: {{ selectedOrder.followup_last_sent_at ? formatDateTime(selectedOrder.followup_last_sent_at) : 'No previous follow-up' }}
+										</div>
+									</div>
+									<p class="text-sm text-gray-600 dark:text-gray-300">Follow-up available in {{ followUpHoursLeft }}h</p>
+								</div>
 								<button
 									v-if="selectedOrder.order_status === 'submitted'"
 									:disabled="isFollowUpCooldown"
@@ -633,8 +649,7 @@
 										:disabled="size.stock <= 0"
 										:class="size.stock <= 0 ? 'text-gray-400' : ''"
 									>
-										{{ size.size }}
-										<span v-if="size.stock <= 0">(Out of Stock)</span>
+										{{ size.size }} (stock: {{ size.stock }})
 									</option>
 								</select>
 							</div>
@@ -713,7 +728,7 @@
 										:key="prod.other_product_id" 
 										:value="prod.other_product_id"
 									>
-										{{ prod.product_name }} ({{ otherProductTypeMap[prod.product_type] }})
+										{{ prod.product_name }} ({{ otherProductTypeMap[prod.product_type] }}) ({{ prod.stock }})
 									</option>
 								</select>
 							</div>
@@ -930,7 +945,7 @@ import {
 	ChevronDown, Package, Send, ShieldCheck,
 	Factory, TruckElectric, Folder, CloudUpload,
 	FileText, BaggageClaim, X, Blocks,
-	Layers, CopyPlus,
+	Layers, CopyPlus, CircleQuestionMark
 } from 'lucide-vue-next';
 import api from '@/services/api'
 import { toast } from 'vue3-toastify'
@@ -946,6 +961,7 @@ interface Order {
 	order_status: OrderStatus;
 	notes?: string;
 	items: OrderItem[];
+	other_product_items?: OtherProductItem[];
 	tracking_num?: string;
 	tracking_code?: string;
 	ivr_num: string
@@ -957,6 +973,12 @@ interface Order {
 	patient: PatientInfo
 	ivr?: IVR
 	// brand: Brand
+}
+
+interface OtherProductItem {
+	other_product_id: number;
+	quantity: number;
+	price: number;
 }
 
 interface Clinic {
@@ -1153,7 +1175,7 @@ const formData = ref({
 			otherProductId: '',
 			brandId: '',
 			manufacturerId: '',
-			otherProductType: 1 as const,
+			otherProductType: 0,
 			otherProductName: '',
 			quantity: 1,
 			otherProductStock: 0,
@@ -1261,6 +1283,12 @@ function getSizeName(graft_size: string | number) {
 	return graftSize?.size ?? `Size ${graft_size}`
 }
 
+function getOtherProductName(otherProductId: string | number) {
+	const id = Number(otherProductId)
+	const p = otherProducts.value.find(op => Number(op.other_product_id) === id)
+	return p?.product_name ?? p?.product_name ?? `Product ${otherProductId}`
+}
+
 function onBrandChange(idx: number) {
 	const brand = selectedBrand(idx)
 	if (brand) {
@@ -1346,7 +1374,7 @@ function addProductItem() {
 		otherProductId: '',
 		brandId: '',
 		manufacturerId: '',
-		otherProductType: 1 as const,
+		otherProductType: 0,
 		otherProductName: '',
 		quantity: 1,
 		otherProductStock: 0,
@@ -1419,7 +1447,7 @@ function resetCreateForm() {
 				otherProductId: '',
 				brandId: '',
 				manufacturerId: '',
-				otherProductType: 1 as const,
+				otherProductType: 0,
 				otherProductName: '',
 				quantity: 1,
 				otherProductStock: 0,
@@ -1674,7 +1702,7 @@ async function editOrder(order: Order) {
 		brandId: String(p.brandId ?? p.brand_id ?? ''),
 		manufacturerId: String(p.manufacturer_id ?? ''),
 		otherProductType: Number(p.product_type ?? p.otherProductType ?? 1) as 0 | 1,
-		otherProductName: p.product_name ?? p.other_product_name ?? '',
+		otherProductName: p.product_name ?? p.product_name ?? '',
 		quantity: Number(p.quantity ?? 0),
 		otherProductStock: Number(p.stock ?? 0),
 		price: Number(p.price ?? 0)
@@ -1767,23 +1795,49 @@ const formatDateTime = (dateStr: string) => {
 };
 
 const isFollowUpCooldown = computed(() => {
-	if (!selectedOrder.value?.followup_last_sent_at) return false;
+	// Use last follow-up timestamp if present; otherwise fall back to the order date.
+	const refDateStr = selectedOrder.value?.followup_last_sent_at || selectedOrder.value?.ordered_at;
+	if (!refDateStr) return false;
 
-	const last = new Date(selectedOrder.value.followup_last_sent_at).getTime();
+	const parseTimestamp = (s: string) => {
+		if (!s) return NaN;
+		// Normalize common formats (space -> T) so Date.parse treats it as ISO when possible
+		const normalized = typeof s === 'string' ? s.replace(' ', 'T') : s;
+		let t = Date.parse(normalized);
+		if (isNaN(t)) {
+			try { t = new Date(s).getTime(); } catch { t = NaN }
+		}
+		return isNaN(t) ? NaN : t;
+	};
+
+	const last = parseTimestamp(refDateStr);
+	if (isNaN(last)) return false;
+
 	const now = Date.now();
-
 	const hours = (now - last) / (1000 * 60 * 60);
 	return hours < 24;
 });
 
 const followUpHoursLeft = computed(() => {
-	if (!selectedOrder.value?.followup_last_sent_at) return 0;
+	const refDateStr = selectedOrder.value?.followup_last_sent_at || selectedOrder.value?.ordered_at;
+	if (!refDateStr) return 0;
 
-	const last = new Date(selectedOrder.value.followup_last_sent_at).getTime();
+	const parseTimestamp = (s: string) => {
+		if (!s) return NaN;
+		const normalized = typeof s === 'string' ? s.replace(' ', 'T') : s;
+		let t = Date.parse(normalized);
+		if (isNaN(t)) {
+			try { t = new Date(s).getTime(); } catch { t = NaN }
+		}
+		return isNaN(t) ? NaN : t;
+	};
+
+	const last = parseTimestamp(refDateStr);
+	if (isNaN(last)) return 0;
+
 	const now = Date.now();
-
-	const hours = (now - last) / (1000 * 60 * 60);
-	return Math.max(0, Math.ceil(24 - hours));
+	const hoursLeft = 24 - (now - last) / (1000 * 60 * 60);
+	return Math.ceil(hoursLeft > 0 ? hoursLeft : 0);
 });
 
 function getSizesByBrand(brandId: string) {
@@ -1853,6 +1907,7 @@ function onOtherProductChange(idx: number) {
 	product.price = Number(otherProduct.price ?? 0)
 	product.otherProductName = otherProduct.product_name ?? product.otherProductName
 	product.otherProductStock = otherProduct.stock ?? product.otherProductStock
+	product.otherProductType = Number(otherProduct.product_type ?? 0) as 0 | 1
 }
 
 function graftStockCheck(graftId: number) {
@@ -1961,6 +2016,16 @@ async function getAllOrders(page = 1)
 				deviceType: it.deviceType ?? it.device_type ?? ''
 			})) : []
 
+			let rawOtherProductItems = o.other_product_items
+			if (!Array.isArray(rawOtherProductItems) && typeof rawOtherProductItems === 'string') {
+				try { rawOtherProductItems = JSON.parse(rawOtherProductItems) } catch { rawOtherProductItems = [] }
+			}
+			const otherProductItems: OtherProductItem[] = Array.isArray(rawOtherProductItems) ? rawOtherProductItems.map((it: any) => ({
+				other_product_id: Number(it.other_product_id ?? 0),
+				quantity: Number(it.quantity ?? 0),
+				price: Number(it.price ?? 0)
+			})) : []
+
 			return {
 				order_id: Number(o.order_id ?? 0),
 				order_code: String(o.order_code ?? ''),
@@ -1969,6 +2034,7 @@ async function getAllOrders(page = 1)
 				order_status: (['submitted','acknowledged','shipped','delivered','cancelled'][Number(o.order_status ?? 0)] ?? 'submitted') as OrderStatus,
 				notes: o.notes ?? '',
 				items,
+				other_product_items: otherProductItems,
 				tracking_num: o.tracking_num ?? '',
 				order_number: o.order_number ?? '',
 				tracking_code: o.tracking_code ?? '',
@@ -2304,10 +2370,12 @@ async function applyOverride() {
 }
 
 async function sendFollowUp(order: Order){
+	console.log('order: ', order);
+	
 	try {
 		const result = await Swal.fire({
 			title: "Send Follow-Up Email?",
-			text: "This will notify the manufacturer again about this order.",
+			text: `This will notify ${order?.ivr?.manufacturer?.order_email || order?.manufacturer_name} again about this order.`,
 			icon: "warning",
 			showCancelButton: true,
 			confirmButtonColor: "#4f46e5",

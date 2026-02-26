@@ -54,6 +54,11 @@ Route::get('/private-file/{path}', [IVRRequestController::class, 'viewIVRFile'])
 Route::get('/private-order-file/{path}', [OrderController::class, 'viewOrderFile'])
 ->where('path', '.*');
 
+// get CSRF cookie before login
+Route::get('/sanctum/csrf-cookie', function () {
+    return response()->json(['csrf' => 'ok']);
+});
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::get('/auth/me', [AuthController::class, 'user']);
