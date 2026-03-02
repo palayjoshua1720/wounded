@@ -517,56 +517,189 @@ class OrderController extends Controller
 
     public function updateOrder(Request $request, $orderId)
     {
-        try {
-            $validated = $request->validate([
-                'clinic_id' => 'required|int|max:255',
-                'clinician_id' => 'required|int|max:255',
-                'patient_id' => 'required|int|max:255',
-                'notes' => 'nullable|string',
-                'items' => 'required|array|min:1',
-                'items.*.brand_id' => 'required|integer|exists:woundmed_brands,brand_id',
-                'items.*.graft_id' => 'required|integer|exists:woundmed_graft_sizes,graft_size_id',
-                'items.*.ivr_id' => 'required|integer|exists:woundmed_ivr,ivr_id',
-                'items.*.quantity' => 'required|integer|min:1',
-                'items.*.asp' => 'required|numeric|min:0',
-                'items.*.product_type' => 'required|integer|in:0,1',
-                'items.*.device_type' => 'nullable|string|max:255',
-            ]);
+        dd($request->all());
+        $request->merge([
+            'items' => json_decode($request->items, true),
+            'products' => collect(json_decode($request->products, true) ?? [])
+                ->filter(function ($product) {
+                    return isset($product['other_product_id']) 
+                        && $product['other_product_id'] !== null
+                        && $product['other_product_id'] !== '';
+                })
+                ->values()
+                ->toArray(),
+        ]);
 
-            $orderCode = 'ORD-' . strtoupper(uniqid(10));
-            $trackingNum = 'TRK-' . strtoupper(Str::random(10));
-
-            $order = Orders::findOrFail($orderId);
-
-            $order->update([
-                'order_code' => $orderCode,
-                'clinic_id' => $validated['clinic_id'],
-                'user_id' => $validated['clinician_id'],
-                'patient_id' => $validated['patient_id'],
-                'tracking_num' => $trackingNum,
-                'notes' => $validated['notes'],
-                'items' => $validated['items'],
-                'order_status' => 0,
-                'ordered_at' => now(),
-            ]);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Order details updated successfully!',
-            ]);
+        $validated = $request->validate([
+            'clinic_id' => 'required|int|max:255',
+            'clinician_id' => 'required|int|max:255',
+            'patient_id' => 'required|int|max:255',
+            'notes' => 'nullable|string',
+            'order_file'      => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:10240',
             
-        } catch (\Illuminate\Validation\ValidationException $e) {
+            'items' => 'required|array|min:1',
+            'items.*.brand_id' => 'required|integer|exists:woundmed_brands,brand_id',
+            'items.*.graft_id' => 'required|integer|exists:woundmed_graft_sizes,graft_size_id',
+            'items.*.ivr_id' => 'required|integer|exists:woundmed_ivr,ivr_id',
+            'items.*.quantity' => 'required|integer|min:1',
+            'items.*.asp' => 'required|numeric|min:0',
+            'items.*.product_type' => 'required|integer|in:0,1',
+            'items.*.device_type' => 'nullable|string|max:255',
+
+            'products' => 'nullable|array',
+            'products.*.other_product_id' => 'integer|exists:woundmed_other_products,other_product_id',
+            'products.*.quantity' => 'integer|min:1',
+            'products.*.price' => 'numeric|min:0',
+            'products.*.product_type' => 'numeric|min:0',
+        ]);
+
+        $order = Orders::findOrFail($orderId);
+
+        # Prevent update if order is already processed
+        if ($order->order_status >= 1) {
             return response()->json([
                 'success' => false,
-                'message' => 'Validation failed',
-                'errors' => $e->errors(),
+                'message' => 'Cannot update order that has been acknowledged, shipped or delivered.',
             ], 422);
-        } catch (\Throwable $th) {
+        }
+
+        # Load current (old) items for delta calculation
+        $oldItems = $order->items ?? [];
+        $oldProducts = $order->other_product_items ?? [];
+
+        # early/initial stock check
+        $graftIds = collect($validated['items'])->pluck('graft_id')->unique()->all();
+        $grafts = GraftSize::whereIn('graft_size_id', $graftIds)->get()->keyBy('graft_size_id');
+
+        $productIds = collect($validated['products'])->pluck('other_product_id')->filter()->unique()->all();
+        $otherProducts = OtherProduct::whereIn('other_product_id', $productIds)->get()->keyBy('other_product_id');
+
+        $errors = [];
+
+        # requested quantities checker
+        foreach ($validated['items'] as $idx => $item) {
+            $graft = $grafts->get($item['graft_id']);
+            if (!$graft) {
+                $errors["items.$idx.graft_id"] = "Graft size not found.";
+                continue;
+            }
+            if ($graft->stock < $item['quantity']) {
+                $errors["items.$idx.quantity"] = 
+                    "Insufficient stock for {$graft->size} (available: {$graft->stock}, requested: {$item['quantity']})";
+            }
+        }
+
+        foreach ($validated['products'] ?? [] as $idx => $prod) {
+            if (empty($prod['other_product_id'])) continue;
+            $product = $otherProducts->get($prod['other_product_id']);
+            if (!$product) {
+                $errors["products.$idx.other_product_id"] = "Product not found.";
+                continue;
+            }
+            if ($product->stock < $prod['quantity']) {
+                $errors["products.$idx.quantity"] = 
+                    "Insufficient stock for '{$product->product_name}' (available: {$product->stock}, requested: {$prod['quantity']})";
+            }
+        }
+
+        if ($errors) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to create order: ' . $th->getMessage(),
+                'message' => 'Cannot update order – insufficient stock or invalid items',
+                'errors'  => $errors,
+            ], 422);
+        }
+
+        try {
+            DB::transaction(function () use ($order, $validated, $oldItems, $oldProducts, $request) {
+
+                # A. Restore old stock (increase)
+                foreach ($oldItems as $oldItem) {
+                    GraftSize::where('graft_size_id', $oldItem['graft_id'])
+                        ->increment('stock', $oldItem['quantity'] ?? 0);
+                }
+
+                foreach ($oldProducts as $oldProd) {
+                    if (empty($oldProd['other_product_id'])) continue;
+                    OtherProduct::where('other_product_id', $oldProd['other_product_id'])
+                        ->increment('stock', $oldProd['quantity'] ?? 0);
+                }
+
+                # B. Reserve new quantities (decrease)
+                foreach ($validated['items'] as $item) {
+                    $affected = GraftSize::where('graft_size_id', $item['graft_id'])
+                        ->where('stock', '>=', $item['quantity'])
+                        ->decrement('stock', $item['quantity']);
+
+                    if ($affected === 0) {
+                        throw new \RuntimeException("Stock no longer available for graft ID {$item['graft_id']}");
+                    }
+                }
+
+                foreach ($validated['products'] ?? [] as $prod) {
+                    if (empty($prod['other_product_id'])) continue;
+
+                    $affected = OtherProduct::where('other_product_id', $prod['other_product_id'])
+                        ->where('stock', '>=', $prod['quantity'])
+                        ->decrement('stock', $prod['quantity']);
+
+                    if ($affected === 0) {
+                        throw new \RuntimeException("Stock no longer available for product ID {$prod['other_product_id']}");
+                    }
+                }
+
+                # C. Update order record
+                $orderCode = 'ORD-' . strtoupper(uniqid());
+                $trackingNum = 'TRK-' . strtoupper(Str::random(10));
+
+                $filePath = $order->order_file;
+                if ($request->hasFile('order_file')) {
+                    
+                    if ($filePath) Storage::disk('private')->delete($filePath);
+
+                    $filename = time() . '_' . $request->file('order_file')->getClientOriginalName();
+                    $filePath = $request->file('order_file')->storeAs('order', $filename, 'private');
+                }
+
+                $order->update([
+                    'order_code'         => $orderCode,
+                    'clinic_id'          => $validated['clinic_id'],
+                    'user_id'            => $validated['clinician_id'],
+                    'patient_id'         => $validated['patient_id'],
+                    'tracking_num'       => $trackingNum,
+                    'notes'              => $validated['notes'] ?? $order->notes,
+                    'items'              => $validated['items'],
+                    'other_product_items'=> $validated['products'] ?? [],
+                    'order_file'         => $filePath,
+                    'order_status'       => 0,
+                    'ordered_at'         => now(),
+                ]);
+            });
+
+        } catch (\RuntimeException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Update failed – stock was taken by another order during processing. Please try again.',
+                'error'   => $e->getMessage(),
+            ], 409);
+        } catch (\Throwable $e) {
+            \Log::error('Order update failed', [
+                'order_id' => $orderId,
+                'error'    => $e->getMessage(),
+                'trace'    => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update order. Please try again or contact support.',
             ], 500);
         }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Order updated successfully!',
+            'order_id' => $order->order_id,
+        ]);
     }
 
     public function updateOrderStatus(Request $request, $orderId)
