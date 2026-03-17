@@ -55,7 +55,7 @@ class AuthController extends Controller
         }
         
         if (! Hash::check($request->password, $user->password)) {
-            $this->logAudit($request, 'authentication', "login failed", $user->id, 1);
+            $this->logAudit($request, 'authentication', "login failed", null, 1, $request->email);
 
             return response()->json([
                 'message' => 'The provided credentials are incorrect.',

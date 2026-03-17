@@ -576,14 +576,27 @@ const formData = ref({
 
 /** Validate magic link */
 async function accessMagicLink() {
+    if (!token || !orderId) {
+        router.replace({ name: "not-found-link" });
+        return;
+    }
+
+    loading.value = true;
+
     try {
-        const { data } = await api.post("/magic-order-auth", { token, order_id: orderId });
+        const { data } = await api.post("/magic-order-auth", {
+            token,
+            order_id: orderId
+        });
+
+        if (!data?.success || !data?.order?.order_id) {
+            router.replace({ name: "not-found-link" });
+        }
 
         order.value = transformOrderResponse(data.order);
-
-        await getAllOtherProducts()
-
         isAuthorized.value = true;
+        
+        await getAllOtherProducts()
     } catch (error) {
         router.replace({ name: "not-found-link" });
         return;

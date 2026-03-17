@@ -98,10 +98,36 @@
 									<div class="text-sm text-gray-900 dark:text-white">{{ order.patient?.patient_name || 'Not specified' }}</div>
 								</td>
 								<td class="px-6 py-4">
-									<div class="text-sm text-gray-900 dark:text-white">
-										<div v-for="(item, idx) in order.items" :key="idx" class="mb-1">
-											{{ getBrandName(item.brandId) }} - {{ getSizeName(item.graft_id) }} × {{ item.quantity }}
+									<div class="text-sm text-gray-900 dark:text-white space-y-1 max-w-xs">
+										<template v-for="(item, idx) in order.items.slice(0, 2)" :key="`visible-${idx}`">
+											<div>
+												{{ getBrandName(item.brandId) }} - {{ getSizeName(item.graft_id) }} × {{ item.quantity }}
+											</div>
+										</template>
+
+										<div v-if="order.items.length > 2" class="flex items-center gap-2">
+											<button
+												@click="toggleItems(order.order_id)"
+												class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium flex items-center gap-1"
+											>
+												<span v-if="!expandedOrders.has(order.order_id)">... +{{ order.items.length - 2 }} more</span>
+												<span v-else>Show less</span>
+												<ChevronDown
+												class="w-4 h-4 transition-transform"
+												:class="{ 'rotate-180': expandedOrders.has(order.order_id) }"
+												/>
+											</button>
 										</div>
+
+										<template v-if="expandedOrders.has(order.order_id)">
+											<div
+												v-for="(item, idx) in order.items.slice(2)"
+												:key="`expanded-${idx}`"
+												class="pl-4 border-l-2 border-blue-200 dark:border-blue-800 mt-1"
+											>
+												{{ getBrandName(item.brandId) }} - {{ getSizeName(item.graft_id) }} × {{ item.quantity }}
+											</div>
+										</template>
 									</div>
 								</td>
 								<td class="px-6 py-4 whitespace-nowrap">
@@ -558,7 +584,7 @@
 					class="flex items-center gap-2 text-sm text-gray-700 mt-2 mb-2"
 					>
 						<span class="font-semibold text-gray-600 dark:text-white">
-							Eligibility Notification Email:
+							Order Notification Email:
 						</span>
 						<span class="text-gray-900 dark:text-white">
 							{{ selectedIVR.manufacturer?.order_email || '—' }}
@@ -1074,6 +1100,7 @@ interface OrderIssue {
 	requested: number;
 	size?: string;
 	available?: number;
+	message?: string;
 }
 
 type OrderItem = {
@@ -1529,17 +1556,46 @@ async function handleCreateOrder() {
             })
         }
 
-        // Stock violation → BLOCK submission
-        if (graft && item.quantity > graft.stock) {
-            stockIssues.push({
-                type: 'stock',
-                sourceType: 'item',
-                itemIndex: idx + 1,
-                brandName: brand?.brand_name || '—',
-                size: graft.size,
-                available: graft.stock,
-                requested: item.quantity
-            })
+        // Stock violation → BLOCK submission (only for increases in edit mode)
+        if (graft) {
+            let requiredStock = item.quantity;
+            
+            // For edit mode, only check stock increases
+            if (showEditForm.value && selectedOrderForEdit.value) {
+                const originalItem = selectedOrderForEdit.value.items?.find(
+                    (origItem: any) => origItem.graft_id?.toString() === item.sizeId
+                );
+                const originalQuantity = originalItem?.quantity ?? 0;
+                
+                // Only validate if quantity is increasing
+                if (item.quantity > originalQuantity) {
+                    requiredStock = item.quantity - originalQuantity;
+                    if (requiredStock > graft.stock) {
+                        stockIssues.push({
+                            type: 'stock',
+                            sourceType: 'item',
+                            itemIndex: idx + 1,
+                            brandName: brand?.brand_name || '—',
+                            size: graft.size,
+                            available: graft.stock,
+                            requested: requiredStock,
+                            message: `Need ${requiredStock} more units (increasing from ${originalQuantity} to ${item.quantity})`
+                        });
+                    }
+                }
+            } 
+            // For create mode, check absolute quantity
+            else if (item.quantity > graft.stock) {
+                stockIssues.push({
+                    type: 'stock',
+                    sourceType: 'item',
+                    itemIndex: idx + 1,
+                    brandName: brand?.brand_name || '—',
+                    size: graft.size,
+                    available: graft.stock,
+                    requested: item.quantity
+                });
+            }
         }
     })
 
@@ -1559,7 +1615,34 @@ async function handleCreateOrder() {
             return
         }
 
-        if (product.quantity > otherProduct.stock) {
+        let requiredStock = product.quantity;
+        
+        // For edit mode, only check stock increases
+        if (showEditForm.value && selectedOrderForEdit.value) {
+            const originalProduct = selectedOrderForEdit.value.other_product_items?.find(
+                (origProd: any) => origProd.other_product_id?.toString() === product.otherProductId
+            );
+            const originalQuantity = originalProduct?.quantity ?? 0;
+            
+            // Only validate if quantity is increasing
+            if (product.quantity > originalQuantity) {
+                requiredStock = product.quantity - originalQuantity;
+                if (requiredStock > otherProduct.stock) {
+                    stockIssues.push({
+                        type: 'stock',
+                        sourceType: 'product',
+                        itemIndex: idx + 1,
+                        brandName: otherProduct.product_name,
+                        size: `(${otherProductTypeMap[otherProduct.product_type]})`,
+                        available: otherProduct.stock,
+                        requested: requiredStock,
+                        message: `Need ${requiredStock} more units (increasing from ${originalQuantity} to ${product.quantity})`
+                    });
+                }
+            }
+        }
+        // For create mode, check absolute quantity
+        else if (product.quantity > otherProduct.stock) {
             stockIssues.push({
                 type: 'stock',
                 sourceType: 'product',
@@ -1568,7 +1651,7 @@ async function handleCreateOrder() {
                 size: `(${otherProductTypeMap[otherProduct.product_type]})`,
                 available: otherProduct.stock,
                 requested: product.quantity
-            })
+            });
         }
     })
 
@@ -1581,11 +1664,11 @@ async function handleCreateOrder() {
 
         stockIssues.forEach(issue => {
             const label = issue.sourceType === 'product' ? 'Product' : 'Item'
+            const displayMessage = issue.message || `Requested: <strong>${issue.requested}</strong><br>Available: <strong>${issue.available}</strong>`
             message += `
                 <div class="border-l-4 border-red-500 pl-3">
                     <strong>${label} #${issue.itemIndex}</strong> – ${issue.brandName} ${issue.size || ''}<br>
-                    Requested: <strong>${issue.requested}</strong><br>
-                    Available: <strong>${issue.available}</strong>
+                    ${displayMessage}
                 </div>
             `
         })
@@ -2302,7 +2385,12 @@ async function addNewOrder(){
 		} else if (showEditForm.value) {
 			const { data } = await api.put(
                 `/management/order/update/${selectedOrderForEdit.value?.order_id}/updateorder`,
-                payload
+                payload,
+				{
+					// headers: {
+					// 	'Content-Type': 'multipart/form-data'
+					// }
+				}
          	)
 
 			Swal.close()
@@ -2470,10 +2558,20 @@ async function sendFollowUp(order: Order){
 		Swal.close()
 		toast.success(data.message || "Follow-up email sent successfully!")
 		getAllOrders(1)
+		closeForm();
 
 	} catch (error: any) {
 		const msg = error.response?.data?.message || "Failed to send follow-up."
 		toast.error(msg)
+	}
+}
+
+const expandedOrders = ref(new Set<number>())
+function toggleItems(orderId: number) {
+	if (expandedOrders.value.has(orderId)) {
+		expandedOrders.value.delete(orderId)
+	} else {
+		expandedOrders.value.add(orderId)
 	}
 }
 

@@ -23,9 +23,22 @@ use App\Template\OtherProductOrderNotificationEmail;
 use App\Template\FollowupOrderNotificationEmail;
 use App\Helpers\OrderHelper;
 use Illuminate\Support\Facades\Storage;
+use App\Traits\AuditLogger;
 
 class OrderController extends Controller
 {
+    use AuditLogger;
+
+    protected function getEntityName()
+    {
+        return 'woundmed_orders';
+    }
+
+    protected function getEntityType()
+    {
+        return 'order';
+    }
+
     public function getAllOrders(Request $request)
     {
         $perPage = $request->query('per_page', 10);
@@ -188,6 +201,8 @@ class OrderController extends Controller
 
     public function addNewOrder(Request $request)
     {
+        $userId = $request->user()->id ?? null;
+
         $request->merge([
             'items' => json_decode($request->items, true),
             'products' => collect(json_decode($request->products, true) ?? [])
@@ -265,6 +280,7 @@ class OrderController extends Controller
                 'message' => 'Cannot place order – insufficient stock or invalid items',
                 'errors'  => $errors,
             ], 422);
+
         }
 
         # process order in db:transaction
@@ -327,6 +343,8 @@ class OrderController extends Controller
                 ]);
             });
 
+            $this->logAudit($request, 'create_new_order', "Order created successfully: {$order->order_code}", $order->order_id);
+
         } catch (\RuntimeException $e) {
             return response()->json([
                 'success' => false,
@@ -341,6 +359,8 @@ class OrderController extends Controller
                 'trace' => $e->getTraceAsString(),
                 'data'  => $request->except('order_file'),
             ]);
+
+            $this->logAudit($request, 'create_new_order', "Failed to create order", $userId);
 
             return response()->json([
                 'success' => false,
@@ -517,7 +537,7 @@ class OrderController extends Controller
 
     public function updateOrder(Request $request, $orderId)
     {
-        dd($request->all());
+        // dd($request->all());
         $request->merge([
             'items' => json_decode($request->items, true),
             'products' => collect(json_decode($request->products, true) ?? [])
@@ -576,29 +596,54 @@ class OrderController extends Controller
 
         $errors = [];
 
-        # requested quantities checker
+        # requested quantities checker (order items)
         foreach ($validated['items'] as $idx => $item) {
             $graft = $grafts->get($item['graft_id']);
             if (!$graft) {
                 $errors["items.$idx.graft_id"] = "Graft size not found.";
                 continue;
             }
-            if ($graft->stock < $item['quantity']) {
+
+            # Find old quantity for this exact graft_id
+            $oldQty = 0;
+            foreach ($oldItems as $old) {
+                if (($old['graft_id'] ?? null) == $item['graft_id']) {
+                    $oldQty = (int)($old['quantity'] ?? 0);
+                    break;
+                }
+            }
+
+            $netRequired = (int)$item['quantity'] - $oldQty;
+
+            if ($netRequired > 0 && $graft->stock < $netRequired) {
                 $errors["items.$idx.quantity"] = 
-                    "Insufficient stock for {$graft->size} (available: {$graft->stock}, requested: {$item['quantity']})";
+                    "Insufficient stock for {$graft->size} (available: {$graft->stock}, need additional: {$netRequired})";
             }
         }
 
+        # requested quantities checker (other product)
         foreach ($validated['products'] ?? [] as $idx => $prod) {
             if (empty($prod['other_product_id'])) continue;
+
             $product = $otherProducts->get($prod['other_product_id']);
             if (!$product) {
                 $errors["products.$idx.other_product_id"] = "Product not found.";
                 continue;
             }
-            if ($product->stock < $prod['quantity']) {
+
+            $oldQty = 0;
+            foreach ($oldProducts as $oldP) {
+                if (($oldP['other_product_id'] ?? null) == $prod['other_product_id']) {
+                    $oldQty = (int)($oldP['quantity'] ?? 0);
+                    break;
+                }
+            }
+
+            $netRequired = (int)$prod['quantity'] - $oldQty;
+
+            if ($netRequired > 0 && $product->stock < $netRequired) {
                 $errors["products.$idx.quantity"] = 
-                    "Insufficient stock for '{$product->product_name}' (available: {$product->stock}, requested: {$prod['quantity']})";
+                    "Insufficient stock for '{$product->product_name}' (available: {$product->stock}, need additional: {$netRequired})";
             }
         }
 
@@ -676,6 +721,8 @@ class OrderController extends Controller
                 ]);
             });
 
+            $this->logAudit($request, 'update_order_details', "Order updated successfully: {$order->order_code}", $order->order_id);
+
         } catch (\RuntimeException $e) {
             return response()->json([
                 'success' => false,
@@ -688,6 +735,8 @@ class OrderController extends Controller
                 'error'    => $e->getMessage(),
                 'trace'    => $e->getTraceAsString(),
             ]);
+
+            $this->logAudit($request, 'update_order_details', "Failed to update order details", $userId);
 
             return response()->json([
                 'success' => false,
@@ -708,15 +757,34 @@ class OrderController extends Controller
             'order_status' => 'required|integer|min:0|max:4'
         ]);
 
-        $order = Orders::findOrFail($orderId);
-        $order->update([
-            'order_status' => $validated['order_status']
-        ]);
+        try {
+            $order = Orders::find($orderId);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Order status updated successfully.',
-        ]);
+            if (!$order) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Order not found.'
+                ], 404);
+            }
+
+            $order->update([
+                'order_status' => $validated['order_status']
+            ]);
+
+            $this->logAudit($request, 'update_order_status', "Order status updated successfully: {$validated['order_status']}, {$order->order_code}", $order->order_id);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Order status updated successfully.',
+            ]);
+        } catch (\Exception $e) {
+            $this->logAudit($request, 'update_order_status', "Failed to update order status: {$order->order_code}", $order->order_id);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update order status: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 
     public function deleteOrder(Request $request, $orderId)
@@ -725,16 +793,22 @@ class OrderController extends Controller
             $order = Orders::findOrFail($orderId);
             $order->delete();
 
+            $this->logAudit($request, 'delete_order', "Order details deleted successfully: {$order->order_code}", $order->order_id);
+
             return response()->json([
                 'message' => 'Order details deleted successfully.'
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
+            $this->logAudit($request, 'delete_order', "Operation failed: {$order->order_code}", $order->order_id);
+
             return response()->json([
                 'success' => false,
-                'message' => 'Operation failed',
+                'message' => 'Operation failed', 
                 'errors' => $e->errors(),
             ], 422);
         } catch (\Throwable $th) {
+            $this->logAudit($request, 'delete_order', "Failed to delete order details: {$order->order_code}", $order->order_id);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to delete order details: ' . $th->getMessage(),
@@ -744,46 +818,65 @@ class OrderController extends Controller
 
     public function validateMagicLink(Request $request)
     {
+        try {
+            return DB::transaction(function () use ($request) {
 
-        $tokenPlain = $request->input('token');
-        $orderId    = $request->input('order_id');
+                $tokenPlain = $request->input('token');
+                $orderId    = $request->input('order_id');
 
-        $token = DB::table('magic_tokens')
-            ->where('order_id', $orderId)
-            ->where('token', hash('sha256', $tokenPlain))
-            ->first();
+                $token = DB::table('magic_tokens')
+                    ->where('order_id', $orderId)
+                    ->where('token', hash('sha256', $tokenPlain))
+                    ->first();
 
-        if (!$token) {
+                if (!$token) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Invalid magic link.'
+                    ], 400);
+                }
+
+                # Check if already used
+                if (!is_null($token->used_at)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'This access link has already been used.'
+                    ], 400);
+                }
+
+                if ($token->expires_at < now()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'This magic link has expired.'
+                    ], 400);
+                }
+
+                # VALID
+                $order = Orders::with(['clinic', 'clinician', 'patient', 'manufacturer', 'brand.manufacturer', 'graft', 'ivr'])
+                    ->where('order_id', $orderId)
+                    ->first();
+
+                $orderEmail = $order->manufacturer->order_email ?? null;
+
+                $this->logAudit($request, 'magic_link_access', "Magic link accessed successfully for Order ID {$orderId}", $orderId, 0, $orderEmail);
+
+                return response()->json([
+                    'success' => true,
+                    'order'   => $order
+                ]);
+            });
+
+        } catch (\Throwable $e) {
+
+            \Log::critical('Magic link validation failed: ' . $e->getMessage());
+
+            $this->logAudit($request, 'magic_link_access', "Magic link access faild for Order ID {$orderId}", $orderId, 1, $orderEmail);
+
             return response()->json([
                 'success' => false,
-                'message' => 'Invalid magic link.'
-            ], 400);
+                'message' => 'An unexpected error occurred.'
+            ], 500);
         }
-
-        # Check if already used
-        if (!is_null($token->used_at)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'This access link has already been used.'
-            ], 400);
-        }
-
-        if ($token->expires_at < now()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'This magic link has expired.'
-            ], 400);
-        }
-
-        # VALID
-        $order = Orders::with(['clinic', 'clinician', 'patient', 'manufacturer', 'brand.manufacturer', 'graft', 'ivr'])
-            ->where('order_id', $orderId)
-            ->first();
-
-        return response()->json([
-            'success' => true,
-            'order'   => $order
-        ]);
     }
 
     public function updateMagicOrderStatus(Request $request, $orderId)
@@ -796,62 +889,69 @@ class OrderController extends Controller
             'token'         => 'required|string',
         ]);
 
-        $order = Orders::findOrFail($orderId);
-        $dataToUpdate = [
-            'order_status' => $validated['order_status'],
-        ];
+        return DB::transaction(function () use ($request, $validated, $orderId) {
 
-        if ($request->filled('order_number')) {
-            $dataToUpdate['order_number'] = $request->order_number;
-        }
+            $order = Orders::findOrFail($orderId);
 
-        if ($request->filled('tracking_code')) {
-            $dataToUpdate['tracking_code'] = $request->tracking_code;
-        }
-
-        if ($request->filled('tracking_link')) {
-            $dataToUpdate['tracking_link'] = $request->tracking_link;
-        }
-
-        $order->update($dataToUpdate);
-
-        # Validate magic token first
-        $tokenRecord = DB::table('magic_tokens')
-            ->where('order_id', $orderId)
-            ->where('token', hash('sha256', $validated['token']))
-            ->first();
-
-        if (!$tokenRecord) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Invalid magic link.'
-            ], 400);
-        }
-
-        # If already used (expired)
-        if (!is_null($tokenRecord->used_at)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'This access link has already been used.'
-            ], 400);
-        }
-
-        # Update order status
-        $order = Orders::findOrFail($orderId);
-        $order->update([
-            'order_status' => $validated['order_status']
-        ]);
-
-        if ((int) $validated['order_status'] === 3) {
-            DB::table('magic_tokens')
+            $tokenRecord = DB::table('magic_tokens')
                 ->where('order_id', $orderId)
-                ->update(['used_at' => now()]);
-        }
+                ->where('token', hash('sha256', $validated['token']))
+                ->first();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Order status updated successfully.',
-        ]);
+            if (!$tokenRecord) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid magic link.'
+                ], 400);
+            }
+
+            if (!is_null($tokenRecord->used_at)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This access link has already been used.'
+                ], 400);
+            }
+        
+            $dataToUpdate = [
+                'order_status' => $validated['order_status'],
+            ];
+
+            if ($request->filled('order_number')) {
+                $dataToUpdate['order_number'] = $request->order_number;
+            }
+
+            if ($request->filled('tracking_code')) {
+                $dataToUpdate['tracking_code'] = $request->tracking_code;
+            }
+
+            if ($request->filled('tracking_link')) {
+                $dataToUpdate['tracking_link'] = $request->tracking_link;
+            }
+
+            $order->update($dataToUpdate);
+
+            # Mark token used if final status
+            if ((int) $validated['order_status'] === 3) {
+                DB::table('magic_tokens')
+                    ->where('order_id', $orderId)
+                    ->update(['used_at' => now()]);
+            }
+
+            # Update order status
+            $order = Orders::findOrFail($orderId);
+            $order->update([
+                'order_status' => $validated['order_status']
+            ]);
+
+            $orderEmail = $order->manufacturer->order_email ?? null;
+
+            $this->logAudit($request, 'update_magic_order_status', "Order status updated successfully Order ID {$orderId}, new status: {$validated['order_status']}", $orderId, 0, $orderEmail ?? null);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Order status updated successfully.',
+            ]);
+        });
     }
 
     public function followUpOrder(Request $request, $orderId)
@@ -963,6 +1063,8 @@ class OrderController extends Controller
                 'followup_last_sent_at' => now()
             ]);
 
+            $this->logAudit($request, 'follow_up_order', "Follow-up email sent successfully: {$order->order_code}", $order->order_id);
+
             return response()->json([
                 'success' => true,
                 'message' => 'Follow-up email sent successfully!',
@@ -1073,131 +1175,325 @@ class OrderController extends Controller
 
     public function addNewOrderByClinic(Request $request)
     {
-        // $userId = Auth::id();
+        $user = Auth::user();
+
+        if (!$user || !in_array($user->user_role, [2, 3])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized. Only clinic users can place orders this way.',
+            ], 403);
+        }
+
+        $request->merge([
+            'items'    => json_decode($request->items ?? '[]', true) ?? [],
+            'products' => collect(json_decode($request->products ?? '[]', true) ?? [])
+                ->filter(fn($p) => !empty($p['other_product_id']) && is_numeric($p['other_product_id']))
+                ->values()
+                ->toArray(),
+        ]);
+
+        $validated = $request->validate([
+            'clinic_id'       => 'required|integer|exists:woundmed_clinics,clinic_id',
+            'clinician_id'    => 'required|integer|exists:woundmed_users,id',
+            'patient_id'      => 'required|integer|exists:woundmed_patient_info,patient_id',
+            'ivr_id'          => 'required|integer|exists:woundmed_ivr,ivr_id',
+            'manufacturer_id' => 'required|integer|exists:woundmed_manufacturers,manufacturer_id',
+            'notes'           => 'nullable|string|max:1500',
+            'order_file'      => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:10240',
+
+            # Graft items
+            'items'           => 'required_without:products|array|min:1',
+            'items.*.brand_id'     => 'required|integer|exists:woundmed_brands,brand_id',
+            'items.*.graft_id'     => 'required|integer|exists:woundmed_graft_sizes,graft_size_id',
+            'items.*.ivr_id'       => 'required|integer|exists:woundmed_ivr,ivr_id',
+            'items.*.quantity'     => 'required|integer|min:1',
+            'items.*.asp'          => 'required|numeric|min:0',
+            'items.*.product_type' => 'required|integer|in:0,1',
+            'items.*.device_type'  => 'nullable|string|max:255',
+
+            # Other products
+            'products'                    => 'required_without:items|array',
+            'products.*.other_product_id' => 'required|integer|exists:woundmed_other_products,other_product_id',
+            'products.*.quantity'         => 'required|integer|min:1',
+            'products.*.price'            => 'required|numeric|min:0',
+            'products.*.product_type'     => 'nullable|numeric|min:0',
+        ]);
+
+        # Stock validation
+        $graftIds      = collect($validated['items'] ?? [])->pluck('graft_id')->unique()->all();
+        $grafts        = GraftSize::whereIn('graft_size_id', $graftIds)->get()->keyBy('graft_size_id');
+
+        $productIds    = collect($validated['products'] ?? [])->pluck('other_product_id')->unique()->all();
+        $otherProducts = OtherProduct::whereIn('other_product_id', $productIds)->get()->keyBy('other_product_id');
+
+        $errors = [];
+
+        foreach ($validated['items'] ?? [] as $idx => $item) {
+            $graft = $grafts->get($item['graft_id']);
+            if (!$graft) {
+                $errors["items.$idx.graft_id"] = "Graft size not found.";
+                continue;
+            }
+            if ($graft->stock < $item['quantity']) {
+                $errors["items.$idx.quantity"] =
+                    "Insufficient stock for {$graft->size} (avail: {$graft->stock}, req: {$item['quantity']})";
+            }
+        }
+
+        foreach ($validated['products'] ?? [] as $idx => $prod) {
+            $product = $otherProducts->get($prod['other_product_id']);
+            if (!$product) {
+                $errors["products.$idx.other_product_id"] = "Product not found.";
+                continue;
+            }
+            if ($product->stock < $prod['quantity']) {
+                $errors["products.$idx.quantity"] =
+                    "Insufficient stock for '{$product->product_name}' (avail: {$product->stock}, req: {$prod['quantity']})";
+            }
+        }
+
+        if ($errors) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cannot place order – insufficient stock or invalid items',
+                'errors'  => $errors,
+            ], 422);
+        }
+
+        # Transaction: reserve stock + create order + handle file
+        $order = null;
+
         try {
-            $validated = $request->validate([
-                'clinic_id' => 'required|int|max:255',
-                'clinician_id' => 'required|int|max:255',
-                'patient_id' => 'required|int|max:255',
-                'notes' => 'nullable|string',
-                'items' => 'required|array|min:1',
-                'items.*.brand_id' => 'required|integer|exists:woundmed_brands,brand_id',
-                'items.*.graft_id' => 'required|integer|exists:woundmed_graft_sizes,graft_size_id',
-                'items.*.ivr_id' => 'required|integer|exists:woundmed_ivr,ivr_id',
-                'items.*.quantity' => 'required|integer|min:1',
-                'items.*.asp' => 'required|numeric|min:0',
-                'items.*.product_type' => 'required|integer|in:0,1',
-                'items.*.device_type' => 'nullable|string|max:255',
-                'ivr_id' => 'required|integer|exists:woundmed_ivr,ivr_id',
-                'manufacturer_id' => 'required|integer|exists:woundmed_manufacturers,manufacturer_id',
-            ]);
+            $order = DB::transaction(function () use ($validated, $request, $user) {
 
-            $orderCode = 'ORD-' . strtoupper(uniqid());
-            $trackingNum = 'TRK-' . strtoupper(Str::random(10));
-
-            $order = Orders::create([
-                'order_code' => $orderCode,
-                'clinic_id' => $validated['clinic_id'],
-                'user_id' => $validated['clinician_id'],
-                'patient_id' => $validated['patient_id'],
-                // 'ordering_user_id' => $userId,
-                'ivr_id' => $validated['ivr_id'],
-                'manufacturer_id' => $validated['manufacturer_id'],
-                'tracking_num' => $trackingNum,
-                'notes' => $validated['notes'],
-                'items' => $validated['items'],
-                'order_status' => 0,
-                'ordered_at' => now(),
-            ]);
-
-            # update stock by subtracting the current graft stock from quantity for each graftsizes
-            DB::transaction(function() use ($validated) {
-                foreach ($validated['items'] as $item) {
-
-                    $graft = GraftSize::lockForUpdate()->find($item['graft_id']);
-
-                    if ($graft->stock < $item['quantity']) {
-                        throw new \Exception("Insufficient stock for " . $graft->size);
+                # Reserve grafts
+                foreach ($validated['items'] ?? [] as $item) {
+                    $affected = GraftSize::where('graft_size_id', $item['graft_id'])
+                        ->where('stock', '>=', $item['quantity'])
+                        ->decrement('stock', $item['quantity']);
+                    if ($affected === 0) {
+                        throw new \RuntimeException("Stock gone for graft {$item['graft_id']}");
                     }
-
-                    $graft->stock -= $item['quantity'];
-                    $graft->save();
                 }
+
+                # Reserve other products
+                foreach ($validated['products'] ?? [] as $prod) {
+                    $affected = OtherProduct::where('other_product_id', $prod['other_product_id'])
+                        ->where('stock', '>=', $prod['quantity'])
+                        ->decrement('stock', $prod['quantity']);
+                    if ($affected === 0) {
+                        throw new \RuntimeException("Stock gone for product {$prod['other_product_id']}");
+                    }
+                }
+
+                # Handle file upload
+                $filePath = null;
+                if ($request->hasFile('order_file')) {
+                    $filename = time() . '_' . $request->file('order_file')->getClientOriginalName();
+                    $filePath = $request->file('order_file')->storeAs('order', $filename, 'private');
+                }
+
+                # Create order
+                $orderCode   = 'ORD-' . strtoupper(uniqid());
+                $trackingNum = 'TRK-' . strtoupper(Str::random(10));
+
+                return Orders::create([
+                    'order_code'         => $orderCode,
+                    'clinic_id'          => $validated['clinic_id'],
+                    'user_id'            => $validated['clinician_id'],
+                    'patient_id'         => $validated['patient_id'],
+                    'ivr_id'             => $validated['ivr_id'],
+                    'manufacturer_id'    => $validated['manufacturer_id'],
+                    'tracking_num'       => $trackingNum,
+                    'notes'              => $validated['notes'] ?? null,
+                    'items'              => $validated['items'] ?? [],
+                    'other_product_items'=> $validated['products'] ?? [],
+                    'order_file'         => $filePath,
+                    'order_status'       => 0,
+                    'ordered_at'         => now(),
+                    // 'ordering_user_id' => $user->id,
+                ]);
             });
 
-            $token = Str::random(64);
+            $this->logAudit(
+                $request,
+                'create_clinic_order',
+                "Clinic order created: {$order->order_code} "
+                . "(grafts: " . count($validated['items'] ?? []) . ", "
+                . "products: " . count($validated['products'] ?? []) . ")",
+                $order->order_id
+            );
 
-            DB::table('magic_tokens')->insert([
-                'manufacturer_id' => $validated['manufacturer_id'],
-                'order_id'        => $order->order_id,
-                'token'           => hash('sha256', $token),
-                'expires_at'      => now()->addDays(60),
-                'created_at'      => now(),
+        } catch (\RuntimeException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Order failed – stock taken by another request. Please retry.',
+                'error'   => $e->getMessage(),
+            ], 409);
+        } catch (\Throwable $e) {
+            \Log::error('Clinic order creation failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ]);
 
-            $email = $request->order_email;
-            $orderUrl = config('app.frontend_url')
-                . '/woundmed-order?token=' . $token
-                . '&order_id=' . $order->order_id;
+            $this->logAudit($request, 'create_clinic_order', 'Failed to create clinic order', $user->id ?? null);
 
-            $totalAsp = 0;
-            foreach ($validated['items'] as $item) {
-                $totalAsp += $item['asp'] * $item['quantity'];
-            }
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create order. Please try again or contact support.',
+            ], 500);
+        }
 
-            $emailBody = OrderNotificationEmail::getTemplate([
-                'order_code'        => $orderCode,
-                'tracking_number'   => $trackingNum,
-                'clinic_name'       => OrderHelper::getClinicName($validated['clinic_id']),
-                'clinician_name'    => OrderHelper::getClinicianName($validated['clinician_id']),
-                'manufacturer_name' => OrderHelper::getManufacturerName($validated['manufacturer_id']),
-                'patient_name'      => OrderHelper::getPatientName($validated['patient_id']),
-                'items'             => array_map(function ($item) {
-                    return [
-                        'brand_name' => OrderHelper::getBrandName($item['brand_id']),
-                        'size_name'  => OrderHelper::getGraftSizeName($item['graft_id']),
-                        'quantity'   => $item['quantity'],
-                        'asp'        => $item['asp'],
-                        'subtotal'   => $item['asp'] * $item['quantity'],
-                    ];
-                }, $validated['items']),
-                'total_asp'       => $totalAsp,
-                'order_link'      => $orderUrl
-            ]);
+        # Magic token + Email preparation
+        $token = Str::random(64);
 
-            $emailService = new EmailService();
+        DB::table('magic_tokens')->insert([
+            'manufacturer_id' => $validated['manufacturer_id'],
+            'order_id'        => $order->order_id,
+            'token'           => hash('sha256', $token),
+            'expires_at'      => now()->addDays(60),
+            'created_at'      => now(),
+        ]);
 
-            $params = [
-                'to'        => $email,
+        $orderUrl = config('app.frontend_url') . '/woundmed-order?' . http_build_query([
+            'token'    => $token,
+            'order_id' => $order->order_id,
+        ]);
+
+        # Prepare data for email
+        $graftItems    = [];
+        $graftSubtotal = 0;
+        foreach ($validated['items'] ?? [] as $item) {
+            $sub = (float)($item['asp'] ?? 0) * (int)($item['quantity'] ?? 0);
+            $graftSubtotal += $sub;
+            $graftItems[] = [
+                'brand_name' => OrderHelper::getBrandName($item['brand_id'] ?? null) ?? '—',
+                'size_name'  => OrderHelper::getGraftSizeName($item['graft_id'] ?? null) ?? '—',
+                'quantity'   => (int)($item['quantity'] ?? 0),
+                'asp'        => (float)($item['asp'] ?? 0),
+                'subtotal'   => $sub,
+            ];
+        }
+
+        $otherProductItems = [];
+        $otherSubtotal     = 0;
+        foreach ($validated['products'] ?? [] as $prod) {
+            $product = OtherProduct::find($prod['other_product_id']);
+            if (!$product) continue;
+
+            $price = (float)($prod['price'] ?? $product->price ?? $product->asp ?? 0);
+            $qty   = (int)($prod['quantity'] ?? 0);
+            $sub   = $price * $qty;
+            $otherSubtotal += $sub;
+
+            $typeLabel = match ((int)($prod['product_type'] ?? 0)) {
+                0 => 'Wound Supplies',
+                1 => 'Devices',
+                default => 'Other',
+            };
+
+            $otherProductItems[] = [
+                'product_name' => $product->product_name ?? 'Unknown',
+                'quantity'     => $qty,
+                'product_type' => $typeLabel,
+                'price'        => $price,
+                'subtotal'     => $sub,
+            ];
+        }
+
+        $totalAsp = $graftSubtotal + $otherSubtotal;
+
+        $emailBody = OrderNotificationEmail::getTemplate([
+            'order_code'          => $order->order_code,
+            'tracking_number'     => $order->tracking_num,
+            'clinic_name'         => OrderHelper::getClinicName($validated['clinic_id']),
+            'clinician_name'      => OrderHelper::getClinicianName($validated['clinician_id']),
+            'manufacturer_name'   => OrderHelper::getManufacturerName($validated['manufacturer_id']),
+            'patient_name'        => OrderHelper::getPatientName($validated['patient_id']),
+            'items'               => $graftItems,
+            'graft_subtotal'      => $graftSubtotal,
+            'other_product_items' => $otherProductItems,
+            'other_subtotal'      => $otherSubtotal,
+            'total_asp'           => $totalAsp,
+            'order_link'          => $orderUrl,
+        ]);
+
+        # prepare other product data to email template
+        $otherProductEmailBody = OtherProductOrderNotificationEmail::getTemplate([
+            'order_code'          => $order['order_code'],
+            'tracking_number'     => $order['tracking_num'],
+            'clinic_name'         => OrderHelper::getClinicName($validated['clinic_id']),
+            'clinician_name'      => OrderHelper::getClinicianName($validated['clinician_id']),
+            'manufacturer_name'   => OrderHelper::getManufacturerName($validated['manufacturer_id']),
+            'patient_name'        => OrderHelper::getPatientName($validated['patient_id']),
+
+            'items'               => $graftItems,
+            'graft_subtotal'      => $graftSubtotal,
+
+            'other_product_items' => $otherProductItems,
+            'other_subtotal'      => $otherSubtotal,
+
+            'total_asp'           => $totalAsp,
+            'order_link'          => $productOnlyUrl,
+        ]);
+
+        # Send email
+        $emailService = new EmailService();
+        $toEmail      = $request->order_email ?? $order->manufacturer?->order_email ?? null;
+
+        if ($toEmail) {
+            $mainParams = [
+                'to'        => $toEmail,
                 'from'      => 'noreply@woundmed.com',
                 'from_name' => 'WoundMed Orders',
-                'subject'   => "New Order Created: {$orderCode}",
+                'subject'   => "New Clinic Order: {$order->order_code}",
                 'body'      => $emailBody,
             ];
 
-            $response = $emailService->send_email(
-                $params,
-                'Order created',
-                'Order created'
+            $emailResults['main'] = $emailService->send_email(
+                $mainParams,
+                'Clinic order created (main)',
+                'Clinic order notification'
             );
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Order created successfully!',
-            ]);
-            
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation failed',
-                'errors' => $e->errors(),
-            ], 422);
-        } catch (\Throwable $th) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to create order: ' . $th->getMessage(),
-            ], 500);
+            # separate email for other products (with different recipients)
+            if (!empty($otherProductItems)) {
+                $otherParams = [
+                    'to'        => $toEmail,
+                    // 'to'     => 'office@woundmedinc.com',               // ← live
+                    // 'cc'     => ['woundmedinc@gmail.com', 'info@woundmedinc.com'], // ← live
+                    'cc'        => ['prospteam@gmail.com', 'joshuapalay.web2@gmail.com'], // ← test / dev
+                    'from'      => 'noreply@woundmed.com',
+                    'from_name' => 'WoundMed Orders',
+                    'subject'   => "Other Products – Clinic Order: {$order->order_code}",
+                    'body'      => $otherProductEmailBody,
+                ];
+
+                $emailResults['other'] = $emailService->send_email(
+                    $otherParams,
+                    'Clinic other-products order',
+                    'Other products notification'
+                );
+            }
+
+            # error logging
+            foreach ($emailResults as $type => $result) {
+                if (!$result) {
+                    \Log::error('Email failed', [
+                        'type'      => $type,
+                        'order_id'  => $order->order_id,
+                        'orderCode' => $order->orderCode,
+                        'to'        => $email,
+                    ]);
+                }
+            }
         }
+
+        return response()->json([
+            'success'  => true,
+            'message'  => 'Order created successfully!',
+            'order_id' => $order->order_id,
+        ], 201);
     }
 
     public function updateOrderByClinic(Request $request, $orderId)
@@ -1254,27 +1550,62 @@ class OrderController extends Controller
         }
     }
 
-    public function viewOrderFile($filename)
+    public function viewOrderFile(string $filename)
     {
-        $decodedFilename = urldecode($filename);
-        
-        $path = "ivr/" . $decodedFilename;
-        
-        if (!Storage::disk('private')->exists($path)) {
-            $path = "order/" . $decodedFilename;
-            
-            if (!Storage::disk('private')->exists($path)) {
-                $path = $decodedFilename;
-                
-                if (!Storage::disk('private')->exists($path)) {
-                    return abort(404, 'File not found.');
-                }
+        $filename = urldecode($filename);
+
+        # prevent path traversal
+        if (str_contains($filename, '..') || str_contains($filename, '/') || str_contains($filename, '\\')) {
+            abort(403, 'Invalid filename');
+        }
+
+        $allowedPrefixes = ['order/', 'ivr/'];
+
+        $disk = Storage::disk('private');
+        $foundPath = null;
+
+        foreach ($allowedPrefixes as $prefix) {
+            $fullPath = $prefix . $filename;
+
+            if ($disk->exists($fullPath)) {
+                $foundPath = $fullPath;
+                break;
             }
         }
 
-        $file = Storage::disk('private')->get($path);
-        $mime = Storage::disk('private')->mimeType($path);
+        if (!$foundPath) {
+            abort(404, 'File not found');
+        }
 
-        return response($file, 200)->header('Content-Type', $mime);
+        $order = Orders::where('order_file', $foundPath)->first();
+        if (!$order) {
+            abort(404);
+        }
+
+        if (!Auth::check() || !in_array(Auth::id(), [$order->user_id, $order->manufacturer->user_id ?? null])) {
+            abort(403, 'Unauthorized');
+        }
+
+        $this->logAudit(
+            request(),
+            'view_order_file', 
+            "User viewed order file: {$filename} (Order #{$order->order_code})",
+            $order->order_id,
+            null,
+            null
+        );
+
+        $mimeType = $disk->mimeType($foundPath);
+        $size     = $disk->size($foundPath);
+        $lastMod  = $disk->lastModified($foundPath);
+
+        return response()
+            ->file($disk->path($foundPath), [
+                'Content-Type'        => $mimeType,
+                'Content-Length'      => $size,
+                'Content-Disposition' => 'inline; filename="' . $filename . '"',
+                'Last-Modified'       => gmdate('D, d M Y H:i:s', $lastMod) . ' GMT',
+                'Cache-Control'       => 'private, max-age=3600', // 1 hour – adjust as needed
+            ]);
     }
 }
