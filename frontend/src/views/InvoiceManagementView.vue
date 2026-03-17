@@ -14,12 +14,7 @@
           Add Invoice
         </button>
       </div>
-    </div>
-
-    <!-- Loading State -->
-    <div v-if="loading && invoices.length === 0" class="flex justify-center py-12">
-      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-    </div>
+    </div> 
 
     <!-- Filters -->
     <div v-if="!loading"
@@ -51,8 +46,7 @@
     </div>
 
     <!-- Invoices Table -->
-    <div v-if="!loading"
-      class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
       <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
           <thead class="bg-gray-50 dark:bg-gray-700">
@@ -76,7 +70,8 @@
             </tr>
           </thead>
           <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-            <tr v-for="invoice in invoices" :key="invoice.id" class="hover:bg-gray-50 dark:hover:bg-gray-700">
+            <TableLoader v-if="loading && invoices.length === 0" :colspan="4" />
+            <tr v-else-if="invoices.length > 0" v-for="invoice in invoices" :key="invoice.id" class="hover:bg-gray-50 dark:hover:bg-gray-700">
               <td class="px-6 py-4">
                 <div class="flex items-center space-x-3">
                   <div>
@@ -111,19 +106,21 @@
                 </div>
               </td>
             </tr>
+            <tr v-else-if="!loading && invoices.length === 0">
+              <td colspan="4" class="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                <FileText class="w-12 h-12 mx-auto mb-4 text-gray-400 dark:text-gray-500" />
+                <div class="flex flex-col items-center justify-center gap-2">
+                  <span class="text-gray-400">
+                    <Users class="w-10 h-10 mb-1" />No invoices found.
+                  </span>
+                </div>
+              </td>
+            </tr>
           </tbody>
         </table>
       </div>
 
-      <!-- Empty State -->
-      <div v-if="!loading && invoices.length === 0" class="text-center py-12">
-        <FileText class="w-12 h-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
-        <div class="flex flex-col items-center justify-center gap-2">
-          <span class="text-gray-400">
-            <Users class="w-10 h-10 mb-1" />No invoices found.
-          </span>
-        </div>
-      </div>
+      <!-- Old Empty State removed -->
 
       <!-- Pagination -->
       <div v-if="pagination" class="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
@@ -906,6 +903,7 @@
 import { ref, computed, onMounted, nextTick, watch } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import BaseModal from '@/components/common/BaseModal.vue'
+import TableLoader from '@/components/ui/TableLoader.vue'
 import api from '@/services/api'
 import axios from 'axios'
 import Swal from 'sweetalert2'
@@ -1233,11 +1231,22 @@ async function fetchClinics() {
 }
 
 function formatDate(dateString: string) {
-  return new Date(dateString).toLocaleDateString('en-US', {
+  const date = new Date(dateString);
+  const options: Intl.DateTimeFormatOptions = {
     year: 'numeric',
     month: 'short',
     day: 'numeric'
-  })
+  };
+  let datePart = date.toLocaleDateString('en-US', options);
+  // Add a dot after the abbreviated month
+  datePart = datePart.replace(/(\w+)\s+(\d+,\s+\d+)/, '$1. $2');
+  
+  const timePart = date.toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true
+  });
+  return `${datePart} [${timePart}]`;
 }
 
 function changePage(page: number) {
@@ -1291,8 +1300,8 @@ function editInvoice(invoice: Invoice) {
       description: item.description || '',
       size: item.size || '',
       serial: item.serial || '',
-      quantity: item.quantity || 1,
-      amount: item.amount || 0
+      quantity: Number(item.quantity) || 1,
+      amount: Number(item.amount) || 0
     }));
   }
 
@@ -1537,14 +1546,14 @@ async function saveReviewedInvoice() {
           description: item.description,
           size: item.size || '',
           serial: item.serial || '',
-          quantity: item.quantity || 1,
-          amount: item.amount || 0
+          quantity: Number(item.quantity) || 1,
+          amount: Number(item.amount) || 0
         });
 
         // Build line items notes for display
         lineItemsNotes += `${itemDescription}\n`;
         lineItemsNotes += `S/N: ${item.serial}\n`;
-        lineItemsNotes += `$${item.amount} x ${item.quantity || 1} = $${(item.amount * (item.quantity || 1)).toFixed(2)}\n\n`;
+        lineItemsNotes += `$${Number(item.amount)} x ${Number(item.quantity || 1)} = $${(Number(item.amount) * Number(item.quantity || 1)).toFixed(2)}\n\n`;
       });
     }
 
@@ -1616,7 +1625,7 @@ async function handleManualInvoiceSubmit() {
         const itemDescription = product.size ? `${product.name} (${product.size})` : product.name;
         lineItemsNotes += `${itemDescription}\n`;
         lineItemsNotes += `S/N: ${product.serials[0]}\n`;
-        lineItemsNotes += `$${product.unit_price} x ${product.quantity || 1} = $${(product.unit_price * (product.quantity || 1)).toFixed(2)}\n\n`;
+        lineItemsNotes += `$${Number(product.unit_price)} x ${Number(product.quantity || 1)} = $${(Number(product.unit_price) * Number(product.quantity || 1)).toFixed(2)}\n\n`;
 
         // Collect serials from line items only
         if (product.serials[0] && typeof product.serials[0] === 'string' && product.serials[0].trim() !== '') {
@@ -1631,8 +1640,8 @@ async function handleManualInvoiceSubmit() {
           description: product.name,
           size: product.size || '',
           serial: product.serials[0] || '',
-          quantity: product.quantity || 1,
-          amount: product.unit_price || 0
+          quantity: Number(product.quantity) || 1,
+          amount: Number(product.unit_price) || 0
         });
       });
     }
@@ -1724,7 +1733,7 @@ function addProduct() {
 
 function calculateTotalAmount() {
   return manualInvoice.value.products.reduce((total, product) => {
-    return total + (product.unit_price * (product.quantity || 1));
+    return total + (Number(product.unit_price) * Number(product.quantity || 1));
   }, 0);
 }
 
@@ -1878,7 +1887,7 @@ function calculateEditTotalAmount() {
   if (!invoiceToEdit.value || !invoiceToEdit.value.line_items) return 0;
 
   return invoiceToEdit.value.line_items.reduce((total, item) => {
-    return total + (item.amount * (item.quantity || 1));
+    return total + (Number(item.amount) * Number(item.quantity || 1));
   }, 0);
 }
 
@@ -1994,9 +2003,9 @@ function parseLineItems(notes: string) {
         if (pricingLine.startsWith('$')) {
           const pricingMatch = pricingLine.match(/\$(.+) x (.+) = \$(.+)/);
           if (pricingMatch) {
-            unitPrice = parseFloat(pricingMatch[1]) || 0;
-            quantity = parseInt(pricingMatch[2]) || 0;
-            total = parseFloat(pricingMatch[3]) || 0;
+            unitPrice = Number(pricingMatch[1]) || 0;
+            quantity = Number(pricingMatch[2]) || 0;
+            total = Number(pricingMatch[3]) || 0;
           }
         }
 
@@ -2089,6 +2098,23 @@ watch(selectedInvoice, async (newInvoice) => {
     }
   }
 }, { immediate: true });
+
+// Helper functions for safe numeric operations in templates
+function safeNumber(value: any, defaultValue: number = 0): number {
+  const num = Number(value);
+  return isNaN(num) ? defaultValue : num;
+}
+
+function formatCurrency(value: any): string {
+  const num = safeNumber(value);
+  return num.toFixed(2);
+}
+
+function calculateTotal(amount: any, quantity: any): string {
+  const amt = safeNumber(amount);
+  const qty = safeNumber(quantity, 1);
+  return (amt * qty).toFixed(2);
+}
 
 // Lifecycle
 onMounted(() => {
