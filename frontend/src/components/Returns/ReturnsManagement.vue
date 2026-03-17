@@ -166,7 +166,11 @@
             <!-- Left: Serial Number -->
             <div class="flex-1 min-w-0">
               <p class="text-blue-100 dark:text-blue-200 text-xs font-medium mb-1">Serial Number</p>
-              <p class="text-white text-xl font-bold font-mono break-all">{{ selectedReturn.serialNumber || '-' }}</p>
+              <p class="text-white text-xl font-bold font-mono break-all">{{ 
+                selectedReturn.entryType === 'upload' 
+                  ? (selectedReturn.ocrSerialNumber || selectedReturn.serialNumber || '-') 
+                  : (selectedReturn.serialNumber || '-') 
+              }}</p>
             </div>
             
             <!-- Right: Badges -->
@@ -182,8 +186,9 @@
               </span>
               
               <!-- Product Code Badge -->
-              <span v-if="selectedReturn.productCode" class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-mono font-semibold bg-white/20 text-white backdrop-blur-sm border border-white/30">
-                {{ selectedReturn.productCode }}
+              <span v-if="selectedReturn.entryType === 'upload' ? selectedReturn.ocrProductCode : selectedReturn.productCode" 
+                class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-mono font-semibold bg-white/20 text-white backdrop-blur-sm border border-white/30">
+                {{ selectedReturn.entryType === 'upload' ? selectedReturn.ocrProductCode : selectedReturn.productCode }}
               </span>
               
               <!-- Return Date Badge -->
@@ -231,7 +236,15 @@
               </div>
               <div>
                 <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Expiry Date</p>
-                <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ selectedReturn.expiryDate ? formatDate(selectedReturn.expiryDate) : '-' }}</p>
+                <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ 
+                  (selectedReturn.entryType === 'upload' 
+                    ? (selectedReturn.ocrExpiryDate || selectedReturn.expiryDate) 
+                    : selectedReturn.expiryDate) 
+                    ? formatDate(selectedReturn.entryType === 'upload' 
+                      ? (selectedReturn.ocrExpiryDate || selectedReturn.expiryDate) 
+                      : selectedReturn.expiryDate) 
+                    : '-' 
+                }}</p>
               </div>
             </div>
           </div>
@@ -302,7 +315,7 @@
         </div>
       </div>
       <template #actions>
-        <div class="flex justify-end gap-3 px-6 py-4 bg-gray-50 dark:bg-gray-700/30 border-t border-gray-200 dark:border-gray-600">
+        <div class="flex justify-end gap-3 px-6 py-4">
           <button @click="showViewModal = false" 
             class="px-5 py-2.5 border-2 border-gray-300 dark:border-gray-600 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 font-medium">
             Close
@@ -458,7 +471,7 @@
         </div>
       </div>
       <template #actions>
-        <div class="flex justify-end gap-3 px-6 py-4 bg-gray-50 dark:bg-gray-700/30 border-t border-gray-200 dark:border-gray-600">
+        <div class="flex justify-end gap-3 px-6 py-4">
           <button @click="cancelEdit" 
             class="px-5 py-2.5 border-2 border-gray-300 dark:border-gray-600 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 font-medium">
             Cancel
@@ -515,7 +528,7 @@
         </div>
       </div>
       <template #actions>
-        <div class="flex justify-end gap-3 px-6 py-4 bg-gray-50 dark:bg-gray-700/30 border-t border-gray-200 dark:border-gray-600">
+        <div class="flex justify-end gap-3 px-6 py-4">
           <button @click="cancelDelete" 
             class="px-5 py-2.5 border-2 border-gray-300 dark:border-gray-600 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 font-medium">
             Cancel
@@ -600,6 +613,10 @@ interface ReturnItem {
   uploadedFileType?: string // File MIME type
   productCode?: string // Added for new field
   manufacturer?: string // Added for new field
+  // OCR fields for upload entries
+  ocrSerialNumber?: string
+  ocrProductCode?: string
+  ocrExpiryDate?: string
 }
 
 interface Brand {

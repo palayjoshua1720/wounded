@@ -97,9 +97,20 @@ return [
     */
 
     'cipher' => 'AES-256-CBC',
-
-    'key' => env('APP_KEY'),
-
+    
+        'key' => env('APP_KEY'),
+    
+        /*
+        |--------------------------------------------------------------------------
+        | HMAC Blind-Index Key
+        |--------------------------------------------------------------------------
+        | A separate secret used to generate deterministic HMAC-SHA256 hashes for
+        | encrypted searchable fields (e.g. email_hash). Must be different from
+        | APP_KEY. Generate with: php artisan key:generate --show
+        |
+        */
+        'hmac_hash_key' => env('HMAC_HASH_KEY', env('APP_KEY')),
+    
     'previous_keys' => [
         ...array_filter(
             explode(',', env('APP_PREVIOUS_KEYS', ''))

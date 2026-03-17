@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\EncryptsData;
 
 class EmailVerificationCode extends Model
 {
-    use HasFactory;
+    use HasFactory, EncryptsData;
 
     protected $fillable = [
         'user_id',

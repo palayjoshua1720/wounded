@@ -351,11 +351,36 @@ class ManufacturerController extends Controller
             default      => null,
         };
 
-        if (!$path || !Storage::disk('private')->exists($path)) {
+        if (!$path) {
+            return response()->json(['error' => 'File not found'], 404);
+        }
+
+        // Handle encrypted files (.enc) — decrypt on-the-fly before streaming
+        if (str_ends_with($path, '.enc')) {
+            if (!\Illuminate\Support\Facades\Storage::disk('local')->exists($path)) {
+                return response()->json(['error' => 'File not found'], 404);
+            }
+
+            $fileService = app(\App\Services\FileEncryptionService::class);
+            $fileData    = $fileService->decryptAndRetrieve($path, 'local');
+
+            // Derive original filename: strip .enc, keep the real extension from the enc filename
+            $originalName = pathinfo(basename($path), PATHINFO_FILENAME); // e.g. 6_ivr_file_20260316_...
+            $mime         = 'application/pdf';
+
+            return response($fileData['contents'], 200, [
+                'Content-Type'        => $mime,
+                'Content-Disposition' => 'inline; filename="' . $type . '_form.pdf"',
+                'Content-Length'      => strlen($fileData['contents']),
+            ]);
+        }
+
+        // Plain (unencrypted) file — legacy fallback
+        if (!\Illuminate\Support\Facades\Storage::disk('private')->exists($path)) {
             return response()->json(['error' => 'File not found'], 404);
         }
 
         $filename = basename($path);
-        return Storage::disk('private')->download($path, $filename);
+        return \Illuminate\Support\Facades\Storage::disk('private')->download($path, $filename);
     }
 }

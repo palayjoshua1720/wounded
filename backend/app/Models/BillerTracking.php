@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\EncryptsData;
 
 class BillerTracking extends Model
 {
+    use EncryptsData;
+    
     protected $table = 'woundmed_biller_tracking';
     
     protected $fillable = [

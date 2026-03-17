@@ -1552,60 +1552,91 @@ class OrderController extends Controller
 
     public function viewOrderFile(string $filename)
     {
-        $filename = urldecode($filename);
+// <<<<<<< Updated upstream
+//         $filename = urldecode($filename);
 
-        # prevent path traversal
-        if (str_contains($filename, '..') || str_contains($filename, '/') || str_contains($filename, '\\')) {
-            abort(403, 'Invalid filename');
+//         # prevent path traversal
+//         if (str_contains($filename, '..') || str_contains($filename, '/') || str_contains($filename, '\\')) {
+//             abort(403, 'Invalid filename');
+//         }
+
+//         $allowedPrefixes = ['order/', 'ivr/'];
+
+//         $disk = Storage::disk('private');
+//         $foundPath = null;
+
+//         foreach ($allowedPrefixes as $prefix) {
+//             $fullPath = $prefix . $filename;
+
+//             if ($disk->exists($fullPath)) {
+//                 $foundPath = $fullPath;
+//                 break;
+// =======
+        $decodedFilename = urldecode($filename);
+
+        // Handle encrypted files (.enc) — decrypt on-the-fly
+        if (str_ends_with($decodedFilename, '.enc')) {
+            if (Storage::disk('local')->exists($decodedFilename)) {
+                $fileService = app(\App\Services\FileEncryptionService::class);
+                $fileData    = $fileService->decryptAndRetrieve($decodedFilename, 'local');
+                return response($fileData['contents'], 200, [
+                    'Content-Type'        => 'application/pdf',
+                    'Content-Disposition' => 'inline; filename="order_file.pdf"',
+                    'Content-Length'      => strlen($fileData['contents']),
+                ]);
+            }
+            return abort(404, 'File not found.');
         }
 
-        $allowedPrefixes = ['order/', 'ivr/'];
+        // Legacy: plain file lookup
+        $path = "ivr/" . $decodedFilename;
 
-        $disk = Storage::disk('private');
-        $foundPath = null;
+        if (!Storage::disk('private')->exists($path)) {
+            $path = "order/" . $decodedFilename;
 
-        foreach ($allowedPrefixes as $prefix) {
-            $fullPath = $prefix . $filename;
+            if (!Storage::disk('private')->exists($path)) {
+                $path = $decodedFilename;
 
-            if ($disk->exists($fullPath)) {
-                $foundPath = $fullPath;
-                break;
+                // $this->logAudit(
+                //     request(),
+                //     'view_order_file', 
+                //     "User viewed order file: {$filename} (Order #{$filename})",
+                //     $order->order_id,
+                //     null,
+                //     null
+                // );
+
+                if (!Storage::disk('private')->exists($path)) {
+                    return abort(404, 'File not found.');
+                }
+// >>>>>>> Stashed changes
             }
         }
 
-        if (!$foundPath) {
-            abort(404, 'File not found');
-        }
+        // if (!$foundPath) {
+        //     abort(404, 'File not found');
+        // }
 
-        $order = Orders::where('order_file', $foundPath)->first();
-        if (!$order) {
-            abort(404);
-        }
+        // $order = Orders::where('order_file', $foundPath)->first();
+        // if (!$order) {
+        //     abort(404);
+        // }
 
-        if (!Auth::check() || !in_array(Auth::id(), [$order->user_id, $order->manufacturer->user_id ?? null])) {
-            abort(403, 'Unauthorized');
-        }
+        // if (!Auth::check() || !in_array(Auth::id(), [$order->user_id, $order->manufacturer->user_id ?? null])) {
+        //     abort(403, 'Unauthorized');
+        // }
 
-        $this->logAudit(
-            request(),
-            'view_order_file', 
-            "User viewed order file: {$filename} (Order #{$order->order_code})",
-            $order->order_id,
-            null,
-            null
-        );
+        // $mimeType = $disk->mimeType($foundPath);
+        // $size     = $disk->size($foundPath);
+        // $lastMod  = $disk->lastModified($foundPath);
 
-        $mimeType = $disk->mimeType($foundPath);
-        $size     = $disk->size($foundPath);
-        $lastMod  = $disk->lastModified($foundPath);
-
-        return response()
-            ->file($disk->path($foundPath), [
-                'Content-Type'        => $mimeType,
-                'Content-Length'      => $size,
-                'Content-Disposition' => 'inline; filename="' . $filename . '"',
-                'Last-Modified'       => gmdate('D, d M Y H:i:s', $lastMod) . ' GMT',
-                'Cache-Control'       => 'private, max-age=3600', // 1 hour – adjust as needed
-            ]);
+        // return response()
+        //     ->file($disk->path($foundPath), [
+        //         'Content-Type'        => $mimeType,
+        //         'Content-Length'      => $size,
+        //         'Content-Disposition' => 'inline; filename="' . $filename . '"',
+        //         'Last-Modified'       => gmdate('D, d M Y H:i:s', $lastMod) . ' GMT',
+        //         'Cache-Control'       => 'private, max-age=3600', // 1 hour – adjust as needed
+        //     ]);
     }
 }

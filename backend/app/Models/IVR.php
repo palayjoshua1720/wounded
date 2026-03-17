@@ -8,10 +8,17 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Traits\EncryptsData;
+use App\Traits\EncryptsFiles;
 
 class IVR extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, EncryptsData, EncryptsFiles;
+
+    /**
+     * File fields that should be encrypted
+     */
+    protected array $encryptableFiles = ['ivr_file'];
 
     protected $table = 'woundmed_ivr';
     protected $primaryKey = 'ivr_id';

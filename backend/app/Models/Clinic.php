@@ -4,10 +4,17 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Traits\EncryptsData;
+use App\Traits\EncryptsFiles;
 
 class Clinic extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, EncryptsData, EncryptsFiles;
+
+    /**
+     * File fields that should be encrypted
+     */
+    protected array $encryptableFiles = ['logo'];
     protected $table      = 'woundmed_clinics';
     protected $primaryKey = 'clinic_id';
     public $timestamps    = true;

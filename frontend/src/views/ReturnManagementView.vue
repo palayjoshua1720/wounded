@@ -662,13 +662,20 @@ async function handleSubmitReturn(data: any) {
       }
       
       // Ensure we're sending the correct field names
-      const submitData = {
+      const submitData: any = {
         brandId: data.brandId,
         graftSizeId: data.graftSizeId,
         reason: data.reason || data.returnReason, // Handle both field names
         other: data.other || data.otherReason || null,
         entryType: data.entryType || 'manual',
         graftLogId: numericGraftLogId
+      }
+      
+      // For upload entries, include OCR fields
+      if (data.entryType === 'upload') {
+        submitData.ocrSerialNumber = data.ocrSerialNumber || null
+        submitData.ocrExpiryDate = data.ocrExpiryDate || null
+        submitData.ocrProductCode = data.ocrProductCode || null
       }
       
       console.log('Submitting return data:', submitData)

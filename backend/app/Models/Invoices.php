@@ -5,10 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Traits\EncryptsData;
 
 class Invoices extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, EncryptsData;
 
     protected $table = 'woundmed_invoices';
     protected $primaryKey = 'invoice_id';
@@ -33,6 +34,6 @@ class Invoices extends Model
     // Belongs to a user (uploaded by)
     public function uploader()
     {
-        return $this->belongsTo(Users::class, 'uploaded_by', 'id');
+        return $this->belongsTo(User::class, 'uploaded_by', 'id');
     }
 }
