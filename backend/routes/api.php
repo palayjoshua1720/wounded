@@ -22,7 +22,7 @@ use App\Http\Controllers\Api\InventoryController;
 use App\Http\Controllers\Api\AdminDashboardController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ClinicDashboardController;
-
+use App\Http\Controllers\Api\NotificationController;
 
 // System Info
 Route::get('/version', function (Request $request) {
@@ -235,6 +235,11 @@ Route::middleware('auth:sanctum')->group(function () {
     // Report Exports
     Route::post('/reports/export/pdf', [ReportExportController::class, 'exportPdf']);
     Route::post('/reports/export/excel', [ReportExportController::class, 'exportExcel']);
+
+    // Notifications
+    Route::get('/notifications', [NotificationController::class, 'fetchNotif']);
+    Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+    Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead']);
 });
 
 // Biller Tracking (public access for testing)

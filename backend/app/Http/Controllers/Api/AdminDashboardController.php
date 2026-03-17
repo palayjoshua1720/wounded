@@ -76,9 +76,9 @@ class AdminDashboardController extends Controller
         $since = now()->subDays(2);
         $events = collect();
 
-        // Usage Logs
+        // ── Usage Logs ─────────────────────────────────────────────
         if (class_exists(UsageLog::class)) {
-            UsageLog::with(['clinic', 'patient.clinic'])
+            UsageLog::with(['clinic', 'patient.clinic', 'graftSize'])
                 ->where('logged_at', '>=', $since)
                 ->orderBy('logged_at', 'desc')
                 ->take(5)
@@ -93,51 +93,115 @@ class AdminDashboardController extends Controller
                         'type'      => 'usage',
                         'action'    => 'Usage log recorded',
                         'clinic'    => $clinicName,
+                        'patient'   => $log->patient?->patient_name ?? null,
+                        'detail'    => $log->graftSize?->size ?? null,
+                        'serial'    => $log->serial_number ?? null,
+                        'status'    => $log->log_status === 0 ? 'Active' : 'Disposed',
                         'timestamp' => $log->logged_at ? $log->logged_at->format('Y-m-d H:i:s') : null,
                     ]);
                 });
         }
 
-        // Orders
-        Orders::with('clinic')
+        // ── Orders ─────────────────────────────────────────────────
+        Orders::with(['clinic', 'patient', 'manufacturer'])
             ->where('ordered_at', '>=', $since)
             ->orderBy('ordered_at', 'desc')
             ->take(5)
             ->get()
             ->each(function ($o) use ($events) {
+                // Build product summary from items JSON (same logic as ClinicDashboard)
+                $productNames = [];
+                $brandNames   = [];
+                if (is_array($o->items) && !empty($o->items)) {
+                    foreach ($o->items as $item) {
+                        if (!empty($item['name'])) {
+                            $productNames[] = $item['name'];
+                        } elseif (!empty($item['product_name'])) {
+                            $productNames[] = $item['product_name'];
+                        } elseif (!empty($item['description'])) {
+                            $productNames[] = $item['description'];
+                        } elseif (!empty($item['type']) && !empty($item['size'])) {
+                            $productNames[] = $item['type'] . ' (' . $item['size'] . ')';
+                        }
+
+                        if (!empty($item['brand_id'])) {
+                            $brand = Brand::find($item['brand_id']);
+                            if ($brand) {
+                                $brandNames[] = $brand->name ?? $brand->brand_name ?? 'Brand #' . $item['brand_id'];
+                            }
+                        }
+                    }
+                }
+
+                $displayProduct = !empty($productNames) ? implode(', ', $productNames) : null;
+                $displayBrands  = !empty($brandNames) ? implode(', ', array_unique($brandNames)) : null;
+
+                $statusLabel = match ((int) $o->order_status) {
+                    0 => 'Submitted',
+                    1 => 'Acknowledged',
+                    2 => 'Shipped',
+                    3 => 'Delivered',
+                    4 => 'Cancelled',
+                    default => 'Unknown',
+                };
+
                 $events->push([
-                    'id'        => 'order_' . $o->order_id,
-                    'type'      => 'order',
-                    'action'    => 'New order placed',
-                    'clinic'    => $o->clinic?->name ?? 'Unknown Clinic',
-                    'timestamp' => $o->ordered_at ? $o->ordered_at->format('Y-m-d H:i:s') : null,
+                    'id'           => 'order_' . $o->order_id,
+                    'type'         => 'order',
+                    'action'       => 'New order placed',
+                    'clinic'       => $o->clinic?->clinic_name ?? 'Unknown Clinic',
+                    'patient'      => $o->patient?->patient_name ?? null,
+                    'detail'       => $displayProduct,
+                    'brands'       => $displayBrands,
+                    'manufacturer' => $o->manufacturer?->manufacturer_name ?? null,
+                    'status'       => $statusLabel,
+                    'timestamp'    => $o->ordered_at ? $o->ordered_at->format('Y-m-d H:i:s') : null,
                 ]);
             });
 
-        // IVR
+        // ── IVR ────────────────────────────────────────────────────
         if (class_exists(IVR::class)) {
-            IVR::with('clinic')
+            IVR::with(['clinic', 'patient', 'brand', 'manufacturer'])
                 ->where('updated_at', '>=', $since)
                 ->latest('updated_at')
                 ->take(5)
                 ->get()
                 ->each(function ($ivr) use ($events) {
-                    $action = match ($ivr->status ?? 'submitted') {
-                        'approved' => 'IVR approved',
-                        default    => 'IVR submitted',
+                    $clinicName = $ivr->clinic?->clinic_name ?? 'Unknown Clinic';
+                    $timestamp  = $ivr->updated_at;
+
+                    $action = match (true) {
+                        $ivr->created_at->diffInMinutes($ivr->updated_at) <= 2
+                            && $ivr->eligibility_status === 0 => 'IVR submitted',
+                        $ivr->eligibility_status === 0 => 'IVR eligibility still pending',
+                        $ivr->eligibility_status === 1 => 'IVR marked as Eligible',
+                        $ivr->eligibility_status === 2 => 'IVR marked as Not Eligible',
+                        default => 'IVR record updated',
+                    };
+
+                    $statusLabel = match ((int) $ivr->eligibility_status) {
+                        0 => 'Pending',
+                        1 => 'Eligible',
+                        2 => 'Not Eligible',
+                        default => 'Unknown',
                     };
 
                     $events->push([
-                        'id'        => 'ivr_' . $ivr->id,
-                        'type'      => 'ivr',
-                        'action'    => $action,
-                        'clinic'    => $ivr->clinic?->name ?? 'Unknown Clinic',
-                        'timestamp' => $ivr->updated_at?->format('Y-m-d H:i:s'),
+                        'id'           => 'ivr_' . $ivr->ivr_id,
+                        'type'         => 'ivr',
+                        'action'       => $action,
+                        'clinic'       => $clinicName,
+                        'patient'      => $ivr->patient?->patient_name ?? null,
+                        'detail'       => $ivr->ivr_number ? "IVR {$ivr->ivr_number}" : null,
+                        'brands'       => $ivr->brand?->name ?? $ivr->brand?->brand_name ?? null,
+                        'manufacturer' => $ivr->manufacturer?->manufacturer_name ?? null,
+                        'status'       => $statusLabel,
+                        'timestamp'    => $timestamp?->format('Y-m-d H:i:s'),
                     ]);
                 });
         }
 
-        // Invoices
+        // ── Invoices ───────────────────────────────────────────────
         if (class_exists(Invoice::class)) {
             Invoice::with('clinic')
                 ->where('created_at', '>=', $since)
@@ -152,40 +216,42 @@ class AdminDashboardController extends Controller
                         default                         => 'Invoice created',
                     };
 
+                    $statusLabel = ucfirst($invoice->status ?? 'pending');
+
                     $events->push([
                         'id'        => 'invoice_' . $invoice->id,
                         'type'      => 'invoice',
                         'action'    => $action,
-                        'clinic'    => $invoice->clinic?->name ?? 'Unknown Clinic',
-                        'time'      => $invoice->created_at?->diffForHumans() ?? 'Unknown time',
-                        'timestamp' => $invoice->created_at,
+                        'clinic'    => $invoice->clinic?->clinic_name ?? 'Unknown Clinic',
+                        'detail'    => $invoice->invoice_number ? "Inv #{$invoice->invoice_number}" : null,
+                        'amount'    => $invoice->amount ? '$' . number_format($invoice->amount, 2) : null,
+                        'status'    => $statusLabel,
+                        'timestamp' => $invoice->created_at?->format('Y-m-d H:i:s'),
                     ]);
                 });
         }
 
-        // Returns (processed returns)
+        // ── Returns ────────────────────────────────────────────────
         if (class_exists(Returns::class)) {
-            Returns::with(['usageLog.patient.clinic'])
+            Returns::with(['usageLog.patient.clinic', 'brand', 'graftSize'])
                 ->where('returned_at', '>=', $since)
                 ->latest('returned_at')
                 ->take(15)
                 ->get()
                 ->each(function ($return) use ($events) {
-                    // Optional: customize action based on data (e.g. reason)
                     $action = 'Return processed';
-                    if ($return->reason) {
-                        $action .= ' (' . ucfirst($return->reason) . ')';
-                    }
-
-                    $clinicName = $return->usageLog?->patient?->clinic?->name ?? 'Unknown Clinic';
+                    $clinicName = $return->usageLog?->patient?->clinic?->clinic_name ?? 'Unknown Clinic';
 
                     $events->push([
                         'id'        => 'return_' . $return->return_id,
                         'type'      => 'return',
                         'action'    => $action,
                         'clinic'    => $clinicName,
-                        'time'      => $return->returned_at?->diffForHumans() ?? 'Unknown time',
-                        'timestamp' => $return->returned_at,
+                        'patient'   => $return->usageLog?->patient?->patient_name ?? null,
+                        'detail'    => $return->ocr_serial_number ?? null,
+                        'brands'    => $return->brand?->name ?? $return->brand?->brand_name ?? null,
+                        'status'    => $return->reason ? ucfirst($return->reason) : 'Returned',
+                        'timestamp' => $return->returned_at?->format('Y-m-d H:i:s'),
                     ]);
                 });
         }

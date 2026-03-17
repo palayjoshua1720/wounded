@@ -97,24 +97,66 @@
         <!-- Activity items -->
         <div v-else class="divide-y divide-gray-100 dark:divide-gray-700">
           <div v-for="activity in recentActivity" :key="activity.id"
-            class="px-6 py-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors group"
+            class="px-6 py-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors group border-l-4"
             :class="getActivityBorder(activity.type)">
-            <div class="flex items-start gap-4">
-              <div class="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center"
-                :class="getIconBg(activity.type)">
-                <component :is="getActivityIcon(activity.type)" class="w-6 h-6" :class="getIconStyle(activity.type)" />
+
+            <div class="flex items-start justify-between gap-4">
+              <!-- Left: icon + content -->
+              <div class="flex items-start gap-3 flex-1 min-w-0">
+                <div class="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center mt-0.5"
+                  :class="getIconBg(activity.type)">
+                  <component :is="getActivityIcon(activity.type)" class="w-5 h-5"
+                    :class="getIconStyle(activity.type)" />
+                </div>
+
+                <div class="flex-1 min-w-0">
+                  <!-- Action title -->
+                  <p
+                    class="text-sm font-semibold text-gray-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                    {{ activity.action }}
+                  </p>
+
+                  <!-- Clinic + Patient on same line -->
+                  <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                    {{ activity.clinic }}<span v-if="activity.patient" class="text-gray-400 dark:text-gray-500"> ·
+                    </span><span v-if="activity.patient">{{ activity.patient }}</span>
+                  </p>
+
+                  <!-- Detail sub-row -->
+                  <div
+                    v-if="activity.detail || activity.manufacturer || activity.brands || activity.amount || activity.serial"
+                    class="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500 dark:text-gray-400">
+                    <span v-if="activity.detail"
+                      class="inline-flex items-center gap-1 bg-gray-100 dark:bg-gray-700/50 px-2 py-0.5 rounded-md">
+                      {{ activity.detail }}
+                    </span>
+                    <span v-if="activity.manufacturer" class="inline-flex items-center gap-1">
+                      <Factory class="w-3 h-3 text-gray-400" />{{ activity.manufacturer }}
+                    </span>
+                    <span v-if="activity.brands" class="inline-flex items-center gap-1">
+                      <Package class="w-3 h-3 text-gray-400" />{{ activity.brands }}
+                    </span>
+                    <span v-if="activity.amount"
+                      class="inline-flex items-center gap-1 font-medium text-gray-700 dark:text-gray-300">
+                      <DollarSign class="w-3 h-3 text-gray-400" />{{ activity.amount }}
+                    </span>
+                    <span v-if="activity.serial" class="inline-flex items-center gap-1">
+                      S/N: {{ activity.serial }}
+                    </span>
+                  </div>
+                </div>
               </div>
-              <div class="flex-1 min-w-0">
-                <p
-                  class="text-base font-medium text-gray-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                  {{ activity.action }}
+
+              <!-- Right: status badge + time -->
+              <div class="text-right shrink-0 flex flex-col items-end gap-1.5">
+                <span v-if="activity.status"
+                  class="inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium leading-5"
+                  :class="getStatusBadge(activity.status)">
+                  {{ activity.status }}
+                </span>
+                <p class="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                  {{ timeAgo(activity.timestamp) }}
                 </p>
-                <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                  {{ activity.clinic }}
-                </p>
-              </div>
-              <div class="text-right text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                {{ timeAgo(activity.timestamp) }}
               </div>
             </div>
           </div>
@@ -186,7 +228,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { ShoppingCart, Building2, Factory, Package, Clock, CheckCircle, AlertTriangle, XCircle, Info, Box, DollarSign, FileUp, ShieldCheck, Receipt, ChevronRight } from 'lucide-vue-next'
+import { ShoppingCart, Building2, Factory, Package, Clock, CheckCircle, AlertTriangle, XCircle, Info, Box, DollarSign, FileUp, ShieldCheck, Receipt, ChevronRight, User as UserIcon } from 'lucide-vue-next'
 import { useUser } from '@/composables/auth/useUser'
 import { useAuthStore } from '@/stores/auth'
 import { dashboardService } from '@/services/api'
@@ -341,5 +383,28 @@ const getIconBg = (type: string) => {
     return: 'bg-orange-100 dark:bg-orange-900/30'
   }
   return map[type] || 'bg-gray-100 dark:bg-gray-800'
+}
+
+const getStatusBadge = (status: string) => {
+  const s = status?.toLowerCase()
+  const map: Record<string, string> = {
+    delivered: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+    shipped: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
+    submitted: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
+    acknowledged: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400',
+    pending: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
+    cancelled: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+    active: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+    disposed: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
+    eligible: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+    'not eligible': 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+    paid: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+    overdue: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+    partial: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400',
+    returned: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400',
+    expired: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+    unused: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
+  }
+  return map[s] || 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
 }
 </script>
