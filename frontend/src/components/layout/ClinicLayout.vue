@@ -69,6 +69,69 @@
             <Bars3Icon class="w-6 h-6" />
           </button>
           <div class="flex items-center space-x-4">
+            <!-- Notification Icon -->
+            <div class="relative">
+              <button type="button"
+                class="relative p-2 text-gray-400 hover:text-gray-500 dark:text-gray-300 dark:hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 rounded-full"
+                @click="toggleNotifications">
+                <span class="sr-only">View notifications</span>
+                <BellRing class="h-6 w-6" />
+                <span v-if="notificationCount > 0"
+                  class="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-xs text-white flex items-center justify-center">
+                  {{ notificationCount > 9 ? '9+' : notificationCount }}
+                </span>
+              </button>
+
+              <div v-if="isNotificationsOpen"
+                class="absolute right-0 z-10 mt-2 w-96 origin-top-right rounded-lg bg-white dark:bg-gray-800 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+                role="menu">
+                <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                  <h3 class="text-sm font-medium text-gray-900 dark:text-gray-100">Notifications</h3>
+                  <span v-if="notificationCount > 0" class="text-xs text-gray-500 dark:text-gray-400">{{ notificationCount }} unread</span>
+                </div>
+                <div class="max-h-96 overflow-y-auto">
+                  <div v-if="headerNotifLoading" class="px-4 py-6 text-center">
+                    <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-green-500 mx-auto"></div>
+                    <p class="text-xs text-gray-400 mt-2">Loading...</p>
+                  </div>
+                  <template v-else>
+                    <div v-for="notification in headerNotifications" :key="notification.id"
+                      @click="handleNotificationClick(notification)"
+                      class="px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer border-b border-gray-100 dark:border-gray-700 last:border-b-0"
+                      :class="!notification.is_read ? 'bg-indigo-50/40 dark:bg-indigo-900/10' : ''">
+                      <div class="flex items-start space-x-3">
+                        <div class="flex-shrink-0">
+                          <div class="h-8 w-8 rounded-full flex items-center justify-center" :class="getNotifIconBg(notification.type)">
+                            <component :is="getNotifIcon(notification.type)" class="h-4 w-4" :class="getNotifIconColor(notification.type)" />
+                          </div>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                          <div class="flex items-center gap-1.5">
+                            <p class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{{ notification.title }}</p>
+                            <span v-if="!notification.is_read" class="inline-block w-1.5 h-1.5 rounded-full bg-indigo-500 flex-shrink-0"></span>
+                          </div>
+                          <p class="text-sm text-gray-500 dark:text-gray-400 line-clamp-1">{{ notification.clinic || notification.message }}</p>
+                          <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{{ formatNotificationTime(notification.created_at || notification.createdAt) }}</p>
+                        </div>
+                        <span v-if="notification.status" class="flex-shrink-0 text-xs px-1.5 py-0.5 rounded-full font-medium" :class="getNotifStatusClass(notification.status)">
+                          {{ notification.status }}
+                        </span>
+                      </div>
+                    </div>
+                    <div v-if="headerNotifications.length === 0" class="px-4 py-8 text-center">
+                      <BellRing class="mx-auto h-8 w-8 text-gray-300 dark:text-gray-600" />
+                      <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">No new notifications</p>
+                    </div>
+                  </template>
+                </div>
+                <div class="px-4 py-2 border-t border-gray-200 dark:border-gray-700">
+                  <button @click="viewAllNotifications" class="w-full text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 text-center py-1 font-medium">
+                    View all notifications
+                  </button>
+                </div>
+              </div>
+            </div>
+
             <div class="flex items-center space-x-2">
               <div class="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center">
                 <UserIcon class="w-5 h-5 text-white" />
@@ -97,7 +160,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { logoutLoading } from '@/composables/auth/useLogin'
@@ -113,6 +176,10 @@ import {
   BellIcon,
   ChartBarIcon
 } from '@heroicons/vue/24/outline'
+
+import { notificationService } from '@/services/api'
+import { useClickOutside } from '@/composables/ui/useClickOutside'
+import { BellRing, ShieldCheck, Box, FileUp, Receipt, DollarSign, Clock } from 'lucide-vue-next'
 
 const sidebarOpen = ref(false)
 const route = useRoute()
@@ -140,6 +207,122 @@ const navigation = computed(() => {
 });
 
 const isActive = (to: string) => route.path === to
+
+const isNotificationsOpen = ref(false)
+const notificationCount = ref(0)
+const headerNotifications = ref<any[]>([])
+const headerNotifLoading = ref(false)
+let notifPollInterval: ReturnType<typeof setInterval> | null = null
+
+// Fetch real notifications for the header bell
+async function fetchHeaderNotifications() {
+  try {
+    const today = new Date().toISOString().slice(0, 10)
+    const params: any = { per_page: 5, page: 1, start_date: today, end_date: today }
+    if ((authStore.user as any)?.clinic_id) {
+       params.clinic_id = (authStore.user as any).clinic_id
+    }
+    const res = await notificationService.getNotifications(params)
+    const items = res?.data?.data || []
+    headerNotifications.value = items
+    notificationCount.value = res?.data?.meta?.unread_count ?? items.filter((n: any) => !n.is_read).length
+  } catch (err) {
+    console.error('Failed to fetch header notifications:', err)
+  }
+}
+
+// Notification type → icon mapping
+const getNotifIcon = (type: string) => {
+  const map: Record<string, any> = { order: Box, usage: FileUp, ivr: ShieldCheck, invoice: Receipt, return: Box, payment: DollarSign }
+  return map[type] || Clock
+}
+const getNotifIconBg = (type: string) => {
+  const map: Record<string, string> = { order: 'bg-violet-100 dark:bg-violet-900/30', usage: 'bg-yellow-100 dark:bg-yellow-900/30', ivr: 'bg-blue-100 dark:bg-blue-900/30', invoice: 'bg-emerald-100 dark:bg-emerald-900/30', return: 'bg-orange-100 dark:bg-orange-900/30' }
+  return map[type] || 'bg-gray-100 dark:bg-gray-800'
+}
+const getNotifIconColor = (type: string) => {
+  const map: Record<string, string> = { order: 'text-violet-600', usage: 'text-yellow-600', ivr: 'text-blue-600', invoice: 'text-emerald-600', return: 'text-orange-600' }
+  return map[type] || 'text-gray-600'
+}
+const getNotifStatusClass = (status: string) => {
+  const s = status?.toLowerCase()
+  const map: Record<string, string> = {
+    delivered: 'bg-green-100 text-green-700', shipped: 'bg-blue-100 text-blue-700',
+    submitted: 'bg-yellow-100 text-yellow-700', pending: 'bg-yellow-100 text-yellow-700',
+    acknowledged: 'bg-indigo-100 text-indigo-700', cancelled: 'bg-red-100 text-red-700',
+    active: 'bg-green-100 text-green-700', eligible: 'bg-green-100 text-green-700',
+    'not eligible': 'bg-red-100 text-red-700', paid: 'bg-green-100 text-green-700',
+    overdue: 'bg-red-100 text-red-700'
+  }
+  return map[s] || 'bg-gray-100 text-gray-700'
+}
+
+const toggleNotifications = async () => {
+  isNotificationsOpen.value = !isNotificationsOpen.value
+  if (isNotificationsOpen.value) {
+    headerNotifLoading.value = true
+    await fetchHeaderNotifications()
+    headerNotifLoading.value = false
+  }
+}
+
+const handleNotificationClick = async (notification: any) => {
+  if (!notification.is_read) {
+    try {
+      await notificationService.markAsRead(notification.id)
+      notification.is_read = true
+      notificationCount.value = Math.max(0, notificationCount.value - 1)
+    } catch (err) {
+      console.error('Failed to mark notification as read:', err)
+    }
+  }
+  const routeMap: Record<string, string> = {
+    order: `/orders`,
+    usage: `/usage`,
+    ivr: `/ivr`,
+    invoice: `/invoices`,
+    return: `/reports`
+  }
+  const target = routeMap[notification.type]
+  if (target) router.push(target)
+  isNotificationsOpen.value = false
+}
+
+const viewAllNotifications = () => {
+  router.push('/notifications')
+  isNotificationsOpen.value = false
+}
+
+const formatNotificationTime = (timestamp: string) => {
+  if (!timestamp) return ''
+  const now = new Date()
+  const notificationTime = new Date(timestamp)
+  const diffInMinutes = Math.floor((now.getTime() - notificationTime.getTime()) / (1000 * 60))
+
+  if (diffInMinutes < 1) return 'Just now'
+  if (diffInMinutes < 60) return `${diffInMinutes}m ago`
+
+  const diffInHours = Math.floor(diffInMinutes / 60)
+  if (diffInHours < 24) return `${diffInHours}h ago`
+
+  const diffInDays = Math.floor(diffInHours / 24)
+  if (diffInDays < 7) return `${diffInDays}d ago`
+
+  return notificationTime.toLocaleDateString()
+}
+
+const { handleClickOutside: handleNotificationsClickOutside } = useClickOutside(isNotificationsOpen)
+
+onMounted(() => {
+  document.addEventListener('click', handleNotificationsClickOutside)
+  fetchHeaderNotifications()
+  notifPollInterval = setInterval(fetchHeaderNotifications, 60000)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleNotificationsClickOutside)
+  if (notifPollInterval) clearInterval(notifPollInterval)
+})
 </script>
 
 <style scoped>

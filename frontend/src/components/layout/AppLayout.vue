@@ -2,35 +2,21 @@
 	<PageLoader :visible="pageLoader" />
 	<div class="min-h-screen bg-gray-100 dark:bg-gray-900">
 		<!-- Sidebar -->
-		<Sidebar 
-			v-if="!$route.meta.hideSidebar"
-			v-model:isOpen="isSidebarOpen"
-		/>
-		
+		<Sidebar v-if="!$route.meta.hideSidebar" v-model:isOpen="isSidebarOpen" />
+
 		<div :class="headerWrapperClass">
 			<!-- Header -->
-			<header v-if="!$route.meta.hideHeader" class="sticky top-0 z-10 flex h-16 flex-shrink-0 bg-white dark:bg-gray-800 shadow">
+			<header v-if="!$route.meta.hideHeader"
+				class="sticky top-0 z-10 flex h-16 flex-shrink-0 bg-white dark:bg-gray-800 shadow">
 				<!-- Mobile Menu Button -->
-				<button
-				type="button"
-				class="px-4 text-gray-500 dark:text-gray-400 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 lg:hidden"
-				@click="toggleSidebar"
-				>
+				<button type="button"
+					class="px-4 text-gray-500 dark:text-gray-400 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 lg:hidden"
+					@click="toggleSidebar">
 					<span class="sr-only">Open sidebar</span>
-					<svg
-						class="h-6 w-6"
-						xmlns="http://www.w3.org/2000/svg"
-						fill="none"
-						viewBox="0 0 24 24"
-						stroke="currentColor"
-						aria-hidden="true"
-					>
-						<path
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="2"
-						d="M4 6h16M4 12h16M4 18h16"
-						/>
+					<svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+						stroke="currentColor" aria-hidden="true">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+							d="M4 6h16M4 12h16M4 18h16" />
 					</svg>
 				</button>
 
@@ -42,157 +28,124 @@
 					<!-- User Profile Section -->
 					<div class="ml-auto mr-4 flex items-center md:ml-6 space-x-4">
 						<!-- Notification Icon -->
-						<!-- <div class="relative">
-							<button
-								type="button"
+						<div class="relative">
+							<button type="button"
 								class="relative p-2 text-gray-400 hover:text-gray-500 dark:text-gray-300 dark:hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 rounded-full"
-								@click="toggleNotifications"
-							>
+								@click="toggleNotifications">
 								<span class="sr-only">View notifications</span>
 								<BellRing class="h-6 w-6" />
-								<span
-								v-if="notificationCount > 0"
-								class="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-xs text-white flex items-center justify-center"
-								>
+								<span v-if="notificationCount > 0"
+									class="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-xs text-white flex items-center justify-center">
 									{{ notificationCount > 9 ? '9+' : notificationCount }}
 								</span>
 							</button>
 
-							<div
-								v-if="isNotificationsOpen"
-								class="absolute right-0 z-10 mt-2 w-80 origin-top-right rounded-md bg-white dark:bg-gray-800 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
-								role="menu"
-							>
-								<div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+							<div v-if="isNotificationsOpen"
+								class="absolute right-0 z-10 mt-2 w-96 origin-top-right rounded-lg bg-white dark:bg-gray-800 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+								role="menu">
+								<div
+									class="px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
 									<h3 class="text-sm font-medium text-gray-900 dark:text-gray-100">Notifications</h3>
+									<span v-if="notificationCount > 0"
+										class="text-xs text-gray-500 dark:text-gray-400">{{ notificationCount }}
+										unread</span>
 								</div>
 								<div class="max-h-96 overflow-y-auto">
-									<div
-										v-for="notification in notifications"
-										:key="notification.id"
-										@click="handleNotificationClick(notification)"
-										class="px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer border-b border-gray-100 dark:border-gray-700 last:border-b-0"
-									>
-										<div class="flex items-start space-x-3">
-											<div class="flex-shrink-0">
-												<div
-												:class="[
-													'h-8 w-8 rounded-full flex items-center justify-center',
-													notification.type === 'success' ? 'bg-green-100 text-green-600' :
-													notification.type === 'warning' ? 'bg-yellow-100 text-yellow-600' :
-													notification.type === 'error' ? 'bg-red-100 text-red-600' :
-													'bg-blue-100 text-blue-600'
-												]"
-												>
-												<svg
-													v-if="notification.type === 'success'"
-													class="h-4 w-4"
-													fill="none"
-													stroke="currentColor"
-													viewBox="0 0 24 24"
-												>
-													<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-												</svg>
-												<svg
-													v-else-if="notification.type === 'warning'"
-													class="h-4 w-4"
-													fill="none"
-													stroke="currentColor"
-													viewBox="0 0 24 24"
-												>
-													<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-												</svg>
-												<svg
-													v-else-if="notification.type === 'error'"
-													class="h-4 w-4"
-													fill="none"
-													stroke="currentColor"
-													viewBox="0 0 24 24"
-												>
-													<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-												</svg>
-												<svg
-													v-else
-													class="h-4 w-4"
-													fill="none"
-													stroke="currentColor"
-													viewBox="0 0 24 24"
-												>
-													<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-												</svg>
+									<div v-if="headerNotifLoading" class="px-4 py-6 text-center">
+										<div
+											class="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-500 mx-auto">
+										</div>
+										<p class="text-xs text-gray-400 mt-2">Loading...</p>
+									</div>
+									<template v-else>
+										<div v-for="notification in headerNotifications" :key="notification.id"
+											@click="handleNotificationClick(notification)"
+											class="px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer border-b border-gray-100 dark:border-gray-700 last:border-b-0"
+											:class="!notification.is_read ? 'bg-indigo-50/40 dark:bg-indigo-900/10' : ''">
+											<div class="flex items-start space-x-3">
+												<div class="flex-shrink-0">
+													<div class="h-8 w-8 rounded-full flex items-center justify-center"
+														:class="getNotifIconBg(notification.type)">
+														<component :is="getNotifIcon(notification.type)" class="h-4 w-4"
+															:class="getNotifIconColor(notification.type)" />
+													</div>
 												</div>
-											</div>
-											<div class="flex-1 min-w-0">
-												<p class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
-												{{ notification.title }}
-												</p>
-												<p class="text-sm text-gray-500 dark:text-gray-400 line-clamp-2">
-												{{ notification.message }}
-												</p>
-												<p class="text-xs text-gray-400 dark:text-gray-500 mt-1">
-												{{ formatNotificationTime(notification.timestamp) }}
-												</p>
+												<div class="flex-1 min-w-0">
+													<div class="flex items-center gap-1.5">
+														<p
+															class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+															{{ notification.title }}</p>
+														<span v-if="!notification.is_read"
+															class="inline-block w-1.5 h-1.5 rounded-full bg-indigo-500 flex-shrink-0"></span>
+													</div>
+													<p class="text-sm text-gray-500 dark:text-gray-400 line-clamp-1">{{
+														notification.clinic || notification.message }}</p>
+													<p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{{
+														formatNotificationTime(notification.created_at) }}</p>
+												</div>
+												<span v-if="notification.status"
+													class="flex-shrink-0 text-xs px-1.5 py-0.5 rounded-full font-medium"
+													:class="getNotifStatusClass(notification.status)">
+													{{ notification.status }}
+												</span>
 											</div>
 										</div>
-									</div>
-									<div v-if="notifications.length === 0" class="px-4 py-8 text-center">
-										<p class="text-sm text-gray-500 dark:text-gray-400">No notifications</p>
-									</div>
+										<div v-if="headerNotifications.length === 0" class="px-4 py-8 text-center">
+											<BellRing class="mx-auto h-8 w-8 text-gray-300 dark:text-gray-600" />
+											<p class="text-sm text-gray-500 dark:text-gray-400 mt-2">No new
+												notifications</p>
+										</div>
+									</template>
 								</div>
 								<div class="px-4 py-2 border-t border-gray-200 dark:border-gray-700">
-									<button
-										@click="viewAllNotifications"
-										class="w-full text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 text-center"
-									>
+									<button @click="viewAllNotifications"
+										class="w-full text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 text-center py-1 font-medium">
 										View all notifications
 									</button>
 								</div>
 							</div>
-						</div> -->
+						</div>
 
 						<div class="relative ml-3">
 							<!-- Profile Button -->
 							<div>
-								<button
-								type="button"
-								class="flex max-w-xs items-center rounded-full bg-white dark:bg-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-								@click="toggleProfile"
-								>
+								<button type="button"
+									class="flex max-w-xs items-center rounded-full bg-white dark:bg-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+									@click="toggleProfile">
 									<span class="sr-only">Open user menu</span>
-									<div class="h-8 w-8 rounded-full bg-indigo-600 flex items-center justify-center text-white">
+									<div
+										class="h-8 w-8 rounded-full bg-indigo-600 flex items-center justify-center text-white">
 										{{ userInitials }}
 									</div>
 								</button>
 							</div>
-							
+
 							<!-- Profile Dropdown Menu -->
-							<div
-								v-if="isProfileOpen"
+							<div v-if="isProfileOpen"
 								class="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded bg-white dark:bg-gray-800 py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
-								role="menu"
-							>
+								role="menu">
 								<!-- User Info -->
 								<div class="px-4 py-2 text-sm text-gray-700 dark:text-gray-200">
 									<p class="font-medium truncate" :title="currentUser?.name">
-										{{ currentUser?.first_name + ' ' + currentUser?.middle_name +  ' ' + currentUser?.last_name }}
+										{{ currentUser?.first_name + ' ' + currentUser?.middle_name + ' ' +
+											currentUser?.last_name }}
 									</p>
 									<span class="text-xs">({{ getUserRoleLabel(currentUser?.user_role) }})</span>
-									<p class="text-gray-500 dark:text-gray-400 truncate" :title="currentUser?.email">{{ currentUser?.email }}</p>
+									<p class="text-gray-500 dark:text-gray-400 truncate" :title="currentUser?.email">{{
+										currentUser?.email }}</p>
 								</div>
 								<div class="border-t border-gray-100 dark:border-gray-700"></div>
-								
+
 								<!-- Settings Option -->
-								<button
-								type="button"
-								class="block w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:bg-gray-100 dark:focus:bg-gray-700"
-								@click="handleSettingsClick"
-								>
+								<button type="button"
+									class="block w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:bg-gray-100 dark:focus:bg-gray-700"
+									@click="handleSettingsClick">
 									<div class="flex items-center">
 										<Settings class="mr-3 h-5 w-5 text-gray-400 flex-shrink-0" />
 										<span class="truncate">Settings</span>
 									</div>
 								</button>
-								
+
 								<!-- Change Account Option -->
 								<!-- <button
 								type="button"
@@ -206,12 +159,9 @@
 								</button> -->
 
 								<!-- Logout Button -->
-								<button
-								type="button"
-								class="block w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:bg-gray-100 dark:focus:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-								@click="handleLogout"
-								:disabled="isLoading"
-								>
+								<button type="button"
+									class="block w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:bg-gray-100 dark:focus:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+									@click="handleLogout" :disabled="isLoading">
 									<div class="flex items-center">
 										<LogOut class="mr-3 h-5 w-5 text-gray-400 flex-shrink-0" />
 										<span class="truncate">{{ isLoading ? 'Logging out...' : 'Sign out' }}</span>
@@ -233,7 +183,8 @@
 							</div>
 							<div class="ml-3">
 								<p class="text-sm font-medium text-yellow-900">
-								Development Notice: This system is currently under active development. Some features may be incomplete or unavailable.
+									Development Notice: This system is currently under active development. Some features
+									may be incomplete or unavailable.
 								</p>
 							</div>
 						</div>
@@ -243,11 +194,8 @@
 			</main>
 		</div>
 		<!-- Notification Modal -->
-		<NotificationModal
-		:isOpen="isNotificationModalOpen"
-		:notification="selectedNotification"
-		@close="closeNotificationModal"
-		/>
+		<NotificationModal :isOpen="isNotificationModalOpen" :notification="selectedNotification"
+			@close="closeNotificationModal" />
 	</div>
 </template>
 
@@ -261,13 +209,14 @@ import { useClickOutside } from '@/composables/ui/useClickOutside'
 import { useUser } from '@/composables/auth/useUser'
 import { useLogin } from '@/composables/auth/useLogin'
 import { pageLoader } from '@/composables/ui/usePageLoader'
+import { notificationService } from '@/services/api'
 import Sidebar from './Sidebar.vue'
 import PageLoader from '@/components/ui/PageLoader.vue'
 import NotificationModal from '@/components/notifications/NotificationModal.vue'
 import {
-    RefreshCcw, Settings, BellRing, LogOut,
-	TriangleAlert,
-	TriangleAlertIcon
+	RefreshCcw, Settings, BellRing, LogOut,
+	TriangleAlert, TriangleAlertIcon,
+	Box, FileUp, ShieldCheck, Receipt, Clock, DollarSign
 } from 'lucide-vue-next';
 
 const route = useRoute()
@@ -289,56 +238,70 @@ const { handleLogout } = useLogin()
 const isProfileOpen = ref(false)
 const isSidebarOpen = ref(false)
 const isNotificationsOpen = ref(false)
-const notificationCount = ref(3) // Mock notification count
+const notificationCount = ref(0)
 const isNotificationModalOpen = ref(false)
 const selectedNotification = ref<any>(null)
+const headerNotifications = ref<any[]>([])
+const headerNotifLoading = ref(false)
+let notifPollInterval: ReturnType<typeof setInterval> | null = null
 
-// Mock notifications data
-const notifications = ref([
-  {
-    id: '1',
-    title: 'New Order Received',
-    message: 'A new order has been placed for 50 units of Product XYZ. Please review and process the order as soon as possible.',
-    type: 'info',
-    timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 30 minutes ago
-    route: '/orders'
-  },
-  {
-    id: '2',
-    title: 'Inventory Low Alert',
-    message: 'Product ABC is running low on stock. Current quantity: 25 units. Please reorder soon.',
-    type: 'warning',
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 hours ago
-    route: '/inventory'
-  },
-  {
-    id: '3',
-    title: 'Payment Received',
-    message: 'Payment of $2,500.00 has been received for Invoice #INV-2024-001.',
-    type: 'success',
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 4).toISOString(), // 4 hours ago
-    route: '/invoices'
-  },
-  {
-    id: '4',
-    title: 'System Maintenance',
-    message: 'Scheduled maintenance will occur tonight from 2:00 AM to 4:00 AM. Some features may be temporarily unavailable.',
-    type: 'info',
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 6).toISOString(), // 6 hours ago
-    route: '/notifications'
-  }
-])
+// Fetch real notifications for the header bell
+async function fetchHeaderNotifications() {
+	try {
+		const today = new Date().toISOString().slice(0, 10)
+		const params: any = { per_page: 5, page: 1, start_date: today, end_date: today }
+
+		if ((authStore.user as any)?.user_role === 2 || (authStore.user as any)?.user_role === 3) {
+			if ((authStore.user as any)?.clinic_id) {
+				params.clinic_id = (authStore.user as any).clinic_id
+			}
+		}
+
+		const res = await notificationService.getNotifications(params)
+		const items = res?.data?.data || []
+		headerNotifications.value = items
+		notificationCount.value = res?.data?.meta?.unread_count ?? items.filter((n: any) => !n.is_read).length
+	} catch (err) {
+		console.error('Failed to fetch header notifications:', err)
+	}
+}
+
+// Notification type → icon mapping
+const getNotifIcon = (type: string) => {
+	const map: Record<string, any> = { order: Box, usage: FileUp, ivr: ShieldCheck, invoice: Receipt, return: Box, payment: DollarSign }
+	return map[type] || Clock
+}
+const getNotifIconBg = (type: string) => {
+	const map: Record<string, string> = { order: 'bg-violet-100 dark:bg-violet-900/30', usage: 'bg-yellow-100 dark:bg-yellow-900/30', ivr: 'bg-blue-100 dark:bg-blue-900/30', invoice: 'bg-emerald-100 dark:bg-emerald-900/30', return: 'bg-orange-100 dark:bg-orange-900/30' }
+	return map[type] || 'bg-gray-100 dark:bg-gray-800'
+}
+const getNotifIconColor = (type: string) => {
+	const map: Record<string, string> = { order: 'text-violet-600', usage: 'text-yellow-600', ivr: 'text-blue-600', invoice: 'text-emerald-600', return: 'text-orange-600' }
+	return map[type] || 'text-gray-600'
+}
+const getNotifStatusClass = (status: string) => {
+	const s = status?.toLowerCase()
+	const map: Record<string, string> = {
+		delivered: 'bg-green-100 text-green-700', shipped: 'bg-blue-100 text-blue-700',
+		submitted: 'bg-yellow-100 text-yellow-700', pending: 'bg-yellow-100 text-yellow-700',
+		acknowledged: 'bg-indigo-100 text-indigo-700', cancelled: 'bg-red-100 text-red-700',
+		active: 'bg-green-100 text-green-700', eligible: 'bg-green-100 text-green-700',
+		'not eligible': 'bg-red-100 text-red-700', paid: 'bg-green-100 text-green-700',
+		overdue: 'bg-red-100 text-red-700'
+	}
+	return map[s] || 'bg-gray-100 text-gray-700'
+}
 
 function getUserRoleLabel(role?: number): string {
-    switch (role) {
-        case 0: return "Admin";
-        case 1: return "Office Staff";
-        case 2: return "Clinic";
-        case 3: return "Clinician";
-        case 4: return "Manufacturer";
-        case 5: return "Biller";
-        default: return "Unknown Role";
-    }
+	switch (role) {
+		case 0: return "Admin";
+		case 1: return "Office Staff";
+		case 2: return "Clinic";
+		case 3: return "Clinician";
+		case 4: return "Manufacturer";
+		case 5: return "Biller";
+		default: return "Unknown Role";
+	}
 }
 
 // Computed Properties
@@ -348,69 +311,95 @@ const isDarkMode = computed(() => themeStore.isDarkMode)
 
 // Methods
 const toggleProfile = () => {
-  isProfileOpen.value = !isProfileOpen.value
+	isProfileOpen.value = !isProfileOpen.value
 }
 
 const toggleSidebar = () => {
-  isSidebarOpen.value = !isSidebarOpen.value
+	isSidebarOpen.value = !isSidebarOpen.value
 }
 
 const toggleTheme = () => {
-  themeStore.toggleTheme()
+	themeStore.toggleTheme()
 }
 
-const toggleNotifications = () => {
-  isNotificationsOpen.value = !isNotificationsOpen.value
+const toggleNotifications = async () => {
+	isNotificationsOpen.value = !isNotificationsOpen.value
+	if (isNotificationsOpen.value) {
+		headerNotifLoading.value = true
+		await fetchHeaderNotifications()
+		headerNotifLoading.value = false
+	}
 }
 
-const handleNotificationClick = (notification: any) => {
-  // Navigate to the notification's route
-  if (notification.route) {
-    router.push(notification.route)
-  }
-  isNotificationsOpen.value = false
+const handleNotificationClick = async (notification: any) => {
+	// Mark as read if unread
+	if (!notification.is_read) {
+		try {
+			await notificationService.markAsRead(notification.id)
+			notification.is_read = true
+			notificationCount.value = Math.max(0, notificationCount.value - 1)
+		} catch (err) {
+			console.error('Failed to mark notification as read:', err)
+		}
+	}
+
+	// Navigate to the relevant management page
+	const role = authStore.user?.user_role ?? 0
+	const prefixMap: Record<number, string> = { 0: 'admin', 1: 'office-staff', 2: 'clinic', 3: 'clinician', 4: 'manufacturer', 5: 'biller' }
+	const prefix = prefixMap[role] || 'admin'
+	const routeMap: Record<string, string> = {
+		order: `/${prefix}/order-management`,
+		usage: `/${prefix}/inventory`,
+		ivr: `/${prefix}/ivr-management`,
+		invoice: `/${prefix}/invoice-management`,
+		return: '/admin/returns'
+	}
+
+	const target = routeMap[notification.type]
+	if (target) router.push(target)
+	isNotificationsOpen.value = false
 }
 
 const viewAllNotifications = () => {
-  router.push('/notifications')
-  isNotificationsOpen.value = false
+	router.push('/notifications')
+	isNotificationsOpen.value = false
 }
 
 const formatNotificationTime = (timestamp: string) => {
-  const now = new Date()
-  const notificationTime = new Date(timestamp)
-  const diffInMinutes = Math.floor((now.getTime() - notificationTime.getTime()) / (1000 * 60))
-  
-  if (diffInMinutes < 1) return 'Just now'
-  if (diffInMinutes < 60) return `${diffInMinutes}m ago`
-  
-  const diffInHours = Math.floor(diffInMinutes / 60)
-  if (diffInHours < 24) return `${diffInHours}h ago`
-  
-  const diffInDays = Math.floor(diffInHours / 24)
-  if (diffInDays < 7) return `${diffInDays}d ago`
-  
-  return notificationTime.toLocaleDateString()
+	const now = new Date()
+	const notificationTime = new Date(timestamp)
+	const diffInMinutes = Math.floor((now.getTime() - notificationTime.getTime()) / (1000 * 60))
+
+	if (diffInMinutes < 1) return 'Just now'
+	if (diffInMinutes < 60) return `${diffInMinutes}m ago`
+
+	const diffInHours = Math.floor(diffInMinutes / 60)
+	if (diffInHours < 24) return `${diffInHours}h ago`
+
+	const diffInDays = Math.floor(diffInHours / 24)
+	if (diffInDays < 7) return `${diffInDays}d ago`
+
+	return notificationTime.toLocaleDateString()
 }
 
 const handleProfileClick = () => {
-  // Close dropdown and navigate to profile
-  isProfileOpen.value = false
-  router.push('/profile')
+	// Close dropdown and navigate to profile
+	isProfileOpen.value = false
+	router.push('/profile')
 }
 
 const handleSettingsClick = () => {
-  isProfileOpen.value = false
-  router.push('/settings')
+	isProfileOpen.value = false
+	router.push('/settings')
 }
 
 const closeNotificationModal = () => {
-  isNotificationModalOpen.value = false
-  selectedNotification.value = null
+	isNotificationModalOpen.value = false
+	selectedNotification.value = null
 }
 
 function goToChangeAccount() {
-  router.push('/change-account')
+	router.push('/change-account')
 }
 
 // Lifecycle Hooks
@@ -418,12 +407,19 @@ const { handleClickOutside: handleProfileClickOutside } = useClickOutside(isProf
 const { handleClickOutside: handleNotificationsClickOutside } = useClickOutside(isNotificationsOpen)
 
 onMounted(() => {
-  document.addEventListener('click', handleProfileClickOutside)
-  document.addEventListener('click', handleNotificationsClickOutside)
+	document.addEventListener('click', handleProfileClickOutside)
+	document.addEventListener('click', handleNotificationsClickOutside)
+
+	// Fetch initial notification count
+	fetchHeaderNotifications()
+
+	// Poll every 60 seconds for new notifications
+	notifPollInterval = setInterval(fetchHeaderNotifications, 60000)
 })
 
 onUnmounted(() => {
-  document.removeEventListener('click', handleProfileClickOutside)
-  document.removeEventListener('click', handleNotificationsClickOutside)
+	document.removeEventListener('click', handleProfileClickOutside)
+	document.removeEventListener('click', handleNotificationsClickOutside)
+	if (notifPollInterval) clearInterval(notifPollInterval)
 })
 </script>
