@@ -1,7 +1,7 @@
 <template>
     <tr>
-        <td :colspan="colspan" class="pt-10 text-center">
-            <div class="inline-block">
+        <td :colspan="colspan" class="py-10 text-center align-middle">
+            <div class="flex flex-col items-center justify-center">
                 <div :class="loaderClass"></div>
                 <div class="text-center text-gray-400 py-4 text-sm">Fetching Data</div>
             </div>

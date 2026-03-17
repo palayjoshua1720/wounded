@@ -274,7 +274,8 @@
                 </tr>
               </thead>
               <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                <tr v-for="item in tableData" :key="item.id">
+                <TableLoader v-if="tableLoader" :colspan="9" />
+                <tr v-else v-for="item in tableData" :key="item.id">
                   <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{{
                     item.patientName
                   }}</td>
@@ -286,9 +287,9 @@
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                     {{ item.submissionDate ? formatDate(item.submissionDate) : '-' }}
                   </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">${{
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{
                     formatCurrency(item.medicareAmount) }}</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">${{
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{
                     formatCurrency(item.providerAmount) }}</td>
                   <td class="px-6 py-4 whitespace-nowrap">
                     <span :class="getStatusClass(item.status)" class="px-2.5 py-0.5 text-xs font-medium rounded-full">
@@ -310,7 +311,7 @@
                     </div>
                   </td>
                 </tr>
-                <tr v-if="tableData.length === 0">
+                <tr v-if="!tableLoader && tableData.length === 0">
                   <td colspan="9" class="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
                     <FileText class="w-12 h-12 mx-auto mb-4 text-gray-400 dark:text-gray-500" />
                     <p>No billing data found. Add your first entry using the "Add New" button.</p>
@@ -352,6 +353,7 @@ import { FileSpreadsheet, Upload, FileText, X, Download, Plus, RefreshCw, Pencil
 import * as XLSX from 'xlsx'
 import Swal from 'sweetalert2'
 import BaseModal from '@/components/common/BaseModal.vue'
+import TableLoader from '@/components/ui/TableLoader.vue'
 
 // State
 const showAddOptions = ref(false)
@@ -1501,11 +1503,22 @@ const formatCurrency = (amount: number): string => {
 
 const formatDate = (dateStr: string): string => {
   if (!dateStr) return '-'
-  return new Date(dateStr).toLocaleDateString('en-US', {
+  const date = new Date(dateStr);
+  const options: Intl.DateTimeFormatOptions = {
     month: 'short',
     day: 'numeric',
     year: 'numeric'
-  })
+  };
+  let datePart = date.toLocaleDateString('en-US', options);
+  // Add a dot after the abbreviated month
+  datePart = datePart.replace(/(\w+)\s+(\d+,\s+\d+)/, '$1. $2');
+  
+  const timePart = date.toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true
+  });
+  return `${datePart} [${timePart}]`;
 }
 
 const getStatusClass = (status: string): string => {
