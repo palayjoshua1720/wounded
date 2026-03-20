@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
 use App\Models\User;
 use App\Services\EmailService;
+use App\Services\HmacHashService;
 use App\Template\ForgotPasswordEmail;
 use Illuminate\Support\Facades\DB;
 
@@ -18,7 +19,13 @@ class ForgotPassword extends Controller
 
         // $user = User::where('email', $request->email)->first();
         $ip = $request->server('HTTP_X_FORWARDED_FOR') ?? $request->server('REMOTE_ADDR');
-        $user = User::where('email', $request->email)->first();
+        $emailHash = app(HmacHashService::class)->hash($request->email);
+        $user = User::where('email_hash', $emailHash)->first();
+        // Legacy fallback for users without email_hash
+        if (!$user) {
+            $user = User::whereNull('email_hash')->get()
+                ->first(fn($u) => $u->email === $request->email);
+        }
         $prevHash = $this->getLastRowHash();
 
 

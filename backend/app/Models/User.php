@@ -7,10 +7,11 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Traits\EncryptsData;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
+    use HasApiTokens, HasFactory, Notifiable, SoftDeletes, EncryptsData;
 
     protected $table = 'woundmed_users';
 
@@ -21,6 +22,7 @@ class User extends Authenticatable
         'middle_name',
         'last_name',
         'email',
+        'email_hash',
         'password',
         'user_role',
         'user_status',

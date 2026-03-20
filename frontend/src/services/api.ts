@@ -359,5 +359,25 @@ export const returnsService = {
   }
 };
 
+export const notificationService = {
+  getNotifications(params?: {
+    search?: string
+    type?: string
+    start_date?: string
+    end_date?: string
+    page?: number
+    per_page?: number
+    clinic_id?: number | string
+  }) {
+    return api.get('/notifications', { params })
+  },
+  markAsRead(id: string) {
+    return api.post(`/notifications/${id}/read`)
+  },
+  markAllAsRead(ids: string[] = []) {
+    return api.post('/notifications/mark-all-read', { ids })
+  }
+}
+
 export { api }
 export default api 

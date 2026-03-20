@@ -381,14 +381,14 @@
 			<!-- Top Clinics/Products & Brand/Size Distribution -->
 			<div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
 				<!-- Top Clinics OR Top Products -->
-				<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5">
+				<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5 flex flex-col">
 					<div class="flex items-center space-x-2 mb-4">
 						<div class="p-1.5 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
 							<component :is="clinicFilter !== 'all' ? CubeIcon : Building2" class="w-4 h-4 text-blue-600 dark:text-blue-400" />
 						</div>
 						<h3 class="text-sm font-semibold text-gray-900 dark:text-white">{{ clinicFilter !== 'all' ? 'Top Products' : 'Top Clinics' }}</h3>
 					</div>
-					<div class="space-y-2">
+					<div class="space-y-2 flex-1 min-h-[120px]">
 						<template v-if="clinicFilter !== 'all'">
 							<div v-for="(product, index) in topProducts.slice(0, 5)" :key="product.product_id" 
 								class="flex items-center justify-between p-2.5 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
@@ -429,25 +429,28 @@
 								</div>
 							</div>
 						</template>
-						<div v-if="(clinicFilter !== 'all' ? topProducts : topClinics).length === 0" class="text-center py-6 text-sm text-gray-500 dark:text-gray-400">
+						<div v-if="reportGenerated && !isLoadingData && (clinicFilter !== 'all' ? topProducts : topClinics).length === 0" class="flex-1 flex items-center justify-center py-8 text-sm text-gray-500 dark:text-gray-400">
 							No data available
 						</div>
 					</div>
 				</div>
 
 				<!-- Brand OR Size Distribution -->
-				<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5">
+				<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5 flex flex-col">
 					<div class="flex items-center space-x-2 mb-4">
 						<div class="p-1.5 bg-purple-50 dark:bg-purple-900/30 rounded-lg">
 							<component :is="brandFilter !== 'all' ? ChartBarSquareIcon : Package" class="w-4 h-4 text-purple-600 dark:text-purple-400" />
 						</div>
 						<h3 class="text-sm font-semibold text-gray-900 dark:text-white">{{ brandFilter !== 'all' ? 'Size Distribution' : 'Brand Distribution' }}</h3>
 					</div>
+					<div v-if="reportGenerated && !isLoadingData && (brandFilter !== 'all' ? sizeDistribution : brandDistribution).length === 0" class="flex-1 flex items-center justify-center py-8 text-xs text-gray-500 dark:text-gray-400">
+							No data available
+						</div>
 					<div class="flex items-center justify-center mb-3">
 						<canvas v-if="brandFilter !== 'all'" ref="sizeChartRef" style="max-width:180px;max-height:180px;"></canvas>
 						<canvas v-else ref="brandChartRef" style="max-width:180px;max-height:180px;"></canvas>
 					</div>
-					<div class="space-y-1.5 max-h-32 overflow-y-auto">
+					<div class="space-y-1.5 flex-1 min-h-[80px]">
 						<template v-if="brandFilter !== 'all'">
 							<div v-for="size in sizeDistribution" :key="size.size_id" 
 								class="flex items-center justify-between p-1.5 rounded hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
@@ -468,9 +471,6 @@
 								<span class="text-xs font-semibold text-gray-900 dark:text-white">{{ brand.count }}</span>
 							</div>
 						</template>
-						<div v-if="(brandFilter !== 'all' ? sizeDistribution : brandDistribution).length === 0" class="text-center py-4 text-xs text-gray-500 dark:text-gray-400">
-							No data available
-						</div>
 					</div>
 				</div>
 			</div>
@@ -548,14 +548,14 @@
 				<!-- Top Clinics and Brand Distribution -->
 				<div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
 					<!-- Top Clinics -->
-					<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5">
+					<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5 flex flex-col">
 						<div class="flex items-center space-x-2 mb-4">
 							<div class="p-1.5 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
 								<Building2 class="w-4 h-4 text-blue-600 dark:text-blue-400" />
 							</div>
 							<h3 class="text-sm font-semibold text-gray-900 dark:text-white">Top Clinics</h3>
 						</div>
-						<div class="space-y-2">
+						<div class="space-y-2 flex-1 min-h-[120px]">
 							<div v-for="(clinic, index) in topInventoryClinics.slice(0, 5)" :key="clinic.clinic_id" 
 								class="flex items-center justify-between p-2.5 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
 								<div class="flex items-center space-x-2.5 flex-1 min-w-0">
@@ -574,24 +574,27 @@
 									</div>
 								</div>
 							</div>
-							<div v-if="topInventoryClinics.length === 0" class="text-center py-6 text-sm text-gray-500 dark:text-gray-400">
+							<div v-if="reportGenerated && !isLoadingData && topInventoryClinics.length === 0" class="flex-1 flex items-center justify-center py-8 text-sm text-gray-500 dark:text-gray-400">
 								No clinic data available
 							</div>
 						</div>
 					</div>
 
 					<!-- Brand Distribution -->
-					<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5">
+					<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5 flex flex-col">
 						<div class="flex items-center space-x-2 mb-4">
 							<div class="p-1.5 bg-purple-50 dark:bg-purple-900/30 rounded-lg">
 								<Package class="w-4 h-4 text-purple-600 dark:text-purple-400" />
 							</div>
 							<h3 class="text-sm font-semibold text-gray-900 dark:text-white">Brand Distribution</h3>
 						</div>
+						<div v-if="reportGenerated && !isLoadingData && inventoryBrandDistribution.length === 0" class="flex-1 flex items-center justify-center py-8 text-xs text-gray-500 dark:text-gray-400">
+								No brand data available
+							</div>
 						<div class="flex items-center justify-center mb-3">
 							<canvas ref="inventoryBrandChartRef" style="max-width:180px;max-height:180px;"></canvas>
 						</div>
-						<div class="space-y-1.5 max-h-32 overflow-y-auto">
+						<div class="space-y-1.5 flex-1 min-h-[80px]">
 							<div v-for="brand in inventoryBrandDistribution" :key="brand.brand_id" 
 								class="flex items-center justify-between p-1.5 rounded hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
 								<div class="flex items-center space-x-2">
@@ -599,9 +602,6 @@
 									<span class="text-xs text-gray-700 dark:text-gray-300">{{ brand.name }}</span>
 								</div>
 								<span class="text-xs font-semibold text-gray-900 dark:text-white">{{ brand.count }}</span>
-							</div>
-							<div v-if="inventoryBrandDistribution.length === 0" class="text-center py-4 text-xs text-gray-500 dark:text-gray-400">
-								No brand data available
 							</div>
 						</div>
 					</div>
@@ -668,17 +668,20 @@
 				<!-- Usage Analytics Grid -->
 				<div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
 					<!-- Usage by Wound Part -->
-					<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5">
+					<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5 flex flex-col">
 						<div class="flex items-center space-x-2 mb-4">
 							<div class="p-1.5 bg-orange-50 dark:bg-orange-900/30 rounded-lg">
 								<TrendingUp class="w-4 h-4 text-orange-600 dark:text-orange-400" />
 							</div>
 							<h3 class="text-sm font-semibold text-gray-900 dark:text-white">Usage by Wound Part</h3>
 						</div>
+						<div v-if="reportGenerated && !isLoadingData && usageByWoundPart.length === 0" class="flex-1 flex items-center justify-center py-8 text-xs text-gray-500 dark:text-gray-400">
+								No usage data available
+							</div>
 						<div class="flex items-center justify-center mb-3">
 							<canvas ref="usageWoundPartChartRef" style="max-width:180px;max-height:180px;"></canvas>
 						</div>
-						<div class="space-y-1.5 max-h-32 overflow-y-auto">
+						<div class="space-y-1.5 flex-1 min-h-[80px]">
 							<div v-for="part in usageByWoundPart" :key="part.name" 
 								class="flex items-center justify-between p-1.5 rounded hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
 								<div class="flex items-center space-x-2">
@@ -687,21 +690,18 @@
 								</div>
 								<span class="text-xs font-semibold text-gray-900 dark:text-white">{{ part.count }}</span>
 							</div>
-							<div v-if="usageByWoundPart.length === 0" class="text-center py-4 text-xs text-gray-500 dark:text-gray-400">
-								No usage data available
-							</div>
 						</div>
 					</div>
 
 					<!-- Top Clinics by Usage -->
-					<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5">
+					<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5 flex flex-col">
 						<div class="flex items-center space-x-2 mb-4">
 							<div class="p-1.5 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
 								<Building2 class="w-4 h-4 text-blue-600 dark:text-blue-400" />
 							</div>
 							<h3 class="text-sm font-semibold text-gray-900 dark:text-white">Top Clinics by Usage</h3>
 						</div>
-						<div class="space-y-2">
+						<div class="space-y-2 flex-1 min-h-[120px]">
 							<div v-for="(clinic, index) in topUsageClinics.slice(0, 5)" :key="clinic.clinic_id" 
 								class="flex items-center justify-between p-2.5 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
 								<div class="flex items-center space-x-2.5 flex-1 min-w-0">
@@ -720,7 +720,7 @@
 									</div>
 								</div>
 							</div>
-							<div v-if="topUsageClinics.length === 0" class="text-center py-6 text-sm text-gray-500 dark:text-gray-400">
+							<div v-if="reportGenerated && !isLoadingData && topUsageClinics.length === 0" class="flex-1 flex items-center justify-center py-8 text-sm text-gray-500 dark:text-gray-400">
 								No clinic data available
 							</div>
 						</div>
@@ -728,18 +728,18 @@
 				</div>
 
 				<!-- Brand Usage Distribution -->
-				<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5">
+				<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5 flex flex-col">
 					<div class="flex items-center space-x-2 mb-4">
 						<div class="p-1.5 bg-purple-50 dark:bg-purple-900/30 rounded-lg">
 							<Package class="w-4 h-4 text-purple-600 dark:text-purple-400" />
 						</div>
 						<h3 class="text-sm font-semibold text-gray-900 dark:text-white">Brand Usage Distribution</h3>
 					</div>
-					<div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+					<div class="grid grid-cols-1 lg:grid-cols-2 gap-5 flex-1">
 						<div class="flex items-center justify-center">
 							<canvas ref="usageBrandChartRef" style="max-width:180px;max-height:180px;"></canvas>
 						</div>
-						<div class="space-y-1.5 max-h-40 overflow-y-auto">
+						<div class="space-y-1.5 flex-1 min-h-[80px]">
 							<div v-for="brand in usageBrandDistribution" :key="brand.brand_id" 
 								class="flex items-center justify-between p-1.5 rounded hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
 								<div class="flex items-center space-x-2">
@@ -748,7 +748,7 @@
 								</div>
 								<span class="text-xs font-semibold text-gray-900 dark:text-white">{{ brand.count }}</span>
 							</div>
-							<div v-if="usageBrandDistribution.length === 0" class="text-center py-4 text-xs text-gray-500 dark:text-gray-400">
+							<div v-if="reportGenerated && !isLoadingData && usageBrandDistribution.length === 0" class="flex-1 flex items-center justify-center py-8 text-xs text-gray-500 dark:text-gray-400">
 								No brand data available
 							</div>
 						</div>
@@ -796,20 +796,20 @@
 				</div>
 
 				<!-- Invoice Status Breakdown -->
-				<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5">
+				<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5 flex flex-col">
 					<div class="flex items-center justify-between mb-4">
 						<h3 class="text-base font-semibold text-gray-900 dark:text-white flex items-center">
 							<span class="w-1 h-5 bg-blue-500 rounded-full mr-2"></span>
 							Invoice Status Breakdown
 						</h3>
 					</div>
-					<div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+					<div class="grid grid-cols-1 lg:grid-cols-2 gap-5 flex-1">
 						<!-- Pie Chart -->
 						<div class="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-4 flex items-center justify-center">
 							<canvas ref="invoiceStatusChartRef" style="max-width:100%;max-height:250px;"></canvas>
 						</div>
 						<!-- Status List -->
-						<div class="space-y-2">
+						<div class="space-y-2 flex-1 min-h-[120px]">
 							<div v-for="status in invoiceStatusBreakdown" :key="status.name" 
 								class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors">
 								<div class="flex items-center space-x-2">
@@ -821,7 +821,7 @@
 									<span class="text-xs text-gray-500 dark:text-gray-400">${{ status.amount.toLocaleString() }}</span>
 								</div>
 							</div>
-							<div v-if="invoiceStatusBreakdown.length === 0" class="text-center py-6 text-sm text-gray-500 dark:text-gray-400">
+							<div v-if="reportGenerated && !isLoadingData && invoiceStatusBreakdown.length === 0" class="flex-1 flex items-center justify-center py-8 text-sm text-gray-500 dark:text-gray-400">
 								No invoice data available
 							</div>
 						</div>
@@ -829,14 +829,14 @@
 				</div>
 
 				<!-- Top Clinics by Invoice Amount -->
-				<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5">
+				<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5 flex flex-col">
 					<div class="flex items-center space-x-2 mb-4">
 						<div class="p-1.5 bg-purple-50 dark:bg-purple-900/30 rounded-lg">
 							<Building2 class="w-4 h-4 text-purple-600 dark:text-purple-400" />
 						</div>
 						<h3 class="text-sm font-semibold text-gray-900 dark:text-white">Top Clinics by Invoice Amount</h3>
 					</div>
-					<div class="space-y-2">
+					<div class="space-y-2 flex-1 min-h-[120px]">
 						<div v-for="(clinic, index) in topInvoiceClinics.slice(0, 5)" :key="clinic.clinic_id" 
 							class="flex items-center justify-between p-2.5 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
 							<div class="flex items-center space-x-2.5 flex-1 min-w-0">
@@ -855,7 +855,7 @@
 								</div>
 							</div>
 						</div>
-						<div v-if="topInvoiceClinics.length === 0" class="text-center py-6 text-sm text-gray-500 dark:text-gray-400">
+						<div v-if="reportGenerated && !isLoadingData && topInvoiceClinics.length === 0" class="flex-1 flex items-center justify-center py-8 text-sm text-gray-500 dark:text-gray-400">
 							No clinic data available
 						</div>
 					</div>
@@ -904,17 +904,20 @@
 				<!-- Eligibility Status & Manufacturers/Insights -->
 				<div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
 					<!-- Eligibility Status Breakdown -->
-					<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5">
+					<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5 flex flex-col">
 						<div class="flex items-center space-x-2 mb-4">
 							<div class="p-1.5 bg-green-50 dark:bg-green-900/30 rounded-lg">
 								<PhoneIcon class="w-4 h-4 text-green-600 dark:text-green-400" />
 							</div>
 							<h3 class="text-sm font-semibold text-gray-900 dark:text-white">Eligibility Status</h3>
 						</div>
+						<div v-if="reportGenerated && !isLoadingData && ivrEligibilityBreakdown.length === 0" class="flex-1 flex items-center justify-center py-8 text-xs text-gray-500 dark:text-gray-400">
+								No IVR data available
+							</div>
 						<div class="flex items-center justify-center mb-3">
 							<canvas ref="ivrEligibilityChartRef" style="max-width:180px;max-height:180px;"></canvas>
 						</div>
-						<div class="space-y-1.5 max-h-32 overflow-y-auto">
+						<div class="space-y-1.5 flex-1 min-h-[80px]">
 							<div v-for="status in ivrEligibilityBreakdown" :key="status.name" 
 								class="flex items-center justify-between p-1.5 rounded hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
 								<div class="flex items-center space-x-2">
@@ -923,21 +926,18 @@
 								</div>
 								<span class="text-xs font-semibold text-gray-900 dark:text-white">{{ status.count }}</span>
 							</div>
-							<div v-if="ivrEligibilityBreakdown.length === 0" class="text-center py-4 text-xs text-gray-500 dark:text-gray-400">
-								No IVR data available
-							</div>
 						</div>
 					</div>
 
 					<!-- Top Manufacturers OR Manufacturer Insights -->
-					<div v-if="manufacturerFilter === 'all'" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5">
+					<div v-if="manufacturerFilter === 'all'" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5 flex flex-col">
 						<div class="flex items-center space-x-2 mb-4">
 							<div class="p-1.5 bg-orange-50 dark:bg-orange-900/30 rounded-lg">
 								<Package class="w-4 h-4 text-orange-600 dark:text-orange-400" />
 							</div>
 							<h3 class="text-sm font-semibold text-gray-900 dark:text-white">Top Manufacturers</h3>
 						</div>
-						<div class="space-y-2">
+						<div class="space-y-2 flex-1 min-h-[120px]">
 							<div v-for="(mfr, index) in topIVRManufacturers.slice(0, 5)" :key="mfr.manufacturer_id" 
 								class="flex items-center justify-between p-2.5 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
 								<div class="flex items-center space-x-2.5 flex-1 min-w-0">
@@ -956,7 +956,7 @@
 									</div>
 								</div>
 							</div>
-							<div v-if="topIVRManufacturers.length === 0" class="text-center py-6 text-sm text-gray-500 dark:text-gray-400">
+							<div v-if="reportGenerated && !isLoadingData && topIVRManufacturers.length === 0" class="flex-1 flex items-center justify-center py-8 text-sm text-gray-500 dark:text-gray-400">
 								No manufacturer data available
 							</div>
 						</div>
@@ -1000,7 +1000,7 @@
 				</div>
 
 				<!-- Clinic Insights or Top Clinics -->
-				<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5">
+				<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5 flex flex-col">
 					<div class="flex items-center space-x-2 mb-4">
 						<div class="p-1.5 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
 							<Building2 class="w-4 h-4 text-blue-600 dark:text-blue-400" />
@@ -1012,7 +1012,7 @@
 					</div>
 
 					<!-- Clinic Insights - Show when clinic is filtered -->
-					<div v-if="clinicFilter !== 'all'" class="grid grid-cols-2 gap-3">
+					<div v-if="clinicFilter !== 'all'" class="grid grid-cols-2 gap-3 flex-1">
 						<div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 border border-blue-100 dark:border-blue-800">
 							<p class="text-xs text-blue-600 dark:text-blue-400 mb-1">Total Requests</p>
 							<p class="text-xl font-bold text-gray-900 dark:text-white">{{ filteredIVRRequests.length }}</p>
@@ -1024,7 +1024,7 @@
 					</div>
 
 					<!-- Top Clinics - Show when no specific clinic is selected -->
-					<div v-else class="space-y-2">
+					<div v-else class="space-y-2 flex-1 min-h-[120px]">
 						<div v-for="(clinic, index) in topIVRClinics.slice(0, 5)" :key="clinic.clinic_id" 
 							class="flex items-center justify-between p-2.5 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
 							<div class="flex items-center space-x-2.5 flex-1 min-w-0">
@@ -1043,7 +1043,7 @@
 								</div>
 							</div>
 						</div>
-						<div v-if="topIVRClinics.length === 0" class="text-center py-6 text-sm text-gray-500 dark:text-gray-400">
+						<div v-if="reportGenerated && !isLoadingData && topIVRClinics.length === 0" class="flex-1 flex items-center justify-center py-8 text-sm text-gray-500 dark:text-gray-400">
 							No clinic data available
 						</div>
 					</div>

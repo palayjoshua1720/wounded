@@ -36,7 +36,7 @@ import BillerTrackingForm from '@/views/BillerTrackingForm.vue'
 import { pageLoader } from '@/composables/ui/usePageLoader'
 
 // Icons
-import { LayoutDashboard, UsersRound, Hospital, Factory, Package, ShieldCheck, ShoppingCart, ClipboardList, PencilRuler, ScanBarcode, BellRing, ChartColumn, CircleUserRound, Calculator, RotateCcw, Layers, FileSpreadsheet, UserCircle  } from 'lucide-vue-next'
+import { LayoutDashboard, UsersRound, Hospital, Factory, Package, ShieldCheck, ShoppingCart, ClipboardList, PencilRuler, ScanBarcode, BellRing, ChartColumn, CircleUserRound, Calculator, RotateCcw, Layers, FileSpreadsheet, UserCircle } from 'lucide-vue-next'
 
 // Types
 interface NavigationItem {
@@ -672,13 +672,13 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 		'manufacturer/ivr-management': [4],
 		'clinic/order-management': [2],
 		// Return Management
-		'returns': [0,1,2,3],
+		'returns': [0, 1, 2, 3],
 
 		// Other Management
 		'usage': [],
 		'smart-selector': [],
 		'reports': [0],
-		'notifications': [0, 1],
+		'notifications': [0, 1, 2, 3],
 		'profile': [],
 	}
 
@@ -840,8 +840,8 @@ router.beforeEach(async (to, from, next) => {
 			return
 		}
 
-		// Notifications / Orders / Reports → Admin + OfficeStaff + Clinics
-		if (['notifications', 'orders', 'reports'].includes(to.name?.toString() || '') && role !== Admin && role !== OfficeStaff && role !== Clinics) {
+		// Notifications / Orders / Reports → Admin + OfficeStaff + Clinics + Clinician
+		if (['notifications', 'orders', 'reports'].includes(to.name?.toString() || '') && role !== Admin && role !== OfficeStaff && role !== Clinics && role !== Clinician) {
 			next({ name: 'admin-dashboard' })
 			return
 		}

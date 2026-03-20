@@ -11,6 +11,7 @@ use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash as LaravelHash;
 use App\Services\VerificationCodeService;
+use App\Services\HmacHashService;
 use App\Traits\AuditLogger;
 
 class AuthController extends Controller
@@ -34,9 +35,16 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        $user = User::where('email', $request->email)->first();
+        $emailHash = app(HmacHashService::class)->hash($request->email);
+        $user = User::where('email_hash', $emailHash)->first();
         $ip = $request->server('HTTP_X_FORWARDED_FOR') ?? $request->server('REMOTE_ADDR');
         $prevHash = $this->getLastRowHash();
+
+        // Legacy fallback: scan for users created before email_hash was added
+        if (! $user) {
+            $user = User::whereNull('email_hash')->get()
+                ->first(fn($u) => $u->email === $request->email);
+        }
 
         if (! $user) {
             $this->logAudit($request, 'authentication', "login failed", null, 1, $request->email);
@@ -55,7 +63,7 @@ class AuthController extends Controller
         }
         
         if (! Hash::check($request->password, $user->password)) {
-            $this->logAudit($request, 'authentication', "login failed", $user->id, 1);
+            $this->logAudit($request, 'authentication', "login failed", null, 1, $request->email);
 
             return response()->json([
                 'message' => 'The provided credentials are incorrect.',
@@ -264,7 +272,12 @@ class AuthController extends Controller
             'email' => 'required|email',
         ]);
 
-        $user = User::where('email', $request->email)->first();
+        $emailHash = app(HmacHashService::class)->hash($request->email);
+        $user = User::where('email_hash', $emailHash)->first();
+
+        if (!$user) {
+            $user = User::all()->first(fn($u) => $u->email === $request->email);
+        }
 
         if (!$user) {
             return response()->json([

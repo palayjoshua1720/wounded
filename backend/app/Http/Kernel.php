@@ -25,8 +25,8 @@ class Kernel extends HttpKernel
 
         'api' => [
             // Laravel 11+ has built-in CORS
-            \Illuminate\Routing\Middleware\SubstituteBindings::class,
             \Illuminate\Http\Middleware\HandleCors::class,
+            \Illuminate\Routing\Middleware\SubstituteBindings::class,
             'throttle:api',
         ],
     ];

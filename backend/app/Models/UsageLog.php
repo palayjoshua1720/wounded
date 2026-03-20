@@ -5,10 +5,17 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Traits\EncryptsData;
+use App\Traits\EncryptsFiles;
 
 class UsageLog extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, EncryptsData, EncryptsFiles;
+
+    /**
+     * File fields that should be encrypted
+     */
+    protected array $encryptableFiles = ['filepath'];
 
     protected $table = 'woundmed_usage_log';
     protected $primaryKey = 'graft_log_id';

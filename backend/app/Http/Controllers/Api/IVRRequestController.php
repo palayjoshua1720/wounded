@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use App\Models\Clinic;
 use App\Models\Brand;
@@ -146,34 +147,42 @@ class IVRRequestController extends Controller
                 'ivr_file' => 'required|file|mimes:pdf,doc,docx|max:10240',
                 'notes' => 'nullable|string',
             ]);
-            // $path = $request->file('ivr_file')->store('ivr', 'public');
-            $path = null;
-            if ($request->hasFile('ivr_file')) {
-                $filename = time().'.'.$request->file('ivr_file')->getClientOriginalExtension();
-                $path = $request->file('ivr_file')->storeAs('ivr', $filename, 'private');
-            }
-            
-            $ivrNumber = '#IVR-' . strtoupper(uniqid());
-            $newIVR = IVR::create([
-                'ivr_number' => $ivrNumber,
-                'clinic_id' => $request['clinic_id'] ?? null,
-                'brand_id' => $validated['brand_id'] ?? null,
-                'manufacturer_id' => $validated['manufacturer_id'] ?? null,
-                'patient_id' => $validated['patient_id'] ?? null,
-                'ivr_file' => $path,
-                'description' => $validated['notes'] ?? null,
-                'eligibility_status' => 0,
-                'submitted_at' => now(),
-                'timestamp' => now(),
-            ]);
-            $token = Str::random(64);
-            DB::table('magic_tokens')->insert([
-                'ivr_id'          => $newIVR->ivr_id,
-                'manufacturer_id' => $validated['manufacturer_id'],
-                'token'           => hash('sha256', $token),
-                'expires_at'      => now()->addDays(60),
-                'created_at'      => now(),
-            ]);
+
+            $ivr = DB::transaction(function () use ($request, $validated) {
+                // $path = $request->file('ivr_file')->store('ivr', 'public');
+                $path = null;
+                if ($request->hasFile('ivr_file')) {
+                    $filename = time().'.'.$request->file('ivr_file')->getClientOriginalExtension();
+                    $path = $request->file('ivr_file')->storeAs('ivr', $filename, 'private');
+                }
+                
+                $ivrNumber = '#IVR-' . strtoupper(uniqid());
+                $newIVR = IVR::create([
+                    'ivr_number' => $ivrNumber,
+                    'clinic_id' => $request['clinic_id'] ?? null,
+                    'brand_id' => $validated['brand_id'] ?? null,
+                    'manufacturer_id' => $validated['manufacturer_id'] ?? null,
+                    'patient_id' => $validated['patient_id'] ?? null,
+                    'ivr_file' => $path,
+                    'description' => $validated['notes'] ?? null,
+                    'eligibility_status' => 0,
+                    'submitted_at' => now(),
+                    'timestamp' => now(),
+                ]);
+                $token = Str::random(64);
+                DB::table('magic_tokens')->insert([
+                    'ivr_id'          => $newIVR->ivr_id,
+                    'manufacturer_id' => $validated['manufacturer_id'],
+                    'token'           => hash('sha256', $token),
+                    'expires_at'      => now()->addDays(60),
+                    'created_at'      => now(),
+                ]);
+
+                return [$ivr, $ivrNumber, $tokenPlain];
+            });
+
+            [$ivr, $ivrNumber, $tokenPlain] = $ivr;
+
             $email = $request->eligibility_email;
             $ivrUrl = config('app.frontend_url')
                 . '/woundmed-ivr-request?token=' . $token
@@ -188,6 +197,7 @@ class IVRRequestController extends Controller
                 'file_url'          => $path,
                 'ivr_link'      => $ivrUrl
             ]);
+            
             $emailService = new EmailService();
             $params = [
                 'to'        => $email,
@@ -302,12 +312,29 @@ class IVRRequestController extends Controller
 
     public function deleteIVRRequest(Request $request, $id)
     {
-        $ivr = IVR::findOrFail($id);
-        $ivr->delete();
-        
-        $this->logAudit($request, 'ivr_request_delete', "IVR Request Deleted: {$ivr->ivr_number}", $ivr->ivr_id);
+        try {
+            $ivr = IVR::findOrFail($id);
+            $ivr->delete();
+            
+            $this->logAudit($request, 'ivr_request_delete', "IVR Request Deleted: {$ivr->ivr_number}", $ivr->ivr_id);
 
-        return response()->json(['message' => 'IVR Request deleted successfully.']);
+            return response()->json(['message' => 'IVR Request deleted successfully.']);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $this->logAudit($request, 'delete_order', "Operation failed: {$ivr->ivr_number}", $ivr->ivr_id);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Operation failed',
+                'errors' => $e->errors(),
+            ], 422);
+        } catch (\Throwable $th) {
+            $this->logAudit($request, 'ivr_request_delete', "Failed to delete ivr request: {$ivr->ivr_number}", $ivr->ivr_id);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete order details: ' . $th->getMessage(),
+            ], 500);
+        }
     }
 
     public function archiveIVRRequest(Request $request, $id)
@@ -330,66 +357,137 @@ class IVRRequestController extends Controller
         return response()->json(['message' => 'IVR Request unarchived successfully.']);
     }
 
-    public function downloadIVRForm($id)
+    public function downloadIVRForm(Request $request, $id)
     {
-        $manufacturer = Manufacturer::findOrFail($id);
+        try {
+            $manufacturer = Manufacturer::findOrFail($id);
 
-        if (!$manufacturer->ivr_file || !Storage::disk('private')->exists($manufacturer->ivr_file)) {
-            return response()->json(['error' => 'File not found'], 404);
+// <<<<<<< Updated upstream
+//             if (!$manufacturer->ivr_file || !Storage::disk('private')->exists($manufacturer->ivr_file)) {
+//                 return response()->json(['error' => 'File not found'], 404);
+//             }
+
+//             $filename = basename($manufacturer->ivr_file);
+
+//             $this->logAudit($request, 'download_ivr_file', "Downloaded IVR file for manufacturer: {$manufacturer->manufacturer_name}", $manufacturer->manufacturer_id, 0, $request->user()?->id);
+
+//             return Storage::disk('private')->download($manufacturer->ivr_file, $filename);
+//         } catch (\Throwable $e) {
+//             \Log::critical('Downloading IVR file failed: ' . $e->getMessage());
+
+//             $this->logAudit($request, 'download_ivr_file', "Failed to download IVR file for manufacturer: {$manufacturer->manufacturer_name}", $manufacturer->manufacturer_id, 1, $request->user()?->id);
+
+//             return response()->json([
+//                 'success' => false,
+//                 'message' => 'An unexpected error occurred.'
+//             ], 500);
+//         }
+// =======
+            if (!$manufacturer->ivr_file || !Storage::disk('private')->exists($manufacturer->ivr_file)) {
+                return response()->json(['error' => 'File not found'], 404);
+            }
+
+            $path = $manufacturer->ivr_file;
+
+            // Handle encrypted files (.enc) — decrypt on-the-fly
+            if (str_ends_with($path, '.enc')) {
+                if (!Storage::disk('local')->exists($path)) {
+                    return response()->json(['error' => 'File not found'], 404);
+                }
+                $fileService = app(\App\Services\FileEncryptionService::class);
+                $fileData    = $fileService->decryptAndRetrieve($path, 'local');
+                return response($fileData['contents'], 200, [
+                    'Content-Type'        => 'application/pdf',
+                    'Content-Disposition' => 'inline; filename="ivr_form.pdf"',
+                    'Content-Length'      => strlen($fileData['contents']),
+                ]);
+            }
+
+            $this->logAudit($request, 'download_ivr_file', "Downloaded IVR file for manufacturer: {$manufacturer->manufacturer_name}", $manufacturer->manufacturer_id, 0, $request->user()?->id);
+
+            // Legacy: plain file
+            if (!Storage::disk('private')->exists($path)) {
+                return response()->json(['error' => 'File not found'], 404);
+            }
+            $filename = basename($path);
+            return Storage::disk('private')->download($path, $filename);
+        } catch (\Throwable $e) {
+            \Log::critical('Downloading IVR file failed: ' . $e->getMessage());
+
+            $this->logAudit($request, 'download_ivr_file', "Failed to download IVR file for manufacturer: {$manufacturer->manufacturer_name}", $manufacturer->manufacturer_id, 1, $request->user()?->id);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'An unexpected error occurred.'
+            ], 500);
         }
-
-        $filename = basename($manufacturer->ivr_file);
-        return Storage::disk('private')->download($manufacturer->ivr_file, $filename);
+// >>>>>>> Stashed changes
     }
 
     // magic links
     public function validateMagicLinkIVR(Request $request)
     {
+        try {
+            return DB::transaction(function () use ($request) {
+                $tokenPlain = $request->input('token');
+                $ivrId    = $request->input('ivr_id');
 
-        $tokenPlain = $request->input('token');
-        $ivrId    = $request->input('ivr_id');
+                $token = DB::table('magic_tokens')
+                    ->where('ivr_id', $ivrId)
+                    ->where('token', hash('sha256', $tokenPlain))
+                    ->first();
 
-        $token = DB::table('magic_tokens')
-            ->where('ivr_id', $ivrId)
-            ->where('token', hash('sha256', $tokenPlain))
-            ->first();
+                if (!$token) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Invalid magic link.'
+                    ], 400);
+                }
 
-        if (!$token) {
+                # Check if already used
+                if (!is_null($token->used_at)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'This access link has already been used.'
+                    ], 400);
+                }
+
+                if ($token->expires_at < now()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'This magic link has expired.'
+                    ], 400);
+                }
+
+                # VALID
+                $ivrRequests = IVR::with([
+                    'clinic',
+                    'brand.manufacturer',
+                    'manufacturer',
+                    'patient'
+                ])
+                    ->where('ivr_id', $ivrId)
+                    ->first();
+
+                $eligibilityEmail = $ivrRequests->manufacturer->eligibility_email ?? null;
+
+                $this->logAudit($request, 'ivr_magic_link_access', "Magic link accessed successfully for IVR Num. {$ivrRequests->ivr_number}", $ivrId, 0, $eligibilityEmail);
+
+                return response()->json([
+                    'success' => true,
+                    'ivr_data'   => $ivrRequests
+                ]);
+            });
+        } catch (\Throwable $e) {
+            \Log::critical('Magic link validation failed: ' . $e->getMessage());
+
+            $this->logAudit($request, 'ivr_magic_link_access', "Magic link access faild for IVR Num. {$ivrRequests->ivr_number}", $ivrId, 1, $eligibilityEmail);
+
             return response()->json([
                 'success' => false,
-                'message' => 'Invalid magic link.'
-            ], 400);
+                'message' => 'An unexpected error occurred.'
+            ], 500);
         }
-
-        # Check if already used
-        if (!is_null($token->used_at)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'This access link has already been used.'
-            ], 400);
-        }
-
-        if ($token->expires_at < now()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'This magic link has expired.'
-            ], 400);
-        }
-
-        # VALID
-        $ivrRequests = IVR::with([
-            'clinic',
-            'brand.manufacturer',
-            'manufacturer',
-            'patient'
-        ])
-            ->where('ivr_id', $ivrId)
-            ->first();
-
-        return response()->json([
-            'success' => true,
-            'ivr_data'   => $ivrRequests
-        ]);
     }
 
     public function updateMagicIVRStatus(Request $request, $ivrId)
@@ -399,66 +497,83 @@ class IVRRequestController extends Controller
             'token'              => 'required|string'
         ]);
 
-        $ivr = IVR::findOrFail($ivrId);
+        return DB::transaction(function () use ($request, $validated, $ivrId) {
+            $ivr = IVR::findOrFail($ivrId);
 
-        $ivr->update([
-            'eligibility_status' => $validated['eligibility_status']
-        ]);
+            $ivr->update([
+                'eligibility_status' => $validated['eligibility_status']
+            ]);
 
-        # Validate magic token first
-        $tokenRecord = DB::table('magic_tokens')
-            ->where('ivr_id', $ivrId)
-            ->where('token', hash('sha256', $validated['token']))
-            ->first();
-
-        if (!$tokenRecord) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Invalid magic link.'
-            ], 400);
-        }
-
-        # If already used (expired)
-        if (!is_null($tokenRecord->used_at)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'This access link has already been used.'
-            ], 400);
-        }
-
-        # Update IVR status
-        $ivr = IVR::findOrFail($ivrId);
-        $ivr->update([
-            'eligibility_status' => $validated['eligibility_status']
-        ]);
-
-        if ((int) $validated['eligibility_status'] === 1) {
-            DB::table('magic_tokens')
+            # Validate magic token first
+            $tokenRecord = DB::table('magic_tokens')
                 ->where('ivr_id', $ivrId)
-                ->update(['used_at' => now()]);
-        }
+                ->where('token', hash('sha256', $validated['token']))
+                ->first();
 
-        $this->logAudit($request, 'ivr_request_magic_update', "IVR Request Magic Link Updated: {$validated['eligibility_status']}", $ivr->ivr_id);
+            if (!$tokenRecord) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid magic link.'
+                ], 400);
+            }
 
-        return response()->json([
-            'success' => true,
-            'message' => 'IVR status updated successfully.',
-        ]);
+            # If already used (expired)
+            if (!is_null($tokenRecord->used_at)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This access link has already been used.'
+                ], 400);
+            }
+
+            # Update IVR status
+            $ivr = IVR::findOrFail($ivrId);
+            $ivr->update([
+                'eligibility_status' => $validated['eligibility_status']
+            ]);
+
+            if ((int) $validated['eligibility_status'] === 1) {
+                DB::table('magic_tokens')
+                    ->where('ivr_id', $ivrId)
+                    ->update(['used_at' => now()]);
+            }
+
+            $this->logAudit($request, 'ivr_request_magic_update', "IVR Request Magic Link Updated: {$validated['eligibility_status']}", $ivr->ivr_id);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'IVR status updated successfully.',
+            ]);
+        });
     }
 
     // live file streaming - can handle both ivr and order files
     public function viewIVRFile($filename)
     {
         $decodedFilename = urldecode($filename);
-        
+
+        // Check if it's already a full encrypted path
+        if (str_ends_with($decodedFilename, '.enc')) {
+            if (Storage::disk('local')->exists($decodedFilename)) {
+                $fileService = app(\App\Services\FileEncryptionService::class);
+                $fileData    = $fileService->decryptAndRetrieve($decodedFilename, 'local');
+                return response($fileData['contents'], 200, [
+                    'Content-Type'        => 'application/pdf',
+                    'Content-Disposition' => 'inline; filename="ivr_file.pdf"',
+                    'Content-Length'      => strlen($fileData['contents']),
+                ]);
+            }
+            return abort(404, 'File not found.');
+        }
+
+        // Legacy: plain file lookup
         $path = "ivr/" . $decodedFilename;
-        
+
         if (!Storage::disk('private')->exists($path)) {
             $path = "order/" . $decodedFilename;
-            
+
             if (!Storage::disk('private')->exists($path)) {
                 $path = $decodedFilename;
-                
+
                 if (!Storage::disk('private')->exists($path)) {
                     return abort(404, 'File not found.');
                 }

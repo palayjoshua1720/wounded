@@ -5,10 +5,17 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Traits\EncryptsData;
+use App\Traits\EncryptsFiles;
 
 class Orders extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, EncryptsData, EncryptsFiles;
+
+    /**
+     * File fields that should be encrypted
+     */
+    protected array $encryptableFiles = ['order_file'];
 
     protected $table = 'woundmed_orders';
     protected $primaryKey = 'order_id';

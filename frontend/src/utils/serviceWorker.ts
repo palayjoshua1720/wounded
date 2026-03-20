@@ -33,8 +33,8 @@ export async function registerServiceWorker() {
       }
 
       // Register new service worker with configuration
-      const registration = await navigator.serviceWorker.register('/service-worker.js', {
-        scope: '/',
+      const registration = await navigator.serviceWorker.register('/portal/service-worker.js', {
+        scope: '/portal/',
         updateViaCache: 'none'
       });
 

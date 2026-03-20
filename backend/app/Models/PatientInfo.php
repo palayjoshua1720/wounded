@@ -8,10 +8,11 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Traits\EncryptsData;
 
 class PatientInfo extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, EncryptsData;
 
     protected $table = 'woundmed_patient_info';
     protected $primaryKey = 'patient_id';

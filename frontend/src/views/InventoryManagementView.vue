@@ -546,7 +546,7 @@
                         </div>
                     </div>
             <template #actions>
-                <div class="flex justify-end space-x-3 px-6 py-4 bg-gray-50 dark:bg-gray-700/30">
+                <div class="flex justify-end space-x-3 px-6 py-4">
                     <button @click="closeUploadModal"
                         class="px-5 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm text-gray-700 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-700 transition-all duration-200 font-medium">
                         Cancel
@@ -954,8 +954,7 @@
                 </div>
             </div>
             <template #actions>
-                <div
-                    class="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700/50 border-t border-gray-200 dark:border-gray-600">
+                <div>
                     <div v-if="selectedItem" class="px-6 py-4">
                         <!-- Compact Status Bar with Actions -->
                         <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
@@ -1181,7 +1180,7 @@
             </div>
 
             <template #actions>
-                <div class="flex justify-between items-center px-6 py-4 bg-gray-50 dark:bg-gray-700/30">
+                <div class="flex justify-between items-center px-6 py-4">
                     <p class="text-xs text-gray-500 dark:text-gray-400 flex items-center">
                         <Info class="w-3.5 h-3.5 mr-1.5" />
                         Changes will be saved immediately&nbsp;&nbsp;&nbsp;&nbsp;
@@ -1238,7 +1237,7 @@
                 </div>
             </div>
             <template #actions>
-                <div class="flex justify-end space-x-3 px-6 py-4 bg-gray-50 dark:bg-gray-700/30">
+                <div class="flex justify-end space-x-3 px-6 py-4">
                     <button @click="showDeleteModal = false"
                         class="px-5 py-2.5 border-2 border-gray-300 dark:border-gray-600 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-700 transition-all duration-200 font-medium">
                         Cancel

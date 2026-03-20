@@ -755,7 +755,7 @@
             </div>
 
             <template #actions>
-                <div class="flex justify-between items-center px-6 py-4 bg-gray-50 dark:bg-gray-700/30">
+                <div class="flex justify-between items-center px-6 py-4">
                     <p class="text-xs text-gray-500 dark:text-gray-400 flex items-center">
                         <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

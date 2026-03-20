@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Traits\EncryptsData;
 
 class OtherProduct extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, EncryptsData;
 
     protected $table = 'woundmed_other_products';
     protected $primaryKey = 'other_product_id';

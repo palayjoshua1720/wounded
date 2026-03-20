@@ -98,10 +98,36 @@
 									<div class="text-sm text-gray-900 dark:text-white">{{ order.patient?.patient_name || 'Not specified' }}</div>
 								</td>
 								<td class="px-6 py-4">
-									<div class="text-sm text-gray-900 dark:text-white">
-										<div v-for="(item, idx) in order.items" :key="idx" class="mb-1">
-											{{ getBrandName(item.brandId) }} - {{ getSizeName(item.graft_id) }} × {{ item.quantity }}
+									<div class="text-sm text-gray-900 dark:text-white space-y-1 max-w-xs">
+										<template v-for="(item, idx) in order.items.slice(0, 2)" :key="`visible-${idx}`">
+											<div>
+												{{ getBrandName(item.brandId) }} - {{ getSizeName(item.graft_id) }} × {{ item.quantity }}
+											</div>
+										</template>
+
+										<div v-if="order.items.length > 2" class="flex items-center gap-2">
+											<button
+												@click="toggleItems(order.order_id)"
+												class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium flex items-center gap-1"
+											>
+												<span v-if="!expandedOrders.has(order.order_id)">... +{{ order.items.length - 2 }} more</span>
+												<span v-else>Show less</span>
+												<ChevronDown
+												class="w-4 h-4 transition-transform"
+												:class="{ 'rotate-180': expandedOrders.has(order.order_id) }"
+												/>
+											</button>
 										</div>
+
+										<template v-if="expandedOrders.has(order.order_id)">
+											<div
+												v-for="(item, idx) in order.items.slice(2)"
+												:key="`expanded-${idx}`"
+												class="pl-4 border-l-2 border-blue-200 dark:border-blue-800 mt-1"
+											>
+												{{ getBrandName(item.brandId) }} - {{ getSizeName(item.graft_id) }} × {{ item.quantity }}
+											</div>
+										</template>
 									</div>
 								</td>
 								<td class="px-6 py-4 whitespace-nowrap">
@@ -285,50 +311,51 @@
 							</table>
 						</div>
 					</div>
-					<div>
-						<h3 class="text-lg font-medium border-t text-gray-900 dark:text-white mb-4">Product Items</h3>
-						<div class="overflow-x-auto">
-							<!-- Other Products Table -->
-							<div v-if="selectedOrder.other_product_items && selectedOrder.other_product_items.length > 0">
-								<table class="w-full">
-									<thead class="bg-gray-50 dark:bg-gray-700">
-										<tr>
-											<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Product Name</th>
-											<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Quantity</th>
-											<th class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Price</th>
-										</tr>
-									</thead>
-									<tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-										<tr v-for="(item, idx) in selectedOrder.other_product_items" :key="`other-${idx}`">
-											<td class="px-4 py-3 text-sm text-gray-900 dark:text-white">{{ getOtherProductName(item.other_product_id) }}</td>
-											<td class="px-4 py-3 text-sm text-gray-900 dark:text-white">{{ item.quantity }}</td>
-											<td class="px-4 py-3 text-right text-sm text-gray-900 dark:text-white">${{ item.price.toFixed(2) }}</td>
-										</tr>
-									</tbody>
-									<tfoot class="bg-gray-50 dark:bg-gray-700">
-										<tr>
-											<td colspan="2" class="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white text-right">Other Products Total:</td>
-											<td class="px-4 py-3 text-right text-sm font-bold text-gray-900 dark:text-white">${{ selectedOrder.other_product_items.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2) }}</td>
-										</tr>
-									</tfoot>
-								</table>
-							</div>
 
-							<!-- Overall Total -->
-							<div v-if="(selectedOrder.items && selectedOrder.items.length > 0) || (selectedOrder.other_product_items && selectedOrder.other_product_items.length > 0)" 
-								class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-								<div class="text-right">
-									<span class="text-lg font-bold text-gray-900 dark:text-white">
-										Overall Total: ${{ 
-											(
-												(selectedOrder.items?.reduce((sum, item) => sum + (item.asp * item.quantity), 0) || 0) + 
-												(selectedOrder.other_product_items?.reduce((sum, item) => sum + (item.price * item.quantity), 0) || 0)
-											).toFixed(2) }}
-									</span>
-								</div>
-							</div>
+					<div v-if="selectedOrder.other_product_items?.length" class="mt-8">
+						<h3 class="text-lg font-medium border-t text-gray-900 dark:text-white mb-4 pt-6">
+							Additional Products
+						</h3>
+						<div class="overflow-x-auto">
+							<table class="w-full">
+								<thead class="bg-gray-50 dark:bg-gray-700">
+									<tr>
+										<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Product</th>
+										<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Quantity</th>
+										<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Unit Price</th>
+										<th class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Subtotal</th>
+									</tr>
+								</thead>
+								<tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+									<tr v-for="(product, idx) in selectedOrder.other_product_items" :key="idx">
+										<td class="px-4 py-3 text-sm text-gray-900 dark:text-white">
+											{{ getOtherProductName(product.other_product_id) || 'Unknown Product' }}
+										</td>
+										<td class="px-4 py-3 text-sm text-gray-900 dark:text-white text-center">
+											{{ product.quantity }}
+										</td>
+										<td class="px-4 py-3 text-sm text-gray-900 dark:text-white text-right">
+											${{ (product.price || 0).toFixed(2) }}
+										</td>
+										<td class="px-4 py-3 text-right text-sm font-medium text-gray-900 dark:text-white">
+											${{ ((product.price || 0) * (product.quantity || 0)).toFixed(2) }}
+										</td>
+									</tr>
+								</tbody>
+								<tfoot class="bg-gray-50 dark:bg-gray-700">
+									<tr>
+										<td colspan="3" class="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white text-right">
+											Additional Subtotal:
+										</td>
+										<td class="px-4 py-3 text-right text-sm font-bold text-gray-900 dark:text-white">
+											${{ selectedOrder.other_product_items.reduce((sum, p) => sum + ((p.price || 0) * (p.quantity || 0)), 0).toFixed(2) }}
+										</td>
+									</tr>
+								</tfoot>
+							</table>
 						</div>
 					</div>
+
 					<div v-if="selectedOrder.notes">
 						<div class="flex items-center space-x-2 mb-2">
 							<FileTextIcon class="w-5 h-5 text-gray-600" />
@@ -397,6 +424,7 @@
 						</div>
 					</div>
 
+					<!-- order file -->
 					<h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4 border-t pt-5">
 						Order File
 					</h3>
@@ -415,6 +443,12 @@
 								class="w-full h-96 rounded-lg"
 								frameborder="0"
 							></iframe>
+						</div>
+						<div v-else-if="isDocFile(filePreviewUrl)" class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4 bg-gray-50 dark:bg-gray-700/50">
+							<div v-if="docContent" class="prose dark:prose-invert max-w-none overflow-y-auto max-h-96" v-html="docContent"></div>
+							<div v-else class="text-center py-8">
+								<p class="text-gray-600 dark:text-gray-400">Loading document...</p>
+							</div>
 						</div>
 						<div v-else class="text-center py-8 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700/50">
 							<File class="w-16 h-16 text-gray-400 mx-auto mb-3" />
@@ -550,7 +584,7 @@
 					class="flex items-center gap-2 text-sm text-gray-700 mt-2 mb-2"
 					>
 						<span class="font-semibold text-gray-600 dark:text-white">
-							Eligibility Notification Email:
+							Order Notification Email:
 						</span>
 						<span class="text-gray-900 dark:text-white">
 							{{ selectedIVR.manufacturer?.order_email || '—' }}
@@ -699,7 +733,7 @@
 				</div>
 
 				<!-- Product Items -->
-				<div :class="{ 'opacity-40 pointer-events-none': !isSelectedIVREligible }">
+				<div v-if="formData.products.length > 0" :class="{ 'opacity-40 pointer-events-none': !isSelectedIVREligible }">
 					<div class="flex items-center justify-between mb-4">
 						 <div class="flex items-center gap-2 mb-2">
 							<Layers class="w-5 h-5 text-green-500" />
@@ -868,7 +902,7 @@
 
 								<div class="inline-flex items-center gap-1">
 								<a 
-									:href="existingFile.url" 
+									:href="`${API_URL}/private-file/${existingFile.url}`" 
 									target="_blank"
 									class="text-blue-600 hover:underline"
 								>
@@ -951,6 +985,7 @@ import api from '@/services/api'
 import { toast } from 'vue3-toastify'
 import 'vue3-toastify/dist/index.css'
 import Swal from 'sweetalert2'
+import mammoth from 'mammoth'
 
 interface Order {
 	order_id: number;
@@ -1065,6 +1100,7 @@ interface OrderIssue {
 	requested: number;
 	size?: string;
 	available?: number;
+	message?: string;
 }
 
 type OrderItem = {
@@ -1135,6 +1171,7 @@ const searchTerm = ref('')
 const statusFilter = ref('all')
 
 const selectedOrder = ref<Order | null>(null)
+const docContent = ref<string>('')
 const showOrderModal = ref(false)
 const showCreateForm = ref(false)
 const isCreateMode = computed(() => showCreateForm.value);
@@ -1458,6 +1495,7 @@ function resetCreateForm() {
 		trackingNumber: '',
 		order_file: ''
 	}
+	selectedFile.value = null
 	previousIvrId.value = null
 }
 
@@ -1518,17 +1556,46 @@ async function handleCreateOrder() {
             })
         }
 
-        // Stock violation → BLOCK submission
-        if (graft && item.quantity > graft.stock) {
-            stockIssues.push({
-                type: 'stock',
-                sourceType: 'item',
-                itemIndex: idx + 1,
-                brandName: brand?.brand_name || '—',
-                size: graft.size,
-                available: graft.stock,
-                requested: item.quantity
-            })
+        // Stock violation → BLOCK submission (only for increases in edit mode)
+        if (graft) {
+            let requiredStock = item.quantity;
+            
+            // For edit mode, only check stock increases
+            if (showEditForm.value && selectedOrderForEdit.value) {
+                const originalItem = selectedOrderForEdit.value.items?.find(
+                    (origItem: any) => origItem.graft_id?.toString() === item.sizeId
+                );
+                const originalQuantity = originalItem?.quantity ?? 0;
+                
+                // Only validate if quantity is increasing
+                if (item.quantity > originalQuantity) {
+                    requiredStock = item.quantity - originalQuantity;
+                    if (requiredStock > graft.stock) {
+                        stockIssues.push({
+                            type: 'stock',
+                            sourceType: 'item',
+                            itemIndex: idx + 1,
+                            brandName: brand?.brand_name || '—',
+                            size: graft.size,
+                            available: graft.stock,
+                            requested: requiredStock,
+                            message: `Need ${requiredStock} more units (increasing from ${originalQuantity} to ${item.quantity})`
+                        });
+                    }
+                }
+            } 
+            // For create mode, check absolute quantity
+            else if (item.quantity > graft.stock) {
+                stockIssues.push({
+                    type: 'stock',
+                    sourceType: 'item',
+                    itemIndex: idx + 1,
+                    brandName: brand?.brand_name || '—',
+                    size: graft.size,
+                    available: graft.stock,
+                    requested: item.quantity
+                });
+            }
         }
     })
 
@@ -1548,7 +1615,34 @@ async function handleCreateOrder() {
             return
         }
 
-        if (product.quantity > otherProduct.stock) {
+        let requiredStock = product.quantity;
+        
+        // For edit mode, only check stock increases
+        if (showEditForm.value && selectedOrderForEdit.value) {
+            const originalProduct = selectedOrderForEdit.value.other_product_items?.find(
+                (origProd: any) => origProd.other_product_id?.toString() === product.otherProductId
+            );
+            const originalQuantity = originalProduct?.quantity ?? 0;
+            
+            // Only validate if quantity is increasing
+            if (product.quantity > originalQuantity) {
+                requiredStock = product.quantity - originalQuantity;
+                if (requiredStock > otherProduct.stock) {
+                    stockIssues.push({
+                        type: 'stock',
+                        sourceType: 'product',
+                        itemIndex: idx + 1,
+                        brandName: otherProduct.product_name,
+                        size: `(${otherProductTypeMap[otherProduct.product_type]})`,
+                        available: otherProduct.stock,
+                        requested: requiredStock,
+                        message: `Need ${requiredStock} more units (increasing from ${originalQuantity} to ${product.quantity})`
+                    });
+                }
+            }
+        }
+        // For create mode, check absolute quantity
+        else if (product.quantity > otherProduct.stock) {
             stockIssues.push({
                 type: 'stock',
                 sourceType: 'product',
@@ -1557,7 +1651,7 @@ async function handleCreateOrder() {
                 size: `(${otherProductTypeMap[otherProduct.product_type]})`,
                 available: otherProduct.stock,
                 requested: product.quantity
-            })
+            });
         }
     })
 
@@ -1570,11 +1664,11 @@ async function handleCreateOrder() {
 
         stockIssues.forEach(issue => {
             const label = issue.sourceType === 'product' ? 'Product' : 'Item'
+            const displayMessage = issue.message || `Requested: <strong>${issue.requested}</strong><br>Available: <strong>${issue.available}</strong>`
             message += `
                 <div class="border-l-4 border-red-500 pl-3">
                     <strong>${label} #${issue.itemIndex}</strong> – ${issue.brandName} ${issue.size || ''}<br>
-                    Requested: <strong>${issue.requested}</strong><br>
-                    Available: <strong>${issue.available}</strong>
+                    ${displayMessage}
                 </div>
             `
         })
@@ -1590,7 +1684,7 @@ async function handleCreateOrder() {
             allowOutsideClick: false
         })
 
-        return   // ← STOP here — do NOT proceed to submission
+        return
     }
 
     // ────────────────────────────────────────────────
@@ -1634,10 +1728,6 @@ async function handleCreateOrder() {
         }
     }
 
-    // ────────────────────────────────────────────────
-    //  If we reached here → no blocking stock issues
-    //  (MUE was either ok or user confirmed)
-    // ────────────────────────────────────────────────
     addNewOrder()
 }
 
@@ -1657,6 +1747,7 @@ async function editOrder(order: Order) {
 	selectedOrderForEdit.value = fullOrder;
 	showCreateForm.value = false;
 	showEditForm.value = true;
+	selectedFile.value = null;
 
 	formData.value = {
 		clinicId: fullOrder.clinic?.clinic_id?.toString() || '',
@@ -1675,7 +1766,7 @@ async function editOrder(order: Order) {
 		products: [],
 		manufacturerId: fullOrder.manufacturer_id?.toString() || '',
 		trackingNumber: fullOrder.tracking_num || '',
-		order_file: fullOrder.order_file || ''
+		order_file: fullOrder.order_file || '',
 	};
 
 	showFormModal.value = true;
@@ -1696,7 +1787,7 @@ async function editOrder(order: Order) {
 		graftStock: Number(item.graftStock ?? 0)
 	}));
 
-	formData.value.products = (fullOrder.products ?? []).map((p: any, idx: number) => ({
+	formData.value.products = (fullOrder.other_product_items ?? []).map((p: any, idx: number) => ({
 		id: String(p.id ?? idx),
 		otherProductId: String(p.other_product_id ?? ''),
 		brandId: String(p.brandId ?? p.brand_id ?? ''),
@@ -1981,6 +2072,76 @@ function isPDFFile(filename: string) {
     return filename.toLowerCase().endsWith('.pdf')
 }
 
+function isDocFile(filename: string) {
+    if (!filename) return false
+    const ext = filename.toLowerCase().split('.').pop() || ''
+    return ['doc', 'docx'].includes(ext)
+}
+
+const loadDocxContent = async (fileUrl: string) => {
+  try {
+    if (!fileUrl) {
+      docContent.value = '<p class="text-yellow-600">No file selected.</p>';
+      return;
+    }
+
+    console.log('[DOCX] Starting fetch for:', fileUrl);
+
+    const fullUrl = `${API_URL}/private-file/${encodeURIComponent(fileUrl)}`;
+    console.log('[DOCX] Full URL:', fullUrl);
+
+    const response = await fetch(fullUrl, {
+      method: 'GET',
+      credentials: 'include',           // if using cookies/sessions
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('auth_token') || ''}`,
+        Accept: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      },
+    });
+
+    console.log('[DOCX] Response status:', response.status);
+    console.log('[DOCX] Content-Type:', response.headers.get('content-type'));
+    console.log('[DOCX] Content-Length:', response.headers.get('content-length'));
+
+    if (!response.ok) {
+      const text = await response.text();
+      console.error('[DOCX] Server error body:', text);
+      throw new Error(`Server returned ${response.status} - ${response.statusText}`);
+    }
+
+    // Force array buffer
+    const arrayBuffer = await response.arrayBuffer();
+    console.log('[DOCX] ArrayBuffer received, byte length:', arrayBuffer.byteLength);
+
+    if (arrayBuffer.byteLength === 0) {
+      throw new Error('Received empty file');
+    }
+
+    // Try Mammoth
+    const result = await mammoth.convertToHtml({ arrayBuffer });
+
+    console.log('[DOCX] Mammoth success - messages:', result.messages);
+
+    docContent.value = result.value || '<p class="text-yellow-600">Document is empty.</p>';
+
+  } catch (err: any) {
+    console.error('[DOCX] Full error:', err);
+    let userMsg = 'Error loading document. Please try downloading it instead.';
+
+    if (err.message.includes('404')) {
+      userMsg = 'File not found on server.';
+    } else if (err.message.includes('CORS')) {
+      userMsg = 'CORS restriction — cannot access file from JavaScript.';
+    } else if (err.message.includes('empty')) {
+      userMsg = 'File appears to be empty or corrupted.';
+    } else if (err.name === 'TypeError') {
+      userMsg = 'Preview not available for this file format. Please download to view (.doc files are not supported for inline preview).';
+    }
+
+    docContent.value = `<p class="text-red-600 font-medium">${userMsg}</p>`;
+  }
+};
+
 const existingFile = computed(() => {
     return formData.value.order_file ? {
         name: formData.value.order_file.split('/').pop(),
@@ -2190,8 +2351,6 @@ async function addNewOrder(){
 		)
 	)
 
-	console.log('order file:', selectedFile.value)
-
 	if (selectedFile.value) {
 		payload.append('order_file', selectedFile.value)
 	}
@@ -2214,7 +2373,6 @@ async function addNewOrder(){
 				payload,
 				{
 					headers: {
-						Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
 						'Content-Type': 'multipart/form-data'
 					}
 				}
@@ -2228,12 +2386,11 @@ async function addNewOrder(){
 			const { data } = await api.put(
                 `/management/order/update/${selectedOrderForEdit.value?.order_id}/updateorder`,
                 payload,
-                {
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                    }
-                }
+				{
+					// headers: {
+					// 	'Content-Type': 'multipart/form-data'
+					// }
+				}
          	)
 
 			Swal.close()
@@ -2401,10 +2558,20 @@ async function sendFollowUp(order: Order){
 		Swal.close()
 		toast.success(data.message || "Follow-up email sent successfully!")
 		getAllOrders(1)
+		closeForm();
 
 	} catch (error: any) {
 		const msg = error.response?.data?.message || "Failed to send follow-up."
 		toast.error(msg)
+	}
+}
+
+const expandedOrders = ref(new Set<number>())
+function toggleItems(orderId: number) {
+	if (expandedOrders.value.has(orderId)) {
+		expandedOrders.value.delete(orderId)
+	} else {
+		expandedOrders.value.add(orderId)
 	}
 }
 
@@ -2425,6 +2592,14 @@ watch(() => formData.value.items, (items) => {
 		item.totalAsp = item.asp * item.quantity
 	})
 }, { deep: true })
+
+watch(() => selectedOrder.value?.order_file, (newFile) => {
+	if (newFile && isDocFile(newFile)) {
+		loadDocxContent(newFile)
+	} else {
+		docContent.value = ''
+	}
+})
 
 watch(() => formData.value.ivrId, (newVal, oldVal) => {
 	previousIvrId.value = oldVal

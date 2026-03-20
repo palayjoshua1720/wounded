@@ -8,10 +8,17 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Traits\EncryptsData;
+use App\Traits\EncryptsFiles;
 
 class Brand extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, EncryptsData, EncryptsFiles;
+
+    /**
+     * File fields that should be encrypted
+     */
+    protected array $encryptableFiles = ['logo'];
 
     protected $table = 'woundmed_brands';
     protected $primaryKey = 'brand_id';
