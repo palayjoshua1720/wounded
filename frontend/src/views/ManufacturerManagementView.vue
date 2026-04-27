@@ -3,8 +3,7 @@
     <!-- Header -->
     <div class="flex items-center justify-between">
       <div>
-        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Manufacturer Management</h1>
-        <p class="text-gray-600 dark:text-gray-400">View and update manufacturer information with ease.</p>
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Manufacturer Management</h1>
       </div>
       <button @click="selectedManufacturer = null; showCreateForm = true"
         class="flex items-center px-5 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg group">

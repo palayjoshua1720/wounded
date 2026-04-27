@@ -3,8 +3,7 @@
 		<!-- Header -->
 		<div class="flex items-center justify-between">
 			<div>
-				<h1 class="text-2xl font-bold text-gray-900 dark:text-white">IVR Management</h1>
-				<p class="text-gray-600 dark:text-gray-400">Manage insurance verification requests</p>
+				<h1 class="text-3xl font-bold text-gray-900 dark:text-white">IVR Management</h1>
 			</div>
 		</div>
 
@@ -21,61 +20,63 @@
 				<div class="flex flex-col sm:flex-row gap-4">
 					<div class="relative">
 						<Funnel class="absolute left-3 top-3.5 h-4 w-4 text-gray-500 dark:text-gray-400" />
-						<select
-						v-model="statusFilter"
-						class="pl-10 pr-8 py-3.5 border-0 bg-gray-50 dark:bg-gray-700/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-gray-700 text-gray-900 dark:text-white appearance-none transition-all duration-200"
-						>
+						<select v-model="statusFilter"
+							class="pl-10 pr-8 py-3.5 border-0 bg-gray-50 dark:bg-gray-700/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-gray-700 text-gray-900 dark:text-white appearance-none transition-all duration-200">
 							<option value="all">All Status</option>
 							<option value="pending">Pending</option>
 							<option value="eligible">Eligible</option>
 							<option value="not_eligible">Not Eligible</option>
 						</select>
 						<ChevronDown
-                            class="absolute right-3 top-3.5 h-4 w-4 text-gray-500 dark:text-gray-400 pointer-events-none" />
+							class="absolute right-3 top-3.5 h-4 w-4 text-gray-500 dark:text-gray-400 pointer-events-none" />
 					</div>
 				</div>
 				<div class="relative">
 					<label for="per-page" class="text-sm text-gray-700 dark:text-gray-300">Rows:</label>
-					<select
-						id="per-page"
-						v-model="itemsPerPage"
-						class="pl-4 pr-8 py-3.5 border-0 bg-gray-50 dark:bg-gray-700/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-gray-700 text-gray-900 dark:text-white appearance-none transition-all duration-200"
-					>
+					<select id="per-page" v-model="itemsPerPage"
+						class="pl-4 pr-8 py-3.5 border-0 bg-gray-50 dark:bg-gray-700/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-gray-700 text-gray-900 dark:text-white appearance-none transition-all duration-200">
 						<option value="10">10</option>
 						<option value="25">25</option>
 						<option value="50">50</option>
 					</select>
 					<ChevronDown
-                            class="absolute right-3 top-3.5 h-4 w-4 text-gray-500 dark:text-gray-400 pointer-events-none" />
+						class="absolute right-3 top-3.5 h-4 w-4 text-gray-500 dark:text-gray-400 pointer-events-none" />
 				</div>
 			</div>
 		</div>
 
 		<!-- IVR Table -->
-		<div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+		<div
+			class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
 			<div class="overflow-x-auto">
 				<table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
 					<thead class="bg-gray-50/80 dark:bg-gray-700/50 backdrop-blur-sm">
 						<tr>
-							<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+							<th
+								class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
 								Patient
 							</th>
-							<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+							<th
+								class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
 								Clinic
 							</th>
-							<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+							<th
+								class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
 								Manufacturer
 							</th>
-							<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+							<th
+								class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
 								Submitted
 							</th>
-							<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+							<th
+								class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
 								Eligibility Status
 							</th>
 							<!-- <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
 								Expiry
 							</th> -->
-							<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+							<th
+								class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
 								Actions
 							</th>
 						</tr>
@@ -83,19 +84,19 @@
 					<tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
 						<TableLoader v-if="tableLoader" :colspan="7" />
 						<template v-else>
-							<tr
-							v-for="ivr in filteredIVRRequest"
-							:key="ivr.ivr_id"
-							class="hover:bg-gray-50 dark:hover:bg-gray-700 "
-							>
+							<tr v-for="ivr in filteredIVRRequest" :key="ivr.ivr_id"
+								class="hover:bg-gray-50 dark:hover:bg-gray-700 ">
 								<td class="px-6 py-3 whitespace-nowrap">
 									<div class="flex items-center">
-										<div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+										<div
+											class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
 											<userProfile class="w-5 h-5 text-green-600" />
 										</div>
 										<div class="ml-4">
-											<div class="text-sm text-gray-900 dark:text-white">{{ ivr.patient?.patient_name }}</div>
-											<div class="text-sm text-gray-500 dark:text-gray-400">{{ ivr.patient?.email }}</div>
+											<div class="text-sm text-gray-900 dark:text-white">{{
+												ivr.patient?.patient_name }}</div>
+											<div class="text-sm text-gray-500 dark:text-gray-400">{{ ivr.patient?.email
+											}}</div>
 										</div>
 									</div>
 								</td>
@@ -111,20 +112,16 @@
 									{{ ivr.submitted_at ? formatDateTime(ivr.submitted_at) : 'N/A' }}
 								</td>
 								<td class="px-6 py-3 whitespace-nowrap">
-									<button
-										@click="handleToggleStatus(ivr.ivr_id)"
-										:class="[
+									<button @click="handleToggleStatus(ivr.ivr_id)" :class="[
 										'flex items-center gap-2 px-2.5 py-0.5 rounded-full text-xs font-medium transition-colors',
 										ivr.ivr_status === 1
 											? ivrStatus[1].classes
 											: ivrEligibilityStatus[ivr.eligibility_status]?.classes
-										]"
-										:title="ivr.ivr_status === 1 ? 'Archived' : 'Toggle Status'"
-									>
+									]" :title="ivr.ivr_status === 1 ? 'Archived' : 'Toggle Status'">
 										<span>
-										{{ ivr.ivr_status === 1
-											? ivrStatus[1].label
-											: ivrEligibilityStatus[ivr.eligibility_status]?.label }}
+											{{ ivr.ivr_status === 1
+												? ivrStatus[1].label
+												: ivrEligibilityStatus[ivr.eligibility_status]?.label }}
 										</span>
 									</button>
 								</td>
@@ -132,11 +129,9 @@
 									{{ ivr.submitted_at ? formatDateTime(ivr.submitted_at) : 'N/A' }}
 								</td> -->
 								<td class="px-6 py-3 whitespace-nowrap text-sm font-medium space-x-2">
-									<button
-									@click="selectedIvrRequest = ivr; showUserDetailsModal = true"
-									class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
-									title="View Details"
-									>
+									<button @click="selectedIvrRequest = ivr; showUserDetailsModal = true"
+										class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
+										title="View Details">
 										<Eye class="w-5 h-4" />
 									</button>
 									<!-- <button
@@ -174,12 +169,12 @@
 
 			<div v-if="filteredIVRRequest.length === 0 && !tableLoader" class="text-center py-12">
 				<div
-                    class="mx-auto h-16 w-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mb-4">
-                    <FileXIcon class="h-8 w-8 text-gray-400 dark:text-gray-500" />
-                </div>
-                <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-1">No IVR Request found.</h3>
-                <p class="text-gray-500 dark:text-gray-400 max-w-md mx-auto">Try adjusting your search or filter to find
-                    what you're looking for.</p>
+					class="mx-auto h-16 w-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mb-4">
+					<FileXIcon class="h-8 w-8 text-gray-400 dark:text-gray-500" />
+				</div>
+				<h3 class="text-lg font-medium text-gray-900 dark:text-white mb-1">No IVR Request found.</h3>
+				<p class="text-gray-500 dark:text-gray-400 max-w-md mx-auto">Try adjusting your search or filter to find
+					what you're looking for.</p>
 			</div>
 
 			<template v-if="!tableLoader">
@@ -191,11 +186,9 @@
 		<BaseModal v-model="showUserDetailsModal" title="IVR Request Details">
 			<template v-if="selectedIvrRequest">
 				<div class="space-y-4">
-					<div
-						class="flex items-center bg-gradient-to-r from-green-50 to-emerald-50
+					<div class="flex items-center bg-gradient-to-r from-green-50 to-emerald-50
 						dark:from-green-900/20 dark:to-emerald-900/20
-						p-4 rounded-xl border border-green-100 dark:border-green-800 shadow-sm"
-					>
+						p-4 rounded-xl border border-green-100 dark:border-green-800 shadow-sm">
 						<div class="p-3 bg-green-600 text-white rounded-lg shadow-md mr-3">
 							<ShieldPlus class="w-6 h-6" />
 						</div>
@@ -208,13 +201,10 @@
 								</span>
 							</p>
 
-							<span
-								v-if="ivrStatus[selectedIvrRequest.ivr_status]"
-								:class="[
-									'mt-1 inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium w-fit whitespace-nowrap',
-									ivrStatus[selectedIvrRequest.ivr_status].classes
-								]"
-							>
+							<span v-if="ivrStatus[selectedIvrRequest.ivr_status]" :class="[
+								'mt-1 inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium w-fit whitespace-nowrap',
+								ivrStatus[selectedIvrRequest.ivr_status].classes
+							]">
 								<CircleCheck class="w-4 h-4" />
 								{{ ivrStatus[selectedIvrRequest.ivr_status].label }}
 							</span>
@@ -242,11 +232,10 @@
 									<CircleCheckBig class="w-5 h-5 text-green-500" />
 									<div>
 										<p class="text-sm text-gray-700">Eligibiltiy Status</p>
-										<p
-											v-if="ivrEligibilityStatus[Number(selectedIvrRequest.eligibility_status)]"
-											:class="['inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium', ivrEligibilityStatus[Number(selectedIvrRequest.eligibility_status)].classes]"
-										>
-											{{ ivrEligibilityStatus[Number(selectedIvrRequest.eligibility_status)].label }}
+										<p v-if="ivrEligibilityStatus[Number(selectedIvrRequest.eligibility_status)]"
+											:class="['inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium', ivrEligibilityStatus[Number(selectedIvrRequest.eligibility_status)].classes]">
+											{{ ivrEligibilityStatus[Number(selectedIvrRequest.eligibility_status)].label
+											}}
 										</p>
 									</div>
 								</div>
@@ -263,21 +252,23 @@
 									<Calendar class="w-5 h-5 text-gray-500" />
 									<div>
 										<p class="text-sm text-gray-700">Date Verified</p>
-										<p class="text-gray-900">{{ formatDate(selectedIvrRequest.verified_at) ? formatDate(selectedIvrRequest.verified_at) : 'N/A' }}</p>
+										<p class="text-gray-900">{{ formatDate(selectedIvrRequest.verified_at) ?
+											formatDate(selectedIvrRequest.verified_at) : 'N/A' }}</p>
 									</div>
 								</div>
 							</div>
 						</div>
 					</div>
 
-					<div class="mt-4 p-4 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm">
+					<div
+						class="mt-4 p-4 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm">
 						<div class="flex items-start space-x-3">
 							<NotebookPen class="w-5 h-5 text-pink-500 mt-0.5" />
 							<div>
-							<p class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Notes</p>
-							<p class="text-gray-900 dark:text-gray-100 whitespace-pre-line">
-								{{ selectedIvrRequest.description || 'No notes provided.' }}
-							</p>
+								<p class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Notes</p>
+								<p class="text-gray-900 dark:text-gray-100 whitespace-pre-line">
+									{{ selectedIvrRequest.description || 'No notes provided.' }}
+								</p>
 							</div>
 						</div>
 					</div>
@@ -292,7 +283,9 @@
 										<p class="text-sm text-blue-700">
 											<strong>Manufacturer: </strong>
 										</p>
-										<p class="text-sm text-blue-700">{{ selectedIvrRequest.manufacturer?.manufacturer_name || '--' }} ({{ selectedIvrRequest.manufacturer?.contact_person || '--' }})</p>
+										<p class="text-sm text-blue-700">{{
+											selectedIvrRequest.manufacturer?.manufacturer_name || '--' }} ({{
+												selectedIvrRequest.manufacturer?.contact_person || '--' }})</p>
 									</div>
 								</div>
 							</div>
@@ -301,15 +294,12 @@
 									<p class="text-sm text-blue-700">
 										<strong>Submitted IVR Form:</strong>
 									</p>
-									
+
 									<div class="flex items-center space-x-3">
-										<button
-											type="button"
-											v-if="selectedIvrRequest.manufacturer?.filepath" 
-											@click="downloadIVRForm(selectedIvrRequest.manufacturer?.manufacturer_id)" 
+										<button type="button" v-if="selectedIvrRequest.manufacturer?.filepath"
+											@click="downloadIVRForm(selectedIvrRequest.manufacturer?.manufacturer_id)"
 											target="_blank"
-											class="flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-md shadow hover:bg-blue-700 active:bg-blue-800 transition"
-										>
+											class="flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-md shadow hover:bg-blue-700 active:bg-blue-800 transition">
 											<Download class="w-5 h-5" />
 											Download Form
 										</button>
@@ -320,25 +310,23 @@
 						</div>
 					</div>
 
-					<div v-if="filePreviewUrl" class="mt-2 border rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800 p-3">
-						<div v-if="isImageFile(filePreviewUrl)" class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4 bg-gray-50 dark:bg-gray-700/50">
-							<img 
-								:src="selectedIvrRequest.filepath" 
-								:alt="selectedIvrRequest.filepath"
-								class="max-w-full h-auto rounded-lg shadow-md"
-								
-							/>
+					<div v-if="filePreviewUrl"
+						class="mt-2 border rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800 p-3">
+						<div v-if="isImageFile(filePreviewUrl)"
+							class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4 bg-gray-50 dark:bg-gray-700/50">
+							<img :src="selectedIvrRequest.filepath" :alt="selectedIvrRequest.filepath"
+								class="max-w-full h-auto rounded-lg shadow-md" />
 						</div>
-						<div v-else-if="isPDFFile(filePreviewUrl)" class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4 bg-gray-50 dark:bg-gray-700/50">
-							<iframe 
-								:src="selectedIvrRequest.filepath" 
-								class="w-full h-96 rounded-lg"
-								frameborder="0"
-							></iframe>
+						<div v-else-if="isPDFFile(filePreviewUrl)"
+							class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4 bg-gray-50 dark:bg-gray-700/50">
+							<iframe :src="selectedIvrRequest.filepath" class="w-full h-96 rounded-lg"
+								frameborder="0"></iframe>
 						</div>
-						<div v-else class="text-center py-8 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700/50">
+						<div v-else
+							class="text-center py-8 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700/50">
 							<File class="w-16 h-16 text-gray-400 mx-auto mb-3" />
-							<p class="text-sm text-gray-500 dark:text-gray-400 font-medium">Preview not available for this file type</p>
+							<p class="text-sm text-gray-500 dark:text-gray-400 font-medium">Preview not available for
+								this file type</p>
 							<p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Download to view the file</p>
 						</div>
 					</div>
@@ -347,7 +335,8 @@
 		</BaseModal>
 
 		<!-- Create/Edit User Form Modal -->
-		<BaseModal v-model="showFormModal" :title="showCreateForm ? 'Submit New IVR Request' : 'Edit IVR Request Details'">
+		<BaseModal v-model="showFormModal"
+			:title="showCreateForm ? 'Submit New IVR Request' : 'Edit IVR Request Details'">
 			<form @submit.prevent="handleSubmitForm" class="space-y-4">
 				<div class="grid grid-cols-2 gap-4">
 					<div>
@@ -355,17 +344,11 @@
 							<userProfile class="w-5 h-5 text-green-600" />
 							<span>Patient<span class="text-red-500">*</span></span>
 						</label>
-						<select
-							v-model="formData.patient_id"
-							required
-							class="mt-1 w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200"
-						>
+						<select v-model="formData.patient_id" required
+							class="mt-1 w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200">
 							<option disabled value="">-- Select Patient --</option>
-							<option 
-								v-for="patient in patientData" 
-								:key="patient.patient_id" 
-								:value="patient.patient_id"
-							>
+							<option v-for="patient in patientData" :key="patient.patient_id"
+								:value="patient.patient_id">
 								{{ patient.patient_name }}
 							</option>
 						</select>
@@ -375,21 +358,15 @@
 							<Package class="w-5 h-5 text-green-600" />
 							<span>Manufacturer</span>
 						</label>
-						<select
-							:disabled="!formData.patient_id"
-							v-model="formData.manufacturer_id"
-							class="mt-1 w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200
-							disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400"
-						>
+						<select :disabled="!formData.patient_id" v-model="formData.manufacturer_id" class="mt-1 w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200
+							disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400">
 							<option disabled value="">-- Select Manufacturer --</option>
-							<option 
-								v-for="manufacturer in manufacturerData" 
-								:key="manufacturer.manufacturer_id" 
+							<option v-for="manufacturer in manufacturerData" :key="manufacturer.manufacturer_id"
 								:value="manufacturer.manufacturer_id"
 								:disabled="isCreateMode && hasExistingIVR(Number(formData.patient_id), Number(manufacturer.manufacturer_id))"
-								class="disabled:opacity-40 disabled:bg-gray-200 disabled:text-gray-400"
-							>
-								{{ manufacturer.manufacturer_name }} {{ hasExistingIVR(Number(formData.patient_id), Number(manufacturer.manufacturer_id)) ? ' (Existing IVR)' : '' }}
+								class="disabled:opacity-40 disabled:bg-gray-200 disabled:text-gray-400">
+								{{ manufacturer.manufacturer_name }} {{ hasExistingIVR(Number(formData.patient_id),
+									Number(manufacturer.manufacturer_id)) ? ' (Existing IVR)' : '' }}
 							</option>
 						</select>
 					</div>
@@ -398,20 +375,15 @@
 							<Package class="w-5 h-5 text-green-600" />
 							<span>Manufacturer</span>
 						</label>
-						<select
-							v-model="formData.manufacturer_id"
-							class="mt-1 w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200
-							disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400"
-						>
+						<select v-model="formData.manufacturer_id" class="mt-1 w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200
+							disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400">
 							<option disabled value="">-- Select Manufacturer --</option>
-							<option 
-								v-for="manufacturer in manufacturerData" 
-								:key="manufacturer.manufacturer_id" 
+							<option v-for="manufacturer in manufacturerData" :key="manufacturer.manufacturer_id"
 								:value="manufacturer.manufacturer_id"
 								:disabled="isCreateMode && hasExistingIVR(Number(formData.patient_id), Number(manufacturer.manufacturer_id))"
-								class="disabled:opacity-40 disabled:bg-gray-200 disabled:text-gray-400"
-							>
-								{{ manufacturer.manufacturer_name }} {{ hasExistingIVR(Number(formData.patient_id), Number(manufacturer.manufacturer_id)) ? ' (Existing IVR)' : '' }}
+								class="disabled:opacity-40 disabled:bg-gray-200 disabled:text-gray-400">
+								{{ manufacturer.manufacturer_name }} {{ hasExistingIVR(Number(formData.patient_id),
+									Number(manufacturer.manufacturer_id)) ? ' (Existing IVR)' : '' }}
 							</option>
 						</select>
 					</div>
@@ -420,12 +392,9 @@
 							<ShieldCheck class="w-5 h-5 text-green-600" />
 							<span>IVR Status<span class="text-red-500">*</span></span>
 						</label>
-						<select
-							v-model="formData.eligibility_status"
-							class="mt-1 w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl 
+						<select v-model="formData.eligibility_status" class="mt-1 w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl 
 								focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 
-								text-gray-900 dark:text-white transition-all duration-200"
-						>
+								text-gray-900 dark:text-white transition-all duration-200">
 							<option disabled value="">-- Select Eligibility Status --</option>
 
 							<option value="0">Pending</option>
@@ -450,40 +419,36 @@
 								</p>
 							</div>
 							<div class="flex items-center gap-2 mt-2">
-								<button
-									type="button"
-									v-if="selectedManufacturer.filepath"
+								<button type="button" v-if="selectedManufacturer.filepath"
 									@click="downloadIVRForm(selectedManufacturer.manufacturer_id)"
-									class="flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-md shadow hover:bg-blue-700 active:bg-blue-800 transition"
-								>
+									class="flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-md shadow hover:bg-blue-700 active:bg-blue-800 transition">
 									<Download class="w-4 h-4" />
 									Download Form
 								</button>
 								<span v-else class="text-gray-500">No file available</span>
 							</div>
-							<p class="shadow-md text-sm mt-4 leading-relaxed bg-gray-100 dark:bg-gray-800 p-3 rounded-lg border-l-4 border-yellow-400 text-gray-600 dark:text-gray-300">
+							<p
+								class="shadow-md text-sm mt-4 leading-relaxed bg-gray-100 dark:bg-gray-800 p-3 rounded-lg border-l-4 border-yellow-400 text-gray-600 dark:text-gray-300">
 								<strong class="text-red-700 dark:text-red-400">Note:</strong>
-								After downloading the form, please complete all required fields. Once finished, save your changes and re-upload the updated file using the upload section below.
+								After downloading the form, please complete all required fields. Once finished, save
+								your
+								changes and re-upload the updated file using the upload section below.
 							</p>
 						</div>
 					</div>
 				</transition>
 
 				<!-- IVR Information -->
-				 <transition name="fade-slide">
+				<transition name="fade-slide">
 					<div v-if="selectedManufacturer" class="relative">
 
 						<!-- Loader Overlay -->
-						<transition name="fade"> 
-							<div
-								v-if="isLoadingFile"
-								class="absolute inset-0 bg-white/70 dark:bg-gray-900/60 backdrop-blur-sm flex flex-col items-center justify-center rounded-lg z-10"
-							>
+						<transition name="fade">
+							<div v-if="isLoadingFile"
+								class="absolute inset-0 bg-white/70 dark:bg-gray-900/60 backdrop-blur-sm flex flex-col items-center justify-center rounded-lg z-10">
 								<div class="w-60 bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden mb-3">
-									<div
-										class="h-full bg-purple-500 transition-all duration-100"
-										:style="{ width: loadProgress + '%' }"
-									></div>
+									<div class="h-full bg-purple-500 transition-all duration-100"
+										:style="{ width: loadProgress + '%' }"></div>
 								</div>
 
 								<p class="text-sm text-gray-700 dark:text-gray-300">
@@ -500,62 +465,52 @@
 								<h3 class="text-md font-semibold text-gray-900 dark:text-gray-100">IVR Information</h3>
 							</div>
 
-							<div v-if="isCreateMode ? !selectedFile : (!existingFile && !selectedFile)"
-								class="mt-1 flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer 
-									bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition"
-								@drop="handleDrop"
-								@dragover="allowDrop"
-							>
-								<input
-									id="ivr-upload"
-									type="file"
-									accept=".pdf,.doc,.docx"
-									class="hidden"
-									@change="handleFileChange"
-								/>
+							<div v-if="isCreateMode ? !selectedFile : (!existingFile && !selectedFile)" class="mt-1 flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer 
+									bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition" @drop="handleDrop"
+								@dragover="allowDrop">
+								<input id="ivr-upload" type="file" accept=".pdf,.doc,.docx" class="hidden"
+									@change="handleFileChange" />
 
 								<label for="ivr-upload" class="text-center cursor-pointer">
-									<div class="mx-auto w-16 h-16 bg-purple-100 dark:bg-purple-900/40 rounded-full flex items-center justify-center mb-3">
+									<div
+										class="mx-auto w-16 h-16 bg-purple-100 dark:bg-purple-900/40 rounded-full flex items-center justify-center mb-3">
 										<CloudUpload class="w-8 h-8 text-purple-500" />
 									</div>
 
 									<p class="text-sm font-semibold text-gray-900 dark:text-white mb-1">
-										<span class="text-purple-600 dark:text-purple-400">Click to upload</span> or drag and drop
+										<span class="text-purple-600 dark:text-purple-400">Click to upload</span> or
+										drag and
+										drop
 									</p>
 									<p class="text-xs text-gray-500 dark:text-gray-400">PDF or DOCX (max. 10MB)</p>
 								</label>
 							</div>
 
 							<!-- File Preview -->
-							<div
-								v-if="selectedFile" 
-								class="mt-3 flex items-center justify-between gap-3 text-sm text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 px-3 py-2 rounded-lg"
-							>
+							<div v-if="selectedFile"
+								class="mt-3 flex items-center justify-between gap-3 text-sm text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 px-3 py-2 rounded-lg">
 								<div class="flex items-center gap-2">
 									<FileText class="w-4 h-4 text-gray-400" />
 									<div>
 										<p class="font-medium">{{ selectedFile.name }}</p>
 										<p class="text-xs text-gray-500">
-											Size: {{ (selectedFile.size / 1024 / 1024).toFixed(2) }} MB • Type: {{ selectedFile.type || 'N/A' }}
+											Size: {{ (selectedFile.size / 1024 / 1024).toFixed(2) }} MB • Type: {{
+												selectedFile.type || 'N/A' }}
 										</p>
 									</div>
 								</div>
 
 								<!-- Remove Button -->
-								<button 
-									@click="removeFile"
+								<button @click="removeFile"
 									class="text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 transition"
-									title="Remove file"
-								>
+									title="Remove file">
 									<X class="w-5 h-5" />
 								</button>
 							</div>
-							
+
 							<!-- Existing file (Edit mode only) -->
-							<div
-								v-if="!showCreateForm && existingFile"
-								class="mt-3 flex items-center justify-between gap-3 text-sm text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 px-3 py-2 rounded-lg"
-							>
+							<div v-if="!showCreateForm && existingFile"
+								class="mt-3 flex items-center justify-between gap-3 text-sm text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 px-3 py-2 rounded-lg">
 								<div class="flex items-center gap-2">
 									<FileText class="w-4 h-4 text-gray-400" />
 									<div>
@@ -565,20 +520,14 @@
 								</div>
 
 								<div class="inline-flex items-center gap-1">
-								<a 
-									:href="existingFile.url" 
-									target="_blank"
-									class="text-blue-600 hover:underline"
-								>
-									<Eye class="w-5 h-4" />
-								</a>
-								<button 
-									@click="removeExistingFile"
-									class="text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 transition"
-									title="Remove file"
-								>
-									<X class="w-5 h-5" />
-								</button>
+									<a :href="existingFile.url" target="_blank" class="text-blue-600 hover:underline">
+										<Eye class="w-5 h-4" />
+									</a>
+									<button @click="removeExistingFile"
+										class="text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 transition"
+										title="Remove file">
+										<X class="w-5 h-5" />
+									</button>
 								</div>
 							</div>
 						</div>
@@ -589,29 +538,20 @@
 						<NotebookPen class="w-5 h-5 text-green-600" />
 						Notes
 					</label>
-					<textarea
-					v-model="formData.description"
-					rows="4"
-					class="mt-1 w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200 resize-none"
-					placeholder="Additional notes for this IVR request..."
-					></textarea>
+					<textarea v-model="formData.description" rows="4"
+						class="mt-1 w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200 resize-none"
+						placeholder="Additional notes for this IVR request..."></textarea>
 				</div>
 			</form>
 			<template #actions>
 				<!-- Actions -->
 				<div class="p-4 flex items-center gap-2">
-					<button
-						type="button"
-						@click="closeForm"
-						class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
-					>
+					<button type="button" @click="closeForm"
+						class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
 						Cancel
 					</button>
-					<button
-						type="button"
-						@click="handleSubmitForm"
-						class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-					>
+					<button type="button" @click="handleSubmitForm"
+						class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
 						{{ showCreateForm ? 'Submit Request' : 'Update IVR Details' }}
 					</button>
 				</div>
@@ -628,7 +568,7 @@ import Pagination from '../components/ui/Pagination.vue'
 import TableLoader from '../components/ui/TableLoader.vue'
 import {
 	Funnel, Search, Eye, SquarePen,
-    Trash2, User as userProfile,
+	Trash2, User as userProfile,
 	Download, ShieldUser, ShieldPlus,
 	Package, NotebookPen, FilePlus2,
 	Hospital, Calendar, CircleCheckBig,
@@ -731,17 +671,17 @@ const ivrStatus: Record<number, { label: string; classes: string }> = {
 }
 
 const ivrEligibilityStatus: Record<number, { label: string; classes: string }> = {
-	0: { 
-		label: 'Pending', 
-		classes: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400' 
+	0: {
+		label: 'Pending',
+		classes: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'
 	},
-	1: { 
-		label: 'Eligible', 
-		classes: 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' 
+	1: {
+		label: 'Eligible',
+		classes: 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
 	},
-	2: { 
-		label: 'Not Eligible', 
-		classes: 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400' 
+	2: {
+		label: 'Not Eligible',
+		classes: 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
 	},
 }
 
@@ -794,12 +734,12 @@ async function editIVR(ivr: IVRRequest) {
 		manufacturer_id: ivr.manufacturer?.manufacturer_id || '',
 		eligibility_status: ivr.eligibility_status.toString(),
 		filepath: ivr.filepath || '',
-		ivr_status:ivr.ivr_status || 0,
+		ivr_status: ivr.ivr_status || 0,
 		primary_email: '',
 	}
 }
 
-async function confirmDelete(ivr: IVRRequest) {	
+async function confirmDelete(ivr: IVRRequest) {
 	try {
 		const result = await Swal.fire({
 			title: "Deleting " + ivr.ivr_number,
@@ -813,7 +753,7 @@ async function confirmDelete(ivr: IVRRequest) {
 
 		if (result.isConfirmed) {
 			await api.put(`/management/delete/${ivr.ivr_id}/deleteivrrequest`);
-			
+
 			await Swal.fire({
 				title: "Deleted!",
 				text: "IVR Request has been deleted.",
@@ -850,7 +790,7 @@ async function confirmArchive(ivr: IVRRequest) {
 				: `/management/archive/${ivr.ivr_id}/archiveivrrequest`;
 
 			await api.put(endpoint);
-			
+
 			await Swal.fire({
 				title: isArchived ? 'Unarchived!' : 'Archived!',
 				text: `IVR Request has been ${isArchived ? 'unarchived' : 'archived'}.`,
@@ -865,7 +805,7 @@ async function confirmArchive(ivr: IVRRequest) {
 	}
 }
 
-async function handleSubmitForm() {	
+async function handleSubmitForm() {
 	try {
 		const payload = new FormData()
 
@@ -910,15 +850,15 @@ async function handleSubmitForm() {
 			closeForm()
 		} else if (showEditForm.value) {
 			const { data } = await api.post(
-                `/management/update/${selectedIvrRequest.value?.ivr_id}/updateivrrequest`,
-                payload,
-                {
-                    headers: {
-                        'Content-Type': 'multipart/form-data',
-                        'Accept': 'application/json',
-                    }
-                }
-         	)
+				`/management/update/${selectedIvrRequest.value?.ivr_id}/updateivrrequest`,
+				payload,
+				{
+					headers: {
+						'Content-Type': 'multipart/form-data',
+						'Accept': 'application/json',
+					}
+				}
+			)
 
 			toast.success(data.message || 'IVR Request Updated Successfully!')
 			await getAllIVRRequests()
@@ -952,7 +892,7 @@ function closeForm() {
 	clearForm()
 }
 
-function clearForm(){
+function clearForm() {
 	formData.value = {
 		clinic_id: '',
 		brand_id: '',
@@ -968,9 +908,9 @@ function clearForm(){
 }
 
 function resetFileState() {
-    selectedFile.value = null;
-    loadProgress.value = 0;
-    isLoadingFile.value = false;
+	selectedFile.value = null;
+	loadProgress.value = 0;
+	isLoadingFile.value = false;
 }
 
 const isCreateMode = computed(() => showCreateForm.value);
@@ -982,24 +922,24 @@ const filteredIVRRequest = computed(() => {
 		not_eligible: 2,
 	};
 
-    return ivrRequest.value.filter(ivr => {
-        const patientName = ivr.patient?.patient_name || '';
-        const email = ivr.patient?.email || '';
-        const clinicName = ivr.clinic?.clinic_name || '';
-        const brandDesc = ivr.brand?.description || '';
-        const matchesSearch = patientName.toLowerCase().includes(searchTerm.value.toLowerCase()) ||
-                              email.toLowerCase().includes(searchTerm.value.toLowerCase()) ||
-                              clinicName.toLowerCase().includes(searchTerm.value.toLowerCase()) ||
-                              brandDesc.toLowerCase().includes(searchTerm.value.toLowerCase());
+	return ivrRequest.value.filter(ivr => {
+		const patientName = ivr.patient?.patient_name || '';
+		const email = ivr.patient?.email || '';
+		const clinicName = ivr.clinic?.clinic_name || '';
+		const brandDesc = ivr.brand?.description || '';
+		const matchesSearch = patientName.toLowerCase().includes(searchTerm.value.toLowerCase()) ||
+			email.toLowerCase().includes(searchTerm.value.toLowerCase()) ||
+			clinicName.toLowerCase().includes(searchTerm.value.toLowerCase()) ||
+			brandDesc.toLowerCase().includes(searchTerm.value.toLowerCase());
 
 		const key = statusFilter.value as keyof typeof statusMap;
 
 		const matchesEligibilityStatus =
-		statusFilter.value === 'all' ||
-		Number(ivr.eligibility_status) === statusMap[key];
+			statusFilter.value === 'all' ||
+			Number(ivr.eligibility_status) === statusMap[key];
 
 		return matchesSearch && matchesEligibilityStatus;
-    });
+	});
 });
 
 const showFormModal = computed({
@@ -1101,112 +1041,112 @@ const removeExistingFile = () => {
 }
 
 const existingFile = computed(() => {
-    return formData.value.filepath ? {
-        name: formData.value.filepath.split('/').pop(),
-        url: formData.value.filepath
-    } : null
+	return formData.value.filepath ? {
+		name: formData.value.filepath.split('/').pop(),
+		url: formData.value.filepath
+	} : null
 })
 
 // get all patient
 async function getAllPatients() {
-    tableLoader.value = true
-    try {
-        const { data } = await api.get(`/management/patients/patientinfo`, {
-            headers: {
-                Authorization: `Bearer ${localStorage.getItem('auth_token')}`
-            }
-        })
+	tableLoader.value = true
+	try {
+		const { data } = await api.get(`/management/patients/patientinfo`, {
+			headers: {
+				Authorization: `Bearer ${localStorage.getItem('auth_token')}`
+			}
+		})
 
-        patientData.value = data.patient_data
-    } catch (error) {
-        console.error('Error fetching clinic users:', error)
-    } finally {
-        tableLoader.value = false
-    }
+		patientData.value = data.patient_data
+	} catch (error) {
+		console.error('Error fetching clinic users:', error)
+	} finally {
+		tableLoader.value = false
+	}
 }
 
 // get all IVR Request
-async function getAllIVRRequests(page= 1){
+async function getAllIVRRequests(page = 1) {
 	tableLoader.value = true
-    try {
-        const { data } = await api.get(`/management/ivr/ivrrequests?page=${page}&per_page=${itemsPerPage.value}`, {
-            headers: {
-                Authorization: `Bearer ${localStorage.getItem('auth_token')}`
-            }
-        })
+	try {
+		const { data } = await api.get(`/management/ivr/ivrrequests?page=${page}&per_page=${itemsPerPage.value}`, {
+			headers: {
+				Authorization: `Bearer ${localStorage.getItem('auth_token')}`
+			}
+		})
 
-        ivrRequest.value = data.data
+		ivrRequest.value = data.data
 		pagination.value = {
-            current_page: data.meta.current_page,
-            last_page: data.meta.last_page,
-            per_page: data.meta.per_page,
-            total: data.meta.total,
-        }
-    } catch (error) {
-        console.error('Error fetching clinic users:', error)
-    } finally {
-        tableLoader.value = false
-    }
+			current_page: data.meta.current_page,
+			last_page: data.meta.last_page,
+			per_page: data.meta.per_page,
+			total: data.meta.total,
+		}
+	} catch (error) {
+		console.error('Error fetching clinic users:', error)
+	} finally {
+		tableLoader.value = false
+	}
 }
 
 // get all Brands
-async function getAllBrands(){
+async function getAllBrands() {
 	tableLoader.value = true
-    try {
-        const { data } = await api.get(`/management/ivr/getbrands`, {
-            headers: {
-                Authorization: `Bearer ${localStorage.getItem('auth_token')}`
-            }
-        })
+	try {
+		const { data } = await api.get(`/management/ivr/getbrands`, {
+			headers: {
+				Authorization: `Bearer ${localStorage.getItem('auth_token')}`
+			}
+		})
 
-        brandData.value = data.brand_data		
-    } catch (error) {
-        console.error('Error fetching brands:', error)
-    } finally {
-        tableLoader.value = false
-    }
+		brandData.value = data.brand_data
+	} catch (error) {
+		console.error('Error fetching brands:', error)
+	} finally {
+		tableLoader.value = false
+	}
 }
 
 // get all Manufacturers
-async function getAllManufacturers(){
+async function getAllManufacturers() {
 	tableLoader.value = true
-    try {
-        const { data } = await api.get(`/management/manufacturer/getmanufacturers`, {
-            headers: {
-                Authorization: `Bearer ${localStorage.getItem('auth_token')}`
-            }
-        })
+	try {
+		const { data } = await api.get(`/management/manufacturer/getmanufacturers`, {
+			headers: {
+				Authorization: `Bearer ${localStorage.getItem('auth_token')}`
+			}
+		})
 
-        manufacturerData.value = data.manufacturer_data
-    } catch (error) {
-        console.error('Error fetching brands:', error)
-    } finally {
-        tableLoader.value = false
-    }
+		manufacturerData.value = data.manufacturer_data
+	} catch (error) {
+		console.error('Error fetching brands:', error)
+	} finally {
+		tableLoader.value = false
+	}
 }
 
 // get all Clinics
-async function getAllClinics(page= 1){
+async function getAllClinics(page = 1) {
 	tableLoader.value = true
-    try {
-        const { data } = await api.get(`/management/ivr/getclinics?page=${page}&per_page=${itemsPerPage.value}`, {
-            headers: {
-                Authorization: `Bearer ${localStorage.getItem('auth_token')}`
-            }
-        })
+	try {
+		const { data } = await api.get(`/management/ivr/getclinics?page=${page}&per_page=${itemsPerPage.value}`, {
+			headers: {
+				Authorization: `Bearer ${localStorage.getItem('auth_token')}`
+			}
+		})
 
-        ivrRequest.value = data.user_data
+		ivrRequest.value = data.user_data
 		pagination.value = {
-            current_page: data.meta.current_page,
-            last_page: data.meta.last_page,
-            per_page: data.meta.per_page,
-            total: data.meta.total,
-        }
-    } catch (error) {
-        console.error('Error fetching clinic users:', error)
-    } finally {
-        tableLoader.value = false
-    }
+			current_page: data.meta.current_page,
+			last_page: data.meta.last_page,
+			per_page: data.meta.per_page,
+			total: data.meta.total,
+		}
+	} catch (error) {
+		console.error('Error fetching clinic users:', error)
+	} finally {
+		tableLoader.value = false
+	}
 }
 
 const downloadIVRForm = async (id: string) => {
@@ -1237,27 +1177,27 @@ const hasExistingIVR = (patientId: number, manufacturerId: number) => {
 }
 
 const filePreviewUrl = computed(() => {
-    if (!selectedIvrRequest.value?.manufacturer?.filepath) return null;
-    return `/storage/${selectedIvrRequest.value.manufacturer.filepath}`;
+	if (!selectedIvrRequest.value?.manufacturer?.filepath) return null;
+	return `/storage/${selectedIvrRequest.value.manufacturer.filepath}`;
 });
 
 function isImageFile(filename: string) {
-    if (!filename) return false
-    const ext = filename.split('.').pop()?.toLowerCase() || ''
-    return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext)
+	if (!filename) return false
+	const ext = filename.split('.').pop()?.toLowerCase() || ''
+	return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext)
 }
 
 function isPDFFile(filename: string) {
-    if (!filename) return false
-    return filename.toLowerCase().endsWith('.pdf')
+	if (!filename) return false
+	return filename.toLowerCase().endsWith('.pdf')
 }
 
 onMounted(async () => {
-    getAllPatients()
-    getAllIVRRequests(1)
-    getAllBrands()
+	getAllPatients()
+	getAllIVRRequests(1)
+	getAllBrands()
 	getAllManufacturers()
-    getAllClinics(1)
+	getAllClinics(1)
 })
 
 watch(selectedManufacturer, (manufacturer) => {
@@ -1265,7 +1205,7 @@ watch(selectedManufacturer, (manufacturer) => {
 		formData.value.manufacturer_id = manufacturer.manufacturer_id
 		formData.value.primary_email = manufacturer.primary_email ?? ''
 		console.log(formData.value.primary_email);
-		
+
 	} else {
 		formData.value.manufacturer_id = ''
 	}
@@ -1301,10 +1241,10 @@ watch(() => formData.value.manufacturer_id, (newVal) => {
 })
 
 watch(itemsPerPage, () => {
-    getAllPatients()
+	getAllPatients()
 	getAllIVRRequests(1)
-    getAllBrands()
-    getAllClinics(1)
+	getAllBrands()
+	getAllClinics(1)
 })
 
 watch(() => formData.value.brand_id, () => {
@@ -1315,36 +1255,48 @@ watch(() => formData.value.brand_id, () => {
 
 <style scoped>
 @keyframes ping-slow {
-    0% { transform: scale(1); opacity: 0.3; }
-    70% { transform: scale(1.3); opacity: 0; }
-    100% { transform: scale(1.3); opacity: 0; }
+	0% {
+		transform: scale(1);
+		opacity: 0.3;
+	}
+
+	70% {
+		transform: scale(1.3);
+		opacity: 0;
+	}
+
+	100% {
+		transform: scale(1.3);
+		opacity: 0;
+	}
 }
+
 .animate-ping-slow {
-    animation: ping-slow 1.2s cubic-bezier(0, 0, 0.2, 1) infinite;
+	animation: ping-slow 1.2s cubic-bezier(0, 0, 0.2, 1) infinite;
 }
 
 .fade-slide-enter-active,
 .fade-slide-leave-active {
-    @apply transition-all duration-300 ease-out;
+	@apply transition-all duration-300 ease-out;
 }
 
 .fade-slide-enter-from {
-    opacity: 0;
-    transform: translateY(10px);
+	opacity: 0;
+	transform: translateY(10px);
 }
 
 .fade-slide-enter-to {
-    opacity: 1;
-    transform: translateY(0);
+	opacity: 1;
+	transform: translateY(0);
 }
 
 .fade-slide-leave-from {
-    opacity: 1;
-    transform: translateY(0);
+	opacity: 1;
+	transform: translateY(0);
 }
 
 .fade-slide-leave-to {
-    opacity: 0;
-    transform: translateY(10px);
+	opacity: 0;
+	transform: translateY(10px);
 }
-</style> 
+</style>

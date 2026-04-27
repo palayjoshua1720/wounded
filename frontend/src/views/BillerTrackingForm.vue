@@ -349,6 +349,7 @@
 import { ref, reactive, onMounted, computed, watch } from 'vue'
 import { toast } from 'vue3-toastify'
 import api from '@/services/api'
+import { formatCurrency } from '@/utils/currency'
 import { FileSpreadsheet, Upload, FileText, X, Download, Plus, RefreshCw, Pencil, Trash2 } from 'lucide-vue-next'
 import * as XLSX from 'xlsx'
 import Swal from 'sweetalert2'
@@ -1495,10 +1496,6 @@ const formatFileSize = (bytes: number): string => {
   const sizes = ['Bytes', 'KB', 'MB', 'GB']
   const i = Math.floor(Math.log(bytes) / Math.log(k))
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
-}
-
-const formatCurrency = (amount: number): string => {
-  return parseFloat(amount.toString()).toFixed(2)
 }
 
 const formatDate = (dateStr: string): string => {

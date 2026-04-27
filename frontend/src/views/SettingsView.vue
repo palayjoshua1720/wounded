@@ -10,7 +10,7 @@
 				<button @click="goBack"
 					class="mb-6 flex items-center text-gray-600 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400 transition-colors duration-200">
 					<ChevronsLeft class="w-5 h-5 mr-2" />
-					<span class="font-medium">Back to Dashboard</span>
+					<span class="font-medium">Back</span>
 				</button>
 				<h2
 					class="text-2xl font-bold text-gray-900 dark:text-white mb-8 pb-2 border-b border-gray-200 dark:border-gray-700">
@@ -44,7 +44,6 @@
 			<main class="flex-1 flex flex-col items-center justify-start py-14 px-6 sm:px-8">
 				<div class="w-full max-w-5xl space-y-8">
 					<h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
-						<SlidersHorizontal class="w-8 h-8 mr-3 text-blue-500 dark:text-blue-400" />
 						{{ sectionTitle }}
 					</h1>
 					<div v-if="section === 'preferences'">
@@ -67,29 +66,27 @@
 										backgroundRepeat: 'no-repeat',
 									}">
 									<div class="absolute bg-black bg-opacity-40"></div>
-									<button @click="toggleTheme"
-										:class="[
-											'absolute top-1 bottom-1 w-1/2 rounded-full bg-white shadow-md transition-all duration-300 flex items-center justify-center',
-											isDarkMode ? 'right-1' : 'left-1'
-										]">
+									<button @click="toggleTheme" :class="[
+										'absolute top-1 bottom-1 w-1/2 rounded-full bg-white shadow-md transition-all duration-300 flex items-center justify-center',
+										isDarkMode ? 'right-1' : 'left-1'
+									]">
 										<div class="flex items-center space-x-1">
-											<div 
-												:class="[
-													'w-2 h-2 rounded-full transition-colors duration-300',
-													isDarkMode ? 'bg-gray-400' : 'bg-yellow-400'
-												]">
-												</div>
-											<span 
-												:class="[
-													'font-medium text-sm transition-colors duration-300',
-													isDarkMode ? 'text-gray-600' : 'text-yellow-600'
-												]">
+											<div :class="[
+												'w-2 h-2 rounded-full transition-colors duration-300',
+												isDarkMode ? 'bg-gray-400' : 'bg-yellow-400'
+											]">
+											</div>
+											<span :class="[
+												'font-medium text-sm transition-colors duration-300',
+												isDarkMode ? 'text-gray-600' : 'text-yellow-600'
+											]">
 												<Moon v-if="isDarkMode" class="w-4 h-4" />
-																								<Sun v-else class="w-4 h-4" />
+												<Sun v-else class="w-4 h-4" />
 											</span>
 										</div>
 									</button>
-									<div class="absolute inset-0 flex items-center justify-between px-4 pointer-events-none">
+									<div
+										class="absolute inset-0 flex items-center justify-between px-4 pointer-events-none">
 										<span class="font-medium text-white drop-shadow text-sm"></span>
 										<span class="font-medium text-white drop-shadow text-sm"></span>
 									</div>
@@ -358,7 +355,7 @@
 										Authentication Enabled</span>
 									<button @click="generateBackupCodes()"
 										class="flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 font-semibold transition-all duration-200 shadow-md transform hover:scale-[1.03]">
-									<RefreshCcw class="w-5 h-5 mr-2" />
+										<RefreshCcw class="w-5 h-5 mr-2" />
 										Generate New Codes
 									</button>
 								</div>
@@ -497,15 +494,15 @@ import {
 	Palette,
 	Lock,
 	CircleUserRound,
-	IdCard,	
-	SlidersHorizontal, 
-	RefreshCcw, 
+	IdCard,
+	SlidersHorizontal,
+	RefreshCcw,
 	Copy,
 	TriangleAlert,
 	ChevronsLeft,
 	Sun,
 	Moon
-} from 'lucide-vue-next'; 
+} from 'lucide-vue-next';
 
 
 
@@ -1055,4 +1052,4 @@ onMounted(async () => {
 });
 
 
-</script> 
+</script>

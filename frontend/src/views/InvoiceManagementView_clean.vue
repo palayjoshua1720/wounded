@@ -1,10 +1,9 @@
-<template>
+﻿<template>
   <div class="space-y-6">
     <!-- Header -->
     <div class="flex items-center justify-between">
       <div>
-        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Invoice & Payment Tracking</h1>
-        <p class="text-gray-600 dark:text-gray-400">Manage invoices, OCR extraction, and payment synchronization</p>
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Invoice & Payment Tracking</h1>
       </div>
       <div class="flex gap-2">
         <button
@@ -17,80 +16,79 @@
     </div>
 
     <!-- Filters -->
-    <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
-      <div class="flex flex-col lg:flex-row gap-6">
-        <div class="flex-1">
-          <div class="relative">
-            <Search class="absolute left-4 top-3.5 h-5 w-5 text-gray-400 dark:text-gray-500" />
-            <input type="text" placeholder="Search invoices, serial numbers, clinics..."
-              class="w-full pl-12 pr-4 py-3.5 border-0 bg-gray-50 dark:bg-gray-700/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200"
-              v-model="filters.search" @input="updateFiltersAndFetch" />
-          </div>
+    <div v-if="!loading"
+      class="flex flex-col sm:flex-row gap-4 bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+      <div class="flex-1">
+        <div class="relative">
+          <Search class="absolute left-3 top-3 h-4 w-4 text-gray-400 dark:text-gray-500" />
+          <input type="text" placeholder="Search invoices, serial numbers, clinics..."
+            class="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            v-model="filters.search" @input="fetchInvoices" />
         </div>
-        <div class="flex flex-col sm:flex-row gap-4">
-          <div class="relative">
-            <Filter class="absolute left-3 top-3.5 h-4 w-4 text-gray-500 dark:text-gray-400" />
-            <select v-model="filters.clinic_id" @change="updateFiltersAndFetch"
-              class="pl-10 pr-8 py-3.5 border-0 bg-gray-50 dark:bg-gray-700/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-gray-700 text-gray-900 dark:text-white appearance-none transition-all duration-200">
-              <option value="all">All Clinics</option>
-              <option v-for="clinic in clinics" :key="clinic.clinic_id" :value="clinic.clinic_id">
-                {{ clinicDisplayName(clinic) }}
-              </option>
-            </select>
-            <ChevronDown class="absolute right-3 top-3.5 h-4 w-4 text-gray-500 dark:text-gray-400 pointer-events-none" />
-          </div>
-          <input type="date" v-model="filters.date_from" @change="updateFiltersAndFetch"
-            class="px-4 py-3.5 border-0 bg-gray-50 dark:bg-gray-700/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200"
-            placeholder="From Date" />
-          <input type="date" v-model="filters.date_to" @change="updateFiltersAndFetch"
-            class="px-4 py-3.5 border-0 bg-gray-50 dark:bg-gray-700/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200"
-            placeholder="To Date" />
-          <button type="button" @click="resetFilters"
-            class="inline-flex items-center px-4 py-3.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700/50 border-0 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200">
-            <X class="w-4 h-4 mr-2" />Reset
-          </button>
-        </div>
+      </div>
+      <div class="flex items-center space-x-2 flex-wrap gap-2">
+        <Filter class="w-4 h-4 text-gray-500 dark:text-gray-400" />
+        <select v-model="filters.clinic_id" @change="fetchInvoices"
+          class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+          <option value="all">All Clinics</option>
+          <option v-for="clinic in clinics" :key="clinic.clinic_id" :value="clinic.clinic_id">
+            {{ clinicDisplayName(clinic) }}
+          </option>
+        </select>
+        <input type="date" v-model="filters.date_from" @change="fetchInvoices"
+          class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+          placeholder="From Date" />
+        <input type="date" v-model="filters.date_to" @change="fetchInvoices"
+          class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+          placeholder="To Date" />
       </div>
     </div>
 
     <!-- Invoices Table -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+    <div
+      class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
       <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
           <thead class="bg-gray-50 dark:bg-gray-700">
             <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+              <th
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 Invoice Details
               </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+              <th
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 Amount
               </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+              <th
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 Invoice Dates
               </th>
-              <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+              <th
+                class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 Actions
               </th>
             </tr>
           </thead>
           <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
             <TableLoader v-if="loading && invoices.length === 0" :colspan="4" />
-            <tr v-else-if="invoices.length > 0" v-for="invoice in invoices" :key="invoice.id" class="hover:bg-gray-50 dark:hover:bg-gray-700">
+            <tr v-else-if="invoices.length > 0" v-for="invoice in invoices" :key="invoice.id"
+              class="hover:bg-gray-50 dark:hover:bg-gray-700">
               <td class="px-6 py-4">
                 <div class="flex items-center space-x-3">
-                  <FileText class="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
                   <div>
                     <div class="text-sm font-medium text-gray-900 dark:text-white">{{ invoice.invoice_number }}</div>
-                    <div class="text-sm text-gray-500 dark:text-gray-400">{{ invoice.serials?.length || 0 }} serials</div>
+                    <div class="text-sm text-gray-500 dark:text-gray-400">{{ invoice.serials?.length || 0 }} serials
+                    </div>
                   </div>
                 </div>
               </td>
               <td class="px-6 py-4">
-                <div class="text-sm font-medium text-gray-900 dark:text-white">{{ formatCurrency(invoice.amount) }}</div>
+                <div class="text-sm font-medium text-gray-900 dark:text-white">{{ formatCurrency(invoice.amount) }}
+                </div>
               </td>
               <td class="px-6 py-4">
                 <div class="text-sm text-gray-900 dark:text-white">{{ formatDate(invoice.invoice_date) }}</div>
-                <div class="text-sm text-gray-500 dark:text-gray-400">Due: {{ formatDateOnly(invoice.due_date) }}</div>
+                <div class="text-sm text-gray-500 dark:text-gray-400">Due: {{ formatDate(invoice.due_date) }}</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2 text-center">
                 <div class="flex justify-center space-x-2">
@@ -113,13 +111,17 @@
               <td colspan="4" class="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
                 <FileText class="w-12 h-12 mx-auto mb-4 text-gray-400 dark:text-gray-500" />
                 <div class="flex flex-col items-center justify-center gap-2">
-                  <span class="text-gray-400">No invoices found.</span>
+                  <span class="text-gray-400">
+                    <Users class="w-10 h-10 mb-1" />No invoices found.
+                  </span>
                 </div>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
+
+      <!-- Old Empty State removed -->
 
       <!-- Pagination -->
       <div v-if="pagination" class="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
@@ -157,16 +159,20 @@
         </p>
         <div class="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg mb-4">
           <p class="text-xs text-blue-800 dark:text-blue-300">
-            <strong>Tip:</strong> For best results, upload clear PDF invoices with readable text. Scanned images may not extract properly.
+            <strong>Tip:</strong> For best results, upload clear PDF invoices with readable text. Scanned images may not
+            extract properly.
             If extraction fails, you'll be able to enter details manually.
           </p>
         </div>
-        <div class="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-lg mb-4 border border-yellow-200 dark:border-yellow-800">
+        <div
+          class="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-lg mb-4 border border-yellow-200 dark:border-yellow-800">
           <p class="text-xs text-yellow-800 dark:text-yellow-300">
-            <strong>Note:</strong> Only PDF files are accepted. Other file formats (DOC, DOCX, etc.) will not be processed.
+            <strong>Note:</strong> Only PDF files are accepted. Other file formats (DOC, DOCX, etc.) will not be
+            processed.
           </p>
         </div>
-        <input type="file" accept=".pdf" class="hidden" id="invoice-pdf-upload" @change="handlePdfUpload" ref="pdfInput" />
+        <input type="file" accept=".pdf" class="hidden" id="invoice-pdf-upload" @change="handlePdfUpload"
+          ref="pdfInput" />
         <label for="invoice-pdf-upload"
           class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg cursor-pointer">
           <Upload class="w-4 h-4 mr-2" />
@@ -199,7 +205,7 @@
           </div>
           <div class="flex justify-between">
             <span class="text-gray-600 dark:text-gray-400">Amount:</span>
-            <span class="font-medium">${{ extractionPreview.amount?.toLocaleString() }}</span>
+            <span class="font-medium">{{ formatCurrency(extractionPreview.amount) }}</span>
           </div>
           <div class="flex justify-between">
             <span class="text-gray-600 dark:text-gray-400">Invoice Date:</span>
@@ -222,7 +228,8 @@
             <span class="font-medium">{{ extractionPreview.serials?.length || 0 }}</span>
           </div>
           <div v-if="extractionPreview.line_items && extractionPreview.line_items.length > 0" class="mt-3">
-            <h5 class="font-medium text-gray-900 dark:text-white mb-2">Line Items ({{ extractionPreview.line_items.length }}):</h5>
+            <h5 class="font-medium text-gray-900 dark:text-white mb-2">Line Items ({{
+              extractionPreview.line_items.length }}):</h5>
             <div class="max-h-32 overflow-y-auto">
               <div v-for="(item, index) in extractionPreview.line_items" :key="index"
                 class="flex justify-between text-xs py-1 border-b border-gray-200 dark:border-gray-700">
@@ -283,7 +290,8 @@
 
         <div>
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Amount</label>
-          <div class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white">
+          <div
+            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white">
             {{ formatCurrency(calculateTotalAmount()) }}
           </div>
           <input v-model.number="manualInvoice.amount" type="hidden" />
@@ -365,6 +373,8 @@
         </div>
       </div>
 
+
+
       <div class="flex justify-end gap-2 pt-4">
         <button type="button" @click="showManualModal = false; showAddInvoiceModal = true;"
           class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
@@ -395,7 +405,9 @@
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Amount</label>
-          <p class="mt-1 text-lg font-semibold text-gray-900 dark:text-white">{{ formatCurrency(selectedInvoice.amount) }}</p>
+          <p class="mt-1 text-lg font-semibold text-gray-900 dark:text-white">{{
+            formatCurrency(selectedInvoice.amount)
+          }}</p>
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Invoice Date</label>
@@ -424,31 +436,38 @@
         <h4 class="text-lg font-medium text-gray-900 dark:text-white mb-3">Product Details</h4>
         <div class="max-h-96 overflow-y-auto">
           <!-- Display line items if available -->
-          <div v-if="selectedInvoice.has_line_items && selectedInvoice.line_items && selectedInvoice.line_items.length > 0">
+          <div
+            v-if="selectedInvoice.has_line_items && selectedInvoice.line_items && selectedInvoice.line_items.length > 0">
             <div v-for="(item, index) in selectedInvoice.line_items" :key="index"
               class="py-2 border-b border-gray-200 dark:border-gray-700 text-sm">
               <div class="flex justify-between items-start">
                 <div>
-                  <div class="font-medium text-gray-900 dark:text-white">{{ item.description }} <span v-if="item.size">({{ item.size }})</span></div>
+                  <div class="font-medium text-gray-900 dark:text-white">{{ item.description }} <span
+                      v-if="item.size">({{
+                        item.size }})</span></div>
                   <div v-if="item.serial" class="text-gray-600 dark:text-gray-400 text-xs">
                     S/N: {{ item.serial }}
                   </div>
-                  <div class="text-gray-600 dark:text-gray-400 text-xs">{{ formatCurrency(item.amount) }} x {{ item.quantity || 1 }} = {{ formatCurrency(item.amount * (item.quantity || 1)) }}</div>
+                  <div class="text-gray-600 dark:text-gray-400 text-xs">
+                    {{ formatCurrency(item.amount || 0) }} x {{ item.quantity || 1 }} = {{ formatCurrency((item.amount || 0) * (item.quantity || 1)) }}
+                  </div>
                 </div>
-                <button v-if="item.serial" @click="markIndividualSerialAsPaid(item.serial)" :disabled="paidSerials[item.serial as string]"
-                  :class="getSerialPaymentButtonClass(item.serial)">
+                <button v-if="item.serial" @click="markIndividualSerialAsPaid(item.serial)"
+                  :disabled="paidSerials[item.serial as string]" :class="getSerialPaymentButtonClass(item.serial)">
                   {{ paidSerials[item.serial as string] ? 'Paid' : 'Mark as Paid' }}
                 </button>
               </div>
             </div>
           </div>
           <!-- Fallback to parsing notes if no line items -->
-          <div v-else-if="selectedInvoice.notes && (selectedInvoice.notes.includes('Line Items:') || selectedInvoice.notes.includes('Line Items :'))">
+          <div
+            v-else-if="selectedInvoice.notes && (selectedInvoice.notes.includes('Line Items:') || selectedInvoice.notes.includes('Line Items :'))">
             <div v-for="(product, index) in parseLineItems(selectedInvoice.notes)" :key="index"
               class="py-2 border-b border-gray-200 dark:border-gray-700 text-sm">
-              <div class="font-medium text-gray-900 dark:text-white">{{ product.size ? product.name + ' ' + product.size : product.name }}</div>
-              <div v-for="(serial, sIndex) in product.serials" :key="sIndex"
-                class="flex justify-between items-start">
+              <div class="font-medium text-gray-900 dark:text-white">{{ product.size ? product.name + ' ' + product.size
+                :
+                product.name }}</div>
+              <div v-for="(serial, sIndex) in product.serials" :key="sIndex" class="flex justify-between items-start">
                 <div class="text-gray-600 dark:text-gray-400 text-xs">
                   S/N: {{ serial }}
                 </div>
@@ -457,7 +476,9 @@
                   {{ paidSerials[serial] ? 'Paid' : 'Mark as Paid' }}
                 </button>
               </div>
-              <div class="text-gray-600 dark:text-gray-400 text-xs">{{ formatCurrency(product.unit_price) }} x {{ product.quantity || 0 }} = {{ formatCurrency(product.total || (product.unit_price * product.quantity)) }}</div>
+              <div class="text-gray-600 dark:text-gray-400 text-xs">
+                {{ formatCurrency(product.unit_price || 0) }} x {{ product.quantity || 0 }} = {{ formatCurrency(product.total || (product.unit_price * product.quantity) || 0) }}
+              </div>
             </div>
           </div>
           <!-- Fallback to serials only -->
@@ -479,6 +500,8 @@
           </div>
         </div>
       </div>
+
+
     </div>
     <template #actions>
       <div class="flex justify-end w-full p-5">
@@ -560,22 +583,12 @@
               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
           </div>
 
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Clinic</label>
-            <select v-model="extractedInvoiceData.clinic_id"
-              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
-              <option value="">Select Clinic</option>
-              <option v-for="clinic in clinics" :key="clinic.clinic_id" :value="clinic.clinic_id">
-                {{ clinicDisplayName(clinic) }}
-              </option>
-            </select>
-          </div>
-
-          <div>
+          <div v-if="extractedInvoiceData.bill_to">
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Bill To</label>
-            <input v-model="extractedInvoiceData.bill_to"
-              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-              placeholder="Bill To" />
+            <div
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white">
+              {{ extractedInvoiceData.bill_to }}
+            </div>
           </div>
         </div>
 
@@ -585,11 +598,14 @@
           <div class="flex items-center">
             <Info class="w-5 h-5 text-blue-600 dark:text-blue-400 mr-2" />
             <span class="text-sm text-blue-800 dark:text-blue-300">
-              <span v-if="extractedInvoiceData.source === 'fallback'">PDF extraction failed. Please manually review and enter all details.</span>
+              <span v-if="extractedInvoiceData.source === 'fallback'">PDF extraction failed. Please manually review and
+                enter all details.</span>
               <span v-else>Enhanced extraction used ({{ extractedInvoiceData.source }}).</span>
             </span>
           </div>
         </div>
+
+
 
         <!-- Line Items -->
         <div class="border-t pt-4">
@@ -637,7 +653,8 @@
                 </div>
               </div>
               <div class="flex justify-end">
-                <button @click="removeLineItem(index)" class="text-red-600 hover:text-red-800 text-sm flex items-center">
+                <button @click="removeLineItem(index)"
+                  class="text-red-600 hover:text-red-800 text-sm flex items-center">
                   <Minus class="w-4 h-4 mr-1" />
                   Remove
                 </button>
@@ -645,6 +662,8 @@
             </div>
           </div>
         </div>
+
+
       </div>
     </div>
 
@@ -665,6 +684,8 @@
       </div>
     </template>
   </BaseModal>
+
+
 
   <!-- Mark as Paid Modal -->
   <BaseModal v-model="showMarkPaidModal" title="Mark Invoice as Paid">
@@ -734,6 +755,8 @@
     </template>
   </BaseModal>
 
+
+
   <!-- Edit Invoice Modal -->
   <BaseModal v-model="showEditModal" title="Edit Invoice" size="xl">
     <form @submit.prevent="handleEditInvoiceSubmit" class="space-y-6">
@@ -760,7 +783,8 @@
 
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Amount (Calculated)</label>
-            <div class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white">
+            <div
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white">
               {{ formatCurrency(calculateEditTotalAmount()) }}
             </div>
             <input v-model.number="invoiceToEdit.amount" type="hidden" />
@@ -842,6 +866,8 @@
             </div>
           </div>
         </div>
+
+
       </div>
 
       <div class="flex justify-end gap-2 pt-4">
@@ -857,16 +883,17 @@
       </div>
     </form>
   </BaseModal>
+
+
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, nextTick, watch } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import BaseModal from '@/components/common/BaseModal.vue'
 import TableLoader from '@/components/ui/TableLoader.vue'
 import api from '@/services/api'
 import axios from 'axios'
-import { formatCurrency } from '@/utils/currency'
 import Swal from 'sweetalert2'
 import {
   Upload,
@@ -874,19 +901,21 @@ import {
   Filter,
   FileText,
   FileUp,
+  Clock,
+  AlertTriangle,
   Plus,
   Minus,
   RefreshCw,
   Eye,
   X,
+  CheckCircle,
   Info,
   Edit,
   Trash2,
-  ChevronDown,
-  AlertTriangle
+  ChevronDown
 } from 'lucide-vue-next'
 
-// Types
+// Updated Types for woundmed_clinics
 interface Clinic {
   clinic_id: string
   clinic_code: string
@@ -951,6 +980,8 @@ interface Stats {
   overdue_amount: number
 }
 
+
+
 interface Product {
   name: string
   size: string
@@ -1012,6 +1043,10 @@ const paidSerials = ref<Record<string, boolean>>({})
 // Upload state
 const uploadedFiles = ref<File[]>([])
 const pdfInput = ref<HTMLInputElement | null>(null)
+const uploadOptions = ref({
+  grouping: 'auto',
+  confidence: 'standard'
+})
 const extractionPreview = ref<any>(null)
 
 // Manual invoice form
@@ -1040,61 +1075,83 @@ const paymentData = ref({
   payment_reference: ''
 })
 
+// Notifications
+
 // Computed properties
 const hasFilesForProcessing = computed(() => uploadedFiles.value.length > 0)
 
 const hasInvoiceChanges = computed(() => {
-  if (!invoiceToEdit.value || !originalInvoice.value) return false
+  if (!invoiceToEdit.value || !originalInvoice.value) return false;
 
+  // Helper function to normalize dates for comparison
   const normalizeDate = (dateStr: string): string => {
-    if (!dateStr) return ''
-    if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr
+    if (!dateStr) return '';
+    // If already in YYYY-MM-DD format, return as is
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr;
+    // Otherwise, try to parse and convert
     try {
-      const dateObj = new Date(dateStr)
-      return dateObj.toISOString().split('T')[0]
+      const dateObj = new Date(dateStr);
+      return dateObj.toISOString().split('T')[0];
     } catch {
-      return dateStr
+      return dateStr;
     }
-  }
+  };
 
-  if (invoiceToEdit.value.invoice_number !== originalInvoice.value.invoice_number) return true
-  if (invoiceToEdit.value.clinic_id !== originalInvoice.value.clinic_id) return true
-  if (Math.abs(invoiceToEdit.value.amount - originalInvoice.value.amount) > 0.01) return true
-  if (normalizeDate(invoiceToEdit.value.invoice_date) !== normalizeDate(originalInvoice.value.invoice_date)) return true
-  if (normalizeDate(invoiceToEdit.value.due_date) !== normalizeDate(originalInvoice.value.due_date)) return true
-  if (invoiceToEdit.value.bill_to !== originalInvoice.value.bill_to) return true
+  // Compare primitive fields
+  if (invoiceToEdit.value.invoice_number !== originalInvoice.value.invoice_number) return true;
+  if (invoiceToEdit.value.clinic_id !== originalInvoice.value.clinic_id) return true;
+  // Use Math.abs for floating point comparison to handle precision issues
+  if (Math.abs(invoiceToEdit.value.amount - originalInvoice.value.amount) > 0.01) return true;
+  if (normalizeDate(invoiceToEdit.value.invoice_date) !== normalizeDate(originalInvoice.value.invoice_date)) return true;
+  if (normalizeDate(invoiceToEdit.value.due_date) !== normalizeDate(originalInvoice.value.due_date)) return true;
+  if (invoiceToEdit.value.bill_to !== originalInvoice.value.bill_to) return true;
 
+  // Compare line items
   if (invoiceToEdit.value.line_items && originalInvoice.value.line_items) {
-    if (invoiceToEdit.value.line_items.length !== originalInvoice.value.line_items.length) return true
+    if (invoiceToEdit.value.line_items.length !== originalInvoice.value.line_items.length) return true;
 
     for (let i = 0; i < invoiceToEdit.value.line_items.length; i++) {
-      const editedItem = invoiceToEdit.value.line_items[i]
-      const originalItem = originalInvoice.value.line_items[i]
+      const editedItem = invoiceToEdit.value.line_items[i];
+      const originalItem = originalInvoice.value.line_items[i];
 
-      if (editedItem.description !== originalItem.description) return true
-      if (editedItem.size !== originalItem.size) return true
-      if (editedItem.serial !== originalItem.serial) return true
-      if (editedItem.quantity !== originalItem.quantity) return true
-      if (Math.abs(editedItem.amount - originalItem.amount) > 0.01) return true
+      if (editedItem.description !== originalItem.description) return true;
+      if (editedItem.size !== originalItem.size) return true;
+      if (editedItem.serial !== originalItem.serial) return true;
+      if (editedItem.quantity !== originalItem.quantity) return true;
+      // Use Math.abs for floating point comparison to handle precision issues
+      if (Math.abs(editedItem.amount - originalItem.amount) > 0.01) return true;
     }
   } else if (invoiceToEdit.value.line_items || originalInvoice.value.line_items) {
-    return true
+    // One is null/undefined and the other isn't
+    return true;
   }
 
-  return false
+  // No changes detected
+  return false;
 })
 
+// Check if current user is admin (user_role = 0)
 const isAdmin = computed(() => {
-  return authStore.currentUser?.user_role === 0
+  return authStore.currentUser?.user_role === 0;
 })
 
+// Format clinic display name for dropdowns
 const clinicDisplayName = (clinic: Clinic) => {
-  return `${clinic.clinic_name} (${clinic.clinic_code})`
+  return `${clinic.clinic_name} (${clinic.clinic_code})`;
 }
 
 // Methods
-function showAlert(message: string, type: 'success' | 'error' | 'warning' | 'info' = 'info', duration = 2000) {
-  const icon = type === 'success' ? 'success' : type === 'error' ? 'error' : type === 'warning' ? 'warning' : 'info'
+function showAlert(
+  message: string,
+  type: 'success' | 'error' | 'warning' | 'info' = 'info',
+  duration = 2000
+) {
+  const icon =
+    type === 'success' ? 'success' :
+      type === 'error' ? 'error' :
+        type === 'warning' ? 'warning' :
+          'info';
+
   Swal.fire({
     text: message,
     icon: icon,
@@ -1103,8 +1160,9 @@ function showAlert(message: string, type: 'success' | 'error' | 'warning' | 'inf
     showConfirmButton: false,
     timer: duration,
     timerProgressBar: true
-  })
+  });
 }
+
 
 async function fetchInvoices() {
   loading.value = true
@@ -1136,22 +1194,6 @@ async function fetchInvoices() {
   }
 }
 
-function updateFiltersAndFetch() {
-  filters.value.page = 1
-  fetchInvoices()
-}
-
-function resetFilters() {
-  filters.value = {
-    search: '',
-    clinic_id: 'all',
-    date_from: '',
-    date_to: '',
-    page: 1
-  }
-  fetchInvoices()
-}
-
 async function fetchStats() {
   try {
     const response = await api.get('/invoice-management/stats')
@@ -1165,6 +1207,8 @@ async function fetchClinics() {
   try {
     const response = await api.get('/invoice-management/clinics')
     clinics.value = response.data
+
+    // If we have clinics, set the first one as default for manual invoice
     if (clinics.value.length > 0 && !manualInvoice.value.clinic_id) {
       manualInvoice.value.clinic_id = clinics.value[0].clinic_id
     }
@@ -1175,33 +1219,34 @@ async function fetchClinics() {
 }
 
 function formatDate(dateString: string) {
-  const date = new Date(dateString)
+  const date = new Date(dateString);
   const options: Intl.DateTimeFormatOptions = {
     year: 'numeric',
     month: 'short',
     day: 'numeric'
-  }
-  let datePart = date.toLocaleDateString('en-US', options)
-  datePart = datePart.replace(/(\w+)\s+(\d+,\s+\d+)/, '$1. $2')
-  
+  };
+  let datePart = date.toLocaleDateString('en-US', options);
+  // Add a dot after the abbreviated month
+  datePart = datePart.replace(/(\w+)\s+(\d+,\s+\d+)/, '$1. $2');
+
   const timePart = date.toLocaleTimeString('en-US', {
     hour: 'numeric',
     minute: '2-digit',
     hour12: true
-  })
-  return `${datePart} [${timePart}]`
+  });
+  return `${datePart} [${timePart}]`;
 }
 
-function formatDateOnly(dateString: string) {
-  const date = new Date(dateString)
-  const options: Intl.DateTimeFormatOptions = {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
-  }
-  let datePart = date.toLocaleDateString('en-US', options)
-  datePart = datePart.replace(/(\w+)\s+(\d+,\s+\d+)/, '$1. $2')
-  return datePart
+function formatCurrency(amount: number | string | undefined | null) {
+  if (amount === undefined || amount === null) return '$0.00';
+  const num = typeof amount === 'string' ? parseFloat(amount) : amount;
+  if (isNaN(num)) return '$0.00';
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(num);
 }
 
 function changePage(page: number) {
@@ -1214,15 +1259,19 @@ function handlePdfUpload(event: Event) {
   const target = event.target as HTMLInputElement
   if (target.files) {
     uploadedFiles.value = Array.from(target.files)
+    // Clear extraction preview as it will be populated after processing
     extractionPreview.value = null
   }
 }
 
 function handleDrop(event: DragEvent) {
-  event.preventDefault()
-  if (event.dataTransfer?.files) {
-    uploadedFiles.value = Array.from(event.dataTransfer.files)
-    extractionPreview.value = null
+  try {
+    // Handle file drop logic here
+    // This function would typically process dropped files
+    console.log('Files dropped:', event.dataTransfer?.files);
+  } catch (error) {
+    console.error('Error handling file drop:', error);
+    showAlert('Failed to handle file drop', 'error');
   }
 }
 
@@ -1233,28 +1282,19 @@ function removeUploadedFile(index: number) {
   }
 }
 
-function resetUploadState() {
-  uploadedFiles.value = []
-  extractionPreview.value = null
-  if (pdfInput.value) {
-    pdfInput.value.value = ''
-  }
-}
-
-watch(showUploadModal, (isOpen) => {
-  if (!isOpen) {
-    resetUploadState()
-  }
-})
-
 function editInvoice(invoice: Invoice) {
+  // Store the original invoice data for comparison
   originalInvoice.value = JSON.parse(JSON.stringify(invoice))
+
+  // Create a deep copy of the invoice to edit
   invoiceToEdit.value = JSON.parse(JSON.stringify(invoice))
 
+  // Ensure line_items array exists
   if (invoiceToEdit.value && !invoiceToEdit.value.line_items) {
-    invoiceToEdit.value.line_items = []
+    invoiceToEdit.value.line_items = [];
   }
 
+  // Ensure line items have all required properties
   if (invoiceToEdit.value && invoiceToEdit.value.line_items) {
     invoiceToEdit.value.line_items = invoiceToEdit.value.line_items.map((item: any) => ({
       description: item.description || '',
@@ -1262,20 +1302,25 @@ function editInvoice(invoice: Invoice) {
       serial: item.serial || '',
       quantity: Number(item.quantity) || 1,
       amount: Number(item.amount) || 0
-    }))
+    }));
   }
 
+  // Ensure dates are in the correct format for HTML date inputs (YYYY-MM-DD)
   if (invoiceToEdit.value && invoiceToEdit.value.invoice_date) {
+    // If the date is already in YYYY-MM-DD format, keep it as is
+    // Otherwise, convert it to the correct format
     if (!/^\d{4}-\d{2}-\d{2}$/.test(invoiceToEdit.value.invoice_date)) {
-      const dateObj = new Date(invoiceToEdit.value.invoice_date)
-      invoiceToEdit.value.invoice_date = dateObj.toISOString().split('T')[0]
+      const dateObj = new Date(invoiceToEdit.value.invoice_date);
+      invoiceToEdit.value.invoice_date = dateObj.toISOString().split('T')[0];
     }
   }
 
   if (invoiceToEdit.value && invoiceToEdit.value.due_date) {
+    // If the date is already in YYYY-MM-DD format, keep it as is
+    // Otherwise, convert it to the correct format
     if (!/^\d{4}-\d{2}-\d{2}$/.test(invoiceToEdit.value.due_date)) {
-      const dateObj = new Date(invoiceToEdit.value.due_date)
-      invoiceToEdit.value.due_date = dateObj.toISOString().split('T')[0]
+      const dateObj = new Date(invoiceToEdit.value.due_date);
+      invoiceToEdit.value.due_date = dateObj.toISOString().split('T')[0];
     }
   }
 
@@ -1284,6 +1329,8 @@ function editInvoice(invoice: Invoice) {
 
 async function confirmDeleteInvoice(invoice: Invoice) {
   invoiceToDelete.value = invoice
+
+  // Show Swal confirmation dialog directly
   const result = await Swal.fire({
     title: 'Are you sure?',
     html: `Are you sure you want to delete invoice <strong>${invoice.invoice_number}</strong>? This action cannot be undone.`,
@@ -1304,10 +1351,9 @@ async function confirmDeleteInvoice(invoice: Invoice) {
 async function handleEditInvoiceSubmit() {
   if (!invoiceToEdit.value) return
 
-  const invoiceData = JSON.parse(JSON.stringify(invoiceToEdit.value))
-  invoiceData.amount = calculateEditTotalAmount()
-  invoiceData.serials = extractSerialsFromLineItems(invoiceData.line_items)
-  invoiceData.has_line_items = invoiceData.line_items && invoiceData.line_items.length > 0
+  // Calculate the total amount from line items before submission
+  const invoiceData = JSON.parse(JSON.stringify(invoiceToEdit.value));
+  invoiceData.amount = calculateEditTotalAmount();
 
   submitting.value = true
   try {
@@ -1316,13 +1362,14 @@ async function handleEditInvoiceSubmit() {
     showAlert('Invoice updated successfully', 'success')
     showEditModal.value = false
 
+    // Update the invoice in the list
     const index = invoices.value.findIndex(inv => inv.id === invoiceToEdit.value!.id)
     if (index !== -1) {
       invoices.value[index] = response.data.invoice
     }
 
+    // Refresh stats
     fetchStats()
-    fetchInvoices()
   } catch (error: any) {
     console.error('Error updating invoice:', error)
     let errorMessage = 'Failed to update invoice'
@@ -1347,61 +1394,83 @@ async function handleEditInvoiceSubmit() {
   }
 }
 
+function simulateOcrExtraction(file: File) {
+  // In a real application, this would call your OCR service
+  extractionPreview.value = {
+    invoice_number: `INV-${new Date().getFullYear()}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
+    amount: Math.floor(Math.random() * 5000) + 1000,
+    invoice_date: new Date().toISOString().split('T')[0],
+    due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    serials: Array.from({ length: Math.floor(Math.random() * 3) + 1 }, () =>
+      `GS${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`
+    )
+  }
+}
+
 async function processUploadedInvoices() {
-  if (uploadedFiles.value.length === 0) return
-  
   uploading.value = true
   try {
-    const file = uploadedFiles.value[0]
-    const formData = new FormData()
-    formData.append('pdf_file', file)
+    for (const file of uploadedFiles.value) {
+      const formData = new FormData()
+      formData.append('pdf_file', file)
 
-    const response = await api.post('/invoice-management/upload-pdf', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
-    })
+      const response = await api.post('/invoice-management/upload-pdf', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      })
 
-    const result = response.data
-    extractedInvoiceData.value = result.extracted_data
+      const result = response.data
 
-    if (!extractedInvoiceData.value.line_items || extractedInvoiceData.value.line_items.length === 0) {
-      if (extractedInvoiceData.value.serials && extractedInvoiceData.value.serials.length > 0) {
-        extractedInvoiceData.value.line_items = extractedInvoiceData.value.serials.map((serial: string) => ({
-          description: 'Graft Product',
-          size: '',
-          serial: serial,
-          quantity: 1,
-          amount: 0
-        }))
+      // Store extracted data for review
+      extractedInvoiceData.value = result.extracted_data
+
+      // Ensure line items array exists and has at least one item for editing
+      // Fix: Only create line items from serials if no line items were extracted
+      if (!extractedInvoiceData.value.line_items || extractedInvoiceData.value.line_items.length === 0) {
+        // Try to create line items from serials if available
+        if (extractedInvoiceData.value.serials && extractedInvoiceData.value.serials.length > 0) {
+          extractedInvoiceData.value.line_items = extractedInvoiceData.value.serials.map((serial: string) => ({
+            description: 'Graft Product',
+            size: '',
+            serial: serial,
+            quantity: 1,
+            amount: 0
+          }));
+        } else {
+          // Create at least one empty line item for manual entry
+          extractedInvoiceData.value.line_items = [{
+            description: '',
+            size: '',
+            serial: '',
+            quantity: 1,
+            amount: 0
+          }];
+        }
       } else {
-        extractedInvoiceData.value.line_items = [{
-          description: '',
-          size: '',
-          serial: '',
-          quantity: 1,
-          amount: 0
-        }]
+        // Ensure line items have all required properties
+        extractedInvoiceData.value.line_items = extractedInvoiceData.value.line_items.map((item: any) => ({
+          description: item.description || '',
+          size: item.size || '',
+          serial: item.serial || '',
+          quantity: item.quantity || 1,
+          amount: item.amount || 0
+        }));
       }
-    } else {
-      extractedInvoiceData.value.line_items = extractedInvoiceData.value.line_items.map((item: any) => ({
-        description: item.description || '',
-        size: item.size || '',
-        serial: item.serial || '',
-        quantity: item.quantity || 1,
-        amount: item.amount || 0
-      }))
-    }
 
-    if (extractedInvoiceData.value.source && extractedInvoiceData.value.source === 'fallback') {
-      showAlert('PDF extraction partially failed. Please review and complete the details.', 'warning')
-    }
+      // If we have a fallback source, show a warning to the user
+      if (extractedInvoiceData.value.source && extractedInvoiceData.value.source === 'fallback') {
+        showAlert('PDF extraction failed. Please manually enter invoice details.', 'error');
+      }
 
-    showPdfReviewModal.value = true
-    showUploadModal.value = false
+      // Show review modal instead of automatically creating invoice
+      showPdfReviewModal.value = true
+      showUploadModal.value = false
+      return
+    }
   } catch (error: any) {
-    console.error('Error processing PDF:', error)
-    let errorMessage = 'Failed to process PDF'
+    console.error('Error processing PDFs:', error)
+    let errorMessage = 'Failed to process PDFs'
     if (axios.isAxiosError(error)) {
       const status = error.response?.status
       const data = error.response?.data
@@ -1412,11 +1481,11 @@ async function processUploadedInvoices() {
           errorMessage = `Invoice already exists: ${errors.invoice_number[0]}`
         }
       } else if (status === 500) {
-        errorMessage = 'Failed to extract data from PDF. The manual entry form will open for you to input the details.'
+        errorMessage = 'Failed to extract data from PDF. The system will open the manual entry form for you to input the details.'
         setTimeout(() => {
-          showPdfReviewModal.value = false
-          showManualModal.value = true
-        }, 2000)
+          showPdfReviewModal.value = false;
+          showManualModal.value = true;
+        }, 2000);
       } else {
         errorMessage = data?.message || `Request failed with status code ${status}`
       }
@@ -1434,61 +1503,71 @@ async function saveReviewedInvoice() {
 
   submitting.value = true
   try {
-    let notes = 'Created from PDF upload'
+    let notes = 'Created from PDF upload';
 
     if (extractedInvoiceData.value.vendor) {
-      notes += `\nVendor: ${extractedInvoiceData.value.vendor}`
+      notes += `\nVendor: ${extractedInvoiceData.value.vendor}`;
     }
 
     if (extractedInvoiceData.value.notes) {
-      notes += `\nNotes: ${extractedInvoiceData.value.notes}`
+      notes += `\nNotes: ${extractedInvoiceData.value.notes}`;
     }
 
     if (extractedInvoiceData.value.payment_terms) {
-      notes += `\nPayment Terms: ${extractedInvoiceData.value.payment_terms}`
+      notes += `\nPayment Terms: ${extractedInvoiceData.value.payment_terms}`;
     }
 
     if (extractedInvoiceData.value.bill_to) {
-      notes += `\nBill To: ${extractedInvoiceData.value.bill_to}`
+      notes += `\nBill To: ${extractedInvoiceData.value.bill_to}`;
     }
-    
-    const allSerials: string[] = []
-    const lineItemsForStorage: Array<{ description: string, size: string, serial: string, quantity: number, amount: number }> = []
+    const allSerials: string[] = [];
+    let lineItemsNotes = '';
+    const lineItemsForStorage: Array<{ description: string, size: string, serial: string, quantity: number, amount: number }> = [];
 
     if (extractedInvoiceData.value.line_items && extractedInvoiceData.value.line_items.length > 0) {
-      notes += `\nLine Items:\n`
+      notes += `\nLine Items:\n`;
       extractedInvoiceData.value.line_items.forEach((item: any) => {
-        const itemDescription = item.size ? `${item.description} (${item.size})` : item.description
-        notes += `${itemDescription}\n`
-        notes += `S/N: ${item.serial}\n`
-        notes += `${formatCurrency(item.amount)} x ${item.quantity || 1} = ${formatCurrency(item.amount * (item.quantity || 1))}\n\n`
+        // Add to notes
+        const itemDescription = item.size ? `${item.description} (${item.size})` : item.description;
+        notes += `${itemDescription}\n`;
+        notes += `S/N: ${item.serial}\n`;
+        notes += `$${item.amount} x ${item.quantity || 1} = $${(item.amount * (item.quantity || 1)).toFixed(2)}\n\n`;
 
+        // Collect serials from line items only
         if (item.serial && typeof item.serial === 'string' && item.serial.trim() !== '') {
+          // Only add if not already in the array
           if (!allSerials.includes(item.serial.trim())) {
-            allSerials.push(item.serial.trim())
+            allSerials.push(item.serial.trim());
           }
         }
 
+        // Build line items for storage
         lineItemsForStorage.push({
           description: item.description,
           size: item.size || '',
           serial: item.serial || '',
           quantity: Number(item.quantity) || 1,
           amount: Number(item.amount) || 0
-        })
-      })
+        });
+
+        // Build line items notes for display
+        lineItemsNotes += `${itemDescription}\n`;
+        lineItemsNotes += `S/N: ${item.serial}\n`;
+        lineItemsNotes += `$${Number(item.amount)} x ${Number(item.quantity || 1)} = $${(Number(item.amount) * Number(item.quantity || 1)).toFixed(2)}\n\n`;
+      });
     }
 
+    // Include raw text for review if available
     if (extractedInvoiceData.value.raw_text) {
-      notes += `\n\nRaw Extracted Text (first 1000 chars):\n${extractedInvoiceData.value.raw_text}`
+      notes += `\n\nRaw Extracted Text (first 1000 chars):\n${extractedInvoiceData.value.raw_text}`;
     }
 
-    const validSerials = [...new Set(allSerials.filter(serial => serial && typeof serial === 'string' && serial.trim() !== ''))]
-    const selectedClinicId = extractedInvoiceData.value.clinic_id || (clinics.value.length > 0 ? clinics.value[0].clinic_id : '')
+    // Filter out any empty or invalid serials and remove duplicates
+    const validSerials = [...new Set(allSerials.filter(serial => serial && typeof serial === 'string' && serial.trim() !== ''))];
 
     const invoiceData = {
       invoice_number: extractedInvoiceData.value.invoice_number,
-      clinic_id: selectedClinicId,
+      clinic_id: clinics.value[0].clinic_id,
       amount: extractedInvoiceData.value.amount,
       invoice_date: extractedInvoiceData.value.invoice_date,
       due_date: extractedInvoiceData.value.due_date,
@@ -1500,7 +1579,7 @@ async function saveReviewedInvoice() {
       bill_to: extractedInvoiceData.value.bill_to
     }
 
-    await api.post('/invoice-management', invoiceData)
+    const response = await api.post('/invoice-management', invoiceData)
 
     showAlert('Invoice created successfully', 'success')
     showPdfReviewModal.value = false
@@ -1531,50 +1610,58 @@ async function saveReviewedInvoice() {
   }
 }
 
+
 async function handleManualInvoiceSubmit() {
   submitting.value = true
   try {
-    const allSerials: string[] = []
-    let lineItemsNotes = ''
-    const lineItemsForStorage: Array<{ description: string, size: string, serial: string, quantity: number, amount: number }> = []
+    // Process line items to collect serials and build notes
+    const allSerials: string[] = [];
+    let lineItemsNotes = '';
+    const lineItemsForStorage: Array<{ description: string, size: string, serial: string, quantity: number, amount: number }> = [];
 
     if (manualInvoice.value.products && manualInvoice.value.products.length > 0) {
-      manualInvoice.value.products.forEach((product) => {
-        const itemDescription = product.size ? `${product.name} (${product.size})` : product.name
-        lineItemsNotes += `${itemDescription}\n`
-        lineItemsNotes += `S/N: ${product.serials[0]}\n`
-        lineItemsNotes += `${formatCurrency(Number(product.unit_price))} x ${Number(product.quantity || 1)} = ${formatCurrency(Number(product.unit_price) * Number(product.quantity || 1))}\n\n`
+      manualInvoice.value.products.forEach((product, index) => {
+        // Add to notes
+        const itemDescription = product.size ? `${product.name} (${product.size})` : product.name;
+        lineItemsNotes += `${itemDescription}\n`;
+        lineItemsNotes += `S/N: ${product.serials[0]}\n`;
+        lineItemsNotes += `$${Number(product.unit_price)} x ${Number(product.quantity || 1)} = $${(Number(product.unit_price) * Number(product.quantity || 1)).toFixed(2)}\n\n`;
 
+        // Collect serials from line items only
         if (product.serials[0] && typeof product.serials[0] === 'string' && product.serials[0].trim() !== '') {
+          // Only add if not already in the array
           if (!allSerials.includes(product.serials[0].trim())) {
-            allSerials.push(product.serials[0].trim())
+            allSerials.push(product.serials[0].trim());
           }
         }
 
+        // Build line items for storage
         lineItemsForStorage.push({
           description: product.name,
           size: product.size || '',
           serial: product.serials[0] || '',
           quantity: Number(product.quantity) || 1,
           amount: Number(product.unit_price) || 0
-        })
-      })
+        });
+      });
     }
 
-    let notes = ''
+    // Build notes with line items
+    let notes = '';
     if (lineItemsNotes) {
-      notes += `\nLine Items:\n${lineItemsNotes}`
+      notes += `\nLine Items:\n${lineItemsNotes}`;
     }
 
-    const validSerials = [...new Set(allSerials.filter(serial => serial && typeof serial === 'string' && serial.trim() !== ''))]
+    // Filter out any empty or invalid serials and remove duplicates
+    const validSerials = [...new Set(allSerials.filter(serial => serial && typeof serial === 'string' && serial.trim() !== ''))];
 
     const invoiceData = {
       invoice_number: manualInvoice.value.invoice_number,
       clinic_id: manualInvoice.value.clinic_id || clinics.value[0].clinic_id,
-      amount: calculateTotalAmount(),
+      amount: manualInvoice.value.amount,
       invoice_date: manualInvoice.value.invoice_date,
       due_date: manualInvoice.value.due_date,
-      status: 'pending_review' as const,
+      status: 'pending' as const,
       serials: validSerials,
       line_items: lineItemsForStorage,
       has_line_items: lineItemsForStorage.length > 0,
@@ -1582,7 +1669,7 @@ async function handleManualInvoiceSubmit() {
       bill_to: manualInvoice.value.bill_to || null
     }
 
-    await api.post('/invoice-management', invoiceData)
+    const response = await api.post('/invoice-management', invoiceData)
 
     showAlert('Invoice created successfully', 'success')
     showManualModal.value = false
@@ -1633,18 +1720,7 @@ function resetManualInvoiceForm() {
   }
 }
 
-function calculateTotalAmount() {
-  return manualInvoice.value.products.reduce((total, product) => {
-    return total + (Number(product.unit_price) * Number(product.quantity || 1))
-  }, 0)
-}
-
-function removeProduct(index: number) {
-  if (manualInvoice.value.products.length > 1) {
-    manualInvoice.value.products.splice(index, 1)
-  }
-}
-
+// Product management functions
 function addProduct() {
   manualInvoice.value.products.push({
     name: '',
@@ -1655,6 +1731,18 @@ function addProduct() {
   })
 }
 
+function calculateTotalAmount() {
+  return manualInvoice.value.products.reduce((total, product) => {
+    return total + (Number(product.unit_price) * Number(product.quantity || 1));
+  }, 0);
+}
+
+function removeProduct(index: number) {
+  if (manualInvoice.value.products.length > 1) {
+    manualInvoice.value.products.splice(index, 1)
+  }
+}
+
 function addProductSerial(productIndex: number) {
   manualInvoice.value.products[productIndex].serials.push('')
 }
@@ -1663,42 +1751,6 @@ function removeProductSerial(productIndex: number, serialIndex: number) {
   const product = manualInvoice.value.products[productIndex]
   if (product.serials.length > 1) {
     product.serials.splice(serialIndex, 1)
-  }
-}
-
-function addLineItem() {
-  if (extractedInvoiceData.value && extractedInvoiceData.value.line_items) {
-    extractedInvoiceData.value.line_items.push({
-      description: '',
-      size: '',
-      serial: '',
-      quantity: 1,
-      amount: 0
-    })
-  }
-}
-
-function removeLineItem(index: number) {
-  if (extractedInvoiceData.value && extractedInvoiceData.value.line_items && extractedInvoiceData.value.line_items.length > 1) {
-    extractedInvoiceData.value.line_items.splice(index, 1)
-  }
-}
-
-function addEditLineItem() {
-  if (invoiceToEdit.value && invoiceToEdit.value.line_items) {
-    invoiceToEdit.value.line_items.push({
-      description: '',
-      size: '',
-      serial: '',
-      quantity: 1,
-      amount: 0
-    })
-  }
-}
-
-function removeEditLineItem(index: number) {
-  if (invoiceToEdit.value && invoiceToEdit.value.line_items && invoiceToEdit.value.line_items.length > 1) {
-    invoiceToEdit.value.line_items.splice(index, 1)
   }
 }
 
@@ -1721,7 +1773,7 @@ async function confirmMarkAsPaid() {
   if (!invoiceToMarkPaid.value || !paymentData.value.paid_amount) return
 
   try {
-    await api.post(`/invoice-management/${invoiceToMarkPaid.value.id}/status`, {
+    const response = await api.post(`/invoice-management/${invoiceToMarkPaid.value.id}/status`, {
       status: 'paid',
       paid_amount: paymentData.value.paid_amount,
       payment_method: paymentData.value.payment_method,
@@ -1740,31 +1792,39 @@ async function confirmMarkAsPaid() {
 }
 
 async function markIndividualSerialAsPaid(serialNumber: string) {
-  if (!selectedInvoice.value) return
-  
+  if (!selectedInvoice.value) return;
+
   try {
-    await api.post(`/invoice-management/${selectedInvoice.value.id}/serial-payment`, {
+    // Make API call to update the serial payment status
+    const response = await api.post(`/invoice-management/${selectedInvoice.value.id}/serial-payment`, {
       serial_number: serialNumber,
       status: 'paid',
       payment_method: 'individual_serial_paid',
       payment_reference: `Payment for serial ${serialNumber}`
-    })
-    
-    paidSerials.value[serialNumber] = true
-    showAlert(`Serial ${serialNumber} marked as paid`, 'success')
-    fetchInvoices()
-    fetchStats()
+    });
+
+    // Update the paidSerials state to reflect the change
+    paidSerials.value[serialNumber] = true;
+
+    // Show success message
+    showAlert(`Serial ${serialNumber} marked as paid`, 'success');
+
+    // Refresh the invoices list to get updated data
+    fetchInvoices();
+    fetchStats();
+
   } catch (error) {
-    console.error('Error marking serial as paid:', error)
-    showAlert(error instanceof Error ? error.message : 'Failed to mark serial as paid', 'error')
+    console.error('Error marking serial as paid:', error);
+    showAlert(error instanceof Error ? error.message : 'Failed to mark serial as paid', 'error');
   }
 }
 
 function getSerialPaymentButtonClass(serialNumber: string) {
   if (paidSerials.value[serialNumber]) {
-    return 'ml-2 px-2 py-1 text-xs bg-green-100 text-green-800 rounded dark:bg-green-900/30 dark:text-green-300 cursor-default opacity-75'
+    return 'ml-2 px-2 py-1 text-xs bg-green-100 text-green-800 rounded dark:bg-green-900/30 dark:text-green-300 cursor-default opacity-75';
+  } else {
+    return 'ml-2 px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded hover:bg-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300 dark:hover:bg-yellow-900/50 cursor-pointer';
   }
-  return 'ml-2 px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded hover:bg-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300 dark:hover:bg-yellow-900/50 cursor-pointer'
 }
 
 function reviewExtractedData(invoice: Invoice) {
@@ -1777,12 +1837,14 @@ function linkToOrder(invoice: Invoice) {
   showReviewModal.value = true
 }
 
+// Delete invoice function
 function deleteInvoice() {
   if (!invoiceToDelete.value) return
 
   api.delete(`/invoice-management/${invoiceToDelete.value.id}`)
     .then(() => {
       showAlert('Invoice deleted successfully', 'success')
+      // Remove the deleted invoice from the invoices array
       invoices.value = invoices.value.filter(invoice => invoice.id !== invoiceToDelete.value!.id)
       invoiceToDelete.value = null
       fetchStats()
@@ -1790,124 +1852,160 @@ function deleteInvoice() {
     .catch(error => {
       console.error('Error deleting invoice:', error)
       if (axios.isAxiosError(error)) {
-        console.error('Axios error details:', error.response?.data, error.response?.status)
+        console.error('Axios error details:', error.response?.data, error.response?.status);
       }
       showAlert(error instanceof Error ? error.message : 'Failed to delete invoice', 'error')
     })
 }
 
+// Line item management functions
+function addLineItem() {
+  if (extractedInvoiceData.value && extractedInvoiceData.value.line_items) {
+    extractedInvoiceData.value.line_items.push({
+      description: '',
+      size: '',
+      serial: '',
+      quantity: 1,
+      amount: 0
+    });
+  }
+}
+
+function addEditLineItem() {
+  if (invoiceToEdit.value && invoiceToEdit.value.line_items) {
+    invoiceToEdit.value.line_items.push({
+      description: '',
+      size: '',
+      serial: '',
+      quantity: 1,
+      amount: 0
+    });
+  }
+}
+
 function calculateEditTotalAmount() {
-  if (!invoiceToEdit.value || !invoiceToEdit.value.line_items) return 0
+  if (!invoiceToEdit.value || !invoiceToEdit.value.line_items) return 0;
+
   return invoiceToEdit.value.line_items.reduce((total, item) => {
-    return total + (Number(item.amount) * Number(item.quantity || 1))
-  }, 0)
-}
-
-function extractSerialsFromLineItems(lineItems: any[]): string[] {
-  if (!lineItems || lineItems.length === 0) return []
-  const serials: string[] = []
-  lineItems.forEach((item: any) => {
-    if (item.serial && typeof item.serial === 'string' && item.serial.trim() !== '') {
-      const trimmedSerial = item.serial.trim()
-      if (!serials.includes(trimmedSerial)) {
-        serials.push(trimmedSerial)
-      }
-    }
-  })
-  return serials
-}
-
-function calculateExtractedInvoiceTotalAmount() {
-  if (!extractedInvoiceData.value || !extractedInvoiceData.value.line_items) return 0
-  return extractedInvoiceData.value.line_items.reduce((total: number, item: any) => {
-    return total + (Number(item.amount) * Number(item.quantity || 1))
-  }, 0)
+    return total + (Number(item.amount) * Number(item.quantity || 1));
+  }, 0);
 }
 
 function resetLineItems() {
   if (extractedInvoiceData.value) {
+    // Clear existing line items
     extractedInvoiceData.value.line_items = [{
       description: '',
       size: '',
       serial: '',
       quantity: 1,
       amount: 0
-    }]
-    extractedInvoiceData.value.invoice_number = ''
-    extractedInvoiceData.value.amount = 0
-    extractedInvoiceData.value.invoice_date = ''
-    extractedInvoiceData.value.due_date = ''
-    extractedInvoiceData.value.serials = []
-    extractedInvoiceData.value.vendor = ''
-    extractedInvoiceData.value.notes = ''
-    extractedInvoiceData.value.payment_terms = ''
+    }];
+
+    // Clear other fields for manual entry
+    extractedInvoiceData.value.invoice_number = '';
+    extractedInvoiceData.value.amount = 0;
+    extractedInvoiceData.value.invoice_date = '';
+    extractedInvoiceData.value.due_date = '';
+    extractedInvoiceData.value.serials = [];
+    extractedInvoiceData.value.vendor = '';
+    extractedInvoiceData.value.notes = '';
+    extractedInvoiceData.value.payment_terms = '';
   }
 }
 
+function removeLineItem(index: number) {
+  if (extractedInvoiceData.value && extractedInvoiceData.value.line_items) {
+    extractedInvoiceData.value.line_items.splice(index, 1);
+  }
+}
+
+function removeEditLineItem(index: number) {
+  if (invoiceToEdit.value && invoiceToEdit.value.line_items) {
+    invoiceToEdit.value.line_items.splice(index, 1);
+  }
+}
+
+// Parse line items from notes
 function parseLineItems(notes: string) {
-  const lines = notes.split('\n')
-  const lineItems = []
-  let inLineItemsSection = false
+  const lines = notes.split('\n');
+  const lineItems = [];
+  let inLineItemsSection = false;
 
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i]
+    const line = lines[i];
 
+    // Check for both formats: "Line Items:" and "Line Items :"
     if (line.startsWith('Line Items:') || line.startsWith('Line Items :')) {
-      inLineItemsSection = true
-      continue
+      inLineItemsSection = true;
+      continue;
     }
 
     if (inLineItemsSection) {
+      // Look for product entries in the format:
+      // Product Name (Size)
+      // S/N: serial_number
+      // $price x quantity = $total
       if (line.trim() !== '' && !line.startsWith('S/N: ') && !line.startsWith('$') && !line.startsWith('Raw Extracted Text')) {
-        let productNameMatch = line.match(/(.+)\s*\((.+)\)/)
-        let productName, productSize
+        // This is a product name line
+        // Try to match format with parentheses first: "Product Name (Size)"
+        let productNameMatch = line.match(/(.+)\s*\((.+)\)/);
+        let productName, productSize;
 
         if (productNameMatch) {
-          productName = productNameMatch[1].trim()
-          productSize = productNameMatch[2].trim()
+          // Format: "Product Name (Size)"
+          productName = productNameMatch[1].trim();
+          productSize = productNameMatch[2].trim();
         } else {
-          const sizePatterns = [/\s+(\d+x\d+cm)$/, /\s+(\d+cm)$/, /\s+(\d+x\d+)$/, /\s+(\d+\.\d+cm)$/, /\s+(\d+\.\d+x\d+\.\d+cm)$/]
-          let foundSize = false
+          // Format: "Product Name Size" (like "Amnio-Maxx Dual Layer Amnion Patch 2x2cm")
+          // Try to extract common size patterns
+          const sizePatterns = [/\s+(\d+x\d+cm)$/, /\s+(\d+cm)$/, /\s+(\d+x\d+)$/, /\s+(\d+\.\d+cm)$/, /\s+(\d+\.\d+x\d+\.\d+cm)$/];
+          let foundSize = false;
 
           for (const pattern of sizePatterns) {
-            const match = line.match(pattern)
+            const match = line.match(pattern);
             if (match) {
-              productSize = match[1]
-              productName = line.replace(pattern, '').trim()
-              foundSize = true
-              break
+              productSize = match[1];
+              productName = line.replace(pattern, '').trim();
+              foundSize = true;
+              break;
             }
           }
 
           if (!foundSize) {
-            productName = line.trim()
-            productSize = ''
+            // No recognizable size pattern, treat entire line as product name
+            productName = line.trim();
+            productSize = '';
           }
         }
 
-        const serialLine = i + 1 < lines.length ? lines[i + 1] : ''
-        const pricingLine = i + 2 < lines.length ? lines[i + 2] : ''
+        // Get the next lines for serial and pricing info
+        const serialLine = i + 1 < lines.length ? lines[i + 1] : '';
+        const pricingLine = i + 2 < lines.length ? lines[i + 2] : '';
 
-        let serials: string[] = []
-        let unitPrice = 0
-        let quantity = 0
-        let total = 0
+        let serials: string[] = [];
+        let unitPrice = 0;
+        let quantity = 0;
+        let total = 0;
 
+        // Parse serials
         if (serialLine.startsWith('S/N: ')) {
-          serials.push(serialLine.replace('S/N: ', '').trim())
-          let nextIndex = i + 2
+          serials.push(serialLine.replace('S/N: ', '').trim());
+          // Check for additional serials
+          let nextIndex = i + 2;
           while (nextIndex < lines.length && lines[nextIndex].startsWith('S/N: ')) {
-            serials.push(lines[nextIndex].replace('S/N: ', '').trim())
-            nextIndex++
+            serials.push(lines[nextIndex].replace('S/N: ', '').trim());
+            nextIndex++;
           }
         }
 
+        // Parse pricing info
         if (pricingLine.startsWith('$')) {
-          const pricingMatch = pricingLine.match(/\$(.+) x (.+) = \$(.+)/)
+          const pricingMatch = pricingLine.match(/\$(.+) x (.+) = \$(.+)/);
           if (pricingMatch) {
-            unitPrice = Number(pricingMatch[1]) || 0
-            quantity = Number(pricingMatch[2]) || 0
-            total = Number(pricingMatch[3]) || 0
+            unitPrice = Number(pricingMatch[1]) || 0;
+            quantity = Number(pricingMatch[2]) || 0;
+            total = Number(pricingMatch[3]) || 0;
           }
         }
 
@@ -1918,90 +2016,104 @@ function parseLineItems(notes: string) {
           unit_price: unitPrice,
           quantity: quantity,
           total: total
-        })
+        });
 
-        i += 2 + (serials.length > 1 ? serials.length - 1 : 0)
+        // Skip the processed lines
+        i += 2 + (serials.length > 1 ? serials.length - 1 : 0);
       } else if (line.startsWith('Raw Extracted Text') || line.trim() === '') {
+        // Stop parsing when we hit the raw text section or an empty line that might indicate end of section
+        // Only break if we've already found some line items
         if (lineItems.length > 0 && line.startsWith('Raw Extracted Text')) {
-          break
+          break;
         }
       }
     }
   }
 
-  return lineItems
+  return lineItems;
 }
 
-// Watchers
+// Watch for changes in products to update the amount
 watch(() => manualInvoice.value.products, () => {
-  manualInvoice.value.amount = calculateTotalAmount()
-}, { deep: true })
+  manualInvoice.value.amount = calculateTotalAmount();
+}, { deep: true });
 
-watch(() => extractedInvoiceData.value?.line_items, () => {
-  if (extractedInvoiceData.value) {
-    extractedInvoiceData.value.amount = calculateExtractedInvoiceTotalAmount()
-  }
-}, { deep: true })
-
+// Watch for changes in edit line items to update the amount field for backend submission
 watch(() => invoiceToEdit.value?.line_items, () => {
-  if (invoiceToEdit.value) {
-    invoiceToEdit.value.amount = calculateEditTotalAmount()
-  }
-}, { deep: true })
+  // We don't automatically update the amount field to avoid interfering with change detection
+  // The amount will be updated when the form is submitted
+}, { deep: true });
 
+// Watch for changes in selected invoice to initialize payment tracking
 watch(selectedInvoice, async (newInvoice) => {
   if (newInvoice) {
-    paidSerials.value = {}
-    
+    // Reset the payment status tracking when a new invoice is selected
+    paidSerials.value = {};
+
+    // Initialize all serials as unpaid by default
+    // Then fetch actual payment status from backend
+
+    // Check serials in line items
     if (newInvoice.line_items && newInvoice.line_items.length > 0) {
       newInvoice.line_items.forEach(item => {
         if (item.serial) {
-          paidSerials.value[item.serial as string] = false
+          paidSerials.value[item.serial as string] = false; // Default to unpaid
         }
-      })
+      });
     }
-    
+
+    // Check serials in parsed notes
     if (newInvoice.notes && (newInvoice.notes.includes('Line Items:') || newInvoice.notes.includes('Line Items :'))) {
-      const parsedItems = parseLineItems(newInvoice.notes)
+      const parsedItems = parseLineItems(newInvoice.notes);
       parsedItems.forEach(product => {
         if (product.serials && product.serials.length > 0) {
           product.serials.forEach(serial => {
-            paidSerials.value[serial] = false
-          })
+            paidSerials.value[serial] = false; // Default to unpaid
+          });
         }
-      })
+      });
     }
-    
+
+    // Check serials in fallback array
     if (newInvoice.serials && newInvoice.serials.length > 0) {
       newInvoice.serials.forEach(serial => {
-        paidSerials.value[serial] = false
-      })
+        paidSerials.value[serial] = false; // Default to unpaid
+      });
     }
-    
+
+    // Fetch actual serial payment status from backend
     try {
-      const response = await api.get(`/invoice-management/${newInvoice.id}/serial-payments`)
-      const serialPayments = response.data
-      
+      const response = await api.get(`/invoice-management/${newInvoice.id}/serial-payments`);
+      const serialPayments = response.data;
+
+      // Update the paidSerials state based on actual payment status
       serialPayments.forEach((payment: any) => {
         if (payment.status === 'paid') {
-          paidSerials.value[payment.serial_number] = true
+          paidSerials.value[payment.serial_number] = true;
         }
-      })
+      });
     } catch (error) {
-      console.error('Error fetching serial payments:', error)
+      console.error('Error fetching serial payments:', error);
+      // Keep default values if API call fails
     }
   }
-}, { immediate: true })
+}, { immediate: true });
 
+// Helper functions for safe numeric operations in templates
 function safeNumber(value: any, defaultValue: number = 0): number {
-  const num = Number(value)
-  return isNaN(num) ? defaultValue : num
+  const num = Number(value);
+  return isNaN(num) ? defaultValue : num;
+}
+
+function formatCurrency(value: any): string {
+  const num = safeNumber(value);
+  return num.toFixed(2);
 }
 
 function calculateTotal(amount: any, quantity: any): string {
-  const amt = safeNumber(amount)
-  const qty = safeNumber(quantity, 1)
-  return formatCurrency(amt * qty)
+  const amt = safeNumber(amount);
+  const qty = safeNumber(quantity, 1);
+  return (amt * qty).toFixed(2);
 }
 
 // Lifecycle

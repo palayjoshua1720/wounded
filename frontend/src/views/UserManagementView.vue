@@ -4,8 +4,6 @@
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div class="space-y-2">
                 <h1 class="text-3xl font-bold text-gray-900 dark:text-white">User Management</h1>
-                <p class="text-gray-600 dark:text-gray-400 max-w-2xl">Manage system users, their roles, and permissions
-                    in one centralized dashboard</p>
             </div>
             <div class="flex items-center gap-4">
                 <button @click="showStats = !showStats"
@@ -91,7 +89,7 @@
                                 <Briefcase class="w-4 h-4 mr-2 text-blue-500" /> Office Staff
                             </span>
                             <span class="font-semibold text-gray-900 dark:text-white">{{ stats.roles['office-staff']
-                                }}</span>
+                            }}</span>
                         </div>
                         <div class="flex items-center justify-between">
                             <span class="flex items-center text-sm text-gray-600 dark:text-gray-300">
@@ -110,7 +108,7 @@
                                 <Factory class="w-4 h-4 mr-2 text-orange-500" /> Manufacturers
                             </span>
                             <span class="font-semibold text-gray-900 dark:text-white">{{ stats.roles.manufacturer
-                                }}</span>
+                            }}</span>
                         </div>
                         <div class="flex items-center justify-between">
                             <span class="flex items-center text-sm text-gray-600 dark:text-gray-300">
@@ -196,81 +194,82 @@
                     <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                         <TableLoader v-if="tableLoader" :colspan="5" />
                         <template v-else>
-                        <tr v-for="user in paginatedUsers" :key="user.id"
-                            class="hover:bg-gray-50/70 dark:hover:bg-gray-700/50 transition-colors duration-150">
-                            <td class="px-6 py-5 whitespace-nowrap">
-                                <div class="flex items-center">
-                                    <div
-                                        class="flex-shrink-0 h-10 w-10 bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-lg flex items-center justify-center text-blue-600 dark:text-blue-400 font-medium text-sm">
-                                        {{ getUserInitials(user) }}
+                            <tr v-for="user in paginatedUsers" :key="user.id"
+                                class="hover:bg-gray-50/70 dark:hover:bg-gray-700/50 transition-colors duration-150">
+                                <td class="px-6 py-5 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <div
+                                            class="flex-shrink-0 h-10 w-10 bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-lg flex items-center justify-center text-blue-600 dark:text-blue-400 font-medium text-sm">
+                                            {{ getUserInitials(user) }}
+                                        </div>
+                                        <div class="ml-4">
+                                            <div class="text-sm font-semibold text-gray-900 dark:text-white">
+                                                {{ formatFullName(user) }}</div>
+                                            <div class="text-sm text-gray-500 dark:text-gray-400">{{ user.email }}</div>
+                                        </div>
                                     </div>
-                                    <div class="ml-4">
-                                        <div class="text-sm font-semibold text-gray-900 dark:text-white">{{formatFullName(user) }}</div>
-                                        <div class="text-sm text-gray-500 dark:text-gray-400">{{ user.email }}</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="px-6 py-5 whitespace-nowrap">
-                                <span
-                                    :class="['inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200', getRoleColor(user.role)]">
-                                    {{ formatRoleName(user.role) }}
-                                </span>
-                            </td>
-                            <td class="px-6 py-5 whitespace-nowrap">
-                                <span
-                                    :class="['inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200', 
+                                </td>
+                                <td class="px-6 py-5 whitespace-nowrap">
+                                    <span
+                                        :class="['inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200', getRoleColor(user.role)]">
+                                        {{ formatRoleName(user.role) }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-5 whitespace-nowrap">
+                                    <span :class="['inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200',
                                         user.isArchived ? 'bg-orange-50 text-orange-700 dark:bg-orange-900/20 dark:text-orange-400' :
-                                        user.isActive ? 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400' : 
-                                        'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400']">
-                                    <component :is="user.isArchived ? Archive : (user.isActive ? CheckCircle2 : XCircle)" class="w-3 h-3 mr-1.5" />
-                                    {{ user.isArchived ? 'Archived' : (user.isActive ? 'Active' : 'Inactive') }}
-                                </span>
-                            </td>
-                            <td class="px-6 py-5 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                {{ formatDate(user.createdAt) }}
-                            </td>
-                            <td class="px-6 py-5 whitespace-nowrap text-sm font-medium">
-                                <div class="flex items-center space-x-2">
-                                    <button @click="selectedUser = user"
-                                        class="p-2 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all duration-200"
-                                        title="View Details">
-                                        <Eye class="w-4 h-4" />
-                                    </button>
-                                    <button @click="editUser(user)"
-                                        class="p-2 text-gray-500 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-all duration-200"
-                                        title="Edit User">
-                                        <FilePenLine class="w-4 h-4" />
-                                    </button>
-                                    <button @click="handleToggleStatus(user.id)" :class="[
-                                        'p-2 rounded-lg transition-all duration-200',
-                                        user.isActive
-                                            ? 'text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20'
-                                            : 'text-gray-500 hover:text-green-600 dark:text-gray-400 dark:hover:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20'
-                                    ]" :title="user.isActive ? 'Deactivate' : 'Activate'">
-                                        <component :is="user.isActive ? XCircle : CheckCircle2" class="w-4 h-4" />
-                                    </button>
-                                    <button v-if="!user.isArchived"
-                                        @click="handleArchiveUser(user.id)"
-                                        class="p-2 text-gray-500 hover:text-orange-600 dark:text-gray-400 dark:hover:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded-lg transition-all duration-200"
-                                        title="Archive User">
-                                        <Archive class="w-4 h-4" />
-                                    </button>
-                                    <button v-else-if="!isOfficeStaff" @click="handleDeleteUser(user.id)"
-                                        class="p-2 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all duration-200"
-                                        title="Delete User">
-                                        <Trash2 class="w-4 h-4" />
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr v-if="filteredUsers.length === 0 && !tableLoader">
-                            <td colspan="5" class="text-center text-gray-400 py-12">
-                                <div class="flex flex-col items-center justify-center gap-2">
-                                    <Users class="w-10 h-10 mb-1" />
-                                    <span>No users found.</span>
-                                </div>
-                            </td>
-                        </tr>
+                                            user.isActive ? 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400' :
+                                                'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400']">
+                                        <component
+                                            :is="user.isArchived ? Archive : (user.isActive ? CheckCircle2 : XCircle)"
+                                            class="w-3 h-3 mr-1.5" />
+                                        {{ user.isArchived ? 'Archived' : (user.isActive ? 'Active' : 'Inactive') }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-5 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                    {{ formatDate(user.createdAt) }}
+                                </td>
+                                <td class="px-6 py-5 whitespace-nowrap text-sm font-medium">
+                                    <div class="flex items-center space-x-2">
+                                        <button @click="selectedUser = user"
+                                            class="p-2 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all duration-200"
+                                            title="View Details">
+                                            <Eye class="w-4 h-4" />
+                                        </button>
+                                        <button @click="editUser(user)"
+                                            class="p-2 text-gray-500 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-all duration-200"
+                                            title="Edit User">
+                                            <FilePenLine class="w-4 h-4" />
+                                        </button>
+                                        <button @click="handleToggleStatus(user.id)" :class="[
+                                            'p-2 rounded-lg transition-all duration-200',
+                                            user.isActive
+                                                ? 'text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20'
+                                                : 'text-gray-500 hover:text-green-600 dark:text-gray-400 dark:hover:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20'
+                                        ]" :title="user.isActive ? 'Deactivate' : 'Activate'">
+                                            <component :is="user.isActive ? XCircle : CheckCircle2" class="w-4 h-4" />
+                                        </button>
+                                        <button v-if="!user.isArchived" @click="handleArchiveUser(user.id)"
+                                            class="p-2 text-gray-500 hover:text-orange-600 dark:text-gray-400 dark:hover:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded-lg transition-all duration-200"
+                                            title="Archive User">
+                                            <Archive class="w-4 h-4" />
+                                        </button>
+                                        <button v-else-if="!isOfficeStaff" @click="handleDeleteUser(user.id)"
+                                            class="p-2 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all duration-200"
+                                            title="Delete User">
+                                            <Trash2 class="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr v-if="filteredUsers.length === 0 && !tableLoader">
+                                <td colspan="5" class="text-center text-gray-400 py-12">
+                                    <div class="flex flex-col items-center justify-center gap-2">
+                                        <Users class="w-10 h-10 mb-1" />
+                                        <span>No users found.</span>
+                                    </div>
+                                </td>
+                            </tr>
                         </template>
                     </tbody>
                 </table>
@@ -282,9 +281,10 @@
                 <p class="text-sm text-gray-600 dark:text-gray-400">
                     Showing <span class="font-semibold text-gray-800 dark:text-white">{{ (currentPage - 1) *
                         itemsPerPage + 1 }}</span> to <span class="font-semibold text-gray-800 dark:text-white">{{
-        Math.min(currentPage * itemsPerPage, totalResults) }}</span> of <span
+                            Math.min(currentPage * itemsPerPage, totalResults) }}</span> of <span
                         class="font-semibold text-gray-800 dark:text-white">{{ totalResults }}</span> results
-                </p>                <nav class="flex items-center space-x-2">
+                </p>
+                <nav class="flex items-center space-x-2">
                     <button @click="previousPage" :disabled="currentPage === 1"
                         class="px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
                         Previous
@@ -314,33 +314,38 @@
             <template v-if="selectedUser">
                 <div class="space-y-6">
                     <!-- Header Card -->
-                    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-2xl p-6">
+                    <div
+                        class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-2xl p-6">
                         <div class="flex items-center space-x-5">
                             <div
                                 class="h-20 w-20 bg-white dark:bg-gray-800 rounded-2xl shadow-sm flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold text-2xl">
                                 {{ getUserInitials(selectedUser) }}
                             </div>
                             <div class="flex-1">
-                                <h2 class="text-2xl font-bold text-gray-900 dark:text-white">{{ formatFullName(selectedUser) }}</h2>
+                                <h2 class="text-2xl font-bold text-gray-900 dark:text-white">{{
+                                    formatFullName(selectedUser) }}</h2>
                                 <div class="flex items-center mt-2 space-x-4">
                                     <span class="inline-flex items-center text-sm text-gray-600 dark:text-gray-400">
                                         <Mail class="w-4 h-4 mr-1.5 text-gray-400" />
                                         {{ selectedUser.email }}
                                     </span>
-                                    <span v-if="selectedUser.phone" class="inline-flex items-center text-sm text-gray-600 dark:text-gray-400">
+                                    <span v-if="selectedUser.phone"
+                                        class="inline-flex items-center text-sm text-gray-600 dark:text-gray-400">
                                         <Phone class="w-4 h-4 mr-1.5 text-gray-400" />
                                         {{ selectedUser.phone }}
                                     </span>
                                 </div>
                                 <div class="mt-3 flex items-center space-x-2">
-                                    <span :class="['px-3 py-1 text-xs font-medium rounded-full', getRoleColor(selectedUser.role)]">
+                                    <span
+                                        :class="['px-3 py-1 text-xs font-medium rounded-full', getRoleColor(selectedUser.role)]">
                                         {{ formatRoleName(selectedUser.role) }}
                                     </span>
-                                    <span :class="['px-3 py-1 text-xs font-medium rounded-full', 
+                                    <span :class="['px-3 py-1 text-xs font-medium rounded-full',
                                         selectedUser.isArchived ? 'bg-orange-100 dark:bg-orange-800 text-orange-700 dark:text-orange-300' :
-                                        selectedUser.isActive ? 'bg-green-100 dark:bg-green-800 text-green-700 dark:text-green-300' : 
-                                        'bg-red-100 dark:bg-red-800 text-red-700 dark:text-red-300']">
-                                        {{ selectedUser.isArchived ? 'Archived' : (selectedUser.isActive ? 'Active' : 'Inactive') }}
+                                            selectedUser.isActive ? 'bg-green-100 dark:bg-green-800 text-green-700 dark:text-green-300' :
+                                                'bg-red-100 dark:bg-red-800 text-red-700 dark:text-red-300']">
+                                        {{ selectedUser.isArchived ? 'Archived' : (selectedUser.isActive ? 'Active' :
+                                        'Inactive') }}
                                     </span>
                                 </div>
                             </div>
@@ -352,12 +357,16 @@
                         <!-- Role -->
                         <div class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
                             <div class="flex items-center space-x-3">
-                                <div class="h-10 w-10 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
+                                <div
+                                    class="h-10 w-10 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
                                     <ShieldCheck class="w-5 h-5 text-purple-600 dark:text-purple-400" />
                                 </div>
                                 <div>
-                                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Role</p>
-                                    <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ formatRoleName(selectedUser.role) }}</p>
+                                    <p
+                                        class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                                        Role</p>
+                                    <p class="text-sm font-semibold text-gray-900 dark:text-white">{{
+                                        formatRoleName(selectedUser.role) }}</p>
                                 </div>
                             </div>
                         </div>
@@ -365,20 +374,22 @@
                         <!-- Status -->
                         <div class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
                             <div class="flex items-center space-x-3">
-                                <div class="h-10 w-10 rounded-lg flex items-center justify-center"
-                                    :class="selectedUser.isArchived ? 'bg-orange-100 dark:bg-orange-900/30' : 
-                                            selectedUser.isActive ? 'bg-green-100 dark:bg-green-900/30' : 
-                                            'bg-red-100 dark:bg-red-900/30'">
-                                    <component :is="selectedUser.isArchived ? Archive : (selectedUser.isActive ? CheckCircle2 : XCircle)"
-                                        class="w-5 h-5" 
-                                        :class="selectedUser.isArchived ? 'text-orange-600 dark:text-orange-400' : 
-                                                selectedUser.isActive ? 'text-green-600 dark:text-green-400' : 
+                                <div class="h-10 w-10 rounded-lg flex items-center justify-center" :class="selectedUser.isArchived ? 'bg-orange-100 dark:bg-orange-900/30' :
+                                    selectedUser.isActive ? 'bg-green-100 dark:bg-green-900/30' :
+                                        'bg-red-100 dark:bg-red-900/30'">
+                                    <component
+                                        :is="selectedUser.isArchived ? Archive : (selectedUser.isActive ? CheckCircle2 : XCircle)"
+                                        class="w-5 h-5" :class="selectedUser.isArchived ? 'text-orange-600 dark:text-orange-400' :
+                                            selectedUser.isActive ? 'text-green-600 dark:text-green-400' :
                                                 'text-red-600 dark:text-red-400'" />
                                 </div>
                                 <div>
-                                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Status</p>
+                                    <p
+                                        class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                                        Status</p>
                                     <p class="text-sm font-semibold text-gray-900 dark:text-white">
-                                        {{ selectedUser.isArchived ? 'Archived' : (selectedUser.isActive ? 'Active' : 'Inactive') }}
+                                        {{ selectedUser.isArchived ? 'Archived' : (selectedUser.isActive ? 'Active' :
+                                        'Inactive') }}
                                     </p>
                                 </div>
                             </div>
@@ -387,12 +398,16 @@
                         <!-- Created Date -->
                         <div class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
                             <div class="flex items-center space-x-3">
-                                <div class="h-10 w-10 bg-orange-100 dark:bg-orange-900/30 rounded-lg flex items-center justify-center">
+                                <div
+                                    class="h-10 w-10 bg-orange-100 dark:bg-orange-900/30 rounded-lg flex items-center justify-center">
                                     <Calendar class="w-5 h-5 text-orange-600 dark:text-orange-400" />
                                 </div>
                                 <div>
-                                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Created Date</p>
-                                    <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ formatDate(selectedUser.createdAt) }}</p>
+                                    <p
+                                        class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                                        Created Date</p>
+                                    <p class="text-sm font-semibold text-gray-900 dark:text-white">{{
+                                        formatDate(selectedUser.createdAt) }}</p>
                                 </div>
                             </div>
                         </div>
@@ -400,16 +415,20 @@
                         <!-- User ID -->
                         <div class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
                             <div class="flex items-center space-x-3">
-                                <div class="h-10 w-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
+                                <div
+                                    class="h-10 w-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
                                     <Fingerprint class="w-5 h-5 text-blue-600 dark:text-blue-400" />
                                 </div>
                                 <div class="flex-1 min-w-0">
-                                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">User ID</p>
+                                    <p
+                                        class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                                        User ID</p>
                                     <div class="flex items-center space-x-2">
-                                        <code class="text-sm font-semibold text-gray-900 dark:text-white truncate">{{ selectedUser.id }}</code>
-                                        <button @click="copyId(selectedUser.id)" 
-                                                class="p-1 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                                                title="Copy ID">
+                                        <code
+                                            class="text-sm font-semibold text-gray-900 dark:text-white truncate">{{ selectedUser.id }}</code>
+                                        <button @click="copyId(selectedUser.id)"
+                                            class="p-1 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                                            title="Copy ID">
                                             <Copy class="w-3.5 h-3.5" />
                                         </button>
                                     </div>
@@ -421,24 +440,30 @@
                     <!-- Department/Facility Info -->
                     <div v-if="selectedUser.department" class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
                         <div class="flex items-start space-x-3">
-                            <div class="h-10 w-10 bg-teal-100 dark:bg-teal-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <div
+                                class="h-10 w-10 bg-teal-100 dark:bg-teal-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
                                 <Building class="w-5 h-5 text-teal-600 dark:text-teal-400" />
                             </div>
                             <div class="flex-1">
                                 <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
                                     <span v-if="selectedUser.role === 'clinic'">Managing Clinic Facility</span>
                                     <span v-else-if="selectedUser.role === 'clinician'">Works at Clinic Facility</span>
-                                    <span v-else-if="selectedUser.role === 'manufacturer'">Associated Manufacturer</span>
+                                    <span v-else-if="selectedUser.role === 'manufacturer'">Associated
+                                        Manufacturer</span>
                                     <span v-else>Department</span>
                                 </p>
-                                <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ selectedUser.department }}</p>
-                                <p v-if="selectedUser.role === 'clinic'" class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                <p class="text-sm font-semibold text-gray-900 dark:text-white">{{
+                                    selectedUser.department }}</p>
+                                <p v-if="selectedUser.role === 'clinic'"
+                                    class="text-xs text-gray-500 dark:text-gray-400 mt-1">
                                     This user is the administrator of this clinic facility.
                                 </p>
-                                <p v-else-if="selectedUser.role === 'clinician'" class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                <p v-else-if="selectedUser.role === 'clinician'"
+                                    class="text-xs text-gray-500 dark:text-gray-400 mt-1">
                                     This clinician provides medical services at this facility.
                                 </p>
-                                <p v-else-if="selectedUser.role === 'manufacturer'" class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                <p v-else-if="selectedUser.role === 'manufacturer'"
+                                    class="text-xs text-gray-500 dark:text-gray-400 mt-1">
                                     This user is associated with the specified manufacturer.
                                 </p>
                             </div>
@@ -448,15 +473,18 @@
                     <!-- Clinic Code -->
                     <div v-if="selectedUser.clinicCode" class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
                         <div class="flex items-center space-x-3">
-                            <div class="h-10 w-10 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg flex items-center justify-center">
+                            <div
+                                class="h-10 w-10 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg flex items-center justify-center">
                                 <Hash class="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                             </div>
                             <div class="flex-1">
-                                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Associated Clinic Code</p>
+                                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                                    Associated Clinic Code</p>
                                 <div class="flex items-center justify-between mt-1">
-                                    <code class="text-sm font-semibold text-gray-900 dark:text-white">{{ selectedUser.clinicCode }}</code>
-                                    <button @click="copyId(selectedUser.clinicCode)" 
-                                            class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors">
+                                    <code
+                                        class="text-sm font-semibold text-gray-900 dark:text-white">{{ selectedUser.clinicCode }}</code>
+                                    <button @click="copyId(selectedUser.clinicCode)"
+                                        class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors">
                                         <Copy class="w-3.5 h-3.5 mr-1.5" />
                                         Copy
                                     </button>
@@ -468,30 +496,35 @@
                     <!-- Clinicians Section (for Clinic Admins) -->
                     <div v-if="selectedUser.role === 'clinic'" class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
                         <!-- Accordion Header -->
-                        <button @click="isCliniciansAccordionOpen = !isCliniciansAccordionOpen" class="w-full flex items-center justify-between text-left focus:outline-none group">
+                        <button @click="isCliniciansAccordionOpen = !isCliniciansAccordionOpen"
+                            class="w-full flex items-center justify-between text-left focus:outline-none group">
                             <div class="flex items-center space-x-3">
-                                <div class="h-10 w-10 bg-teal-100 dark:bg-teal-900/30 rounded-lg flex items-center justify-center">
+                                <div
+                                    class="h-10 w-10 bg-teal-100 dark:bg-teal-900/30 rounded-lg flex items-center justify-center">
                                     <Stethoscope class="w-5 h-5 text-teal-600 dark:text-teal-400" />
                                 </div>
                                 <div>
-                                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Clinicians at this Facility</p>
-                                    <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ associatedClinicians.length }} Medical Staff</p>
+                                    <p
+                                        class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                                        Clinicians at this Facility</p>
+                                    <p class="text-sm font-semibold text-gray-900 dark:text-white">{{
+                                        associatedClinicians.length }} Medical Staff</p>
                                 </div>
                             </div>
-                            <ChevronDown class="w-5 h-5 text-gray-500 dark:text-gray-400 transition-transform duration-300 transform" :class="{ 'rotate-180': isCliniciansAccordionOpen }" />
+                            <ChevronDown
+                                class="w-5 h-5 text-gray-500 dark:text-gray-400 transition-transform duration-300 transform"
+                                :class="{ 'rotate-180': isCliniciansAccordionOpen }" />
                         </button>
-                        
+
                         <!-- Accordion Content -->
-                        <transition
-                            enter-active-class="transition ease-out duration-200"
-                            enter-from-class="opacity-0 -translate-y-2"
-                            enter-to-class="opacity-100 translate-y-0"
+                        <transition enter-active-class="transition ease-out duration-200"
+                            enter-from-class="opacity-0 -translate-y-2" enter-to-class="opacity-100 translate-y-0"
                             leave-active-class="transition ease-in duration-150"
-                            leave-from-class="opacity-100 translate-y-0"
-                            leave-to-class="opacity-0 -translate-y-2">
-                            <div v-if="isCliniciansAccordionOpen" class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
+                            leave-from-class="opacity-100 translate-y-0" leave-to-class="opacity-0 -translate-y-2">
+                            <div v-if="isCliniciansAccordionOpen"
+                                class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
                                 <div v-if="associatedClinicians.length > 0">
-                                     <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
                                         Medical staff working at {{ selectedUser.department }}
                                     </p>
                                     <ul class="space-y-3">
@@ -505,7 +538,8 @@
                                                 <div class="ml-3">
                                                     <p class="text-sm font-medium text-gray-900 dark:text-white">{{
                                                         formatFullName(clinician) }}</p>
-                                                    <p class="text-xs text-gray-500 dark:text-gray-400">{{ clinician.email }}</p>
+                                                    <p class="text-xs text-gray-500 dark:text-gray-400">{{
+                                                        clinician.email }}</p>
                                                 </div>
                                             </div>
                                             <span
@@ -517,11 +551,13 @@
                                     <div v-if="associatedClinicians.length > initialClinicianCount" class="mt-3">
                                         <button @click="showAllClinicians = !showAllClinicians"
                                             class="w-full text-center px-4 py-2 text-sm font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors">
-                                            {{ showAllClinicians ? 'Show Less' : `Show ${associatedClinicians.length - initialClinicianCount} More` }}
+                                            {{ showAllClinicians ? 'Show Less' : `Show ${associatedClinicians.length -
+                                            initialClinicianCount} More` }}
                                         </button>
                                     </div>
                                 </div>
-                                <div v-else class="bg-white dark:bg-gray-800 rounded-lg p-4 border border-dashed border-gray-300 dark:border-gray-600">
+                                <div v-else
+                                    class="bg-white dark:bg-gray-800 rounded-lg p-4 border border-dashed border-gray-300 dark:border-gray-600">
                                     <p class="text-sm text-gray-500 dark:text-gray-400 text-center">
                                         No clinicians are currently assigned to this clinic facility.
                                     </p>
@@ -532,27 +568,31 @@
 
                     <!-- Quick Actions -->
                     <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
-                        <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">Quick Actions</p>
+                        <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
+                            Quick Actions</p>
                         <div class="flex flex-wrap gap-3">
                             <button @click="editUser(selectedUser); selectedUser = null"
                                 class="inline-flex items-center px-4 py-2 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900/30 transition-colors text-sm font-medium">
                                 <FilePenLine class="w-4 h-4 mr-2" />
                                 Edit User
                             </button>
-                            <button v-if="!selectedUser.isArchived" @click="handleToggleStatus(selectedUser.id); selectedUser = null"
-                                :class="['inline-flex items-center px-4 py-2 rounded-lg transition-colors text-sm font-medium', 
-                                    selectedUser.isActive 
-                                        ? 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/30' 
+                            <button v-if="!selectedUser.isArchived"
+                                @click="handleToggleStatus(selectedUser.id); selectedUser = null"
+                                :class="['inline-flex items-center px-4 py-2 rounded-lg transition-colors text-sm font-medium',
+                                    selectedUser.isActive
+                                        ? 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/30'
                                         : 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 hover:bg-green-100 dark:hover:bg-green-900/30']">
                                 <component :is="selectedUser.isActive ? XCircle : CheckCircle2" class="w-4 h-4 mr-2" />
                                 {{ selectedUser.isActive ? 'Deactivate' : 'Activate' }}
                             </button>
-                            <button v-if="!selectedUser.isArchived" @click="handleArchiveUser(selectedUser.id); selectedUser = null"
+                            <button v-if="!selectedUser.isArchived"
+                                @click="handleArchiveUser(selectedUser.id); selectedUser = null"
                                 class="inline-flex items-center px-4 py-2 bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300 rounded-lg hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-colors text-sm font-medium">
                                 <Archive class="w-4 h-4 mr-2" />
                                 Archive User
                             </button>
-                            <button v-else-if="!isOfficeStaff" @click="handleDeleteUser(selectedUser.id); selectedUser = null"
+                            <button v-else-if="!isOfficeStaff"
+                                @click="handleDeleteUser(selectedUser.id); selectedUser = null"
                                 class="inline-flex items-center px-4 py-2 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors text-sm font-medium">
                                 <Trash2 class="w-4 h-4 mr-2" />
                                 Delete User
@@ -561,14 +601,13 @@
                     </div>
 
                     <!-- Copy Tooltip -->
-                    <transition
-                        enter-active-class="transition ease-out duration-200"
-                        enter-from-class="transform opacity-0 scale-95"
-                        enter-to-class="transform opacity-100 scale-100"
+                    <transition enter-active-class="transition ease-out duration-200"
+                        enter-from-class="transform opacity-0 scale-95" enter-to-class="transform opacity-100 scale-100"
                         leave-active-class="transition ease-in duration-100"
                         leave-from-class="transform opacity-100 scale-100"
                         leave-to-class="transform opacity-0 scale-95">
-                        <div v-if="copiedTooltip" class="fixed bottom-4 right-4 px-4 py-2 text-sm text-white bg-gray-800 dark:bg-gray-900 rounded-lg shadow-lg">
+                        <div v-if="copiedTooltip"
+                            class="fixed bottom-4 right-4 px-4 py-2 text-sm text-white bg-gray-800 dark:bg-gray-900 rounded-lg shadow-lg">
                             Copied to clipboard!
                         </div>
                     </transition>
@@ -580,14 +619,18 @@
         <BaseModal v-model="showFormModal" :title="showCreateForm ? 'Create New User' : 'Edit User'" size="2xl">
             <form @submit.prevent="handleSubmitForm" class="space-y-6">
                 <!-- User Header (only shown when editing) -->
-                <div v-if="!showCreateForm && selectedUser" class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-4">
+                <div v-if="!showCreateForm && selectedUser"
+                    class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-4">
                     <div class="flex items-center space-x-4">
-                        <div class="h-12 w-12 bg-white dark:bg-gray-800 rounded-xl shadow-sm flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold text-lg">
+                        <div
+                            class="h-12 w-12 bg-white dark:bg-gray-800 rounded-xl shadow-sm flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold text-lg">
                             {{ getUserInitials(selectedUser) }}
                         </div>
                         <div>
                             <p class="text-sm text-gray-500 dark:text-gray-400">Editing User</p>
-                            <p class="text-lg font-semibold text-gray-900 dark:text-white">{{ formatFullName(selectedUser) }}</p>
+                            <p class="text-lg font-semibold text-gray-900 dark:text-white">{{
+                                formatFullName(selectedUser) }}
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -656,86 +699,91 @@
                     </div>
 
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Role<span
-                                class="text-red-500 ml-1">*</span></label>
-                        <select v-model="formData.role" required
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Role<span
+                                    class="text-red-500 ml-1">*</span></label>
+                            <select v-model="formData.role" required
+                                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white appearance-none transition-all duration-200">
+                                <!-- Office Staff only visible to admins -->
+                                <option v-if="!isOfficeStaff" value="office-staff">Office Staff</option>
+                                <!-- Roles available to both admin and office staff -->
+                                <option value="clinic">Clinic Administrator</option>
+                                <option value="clinician">Clinician (Medical Staff)</option>
+                                <option value="manufacturer">Manufacturer</option>
+                                <option value="biller">Biller</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Status<span
+                                    class="text-red-500 ml-1">*</span></label>
+                            <select v-model="formData.isActive" required
+                                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white appearance-none transition-all duration-200">
+                                <option :value="true">Active</option>
+                                <option :value="false">Inactive</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div v-if="formData.role === 'clinic'">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Clinic Facility
+                            <span class="text-red-500 ml-1">*</span>
+                        </label>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">Select the clinic facility this user
+                            will
+                            manage</p>
+                        <select v-model="formData.clinicId" :required="formData.role === 'clinic'"
                             class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white appearance-none transition-all duration-200">
-                            <!-- Office Staff only visible to admins -->
-                            <option v-if="!isOfficeStaff" value="office-staff">Office Staff</option>
-                            <!-- Roles available to both admin and office staff -->
-                            <option value="clinic">Clinic Administrator</option>
-                            <option value="clinician">Clinician (Medical Staff)</option>
-                            <option value="manufacturer">Manufacturer</option>
-                            <option value="biller">Biller</option>
+                            <option disabled value="">Select a clinic facility</option>
+                            <option v-for="dept in departments" :key="dept.id" :value="dept.id">
+                                {{ dept.name }}
+                            </option>
                         </select>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Status<span
+
+                    <div v-if="formData.role === 'manufacturer'">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Manufacturer<span
                                 class="text-red-500 ml-1">*</span></label>
-                        <select v-model="formData.isActive" required
+                        <select v-model="formData.manufacturerId" :required="formData.role === 'manufacturer'"
                             class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white appearance-none transition-all duration-200">
-                            <option :value="true">Active</option>
-                            <option :value="false">Inactive</option>
+                            <option disabled value="">Select a manufacturer</option>
+                            <option v-for="manu in manufacturers" :key="manu.id" :value="manu.id">
+                                {{ manu.name }}
+                            </option>
                         </select>
                     </div>
-                </div>
 
-                <div v-if="formData.role === 'clinic'">
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Clinic Facility
-                        <span class="text-red-500 ml-1">*</span>
-                    </label>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">Select the clinic facility this user will manage</p>
-                    <select v-model="formData.clinicId" :required="formData.role === 'clinic'"
-                        class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white appearance-none transition-all duration-200">
-                        <option disabled value="">Select a clinic facility</option>
-                        <option v-for="dept in departments" :key="dept.id" :value="dept.id">
-                            {{ dept.name }}
-                        </option>
-                    </select>
-                </div>
-
-                <div v-if="formData.role === 'manufacturer'">
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Manufacturer<span
-                            class="text-red-500 ml-1">*</span></label>
-                    <select v-model="formData.manufacturerId" :required="formData.role === 'manufacturer'"
-                        class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white appearance-none transition-all duration-200">
-                        <option disabled value="">Select a manufacturer</option>
-                        <option v-for="manu in manufacturers" :key="manu.id" :value="manu.id">
-                            {{ manu.name }}
-                        </option>
-                    </select>
-                </div>
-
-                <div v-if="formData.role === 'clinician'">
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Associated Clinic Facility
-                        <span class="text-red-500 ml-1">*</span>
-                    </label>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">Select the clinic facility where this clinician works</p>
-                    <select v-model="formData.clinicId" :required="formData.role === 'clinician'"
-                        class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white appearance-none transition-all duration-200">
-                        <option disabled value="">Select a clinic facility</option>
-                        <option v-for="dept in departments" :key="dept.id" :value="dept.id">
-                            {{ dept.name }}
-                        </option>
-                    </select>
-                </div>
-
-                <div v-if="showCreateForm">
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Password<span
-                            class="text-red-500 ml-1">*</span></label>
-                    <div class="relative">
-                        <input v-model="formData.password" type="text" :required="showCreateForm"
-                            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200 pr-12"
-                            placeholder="Enter or generate a password" />
-                        <button type="button" @click="generateRandomPassword"
-                            class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400"
-                            title="Generate Random Password">
-                            <Sparkles class="w-5 h-5" />
-                        </button>
+                    <div v-if="formData.role === 'clinician'">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Associated Clinic
+                            Facility
+                            <span class="text-red-500 ml-1">*</span>
+                        </label>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">Select the clinic facility where this
+                            clinician
+                            works</p>
+                        <select v-model="formData.clinicId" :required="formData.role === 'clinician'"
+                            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white appearance-none transition-all duration-200">
+                            <option disabled value="">Select a clinic facility</option>
+                            <option v-for="dept in departments" :key="dept.id" :value="dept.id">
+                                {{ dept.name }}
+                            </option>
+                        </select>
                     </div>
-                </div>
+
+                    <div v-if="showCreateForm">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Password<span
+                                class="text-red-500 ml-1">*</span></label>
+                        <div class="relative">
+                            <input v-model="formData.password" type="text" :required="showCreateForm"
+                                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200 pr-12"
+                                placeholder="Enter or generate a password" />
+                            <button type="button" @click="generateRandomPassword"
+                                class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400"
+                                title="Generate Random Password">
+                                <Sparkles class="w-5 h-5" />
+                            </button>
+                        </div>
+                    </div>
 
                 </div>
 
@@ -907,7 +955,7 @@ const displayedClinicians = computed(() => {
 const fetchCliniciansForClinic = async (clinicId: string) => {
     try {
         // Fetch all clinicians (no pagination) for this clinic
-        const { data } = await userService.getUsers({ 
+        const { data } = await userService.getUsers({
             role: 3, // clinician role
             status: 'all'
         })
@@ -928,10 +976,10 @@ const fetchCliniciansForClinic = async (clinicId: string) => {
             lastLogin: u.lastLogin ?? undefined,
             createdAt: u.createdAt ?? u.created_at ?? new Date().toISOString(),
         } as User))
-        
+
         // Filter by clinic ID
         associatedCliniciansData.value = allClinicians.filter(c => c.clinicId === clinicId)
-        
+
         console.log('Clinic ID:', clinicId)
         console.log('All fetched clinicians:', allClinicians.map(c => ({ id: c.id, name: formatFullName(c), clinicId: c.clinicId })))
         console.log('Filtered clinicians for this clinic:', associatedCliniciansData.value.map(c => ({ id: c.id, name: formatFullName(c), clinicId: c.clinicId })))
@@ -947,7 +995,7 @@ async function handleToggleStatus(userId: string) {
 
     const action = user.isActive ? 'deactivate' : 'activate'
     const actionTitle = user.isActive ? 'Deactivate User' : 'Activate User'
-    
+
     const result = await Swal.fire({
         title: actionTitle,
         text: `Are you sure you want to ${action} ${formatFullName(user)}?`,
@@ -1167,7 +1215,7 @@ async function handleSubmitForm() {
             }
             users.value.unshift(newUser)
             await fetchUserStats()
-            
+
             // Success notification
             await Swal.fire({
                 title: 'User Created Successfully!',
@@ -1181,18 +1229,18 @@ async function handleSubmitForm() {
                 timer: 4000,
                 showConfirmButton: true
             })
-            
+
             closeForm()
         } catch (err: any) {
             console.error('Failed to create user', err)
-            
+
             // Handle specific validation errors
             const errorMessage = err.response?.data?.message || 'Failed to create user. Please try again.'
             const errorCode = err.response?.data?.error
-            
+
             let title = 'Error!'
             let icon: 'error' | 'warning' = 'error'
-            
+
             if (errorCode === 'manufacturer_account_exists') {
                 title = 'Manufacturer Account Already Exists'
                 icon = 'warning'
@@ -1203,7 +1251,7 @@ async function handleSubmitForm() {
                 title = 'Unauthorized Role Creation'
                 icon = 'error'
             }
-            
+
             await Swal.fire({
                 title: title,
                 text: errorMessage,
@@ -1246,7 +1294,7 @@ async function handleSubmitForm() {
             const idx = users.value.findIndex(x => x.id === updated.id)
             if (idx !== -1) users.value[idx] = updated
             await fetchUserStats()
-            
+
             // Success notification
             await Swal.fire({
                 title: 'Success!',
@@ -1256,18 +1304,18 @@ async function handleSubmitForm() {
                 timer: 2000,
                 showConfirmButton: false
             })
-            
+
             closeForm()
         } catch (err: any) {
             console.error('Failed to update user', err)
-            
+
             // Handle specific validation errors
             const errorMessage = err.response?.data?.message || 'Failed to update user. Please try again.'
             const errorCode = err.response?.data?.error
-            
+
             let title = 'Error!'
             let icon: 'error' | 'warning' = 'error'
-            
+
             if (errorCode === 'manufacturer_account_exists') {
                 title = 'Manufacturer Account Already Exists'
                 icon = 'warning'
@@ -1275,7 +1323,7 @@ async function handleSubmitForm() {
                 title = 'Clinic Admin Already Exists'
                 icon = 'warning'
             }
-            
+
             await Swal.fire({
                 title: title,
                 text: errorMessage,
@@ -1440,34 +1488,34 @@ const roleToInt = (role: User['role']): number => {
 const fetchUsers = async () => {
     tableLoader.value = true
     try {
-    const params = {
-        search: searchTerm.value || undefined,
-        role: roleFilter.value === 'all' ? undefined : roleToInt(roleFilter.value as User['role']),
-        status: statusFilter.value,
-        page: currentPage.value,
-    }
-    const { data } = await userService.getUsers(params)
-    const incoming: any[] = Array.isArray(data.users) ? data.users : []
-    users.value = incoming.map((u) => ({
-        id: String(u.id),
-        email: u.email,
-        firstName: u.firstName ?? u.first_name ?? '',
-        middleName: u.middleName ?? u.middle_name ?? '',
-        lastName: u.lastName ?? u.last_name ?? '',
-        phone: u.phone ?? '',
-        role: normalizeRole(u.role),
-        department: u.department ?? undefined,
-        clinicId: u.clinicId ?? u.clinic_id ?? undefined,
-        clinicCode: u.clinicCode ?? u.clinic_code ?? undefined,
-        manufacturerId: u.manufacturerId ?? u.manufacturer_id ?? undefined,
-        isActive: Boolean(u.isActive),
-        isArchived: Boolean(u.isArchived ?? false),
-        lastLogin: u.lastLogin ?? undefined,
-        createdAt: u.createdAt ?? u.created_at ?? new Date().toISOString(),
-    }))
-    // Update total results to reflect filtered count from backend
-    totalResults.value = data.total
-    if (data.per_page) itemsPerPage.value = Number(data.per_page)
+        const params = {
+            search: searchTerm.value || undefined,
+            role: roleFilter.value === 'all' ? undefined : roleToInt(roleFilter.value as User['role']),
+            status: statusFilter.value,
+            page: currentPage.value,
+        }
+        const { data } = await userService.getUsers(params)
+        const incoming: any[] = Array.isArray(data.users) ? data.users : []
+        users.value = incoming.map((u) => ({
+            id: String(u.id),
+            email: u.email,
+            firstName: u.firstName ?? u.first_name ?? '',
+            middleName: u.middleName ?? u.middle_name ?? '',
+            lastName: u.lastName ?? u.last_name ?? '',
+            phone: u.phone ?? '',
+            role: normalizeRole(u.role),
+            department: u.department ?? undefined,
+            clinicId: u.clinicId ?? u.clinic_id ?? undefined,
+            clinicCode: u.clinicCode ?? u.clinic_code ?? undefined,
+            manufacturerId: u.manufacturerId ?? u.manufacturer_id ?? undefined,
+            isActive: Boolean(u.isActive),
+            isArchived: Boolean(u.isArchived ?? false),
+            lastLogin: u.lastLogin ?? undefined,
+            createdAt: u.createdAt ?? u.created_at ?? new Date().toISOString(),
+        }))
+        // Update total results to reflect filtered count from backend
+        totalResults.value = data.total
+        if (data.per_page) itemsPerPage.value = Number(data.per_page)
     } catch (err) {
         console.error('Failed to fetch users', err)
     } finally {
@@ -1500,17 +1548,17 @@ const fetchClinics = async () => {
     try {
         const { data } = await userService.getClinics()
         // Handle both possible response structures
-        const items = Array.isArray(data) 
-            ? data 
-            : (Array.isArray(data?.user_data) 
-                ? data.user_data 
+        const items = Array.isArray(data)
+            ? data
+            : (Array.isArray(data?.user_data)
+                ? data.user_data
                 : (Array.isArray(data?.clinics) ? data.clinics : []))
-        
-        departments.value = items.map((c: any) => ({ 
-            id: String(c.clinic_id ?? c.id), 
-            name: c.clinic_name ?? c.name 
+
+        departments.value = items.map((c: any) => ({
+            id: String(c.clinic_id ?? c.id),
+            name: c.clinic_name ?? c.name
         }))
-        
+
         console.log('Clinics loaded:', departments.value)
     } catch (err) {
         console.error('Failed to fetch clinics', err)
@@ -1521,15 +1569,15 @@ const fetchManufacturers = async () => {
     try {
         const { data } = await userService.getManufacturers()
         // Handle both possible response structures
-        const items = Array.isArray(data) 
-            ? data 
-            : (Array.isArray(data?.manufacturerData) 
-                ? data.manufacturerData 
+        const items = Array.isArray(data)
+            ? data
+            : (Array.isArray(data?.manufacturerData)
+                ? data.manufacturerData
                 : (Array.isArray(data?.manufacturers) ? data.manufacturers : []))
-        
-        manufacturers.value = items.map((m: any) => ({ 
-            id: String(m.manufacturer_id ?? m.id), 
-            name: m.manufacturer_name ?? m.manufacturerName ?? m.name 
+
+        manufacturers.value = items.map((m: any) => ({
+            id: String(m.manufacturer_id ?? m.id),
+            name: m.manufacturer_name ?? m.manufacturerName ?? m.name
         }))
     } catch (err) {
         console.error('Failed to fetch manufacturers', err)

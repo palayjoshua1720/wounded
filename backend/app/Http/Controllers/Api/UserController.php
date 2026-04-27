@@ -227,7 +227,7 @@ class UserController extends Controller
             $emailParams = [
                 'to'        => $user->email,
                 'from'      => 'noreply@woundmed.com',
-                'from_name' => 'WoundMed Support',
+                'from_name' => 'WOUNDMED INC.',
                 'subject'   => 'Welcome to WoundMed - Your Account Details',
                 'body'      => $emailBody,
             ];
