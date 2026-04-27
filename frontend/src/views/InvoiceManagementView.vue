@@ -4,7 +4,7 @@
     <div class="flex items-center justify-between">
       <div>
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Invoice & Payment Tracking</h1>
-        <p class="text-gray-600 dark:text-gray-400">Manage invoices, OCR extraction, and payment synchronization</p>
+        <!-- <p class="text-gray-600 dark:text-gray-400">Manage invoices, OCR extraction, and payment synchronization</p> -->
       </div>
       <div class="flex gap-2">
         <button

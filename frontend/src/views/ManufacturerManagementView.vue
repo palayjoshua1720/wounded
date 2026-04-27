@@ -514,58 +514,59 @@
             </div>
           </div>
 
-        <!-- File Upload Sections -->
-        <div class="space-y-8">
-          <!-- IVR -->
-          <div>
-            <div class="flex items-center gap-2 mb-2">
-              <FilePenLine class="w-5 h-5 text-green-500" />
-              <h3 class="text-md font-semibold text-gray-900 dark:text-gray-100">IVR Information</h3>
+          <!-- File Upload Sections -->
+          <div class="space-y-8">
+            <!-- IVR -->
+            <div>
+              <div class="flex items-center gap-2 mb-2">
+                <FilePenLine class="w-5 h-5 text-green-500" />
+                <h3 class="text-md font-semibold text-gray-900 dark:text-gray-100">IVR Information</h3>
+              </div>
+              <FileUploadSection v-model:selectedFile="selectedIvrFile" v-model:previewUrl="ivrPreviewUrl"
+                v-model:removeFlag="removeIvrFlag" :existingFilename="formData.ivrFilename"
+                :existingFileExtension="formData.ivrFileExtension" label="IVR Form" accept=".pdf,.doc,.docx"
+                @remove-existing="removeExistingIvr" @preview="previewExistingFile('ivr')" />
             </div>
-            <FileUploadSection v-model:selectedFile="selectedIvrFile" v-model:previewUrl="ivrPreviewUrl"
-              v-model:removeFlag="removeIvrFlag" :existingFilename="formData.ivrFilename"
-              :existingFileExtension="formData.ivrFileExtension" label="IVR Form"
-              accept=".pdf,.doc,.docx" @remove-existing="removeExistingIvr" @preview="previewExistingFile('ivr')" />
+
+            <!-- Order -->
+            <div>
+              <div class="flex items-center gap-2 mb-2">
+                <FilePenLine class="w-5 h-5 text-green-500" />
+                <h3 class="text-md font-semibold text-gray-900 dark:text-gray-100">Order Form</h3>
+              </div>
+              <FileUploadSection v-model:selectedFile="selectedOrderFile" v-model:previewUrl="orderPreviewUrl"
+                v-model:removeFlag="removeOrderFlag" :existingFilename="formData.orderFilename"
+                :existingFileExtension="formData.orderFileExtension" label="Order Form" accept=".pdf,.doc,.docx"
+                @remove-existing="removeExistingOrder" @preview="previewExistingFile('order')" />
+            </div>
+
+            <!-- Onboarding -->
+            <div>
+              <div class="flex items-center gap-2 mb-2">
+                <FilePenLine class="w-5 h-5 text-green-500" />
+                <h3 class="text-md font-semibold text-gray-900 dark:text-gray-100">Onboarding File</h3>
+              </div>
+              <FileUploadSection v-model:selectedFile="selectedOnboardingFile" v-model:previewUrl="onboardingPreviewUrl"
+                v-model:removeFlag="removeOnboardingFlag" :existingFilename="formData.onboardingFilename"
+                :existingFileExtension="formData.onboardingFileExtension" label="Onboarding File"
+                accept=".pdf,.doc,.docx" @remove-existing="removeExistingOnboarding"
+                @preview="previewExistingFile('onboarding')" />
+            </div>
           </div>
 
-          <!-- Order -->
-          <div>
-            <div class="flex items-center gap-2 mb-2">
-              <FilePenLine class="w-5 h-5 text-green-500" />
-              <h3 class="text-md font-semibold text-gray-900 dark:text-gray-100">Order Form</h3>
-            </div>
-            <FileUploadSection v-model:selectedFile="selectedOrderFile" v-model:previewUrl="orderPreviewUrl"
-              v-model:removeFlag="removeOrderFlag" :existingFilename="formData.orderFilename"
-              :existingFileExtension="formData.orderFileExtension" label="Order Form"
-              accept=".pdf,.doc,.docx" @remove-existing="removeExistingOrder" @preview="previewExistingFile('order')" />
-          </div>
-
-          <!-- Onboarding -->
-          <div>
-            <div class="flex items-center gap-2 mb-2">
-              <FilePenLine class="w-5 h-5 text-green-500" />
-              <h3 class="text-md font-semibold text-gray-900 dark:text-gray-100">Onboarding File</h3>
-            </div>
-            <FileUploadSection v-model:selectedFile="selectedOnboardingFile" v-model:previewUrl="onboardingPreviewUrl"
-              v-model:removeFlag="removeOnboardingFlag" :existingFilename="formData.onboardingFilename"
-              :existingFileExtension="formData.onboardingFileExtension"
-              label="Onboarding File" accept=".pdf,.doc,.docx" @remove-existing="removeExistingOnboarding"
-              @preview="previewExistingFile('onboarding')" />
+          <!-- Submit Buttons -->
+          <div class="flex justify-end space-x-3 pt-4">
+            <button type="button" @click="closeForm"
+              class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
+              Cancel
+            </button>
+            <button type="button" @click="handleSubmitForm"
+              class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+              {{ showCreateForm ? 'Create Manufacturer' : 'Update Manufacturer' }}
+            </button>
           </div>
         </div>
-
-        <!-- Submit Buttons -->
-        <div class="flex justify-end space-x-3 pt-4">
-          <button type="button" @click="closeForm"
-            class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
-            Cancel
-          </button>
-          <button type="button" @click="handleSubmitForm"
-            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-            {{ showCreateForm ? 'Create Manufacturer' : 'Update Manufacturer' }}
-          </button>
-        </div>
-      </template>
+        </form>
     </BaseModal>
 
     <!-- Logo Cropper Modal -->

@@ -4,9 +4,6 @@
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
       <div class="space-y-2">
         <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Inventory Ledger Management</h1>
-        <p class="text-gray-600 dark:text-gray-400 max-w-2xl">
-          Track inventory items with serial numbers, product details, clinic assignments, usage status, and invoice connections.
-        </p>
       </div>
       <div class="flex items-center gap-4">
         <button @click="showStats = !showStats"
