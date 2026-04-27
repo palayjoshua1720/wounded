@@ -62,7 +62,7 @@ class VerificationCodeService
         $emailParams = [
             'to' => $user->email,
             'from' => 'noreply@woundmed.com',
-            'from_name' => 'WoundMed Security',
+            'from_name' => 'WOUNDMED INC. Security',
             'subject' => 'Your Login Verification Code',
             'body' => $this->getVerificationEmailTemplate($user, $code),
         ];
@@ -185,7 +185,7 @@ class VerificationCodeService
             <body>
                 <div class='container'>
                     <div class='header'> 
-                        <h2>WoundMed Security</h2>
+                        <h2>WOUNDMED INC. Security</h2>
                         <p>Account Verification</p>
                     </div>
                     <div class='content'>

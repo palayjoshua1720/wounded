@@ -32,6 +32,7 @@ class IVR extends Model
         'manufacturer_id',
         'patient_id',
         'ivr_file',
+        'ivr_file_extension',
         'description',
         'eligibility_status',
         'ivr_status',

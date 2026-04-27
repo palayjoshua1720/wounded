@@ -565,22 +565,42 @@
 							<div v-if="!showCreateForm && existingFile"
 								class="mt-3 flex items-center justify-between gap-3 text-sm text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 px-3 py-2 rounded-lg">
 								<div class="flex items-center gap-2">
-									<FileText class="w-4 h-4 text-gray-400" />
+									<div class="h-8 w-8 bg-gray-50 dark:bg-gray-700 rounded-lg flex items-center justify-center">
+										<FileText :class="getFileTypeIcon(existingFile.extension)" class="w-4 h-4" />
+									</div>
 									<div>
-										<p class="font-medium">{{ existingFile.name }}</p>
-										<p class="text-xs text-gray-500">Current uploaded file</p>
+										<div class="flex items-center gap-2">
+											<span :class="[
+												'inline-flex px-2 py-0.5 text-xs rounded-full font-medium',
+												(existingFile.extension || 'pdf') === 'pdf'
+													? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
+													: 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400'
+											]">
+												{{ (existingFile.extension || 'pdf').toUpperCase() }}
+											</span>
+											<span class="text-xs text-gray-600 dark:text-gray-400">
+												{{ getFileTypeDisplay(existingFile.extension || 'pdf') }}
+											</span>
+										</div>
+										<p class="text-xs text-gray-500 mt-0.5">Current uploaded file</p>
 									</div>
 								</div>
 
 								<div class="inline-flex items-center gap-1">
-									<a :href="existingFile.url" target="_blank" class="text-blue-600 hover:underline">
-										<Eye class="w-5 h-4" />
-									</a>
-									<button @click="removeExistingFile"
-										class="text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 transition"
-										title="Remove file">
-										<X class="w-5 h-5" />
-									</button>
+								<a 
+									:href="existingFile.url" 
+									target="blank"
+									class="text-blue-600 hover:underline"
+								>
+									<Eye class="w-5 h-4" />
+								</a>
+								<button 
+									@click="removeExistingFile"
+									class="text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 transition"
+									title="Remove file"
+								>
+									<X class="w-5 h-5" />
+								</button>
 								</div>
 							</div>
 						</div>
@@ -651,6 +671,7 @@ interface IVRRequest {
 	description: string
 	verified_at: string
 	ivr_file: string
+	ivr_file_extension?: string
 
 	// Nested relations
 	patient?: {
@@ -768,6 +789,7 @@ const formData = ref({
 	status: '',
 	eligibility_status: 0,
 	ivr_file: '',
+	ivr_file_extension: '',
 	ivr_status: 0
 })
 
@@ -795,7 +817,8 @@ async function editIVR(ivr: IVRRequest) {
 		manufacturer_id: ivr.manufacturer?.manufacturer_id || '',
 		eligibility_status: ivr.eligibility_status,
 		ivr_file: ivr.ivr_file || '',
-		ivr_status: ivr.ivr_status || 0,
+		ivr_file_extension: ivr.ivr_file_extension || '',
+		ivr_status:ivr.ivr_status || 0,
 		eligibility_email: '',
 	}
 
@@ -1022,6 +1045,7 @@ function clearForm() {
 		status: '',
 		eligibility_status: 0,
 		ivr_file: '',
+		ivr_file_extension: '',
 		ivr_status: 0,
 	}
 }
@@ -1154,16 +1178,20 @@ const removeFile = () => {
 
 const removeExistingFile = () => {
 	formData.value.ivr_file = '';
+	formData.value.ivr_file_extension = '';
 	selectedFile.value = null
 	loadProgress.value = 0
 	isLoadingFile.value = false
 }
 
 const existingFile = computed(() => {
-	return formData.value.ivr_file ? {
-		name: formData.value.ivr_file.split('/').pop(),
-		url: formData.value.ivr_file
-	} : null
+    if (!formData.value.ivr_file) return null
+    const extension = formData.value.ivr_file_extension || 'pdf'
+    return {
+        name: formData.value.ivr_file.split('/').pop(),
+        url: `${API_URL}/private-file/${formData.value.ivr_file}`,
+        extension: extension
+    }
 })
 
 // get all patient
@@ -1311,6 +1339,25 @@ function isImageFile(filename: string) {
 function isPDFFile(filename: string) {
 	if (!filename) return false
 	return filename.toLowerCase().endsWith('.pdf')
+}
+
+const getFileTypeDisplay = (extension: string): string => {
+	const typeMap: Record<string, string> = {
+		'pdf': 'PDF Document',
+		'doc': 'Word Document',
+		'docx': 'Word Document'
+	}
+	return typeMap[extension] || 'Document'
+}
+
+const getFileTypeIcon = (extension: string): string => {
+	if (!extension) return 'text-gray-400'
+	const iconMap: Record<string, string> = {
+		'pdf': 'text-red-500',
+		'doc': 'text-blue-500',
+		'docx': 'text-blue-500'
+	}
+	return iconMap[extension] || 'text-gray-500'
 }
 
 onMounted(async () => {

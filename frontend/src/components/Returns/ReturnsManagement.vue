@@ -1,7 +1,7 @@
 <template>
   <div class="space-y-6">
-    <!-- Filters Card -->
-    <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+    <!-- Filters Card - Desktop -->
+    <div class="hidden lg:block bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
       <div class="flex flex-col lg:flex-row gap-6">
         <div class="flex-1">
           <div class="relative">
@@ -39,8 +39,72 @@
       </div>
     </div>
 
-    <!-- Returns Table Card -->
-    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+    <!-- Filters Card - Mobile -->
+    <div class="lg:hidden bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+      <!-- Search Row -->
+      <div class="relative mb-4">
+        <Search class="absolute left-4 top-3.5 h-5 w-5 text-gray-400 dark:text-gray-500" />
+        <input v-model="searchQuery" type="text" placeholder="Search returns by serial number, brand, reason..."
+          class="w-full pl-12 pr-10 py-3.5 border-0 bg-gray-50 dark:bg-gray-700/50 rounded-xl focus:ring-2 focus:ring-orange-500 focus:bg-white dark:focus:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200" />
+        <button v-if="searchQuery" @click="searchQuery = ''" class="absolute right-3 top-3 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+          <X class="w-4 h-4" />
+        </button>
+      </div>
+
+      <!-- Filter Pills Row -->
+      <div class="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 scrollbar-hide">
+        <button @click="showFilters = !showFilters"
+          class="flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg text-xs font-medium">
+          <SlidersHorizontal class="w-3.5 h-3.5" />
+          Filters
+          <span v-if="statusFilter !== 'all'" class="w-2 h-2 bg-blue-500 rounded-full"></span>
+        </button>
+        <span v-if="statusFilter !== 'all'" class="flex-shrink-0 inline-flex items-center gap-1 px-2.5 py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-lg text-xs">
+          {{ statusFilter === 'manual' ? 'Manual' : 'Upload' }}
+          <button @click="statusFilter = 'all'" class="hover:text-blue-900">
+            <X class="w-3 h-3" />
+          </button>
+        </span>
+      </div>
+
+      <!-- Expandable Filters -->
+      <div v-if="showFilters" class="space-y-3 pt-3 mt-3 border-t border-gray-100 dark:border-gray-700">
+        <div>
+          <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Entry Type</label>
+          <div class="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+            <button @click="statusFilter = 'all'"
+              :class="['flex-shrink-0 py-2 px-3 rounded-lg text-xs font-medium transition-colors', statusFilter === 'all' ? 'bg-blue-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300']">
+              All
+            </button>
+            <button @click="statusFilter = 'manual'"
+              :class="['flex-shrink-0 py-2 px-3 rounded-lg text-xs font-medium transition-colors', statusFilter === 'manual' ? 'bg-blue-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300']">
+              Manual
+            </button>
+            <button @click="statusFilter = 'upload'"
+              :class="['flex-shrink-0 py-2 px-3 rounded-lg text-xs font-medium transition-colors', statusFilter === 'upload' ? 'bg-blue-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300']">
+              Upload
+            </button>
+          </div>
+        </div>
+        <div class="flex items-center justify-between pt-2">
+          <label class="block text-xs font-medium text-gray-500 dark:text-gray-400">Items per page</label>
+          <div class="relative">
+            <select
+              v-model="itemsPerPage"
+              class="pl-3 pr-8 py-2 border-0 bg-gray-50 dark:bg-gray-700/50 rounded-lg focus:ring-2 focus:ring-orange-500 text-gray-900 dark:text-white appearance-none text-xs font-medium transition-all duration-200"
+            >
+              <option value="10">10 per page</option>
+              <option value="25">25 per page</option>
+              <option value="50">50 per page</option>
+            </select>
+            <ChevronDown class="absolute right-2 top-2 h-4 w-4 text-gray-500 dark:text-gray-400 pointer-events-none" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Returns Table Card (Desktop) -->
+    <div class="hidden lg:block bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
       <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
           <thead class="bg-gray-50/80 dark:bg-gray-700/50 backdrop-blur-sm">
@@ -64,7 +128,7 @@
               </td>
             </tr>
             <template v-else>
-              <tr v-for="item in returns" :key="item.id" class="hover:bg-gray-50/70 dark:hover:bg-gray-700/50 transition-colors duration-150">
+              <tr v-for="item in filteredReturns" :key="item.id" class="hover:bg-gray-50/70 dark:hover:bg-gray-700/50 transition-colors duration-150">
               <td class="px-6 py-5 whitespace-nowrap">
                 <div class="flex items-center">
                   <div class="flex-shrink-0 h-10 w-10 bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-lg flex items-center justify-center">
@@ -118,7 +182,7 @@
                   <button @click="editReturn(item)" 
                     class="inline-flex items-center justify-center w-9 h-9 text-gray-400 dark:text-gray-500 hover:bg-amber-100 dark:hover:bg-amber-900/30 hover:text-amber-700 dark:hover:text-amber-400 rounded-lg transition-all duration-200"
                     title="Edit Return">
-                    <Edit3 class="w-5 h-5" />
+                    <FilePenLine class="w-5 h-5" />
                   </button>
                   <button @click="confirmDelete(item)" 
                     class="inline-flex items-center justify-center w-9 h-9 text-gray-400 dark:text-gray-500 hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-700 dark:hover:text-red-400 rounded-lg transition-all duration-200"
@@ -149,6 +213,124 @@
         @update:page="changePage"
       />
     </div>
+
+    <!-- Mobile Card View -->
+    <div class="lg:hidden space-y-4">
+      <!-- Loading State -->
+      <div v-if="props.loading" class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-8 text-center">
+        <div class="w-8 h-8 rounded-full border-4 border-gray-200 border-t-red-600 animate-spin mx-auto"></div>
+        <div class="text-center text-gray-400 py-4 text-sm">Fetching Returns</div>
+      </div>
+
+      <!-- Empty State -->
+      <div v-else-if="filteredReturns.length === 0" class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-8 text-center">
+        <div class="flex justify-center mb-4">
+          <div class="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
+            <RefreshCcw class="w-8 h-8 text-gray-400 dark:text-gray-500" />
+          </div>
+        </div>
+        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">No returns found</h3>
+        <p class="text-gray-600 dark:text-gray-400">No return records match your current filters.</p>
+      </div>
+
+      <!-- Return Cards -->
+      <div v-else class="space-y-4">
+        <div
+          v-for="item in filteredReturns"
+          :key="item.id"
+          class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden"
+        >
+          <!-- Card Header with Gradient -->
+          <div class="bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-700 dark:to-indigo-800 p-4">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <div class="h-10 w-10 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur-sm">
+                  <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                  </svg>
+                </div>
+                <div>
+                  <p class="text-white font-bold font-mono text-sm">{{ item.serialNumber || '-' }}</p>
+                  <p class="text-blue-100 text-xs">{{ item.productCode || 'No Code' }}</p>
+                </div>
+              </div>
+              <!-- Entry Type Badge -->
+              <span v-if="item.entryType === 'manual'" 
+                class="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium bg-white/20 text-white backdrop-blur-sm border border-white/30">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                Manual
+              </span>
+              <span v-else-if="item.entryType === 'upload'" 
+                class="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium bg-white/20 text-white backdrop-blur-sm border border-white/30">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                </svg>
+                Upload
+              </span>
+            </div>
+          </div>
+
+          <!-- Card Body -->
+          <div class="p-4 space-y-3">
+            <!-- Brand & Size Row -->
+            <div class="grid grid-cols-2 gap-3">
+              <div class="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-3">
+                <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Brand</p>
+                <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ getBrandName(item.brandId) }}</p>
+              </div>
+              <div class="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-3">
+                <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Size</p>
+                <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ item.size || '-' }}</p>
+              </div>
+            </div>
+
+            <!-- Return Reason -->
+            <div class="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-3">
+              <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Return Reason</p>
+              <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ item.returnReason }}</p>
+              <p v-if="item.otherReason" class="text-xs text-gray-500 dark:text-gray-400 italic mt-1">{{ item.otherReason }}</p>
+            </div>
+
+            <!-- Returned Date -->
+            <div class="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-3">
+              <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Returned Date</p>
+              <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ formatDate(item.returnDate) }}</p>
+            </div>
+          </div>
+
+          <!-- Card Actions -->
+          <div class="px-4 pb-4">
+            <div class="grid grid-cols-3 gap-2">
+              <button @click="viewReturn(item)" 
+                class="flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors">
+                <Eye class="w-4 h-4" />
+                View
+              </button>
+              <button @click="editReturn(item)" 
+                class="flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-medium text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 rounded-lg hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors">
+                <Edit3 class="w-4 h-4" />
+                Edit
+              </button>
+              <button @click="confirmDelete(item)" 
+                class="flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors">
+                <Trash2 class="w-4 h-4" />
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mobile Pagination -->
+      <Pagination 
+        v-if="pagination.total > 0"
+        :pagination="pagination"
+        @update:page="changePage"
+      />
+    </div>
+
     <BaseModal v-model="showViewModal" title="Return Details" width="max-w-3xl">
       <div v-if="selectedReturn" class="space-y-6">
         <!-- Loading Indicator -->
@@ -548,7 +730,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { RefreshCcw, Upload, CheckCircle2, Eye, Search, Edit3, Trash2, Tag, Maximize2, Calendar, AlertTriangle, Image as ImageIcon, Download, ChevronDown } from 'lucide-vue-next'
+import { RefreshCcw, Upload, CheckCircle2, Eye, Search, FilePenLine, Trash2, Tag, Maximize2, Calendar, AlertTriangle, Image as ImageIcon, Download, ChevronDown, SlidersHorizontal, X } from 'lucide-vue-next'
 import BaseModal from '@/components/common/BaseModal.vue'
 import Pagination from '@/components/ui/Pagination.vue'
 import api from '@/services/api'
@@ -677,10 +859,33 @@ watch(() => props.graftSizes, (newGraftSizes) => {
 
 const searchQuery = ref('')
 const statusFilter = ref('all')
+const showFilters = ref(false)
 
-// Note: Server-side filtering/searching should be implemented in the backend
-// For now, returns are already paginated from the server
-const filteredReturns = computed(() => returns.value)
+// Client-side filtering based on search query and status filter
+const filteredReturns = computed(() => {
+  let result = returns.value
+  
+  // Filter by search query
+  if (searchQuery.value && searchQuery.value.trim()) {
+    const query = searchQuery.value.toLowerCase().trim()
+    result = result.filter(item => {
+      const serialMatch = item.serialNumber?.toLowerCase().includes(query)
+      const brandMatch = getBrandName(item.brandId)?.toLowerCase().includes(query)
+      const reasonMatch = item.returnReason?.toLowerCase().includes(query)
+      const otherReasonMatch = item.otherReason?.toLowerCase().includes(query)
+      const sizeMatch = item.size?.toLowerCase().includes(query)
+      const productCodeMatch = item.productCode?.toLowerCase().includes(query)
+      return serialMatch || brandMatch || reasonMatch || otherReasonMatch || sizeMatch || productCodeMatch
+    })
+  }
+  
+  // Filter by entry type (status)
+  if (statusFilter.value && statusFilter.value !== 'all') {
+    result = result.filter(item => item.entryType === statusFilter.value)
+  }
+  
+  return result
+})
 
 function changePage(page: number) {
   if (page < 1 || page > pagination.value.last_page) return

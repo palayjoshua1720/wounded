@@ -18,7 +18,7 @@ class Brand extends Model
     /**
      * File fields that should be encrypted
      */
-    protected array $encryptableFiles = ['logo'];
+    // protected array $encryptableFiles = '';
 
     protected $table = 'woundmed_brands';
     protected $primaryKey = 'brand_id';

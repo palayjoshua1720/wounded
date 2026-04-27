@@ -23,6 +23,7 @@ use App\Http\Controllers\Api\AdminDashboardController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ClinicDashboardController;
 use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\InventoryLedgerController;
 
 // System Info
 Route::get('/version', function (Request $request) {
@@ -201,6 +202,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/inventory/search-patients', [InventoryController::class, 'searchPatients']);
     Route::get('/inventory/graft-size/{graftSizeId}', [InventoryController::class, 'getGraftSize']);
     Route::get('/inventory/clinicians', [InventoryController::class, 'getCliniciansForInventory']);
+    Route::get('/inventory/brands-list', [InventoryController::class, 'getBrandsList']);
+    Route::get('/inventory/graft-sizes-list', [InventoryController::class, 'getGraftSizesList']);
     Route::post('/inventory/usage-logs', [InventoryController::class, 'storeUsageLog']);
     Route::put('/inventory/usage-logs/{id}', [InventoryController::class, 'updateUsageLog']);
     Route::patch('/inventory/{id}/status', [InventoryController::class, 'updateInventoryStatus']);
@@ -236,6 +239,29 @@ Route::middleware('auth:sanctum')->group(function () {
     // Report Exports
     Route::post('/reports/export/pdf', [ReportExportController::class, 'exportPdf']);
     Route::post('/reports/export/excel', [ReportExportController::class, 'exportExcel']);
+
+    // ============================================================================
+    // INVENTORY LEDGER MANAGEMENT MODULE - ROUTES
+    // ----------------------------------------------------------------------------
+    // These routes power the standalone Inventory Ledger Management feature.
+    // To remove this module, delete these routes and the controller file.
+    // IMPORTANT: Static routes (products/list, invoices/list) must come BEFORE
+    // parameterized routes ({id}) to avoid route conflicts.
+    // ============================================================================
+    Route::get('/inventory-ledger', [InventoryLedgerController::class, 'index']);
+    Route::get('/inventory-ledger/init', [InventoryLedgerController::class, 'init']);
+    Route::get('/inventory-ledger/stats', [InventoryLedgerController::class, 'stats']);
+    Route::get('/inventory-ledger/products/list', [InventoryLedgerController::class, 'getProducts']);
+    Route::get('/inventory-ledger/invoices/list', [InventoryLedgerController::class, 'getInvoices']);
+    Route::get('/inventory-ledger/orders/search', [InventoryLedgerController::class, 'getOrders']);
+    Route::post('/inventory-ledger', [InventoryLedgerController::class, 'store']);
+    Route::get('/inventory-ledger/{id}', [InventoryLedgerController::class, 'show']);
+    Route::put('/inventory-ledger/{id}', [InventoryLedgerController::class, 'update']);
+    Route::delete('/inventory-ledger/{id}', [InventoryLedgerController::class, 'destroy']);
+    Route::post('/inventory-ledger/{id}/restore', [InventoryLedgerController::class, 'restore']);
+    // ============================================================================
+    // END INVENTORY LEDGER MANAGEMENT MODULE
+    // ============================================================================
 
     // Notifications
     Route::get('/notifications', [NotificationController::class, 'fetchNotif']);

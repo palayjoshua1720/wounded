@@ -61,7 +61,7 @@ class ForgotPassword extends Controller
         $params = [
             'to'        => $user->email,
             'from'      => 'noreply@woundmed.com',
-            'from_name' => 'WOUNDMED INC.',
+            'from_name' => 'WOUNDMED INC. Support',
             'subject'   => 'Password Reset Request',
             'body'      => $emailBody,
         ];

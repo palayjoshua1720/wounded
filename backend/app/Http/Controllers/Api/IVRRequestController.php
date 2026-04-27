@@ -172,7 +172,6 @@ class IVRRequestController extends Controller
                     'timestamp' => now(),
                 ]);
                 $tokenPlain = Str::random(64);
-
                 DB::table('magic_tokens')->insert([
                     'ivr_id'          => $newIVR->ivr_id,
                     'manufacturer_id' => $validated['manufacturer_id'],
@@ -217,7 +216,7 @@ class IVRRequestController extends Controller
                 'subject'   => "New IVR Request: {$ivrNumber}",
                 'body'      => $emailBody,
             ];
-            $response = $emailService->send_email(
+            $emailService->send_email(
                 $params,
                 'IVR Request',
                 'IVR Request'
@@ -322,6 +321,7 @@ class IVRRequestController extends Controller
 
     public function deleteIVRRequest(Request $request, $id)
     {
+        $ivr = null;
         try {
             $ivr = IVR::findOrFail($id);
             $ivr->delete();
@@ -330,7 +330,9 @@ class IVRRequestController extends Controller
 
             return response()->json(['message' => 'IVR Request deleted successfully.']);
         } catch (\Illuminate\Validation\ValidationException $e) {
-            $this->logAudit($request, 'delete_order', "Operation failed: {$ivr->ivr_number}", $ivr->ivr_id);
+            $ivrNumber = $ivr ? $ivr->ivr_number : 'Unknown';
+            $ivrId = $ivr ? $ivr->ivr_id : $id;
+            $this->logAudit($request, 'delete_order', "Operation failed: {$ivrNumber}", $ivrId);
 
             return response()->json([
                 'success' => false,
@@ -338,7 +340,9 @@ class IVRRequestController extends Controller
                 'errors' => $e->errors(),
             ], 422);
         } catch (\Throwable $th) {
-            $this->logAudit($request, 'ivr_request_delete', "Failed to delete ivr request: {$ivr->ivr_number}", $ivr->ivr_id);
+            $ivrNumber = $ivr ? $ivr->ivr_number : 'Unknown';
+            $ivrId = $ivr ? $ivr->ivr_id : $id;
+            $this->logAudit($request, 'ivr_request_delete', "Failed to delete ivr request: {$ivrNumber}", $ivrId);
 
             return response()->json([
                 'success' => false,
@@ -437,10 +441,13 @@ class IVRRequestController extends Controller
     // magic links
     public function validateMagicLinkIVR(Request $request)
     {
+        $ivrId = $request->input('ivr_id');
+        $ivrRequests = null;
+        $eligibilityEmail = null;
+        
         try {
-            return DB::transaction(function () use ($request) {
+            return DB::transaction(function () use ($request, $ivrId) {
                 $tokenPlain = $request->input('token');
-                $ivrId    = $request->input('ivr_id');
 
                 $token = DB::table('magic_tokens')
                     ->where('ivr_id', $ivrId)
@@ -470,7 +477,7 @@ class IVRRequestController extends Controller
                 }
 
                 # VALID
-                $ivrRequests = IVR::with([
+                $ivrRequest = IVR::with([
                     'clinic',
                     'brand.manufacturer',
                     'manufacturer',
@@ -479,19 +486,20 @@ class IVRRequestController extends Controller
                     ->where('ivr_id', $ivrId)
                     ->first();
 
-                $eligibilityEmail = $ivrRequests->manufacturer->eligibility_email ?? null;
+                $eligibilityEmailValue = $ivrRequest->manufacturer->eligibility_email ?? null;
 
-                $this->logAudit($request, 'ivr_magic_link_access', "Magic link accessed successfully for IVR Num. {$ivrRequests->ivr_number}", $ivrId, 0, $eligibilityEmail);
+                $this->logAudit($request, 'ivr_magic_link_access', "Magic link accessed successfully for IVR Num. {$ivrRequest->ivr_number}", $ivrId, 0, $eligibilityEmailValue);
 
                 return response()->json([
                     'success' => true,
-                    'ivr_data'   => $ivrRequests
+                    'ivr_data'   => $ivrRequest
                 ]);
             });
         } catch (\Throwable $e) {
             \Log::critical('Magic link validation failed: ' . $e->getMessage());
 
-            $this->logAudit($request, 'ivr_magic_link_access', "Magic link access faild for IVR Num. {$ivrRequests->ivr_number}", $ivrId, 1, $eligibilityEmail);
+            $ivrNumber = $ivrRequests ? $ivrRequests->ivr_number : 'Unknown';
+            $this->logAudit($request, 'ivr_magic_link_access', "Magic link access failed for IVR Num. {$ivrNumber}", $ivrId, 1, $eligibilityEmail);
 
             return response()->json([
                 'success' => false,

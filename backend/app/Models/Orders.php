@@ -40,6 +40,7 @@ class Orders extends Model
         'ordered_at',
         'followup_last_sent_at',
         'order_file',
+        'order_file_extension',
     ];
 
     protected $casts = [

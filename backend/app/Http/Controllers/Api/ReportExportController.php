@@ -25,7 +25,7 @@ class ReportExportController extends Controller
     public function exportPdf(Request $request)
     {
         $validated = $request->validate([
-            'report_type' => 'required|string|in:orders,inventory,usage,invoices,ivr',
+            'report_type' => 'required|string|in:orders,inventory,usage,invoices,ivr,clinic',
             'date_range' => 'required|string',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date',
@@ -56,7 +56,7 @@ class ReportExportController extends Controller
     public function exportExcel(Request $request)
     {
         $validated = $request->validate([
-            'report_type' => 'required|string|in:orders,inventory,usage,invoices,ivr',
+            'report_type' => 'required|string|in:orders,inventory,usage,invoices,ivr,clinic',
             'date_range' => 'required|string',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date',
@@ -98,6 +98,8 @@ class ReportExportController extends Controller
                 return $this->getInvoiceReport($dateRange, $filters);
             case 'ivr':
                 return $this->getIVRReport($dateRange, $filters);
+            case 'clinic':
+                return $this->getClinicReport($dateRange, $filters);
             default:
                 return [];
         }
@@ -668,6 +670,164 @@ class ReportExportController extends Controller
     }
 
     /**
+     * Get clinic report data
+     */
+    private function getClinicReport(array $dateRange, array $filters): array
+    {
+        // Query Orders filtered by clinic_id and date range
+        $ordersQuery = Orders::query()
+            ->whereBetween('ordered_at', [$dateRange['start'], $dateRange['end']]);
+
+        if (!empty($filters['clinic_id']) && $filters['clinic_id'] !== 'all') {
+            $ordersQuery->where('clinic_id', $filters['clinic_id']);
+        }
+
+        if (!empty($filters['brand_id']) && $filters['brand_id'] !== 'all') {
+            $ordersQuery->whereHas('brand', function ($q) use ($filters) {
+                $q->where('brand_id', $filters['brand_id']);
+            });
+        }
+
+        $orders = $ordersQuery->with(['clinic'])->get();
+
+        // Query PatientInfo filtered by clinic_id
+        $patientsQuery = \App\Models\PatientInfo::query();
+
+        if (!empty($filters['clinic_id']) && $filters['clinic_id'] !== 'all') {
+            $patientsQuery->where('clinic_id', $filters['clinic_id']);
+        }
+
+        $patients = $patientsQuery->with(['clinic'])->get();
+
+        // Query IVR requests filtered by clinic_id and date range
+        $ivrQuery = IVR::query()
+            ->whereBetween('created_at', [$dateRange['start'], $dateRange['end']]);
+
+        if (!empty($filters['clinic_id']) && $filters['clinic_id'] !== 'all') {
+            $ivrQuery->where('clinic_id', $filters['clinic_id']);
+        }
+
+        $ivrRequests = $ivrQuery->with(['clinic', 'patient', 'manufacturer'])->get();
+
+        // Query Invoices filtered by clinic_id and date range
+        $invoicesQuery = Invoice::query()
+            ->whereBetween('invoice_date', [$dateRange['start'], $dateRange['end']]);
+
+        if (!empty($filters['clinic_id']) && $filters['clinic_id'] !== 'all') {
+            $invoicesQuery->where('clinic_id', $filters['clinic_id']);
+        }
+
+        $invoices = $invoicesQuery->with('clinic')->get();
+
+        // Calculate summary counts
+        $totalOrders = $orders->count();
+        $totalPatients = $patients->count();
+        $totalIvrRequests = $ivrRequests->count();
+        $totalInvoices = $invoices->count();
+
+        // Order Status Breakdown
+        $statusMap = [
+            0 => 'submitted',
+            1 => 'acknowledged',
+            2 => 'shipped',
+            3 => 'delivered',
+            4 => 'cancelled',
+        ];
+
+        $orderStatusBreakdown = $orders->groupBy('order_status')
+            ->map(function ($group) use ($totalOrders, $statusMap) {
+                $statusValue = $group->first()->order_status;
+                $statusLabel = $statusMap[$statusValue] ?? 'unknown';
+                return [
+                    'status' => $statusLabel,
+                    'count' => $group->count(),
+                    'percentage' => $totalOrders > 0 ? round(($group->count() / $totalOrders) * 100, 1) : 0,
+                ];
+            })->values();
+
+        // Pre-load brands lookup for efficiency
+        $brands = Brand::all()->keyBy('brand_id')->map(fn($b) => $b->brand_name);
+
+        return [
+            'summary' => [
+                'total_orders' => $totalOrders,
+                'total_patients' => $totalPatients,
+                'total_ivr_requests' => $totalIvrRequests,
+                'total_invoices' => $totalInvoices,
+            ],
+            'orderStatusBreakdown' => $orderStatusBreakdown,
+            'status_breakdown' => $orderStatusBreakdown, // For PDF template compatibility
+            'orders' => $orders->map(function ($order) use ($brands, $statusMap) {
+                $items = is_array($order->items) ? $order->items : [];
+                $firstItem = $items[0] ?? null;
+                $brandId = $firstItem['brand_id'] ?? $firstItem['brandId'] ?? null;
+                $brandName = $firstItem['brand_name'] ?? null;
+                if (empty($brandName) && $brandId) {
+                    $brandName = $brands->get($brandId) ?? 'Unknown Brand';
+                }
+                // Calculate order total from items
+                $orderTotal = collect($items)->sum(function ($item) {
+                    $price = $item['asp'] ?? $item['price'] ?? $item['unit_price'] ?? 0;
+                    $quantity = $item['quantity'] ?? 1;
+                    return $price * $quantity;
+                });
+                return [
+                    'order_code' => $order->order_code,
+                    'ordered_at' => $order->ordered_at ? $order->ordered_at->format('Y-m-d') : null,
+                    'product_name' => $firstItem['product_name'] ?? $firstItem['graft_size'] ?? 'Unknown Product',
+                    'brand_name' => $brandName ?? 'Unknown Brand',
+                    'graft_size' => $firstItem['graft_size'] ?? 'N/A',
+                    'clinic_name' => $order->clinic->clinic_name ?? null,
+                    'items_count' => is_array($order->items) ? count($order->items) : 0,
+                    'total_amount' => $orderTotal,
+                    'status' => $statusMap[$order->order_status] ?? 'unknown',
+                ];
+            }),
+            // Patient data excluded for HIPAA compliance - only count is provided
+            'patients' => [],
+            'ivrRequests' => $ivrRequests->map(function ($ivr) {
+                return [
+                    // Patient name and insurance excluded for HIPAA compliance
+                    'eligibility_status' => $ivr->eligibility_status === 'eligible' ? 'Eligible' : 'Not Eligible',
+                    'date' => $ivr->created_at ? $ivr->created_at->format('Y-m-d') : null,
+                    'created_at' => $ivr->created_at ? $ivr->created_at->format('Y-m-d') : null,
+                ];
+            }),
+            'requests' => $ivrRequests->map(function ($ivr) {
+                return [
+                    'ivr_id' => $ivr->ivr_id,
+                    // Patient name and insurance excluded for HIPAA compliance
+                    'eligibility_status' => $ivr->eligibility_status === 'eligible' ? 'eligible' : 'not_eligible',
+                    'created_at' => $ivr->created_at ? $ivr->created_at->format('Y-m-d') : null,
+                    'clinic_name' => $ivr->clinic?->clinic_name ?? 'Unknown',
+                    'manufacturer_name' => $ivr->manufacturer?->manufacturer_name ?? 'Unknown',
+                ];
+            }), // For PDF template compatibility
+            'invoices' => $invoices->map(function ($invoice) {
+                $lineItems = is_array($invoice->line_items) ? $invoice->line_items : [];
+                return [
+                    'invoice_number' => $invoice->invoice_number,
+                    'invoice_date' => $invoice->invoice_date ? $invoice->invoice_date->format('Y-m-d') : null,
+                    'amount' => $invoice->amount,
+                    'total_amount' => $invoice->amount,
+                    'paid_amount' => $invoice->paid_amount ?? 0,
+                    'due_date' => $invoice->due_date ? $invoice->due_date->format('Y-m-d') : null,
+                    'status' => ucfirst($invoice->status),
+                    'clinic_name' => $invoice->clinic?->clinic_name ?? 'Unknown',
+                    'line_items' => collect($lineItems)->map(function ($item) {
+                        return [
+                            'description' => $item['description'] ?? $item['product_name'] ?? 'Unknown Item',
+                            'quantity' => $item['quantity'] ?? 1,
+                            'unit_price' => $item['unit_price'] ?? $item['price'] ?? 0,
+                            'amount' => ($item['quantity'] ?? 1) * ($item['unit_price'] ?? $item['price'] ?? 0),
+                        ];
+                    })->values(),
+                ];
+            }),
+        ];
+    }
+
+    /**
      * Get inventory status label
      */
     private function getInventoryStatusLabel(int $status): string
@@ -692,8 +852,9 @@ class ReportExportController extends Controller
             'orders' => 'Orders Report',
             'inventory' => 'Inventory Report',
             'usage' => 'Usage Report',
-            'invoice' => 'Invoice Report',
+            'invoices' => 'Invoice Report',
             'ivr' => 'IVR Report',
+            'clinic' => 'Clinic Report',
             'returns' => 'Returns Report',
         ];
 
