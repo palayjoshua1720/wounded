@@ -146,9 +146,11 @@ class IVRRequestController extends Controller
                 'manufacturer_id' => 'required|int|max:255',
                 'ivr_file' => 'required|file|mimes:pdf,doc,docx|max:10240',
                 'notes' => 'nullable|string',
+                'clinic_id'        => 'nullable|integer',
+                'eligibility_email'=> 'required|email',
             ]);
 
-            $ivr = DB::transaction(function () use ($request, $validated) {
+            $result = DB::transaction(function () use ($request, $validated) {
                 // $path = $request->file('ivr_file')->store('ivr', 'public');
                 $path = null;
                 if ($request->hasFile('ivr_file')) {
@@ -169,24 +171,33 @@ class IVRRequestController extends Controller
                     'submitted_at' => now(),
                     'timestamp' => now(),
                 ]);
-                $token = Str::random(64);
+                $tokenPlain = Str::random(64);
+
                 DB::table('magic_tokens')->insert([
                     'ivr_id'          => $newIVR->ivr_id,
                     'manufacturer_id' => $validated['manufacturer_id'],
-                    'token'           => hash('sha256', $token),
+                    'token'           => hash('sha256', $tokenPlain),
                     'expires_at'      => now()->addDays(60),
                     'created_at'      => now(),
                 ]);
 
-                return [$ivr, $ivrNumber, $tokenPlain];
+                return [
+                    'ivr'        => $newIVR,
+                    'ivrNumber'  => $ivrNumber,
+                    'tokenPlain' => $tokenPlain,
+                    'filePath'   => $path
+                ];
             });
 
-            [$ivr, $ivrNumber, $tokenPlain] = $ivr;
+            $ivr        = $result['ivr'];
+            $ivrNumber  = $result['ivrNumber'];
+            $token      = $result['tokenPlain'];
+            $path       = $result['filePath'];
 
             $email = $request->eligibility_email;
             $ivrUrl = config('app.frontend_url')
                 . '/woundmed-ivr-request?token=' . $token
-                . '&ivr_id=' . $newIVR->ivr_id;
+                . '&ivr_id=' . $ivr->ivr_id;
             $emailBody = IVRRequestNotificationEmail::getTemplate([
                 'ivr_number'        => $ivrNumber,
                 'patient_name'      => IVRHelper::getPatientName($validated['patient_id']),
@@ -202,7 +213,7 @@ class IVRRequestController extends Controller
             $params = [
                 'to'        => $email,
                 'from'      => 'noreply@woundmed.com',
-                'from_name' => 'WoundMed IVR',
+                'from_name' => 'WOUNDMED INC. IVR',
                 'subject'   => "New IVR Request: {$ivrNumber}",
                 'body'      => $emailBody,
             ];
@@ -212,7 +223,7 @@ class IVRRequestController extends Controller
                 'IVR Request'
             );
 
-            $this->logAudit($request, 'ivr_request_create', "IVR request created: {$ivrNumber}", $newIVR->ivr_id);
+            $this->logAudit($request, 'ivr_request_create', "IVR request created: {$ivrNumber}", $ivr->ivr_id);
 
             return response()->json([
                 'success' => true,
@@ -236,7 +247,6 @@ class IVRRequestController extends Controller
                 'brand_id' => 'nullable|int|max:255',
                 'manufacturer_id' => 'required|int|max:255',
                 'eligibility_status' => 'nullable|int|max:255',
-                'notes' => 'required|string',
                 'ivr_file' => 'nullable|file|mimes:pdf,doc,docx|max:10240',
                 'remove_existing_file' => 'nullable|boolean',
             ]);
@@ -262,7 +272,7 @@ class IVRRequestController extends Controller
             $ivr->brand_id = $validated['brand_id'] ?? null;
             $ivr->manufacturer_id = $validated['manufacturer_id'];
             $ivr->patient_id = $validated['patient_id'];
-            $ivr->description = $validated['notes'];
+            $ivr->description = $validated['notes'] ?? null;
             $ivr->eligibility_status = $validated['eligibility_status'];
 
             $ivr->save();

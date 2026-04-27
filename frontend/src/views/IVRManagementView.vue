@@ -4,7 +4,7 @@
 		<div class="flex items-center justify-between">
 			<div>
 				<h1 class="text-2xl font-bold text-gray-900 dark:text-white">IVR Management</h1>
-				<p class="text-gray-600 dark:text-gray-400">Manage insurance verification requests</p>
+				<!-- <p class="text-gray-600 dark:text-gray-400">Manage insurance verification requests</p> -->
 			</div>
 
 			<button
@@ -113,14 +113,14 @@
 								</td>
 								<td class="px-6 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
 									<div class="flex items-center gap-2">
-										<span>{{ ivr.clinic?.clinic_name ? ivr.clinic?.clinic_name : 'N/A' }}</span>
+										<span>{{ ivr.clinic?.clinic_name ? ivr.clinic?.clinic_name : 'No records found' }}</span>
 									</div>
 								</td>
 								<td class="px-6 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-									{{ ivr.manufacturer?.manufacturer_name || 'N/A' }}
+									{{ ivr.manufacturer?.manufacturer_name || 'No records found' }}
 								</td>
 								<td class="px-6 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-									{{ ivr.submitted_at ? formatDateTime(ivr.submitted_at) : 'N/A' }}
+									{{ ivr.submitted_at ? formatDateTime(ivr.submitted_at) : 'No records found' }}
 								</td>
 								<td class="px-6 py-3 whitespace-nowrap">
 									<button
@@ -289,8 +289,12 @@
 						<div class="flex items-start space-x-3">
 							<NotebookPen class="w-5 h-5 text-pink-500 mt-0.5" />
 							<div>
-							<p class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Notes</p>
-							<p class="text-gray-900 dark:text-gray-100 whitespace-pre-line">
+							<p class="text-sm text-gray-700">Notes</p>
+							<p
+								:class="selectedIvrRequest.description 
+									? 'text-gray-900 dark:text-gray-100' 
+									: 'text-gray-400 dark:text-gray-500 italic'"
+								>
 								{{ selectedIvrRequest.description || 'No notes provided.' }}
 							</p>
 							</div>
@@ -307,7 +311,7 @@
 										<p class="text-sm text-blue-700">
 											<strong>Manufacturer: </strong>
 										</p>
-										<p class="text-sm text-blue-700">{{ selectedIvrRequest.manufacturer?.manufacturer_name || '--' }} ({{ selectedIvrRequest.manufacturer?.contact_person || '--' }})</p>
+										<p v-if="selectedIvrRequest.manufacturer?.manufacturer_name" class="text-sm text-blue-700">{{ selectedIvrRequest.manufacturer?.manufacturer_name }} ({{ selectedIvrRequest.manufacturer?.contact_person }})</p>
 									</div>
 								</div>
 							</div>
@@ -518,7 +522,7 @@
 							<div class="space-y-2">
 								<p class="text-sm text-blue-700">
 									<strong>Manufacturer: </strong>
-									<span>{{ selectedManufacturer.manufacturer_name || '--' }}</span>
+									<span>{{ selectedManufacturer.manufacturer_name || 'NA' }}</span>
 								</p>
 								<p class="text-sm text-blue-700">
 									<strong>Form Type: </strong>
@@ -526,7 +530,7 @@
 								</p>
 								<p class="text-sm text-blue-700">
 									<strong>Eligibility Confirmation Email: </strong>
-									<span>{{ selectedManufacturer.eligibility_email }}</span>
+									<span>{{ selectedManufacturer.eligibility_email || 'NA' }}</span>
 								</p>
 							</div>
 							<div class="flex items-center gap-2 mt-2">

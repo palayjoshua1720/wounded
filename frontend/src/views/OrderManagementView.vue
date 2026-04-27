@@ -4,7 +4,7 @@
 		<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
 			<div class="space-y-2">
 				<h1 class="text-3xl font-bold text-gray-900 dark:text-white">Order Management</h1>
-				<p class="text-gray-600 dark:text-gray-400 max-w-2xl">View, organize, and track every order in one place.</p>
+				<!-- <p class="text-gray-600 dark:text-gray-400 max-w-2xl">View, organize, and track every order in one place.</p> -->
 			</div>
 			<button
 				@click="
@@ -241,6 +241,13 @@
 									<p class="text-gray-900 dark:text-white">{{ selectedOrder.manufacturer_name }}</p>
 								</div>
 							</div>
+							<div v-if="selectedOrder.ivr_num" class="flex items-center space-x-3">
+								<ShieldCheck class="w-5 h-5 text-gray-600" />
+								<div>
+									<p class="text-sm font-medium text-gray-700 dark:text-gray-300">IVR</p>
+									<p class="text-gray-900 dark:text-white">{{ selectedOrder.ivr_num }}</p>
+								</div>
+							</div>
 						</div>
 						<div class="space-y-4">
 							<div class="flex items-center space-x-3">
@@ -255,13 +262,6 @@
 								<div>
 									<p class="text-sm font-medium text-gray-700 dark:text-gray-300">Tracking Number</p>
 									<p class="text-gray-900 dark:text-white">{{ selectedOrder.tracking_num }}</p>
-								</div>
-							</div>
-							<div v-if="selectedOrder.ivr_num" class="flex items-center space-x-3">
-								<ShieldCheck class="w-5 h-5 text-gray-600" />
-								<div>
-									<p class="text-sm font-medium text-gray-700 dark:text-gray-300">IVR</p>
-									<p class="text-gray-900 dark:text-white">{{ selectedOrder.ivr_num }}</p>
 								</div>
 							</div>
 							<div v-if="selectedOrder.order_number" class="flex items-center space-x-3">
@@ -367,37 +367,59 @@
 					</div>
 					<div class="border-t border-gray-200 pt-6">
 						<h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">
-							Update Status
+							Override Status
 						</h3>
 						<div class="flex items-center justify-between w-full">
 							<div class="flex space-x-3">
-								<button
-									v-if="selectedOrder.order_status === 'submitted'"
-									@click="updateOrderStatusNew(selectedOrder.order_id, 'acknowledged')"
-									class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-								>
-									Mark Acknowledged
-								</button>
-								<button
-									v-if="selectedOrder.order_status === 'acknowledged'"
-									@click="updateOrderStatusNew(selectedOrder.order_id, 'shipped')"
-									class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-								>
-									Mark Shipped
-								</button>
-								<button
-									v-if="selectedOrder.order_status === 'shipped'"
-									@click="updateOrderStatusNew(selectedOrder.order_id, 'delivered')"
-									class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-								>
-									Mark Delivered
-								</button>
-								<span
-									v-if="selectedOrder.order_status === 'delivered'"
-									class="bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400 px-3 py-1 rounded-full text-sm"
-								>
-									Delivered
-								</span>
+								<div class="flex space-x-3 items-center">
+									<select
+										v-model="overrideStatus"
+										class="w-56 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 
+										bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-200 
+										shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 
+										transition-all duration-150 cursor-pointer
+										disabled:opacity-50 disabled:cursor-not-allowed"
+									>
+										<option disabled value="">Select Status</option>
+
+										<option 
+											value="submitted"
+											:disabled="selectedOrder.order_status === 'submitted'"
+										>
+											Submitted
+										</option>
+
+										<option 
+											value="acknowledged"
+											:disabled="selectedOrder.order_status === 'acknowledged'"
+										>
+											Acknowledged
+										</option>
+
+										<option 
+											value="shipped"
+											:disabled="selectedOrder.order_status === 'shipped'"
+										>
+											Shipped
+										</option>
+
+										<option 
+											value="delivered"
+											:disabled="selectedOrder.order_status === 'delivered'"
+										>
+											Delivered
+										</option>
+									</select>
+
+									<button
+										:disabled="!overrideStatus || overrideStatus === selectedOrder.order_status"
+										@click="applyOverride"
+										class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors 
+											disabled:opacity-50 disabled:cursor-not-allowed"
+									>
+										Apply Override
+									</button>
+								</div>
 							</div>
 
 							<!-- RIGHT: FOLLOW-UP BUTTON + COOLDOWN -->
@@ -425,7 +447,7 @@
 					</div>
 
 					<!-- order file -->
-					<h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4 border-t pt-5">
+					<h3 v-if="filePreviewUrl" class="text-lg font-medium text-gray-900 dark:text-white mb-4 border-t pt-5">
 						Order File
 					</h3>
 					<div v-if="filePreviewUrl" class="border rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800 p-3" style="margin-top: unset !important;">
@@ -454,64 +476,6 @@
 							<File class="w-16 h-16 text-gray-400 mx-auto mb-3" />
 							<p class="text-sm text-gray-500 dark:text-gray-400 font-medium">Preview not available for this file type</p>
 							<p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Download to view the file</p>
-						</div>
-					</div>
-
-					<div class="border-t border-gray-200 pt-6">
-						<h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">
-							Override Status
-						</h3>
-
-						<div class="flex items-center justify-between w-full">
-							<div class="flex space-x-3 items-center">
-								<select
-									v-model="overrideStatus"
-									class="w-56 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 
-									bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-200 
-									shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 
-									transition-all duration-150 cursor-pointer
-									disabled:opacity-50 disabled:cursor-not-allowed"
-								>
-									<option disabled value="">Select Status</option>
-
-									<option 
-										value="submitted"
-										:disabled="selectedOrder.order_status === 'submitted'"
-									>
-										Submitted
-									</option>
-
-									<option 
-										value="acknowledged"
-										:disabled="selectedOrder.order_status === 'acknowledged'"
-									>
-										Acknowledged
-									</option>
-
-									<option 
-										value="shipped"
-										:disabled="selectedOrder.order_status === 'shipped'"
-									>
-										Shipped
-									</option>
-
-									<option 
-										value="delivered"
-										:disabled="selectedOrder.order_status === 'delivered'"
-									>
-										Delivered
-									</option>
-								</select>
-
-								<button
-									:disabled="!overrideStatus || overrideStatus === selectedOrder.order_status"
-									@click="applyOverride"
-									class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors 
-										disabled:opacity-50 disabled:cursor-not-allowed"
-								>
-									Apply Override
-								</button>
-							</div>
 						</div>
 					</div>
 				</div>
@@ -579,7 +543,7 @@
 						</option>
 					</select>
 					
-					<div
+					<!-- <div
 					v-if="selectedIVR"
 					class="flex items-center gap-2 text-sm text-gray-700 mt-2 mb-2"
 					>
@@ -589,7 +553,7 @@
 						<span class="text-gray-900 dark:text-white">
 							{{ selectedIVR.manufacturer?.order_email || '—' }}
 						</span>
-					</div>
+					</div> -->
 
 					<div v-if="selectedIVR" class="mt-2">
 						<div
@@ -808,6 +772,45 @@
 				</div>
 
 				<transition name="fade-slide">
+					<div v-if="selectedIVR" class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+						<div>
+							<h4 class="font-medium text-blue-900 mb-2">Order File Information</h4>
+							<div class="space-y-2">
+								<p class="text-sm text-blue-700">
+									<strong>Manufacturer: </strong>
+									<span>{{ selectedIVR.manufacturer.manufacturer_name || 'NA' }}</span>
+								</p>
+								<p class="text-sm text-blue-700">
+									<strong>Form Type: </strong>
+									<span>File</span>
+								</p>
+								<p class="text-sm text-blue-700">
+									<strong>Order Email: </strong>
+									<span>{{ selectedIVR.manufacturer.order_email || 'NA' }}</span>
+								</p>
+							</div>
+							<div class="flex items-center gap-2 mt-2">
+								<button
+									type="button"
+									v-if="selectedIVR.manufacturer.order_file"
+									@click="downloadOrderFile(selectedIVR.manufacturer.manufacturer_id)"
+									class="flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-md shadow hover:bg-blue-700 active:bg-blue-800 transition"
+								>
+									<Download class="w-4 h-4" />
+									Download Order File
+								</button>
+								<span v-else class="text-gray-500">No file available</span>
+							</div>
+							<p class="shadow-md text-sm mt-4 leading-relaxed bg-gray-100 dark:bg-gray-800 p-3 rounded-lg border-l-4 border-yellow-400 text-gray-600 dark:text-gray-300">
+								<strong class="text-red-700 dark:text-red-400">Note:</strong>
+								After downloading the form, please complete all required fields. Once finished, save your changes and re-upload the updated file using the upload section below.
+							</p>
+							<p> </p>
+						</div>
+					</div>
+				</transition>
+
+				<transition name="fade-slide">
 					<div v-if="selectedIVR" class="relative">
 
 						<!-- Loader Overlay -->
@@ -954,9 +957,11 @@
 						Cancel
 					</button>
 					<button
-					type="button"
-					@click="handleCreateOrder"
-					class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+						type="button"
+						@click="handleCreateOrder"
+						:disabled="isUpdateButtonDisabled"
+						class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+						:title="isUpdateButtonDisabled ? 'Orders that have been acknowledged cannot be edited' : ''"
 					>
 						{{ showCreateForm ? 'Submit Order' : 'Update Order' }}
 					</button>
@@ -979,7 +984,8 @@ import {
 	ChevronDown, Package, Send, ShieldCheck,
 	Factory, TruckElectric, Folder, CloudUpload,
 	FileText, BaggageClaim, X, Blocks,
-	Layers, CopyPlus, CircleQuestionMark
+	Layers, CopyPlus, CircleQuestionMark, SendIcon,
+	Download, 
 } from 'lucide-vue-next';
 import api from '@/services/api'
 import { toast } from 'vue3-toastify'
@@ -1081,6 +1087,7 @@ interface Manufacturer {
 	manufacturer_id: string
 	manufacturer_name: string
 	order_email: string
+	order_file: string
 	brands: Brand[]
 }
 
@@ -1258,6 +1265,19 @@ const selectedPatientIVRs = computed(() => {
 const isSelectedIVREligible = computed(() => {
 	return selectedIVR.value?.eligibility_status === 1
 })
+
+const isUpdateButtonDisabled = computed(() => {
+    if (showCreateForm.value) return false;
+
+    return selectedOrderForEdit.value?.order_status ==='acknowledged';
+});
+
+if(isUpdateButtonDisabled){
+	console.log('acknowledged');
+} else {
+	console.log('not acknowledged');
+	
+}
 
 function getEligibilityLabel(status?: number) {
 	switch (status) {
@@ -1855,6 +1875,7 @@ const getStatusIcon = (status: string) => {
 		case 'delivered': return CircleCheck
 		case 'shipped': return Truck
 		case 'acknowledged': return Box
+		case 'submitted': return SendIcon
 		default: return null
 	}
 }
@@ -2574,6 +2595,23 @@ function toggleItems(orderId: number) {
 		expandedOrders.value.add(orderId)
 	}
 }
+
+const downloadOrderFile = async (id: string) => {
+	try {
+		const response = await api.get(`/management/order/download/${id}/downloadOrderFile`, {
+			responseType: 'blob',
+		});
+
+		const blob = new Blob([response.data]);
+		const link = document.createElement('a');
+		link.href = URL.createObjectURL(blob);
+		link.download = 'IVR_Form.pdf';
+		link.click();
+		URL.revokeObjectURL(link.href);
+	} catch (error) {
+		// 
+	}
+};
 
 onMounted(async () => {
     getAllOrders(1)
