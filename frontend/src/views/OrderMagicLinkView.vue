@@ -213,7 +213,7 @@
                                 <td class="px-6 py-4">{{ getSizeName(item.graftSize) }}</td>
                                 <td class="px-6 py-4 text-center">{{ item.quantity }}</td>
                                 <td class="px-6 py-4 text-right font-medium">
-                                ${{ Number(item.subtotal).toFixed(2) }}
+                                {{ formatCurrency(item.subtotal) }}
                                 </td>
                             </tr>
                         </tbody>
@@ -224,7 +224,7 @@
                                 Items Total:
                                 </td>
                                 <td class="px-6 py-4 text-right text-lg font-bold">
-                                ${{ Number(displayOrder.items.reduce((sum, item) => sum + item.subtotal, 0)).toFixed(2) }}
+                                {{ formatCurrency(displayOrder.items.reduce((sum, item) => sum + item.subtotal, 0)) }}
                                 </td>
                             </tr>
                         </tfoot>
@@ -256,7 +256,7 @@
                             <tr v-for="item in displayOrder.other_product_items" :key="item.id" class="hover:bg-gray-50">
                                 <td class="px-6 py-4">{{ item.product }}</td>
                                 <td class="px-6 py-4 text-center">{{ item.quantity }}</td>
-                                <td class="px-6 py-4 text-right">${{ Number(item.price).toFixed(2) }}</td>
+                                <td class="px-6 py-4 text-right">{{ formatCurrency(item.price) }}</td>
                             </tr>
                         </tbody>
 
@@ -266,10 +266,7 @@
                                 Product Items Subtotal:
                                 </td>
                                 <td class="px-6 py-4 text-right text-lg font-bold">
-                                    ${{ displayOrder.other_product_items
-                                        .reduce((sum, item) => sum + (item?.subtotal ?? 0), 0)
-                                        .toFixed(2)
-                                    }}
+                                    {{ formatCurrency(displayOrder.other_product_items.reduce((sum, item) => sum + (item?.subtotal ?? 0), 0)) }}
                                 </td>
                             </tr>
                         </tfoot>
@@ -284,15 +281,15 @@
                     <div class="text-right">
                         <div class="mb-3">
                             <p class="text-sm text-gray-600 font-medium">Items Subtotal:</p>
-                            <p class="text-lg text-gray-900 font-semibold">${{ Number(displayOrder.items.reduce((sum, item) => sum + item.subtotal, 0)).toFixed(2) }}</p>
+                            <p class="text-lg text-gray-900 font-semibold">{{ formatCurrency(displayOrder.items.reduce((sum, item) => sum + item.subtotal, 0)) }}</p>
                         </div>
                         <div v-if="displayOrder.other_product_items && displayOrder.other_product_items.length > 0" class="mb-4">
                             <p class="text-sm text-gray-600 font-medium">Other Products Subtotal:</p>
-                            <p class="text-lg text-gray-900 font-semibold">${{ Number(displayOrder.other_product_items.reduce((sum, item) => sum + (item?.subtotal ?? 0), 0)).toFixed(2) }}</p>
+                            <p class="text-lg text-gray-900 font-semibold">{{ formatCurrency(displayOrder.other_product_items.reduce((sum, item) => sum + (item?.subtotal ?? 0), 0)) }}</p>
                         </div>
                         <div class="border-t border-gray-200 pt-4">
                             <p class="text-sm text-gray-600 font-medium">Total Order Amount:</p>
-                            <p class="text-2xl text-gray-900 font-bold">${{ Number(displayOrder.totalAmount).toFixed(2) }}</p>
+                            <p class="text-2xl text-gray-900 font-bold">{{ formatCurrency(displayOrder.totalAmount) }}</p>
                         </div>
                     </div>
                 </div>
@@ -392,6 +389,7 @@ import api from "@/services/api";
 import { toast } from 'vue3-toastify'
 import 'vue3-toastify/dist/index.css'
 import Swal from 'sweetalert2'
+import { formatCurrency } from '@/utils/currency'
 
 interface Order {
 	order_id: number;

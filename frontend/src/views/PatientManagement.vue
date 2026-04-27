@@ -4,7 +4,6 @@
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div class="space-y-2">
                 <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Patient Management</h1>
-                <p class="text-gray-600 dark:text-gray-400 max-w-2xl">Manage patient information, view patient details, and track patient records in one centralized dashboard</p>
             </div>
             <div class="flex items-center gap-4">
                 <button @click="showStats = !showStats"
@@ -116,71 +115,76 @@
                     <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                         <TableLoader v-if="tableLoader" :colspan="5" />
                         <template v-else>
-                        <tr v-for="patient in paginatedPatients" :key="patient.patient_id"
-                            class="hover:bg-gray-50/70 dark:hover:bg-gray-700/50 transition-colors duration-150">
-                            <td class="px-6 py-5 whitespace-nowrap">
-                                <div class="flex items-center">
-                                    <div
-                                        class="flex-shrink-0 h-10 w-10 bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-lg flex items-center justify-center text-blue-600 dark:text-blue-400 font-medium text-sm">
-                                        {{ getPatientInitials(patient.patient_name) }}
+                            <tr v-for="patient in paginatedPatients" :key="patient.patient_id"
+                                class="hover:bg-gray-50/70 dark:hover:bg-gray-700/50 transition-colors duration-150">
+                                <td class="px-6 py-5 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <div
+                                            class="flex-shrink-0 h-10 w-10 bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-lg flex items-center justify-center text-blue-600 dark:text-blue-400 font-medium text-sm">
+                                            {{ getPatientInitials(patient.patient_name) }}
+                                        </div>
+                                        <div class="ml-4">
+                                            <div class="text-sm font-semibold text-gray-900 dark:text-white">{{
+                                                patient.patient_name }}</div>
+                                            <div class="text-sm text-gray-500 dark:text-gray-400">{{ patient.email }}
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="ml-4">
-                                        <div class="text-sm font-semibold text-gray-900 dark:text-white">{{ patient.patient_name }}</div>
-                                        <div class="text-sm text-gray-500 dark:text-gray-400">{{ patient.email }}</div>
+                                </td>
+                                <td class="px-6 py-5 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <div
+                                            class="flex-shrink-0 h-8 w-8 bg-gradient-to-br from-green-100 to-teal-100 dark:from-green-900/30 dark:to-teal-900/30 rounded-full flex items-center justify-center text-green-600 dark:text-green-400 font-medium text-xs">
+                                            {{ getUserInitials(patient.user_name) }}
+                                        </div>
+                                        <div class="ml-3">
+                                            <p class="text-sm font-medium text-gray-900 dark:text-white">{{
+                                                patient.user_name || 'System' }}</p>
+                                            <p v-if="patient.user_role !== null"
+                                                class="text-xs text-gray-500 dark:text-gray-400">
+                                                {{ getRoleLabel(patient.user_role) }}
+                                            </p>
+                                        </div>
                                     </div>
-                                </div>
-                            </td>
-                            <td class="px-6 py-5 whitespace-nowrap">
-                                <div class="flex items-center">
-                                    <div
-                                        class="flex-shrink-0 h-8 w-8 bg-gradient-to-br from-green-100 to-teal-100 dark:from-green-900/30 dark:to-teal-900/30 rounded-full flex items-center justify-center text-green-600 dark:text-green-400 font-medium text-xs">
-                                        {{ getUserInitials(patient.user_name) }}
+                                </td>
+                                <td class="px-6 py-5 whitespace-nowrap">
+                                    <span
+                                        class="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-purple-50 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400">
+                                        <ClipboardList class="w-3 h-3 mr-1.5" />
+                                        {{ patient.ivr_count }} Records
+                                    </span>
+                                </td>
+                                <td class="px-6 py-5 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                    {{ formatDate(patient.created_at) }}
+                                </td>
+                                <td class="px-6 py-5 whitespace-nowrap text-sm font-medium">
+                                    <div class="flex items-center space-x-2">
+                                        <button @click="viewPatient(patient)"
+                                            class="p-2 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all duration-200"
+                                            title="View Details">
+                                            <Eye class="w-4 h-4" />
+                                        </button>
+                                        <button @click="editPatient(patient)"
+                                            class="p-2 text-gray-500 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-all duration-200"
+                                            title="Edit Patient">
+                                            <FilePenLine class="w-4 h-4" />
+                                        </button>
+                                        <button @click="handleDeletePatient(patient.patient_id)"
+                                            class="p-2 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all duration-200"
+                                            title="Delete Patient">
+                                            <Trash2 class="w-4 h-4" />
+                                        </button>
                                     </div>
-                                    <div class="ml-3">
-                                        <p class="text-sm font-medium text-gray-900 dark:text-white">{{ patient.user_name || 'System' }}</p>
-                                        <p v-if="patient.user_role !== null" class="text-xs text-gray-500 dark:text-gray-400">
-                                            {{ getRoleLabel(patient.user_role) }}
-                                        </p>
+                                </td>
+                            </tr>
+                            <tr v-if="filteredPatients.length === 0 && !tableLoader">
+                                <td colspan="5" class="text-center text-gray-400 py-12">
+                                    <div class="flex flex-col items-center justify-center gap-2">
+                                        <Users class="w-10 h-10 mb-1" />
+                                        <span>No patients found.</span>
                                     </div>
-                                </div>
-                            </td>
-                            <td class="px-6 py-5 whitespace-nowrap">
-                                <span class="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-purple-50 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400">
-                                    <ClipboardList class="w-3 h-3 mr-1.5" />
-                                    {{ patient.ivr_count }} Records
-                                </span>
-                            </td>
-                            <td class="px-6 py-5 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                {{ formatDate(patient.created_at) }}
-                            </td>
-                            <td class="px-6 py-5 whitespace-nowrap text-sm font-medium">
-                                <div class="flex items-center space-x-2">
-                                    <button @click="viewPatient(patient)"
-                                        class="p-2 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all duration-200"
-                                        title="View Details">
-                                        <Eye class="w-4 h-4" />
-                                    </button>
-                                    <button @click="editPatient(patient)"
-                                        class="p-2 text-gray-500 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-all duration-200"
-                                        title="Edit Patient">
-                                        <FilePenLine class="w-4 h-4" />
-                                    </button>
-                                    <button @click="handleDeletePatient(patient.patient_id)"
-                                        class="p-2 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all duration-200"
-                                        title="Delete Patient">
-                                        <Trash2 class="w-4 h-4" />
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr v-if="filteredPatients.length === 0 && !tableLoader">
-                            <td colspan="5" class="text-center text-gray-400 py-12">
-                                <div class="flex flex-col items-center justify-center gap-2">
-                                    <Users class="w-10 h-10 mb-1" />
-                                    <span>No patients found.</span>
-                                </div>
-                            </td>
-                        </tr>
+                                </td>
+                            </tr>
                         </template>
                     </tbody>
                 </table>
@@ -192,7 +196,7 @@
                 <p class="text-sm text-gray-600 dark:text-gray-400">
                     Showing <span class="font-semibold text-gray-800 dark:text-white">{{ (currentPage - 1) *
                         itemsPerPage + 1 }}</span> to <span class="font-semibold text-gray-800 dark:text-white">{{
-        Math.min(currentPage * itemsPerPage, totalResults) }}</span> of <span
+                            Math.min(currentPage * itemsPerPage, totalResults) }}</span> of <span
                         class="font-semibold text-gray-800 dark:text-white">{{ totalResults }}</span> results
                 </p>
                 <nav class="flex items-center space-x-2">
@@ -225,19 +229,22 @@
             <template v-if="selectedPatient">
                 <!-- Loading Indicator -->
                 <div v-if="isLoadingDetails" class="flex items-center justify-center py-8">
-                    <div class="w-6 h-6 rounded-full border-4 border-blue-200 border-t-blue-600 animate-spin mr-3"></div>
+                    <div class="w-6 h-6 rounded-full border-4 border-blue-200 border-t-blue-600 animate-spin mr-3">
+                    </div>
                     <span class="text-sm text-gray-600 dark:text-gray-400">Loading patient details...</span>
                 </div>
                 <div class="space-y-6">
                     <!-- Header Card -->
-                    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-2xl p-6">
+                    <div
+                        class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-2xl p-6">
                         <div class="flex items-center space-x-5">
                             <div
                                 class="h-20 w-20 bg-white dark:bg-gray-800 rounded-2xl shadow-sm flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold text-2xl">
                                 {{ getPatientInitials(selectedPatient.patient_name) }}
                             </div>
                             <div class="flex-1">
-                                <h2 class="text-2xl font-bold text-gray-900 dark:text-white">{{ selectedPatient.patient_name }}</h2>
+                                <h2 class="text-2xl font-bold text-gray-900 dark:text-white">{{
+                                    selectedPatient.patient_name }}</h2>
                                 <div class="flex items-center mt-2 space-x-4">
                                     <span class="inline-flex items-center text-sm text-gray-600 dark:text-gray-400">
                                         <Mail class="w-4 h-4 mr-1.5 text-gray-400" />
@@ -245,10 +252,12 @@
                                     </span>
                                 </div>
                                 <div class="mt-3 flex items-center space-x-2">
-                                    <span class="px-3 py-1 bg-blue-100 dark:bg-blue-800 text-blue-700 dark:text-blue-300 text-xs font-medium rounded-full">
+                                    <span
+                                        class="px-3 py-1 bg-blue-100 dark:bg-blue-800 text-blue-700 dark:text-blue-300 text-xs font-medium rounded-full">
                                         ID: #{{ selectedPatient.patient_id }}
                                     </span>
-                                    <span v-if="selectedPatient.ivr_count > 0" class="px-3 py-1 bg-purple-100 dark:bg-purple-800 text-purple-700 dark:text-purple-300 text-xs font-medium rounded-full">
+                                    <span v-if="selectedPatient.ivr_count > 0"
+                                        class="px-3 py-1 bg-purple-100 dark:bg-purple-800 text-purple-700 dark:text-purple-300 text-xs font-medium rounded-full">
                                         {{ selectedPatient.ivr_count }} IVR Records
                                     </span>
                                 </div>
@@ -261,13 +270,18 @@
                         <!-- Created By -->
                         <div class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
                             <div class="flex items-center space-x-3">
-                                <div class="h-10 w-10 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
+                                <div
+                                    class="h-10 w-10 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
                                     <UserCircle class="w-5 h-5 text-green-600 dark:text-green-400" />
                                 </div>
                                 <div>
-                                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Created By</p>
-                                    <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ selectedPatient.user_name || 'System' }}</p>
-                                    <p v-if="selectedPatient.user_role !== null" class="text-xs text-gray-500 dark:text-gray-400">
+                                    <p
+                                        class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                                        Created By</p>
+                                    <p class="text-sm font-semibold text-gray-900 dark:text-white">{{
+                                        selectedPatient.user_name || 'System' }}</p>
+                                    <p v-if="selectedPatient.user_role !== null"
+                                        class="text-xs text-gray-500 dark:text-gray-400">
                                         {{ getRoleLabel(selectedPatient.user_role) }}
                                     </p>
                                 </div>
@@ -277,12 +291,16 @@
                         <!-- Created Date -->
                         <div class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
                             <div class="flex items-center space-x-3">
-                                <div class="h-10 w-10 bg-orange-100 dark:bg-orange-900/30 rounded-lg flex items-center justify-center">
+                                <div
+                                    class="h-10 w-10 bg-orange-100 dark:bg-orange-900/30 rounded-lg flex items-center justify-center">
                                     <Calendar class="w-5 h-5 text-orange-600 dark:text-orange-400" />
                                 </div>
                                 <div>
-                                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Created Date</p>
-                                    <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ formatDate(selectedPatient.created_at) }}</p>
+                                    <p
+                                        class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                                        Created Date</p>
+                                    <p class="text-sm font-semibold text-gray-900 dark:text-white">{{
+                                        formatDate(selectedPatient.created_at) }}</p>
                                 </div>
                             </div>
                         </div>
@@ -290,15 +308,21 @@
                         <!-- Last Updated -->
                         <div class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
                             <div class="flex items-center space-x-3">
-                                <div class="h-10 w-10 bg-teal-100 dark:bg-teal-900/30 rounded-lg flex items-center justify-center">
+                                <div
+                                    class="h-10 w-10 bg-teal-100 dark:bg-teal-900/30 rounded-lg flex items-center justify-center">
                                     <Clock class="w-5 h-5 text-teal-600 dark:text-teal-400" />
                                 </div>
                                 <div>
-                                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Last Updated</p>
-                                    <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ formatDate(selectedPatient.updated_at) }}</p>
-                                    <p v-if="selectedPatient.updated_by_user_name" class="text-xs text-gray-500 dark:text-gray-400">
+                                    <p
+                                        class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                                        Last Updated</p>
+                                    <p class="text-sm font-semibold text-gray-900 dark:text-white">{{
+                                        formatDate(selectedPatient.updated_at) }}</p>
+                                    <p v-if="selectedPatient.updated_by_user_name"
+                                        class="text-xs text-gray-500 dark:text-gray-400">
                                         by {{ selectedPatient.updated_by_user_name }}
-                                        <span v-if="selectedPatient.updated_by_user_role !== null">({{ getRoleLabel(selectedPatient.updated_by_user_role) }})</span>
+                                        <span v-if="selectedPatient.updated_by_user_role !== null">({{
+                                            getRoleLabel(selectedPatient.updated_by_user_role) }})</span>
                                     </p>
                                 </div>
                             </div>
@@ -307,12 +331,16 @@
                         <!-- IVR Records -->
                         <div class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
                             <div class="flex items-center space-x-3">
-                                <div class="h-10 w-10 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
+                                <div
+                                    class="h-10 w-10 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
                                     <ClipboardList class="w-5 h-5 text-purple-600 dark:text-purple-400" />
                                 </div>
                                 <div>
-                                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">IVR Records</p>
-                                    <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ selectedPatient.ivr_count }} Total Records</p>
+                                    <p
+                                        class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                                        IVR Records</p>
+                                    <p class="text-sm font-semibold text-gray-900 dark:text-white">{{
+                                        selectedPatient.ivr_count }} Total Records</p>
                                 </div>
                             </div>
                         </div>
@@ -320,7 +348,8 @@
 
                     <!-- Quick Actions -->
                     <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
-                        <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">Quick Actions</p>
+                        <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
+                            Quick Actions</p>
                         <div class="flex flex-wrap gap-3">
                             <button @click="editPatient(selectedPatient); selectedPatient = null"
                                 class="inline-flex items-center px-4 py-2 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900/30 transition-colors text-sm font-medium">
@@ -342,19 +371,25 @@
         <BaseModal v-model="showFormModal" :title="showCreateForm ? 'Add New Patient' : 'Edit Patient'" size="lg">
             <form @submit.prevent="handleSubmitForm" class="space-y-6">
                 <!-- Loading Indicator (only shown when editing and loading) -->
-                <div v-if="!showCreateForm && isLoadingDetails" class="flex items-center justify-center py-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
-                    <div class="w-6 h-6 rounded-full border-4 border-blue-200 border-t-blue-600 animate-spin mr-3"></div>
+                <div v-if="!showCreateForm && isLoadingDetails"
+                    class="flex items-center justify-center py-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
+                    <div class="w-6 h-6 rounded-full border-4 border-blue-200 border-t-blue-600 animate-spin mr-3">
+                    </div>
                     <span class="text-sm text-gray-600 dark:text-gray-400">Loading fresh data...</span>
                 </div>
                 <!-- Patient Header (only shown when editing) -->
-                <div v-if="!showCreateForm && selectedPatient" class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-4">
+                <div v-if="!showCreateForm && selectedPatient"
+                    class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-4">
                     <div class="flex items-center space-x-4">
-                        <div class="h-12 w-12 bg-white dark:bg-gray-800 rounded-xl shadow-sm flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold text-lg">
+                        <div
+                            class="h-12 w-12 bg-white dark:bg-gray-800 rounded-xl shadow-sm flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold text-lg">
                             {{ getPatientInitials(selectedPatient.patient_name) }}
                         </div>
                         <div>
                             <p class="text-sm text-gray-500 dark:text-gray-400">Editing Patient</p>
-                            <p class="text-lg font-semibold text-gray-900 dark:text-white">{{ selectedPatient.patient_name }}</p>
+                            <p class="text-lg font-semibold text-gray-900 dark:text-white">{{
+                                selectedPatient.patient_name }}
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -394,8 +429,7 @@
                             </span>
                         </label>
                         <div class="relative">
-                            <select v-model="formData.clinic_id" required
-                                :disabled="isLoadingClinics"
+                            <select v-model="formData.clinic_id" required :disabled="isLoadingClinics"
                                 class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white appearance-none transition-all duration-200">
                                 <option value="" disabled>Select a clinic</option>
                                 <option v-for="clinic in clinics" :key="clinic.id" :value="clinic.id">
@@ -403,9 +437,12 @@
                                 </option>
                             </select>
                             <div v-if="isLoadingClinics" class="absolute right-10 top-3.5">
-                                <div class="w-5 h-5 rounded-full border-2 border-gray-300 border-t-blue-600 animate-spin"></div>
+                                <div
+                                    class="w-5 h-5 rounded-full border-2 border-gray-300 border-t-blue-600 animate-spin">
+                                </div>
                             </div>
-                            <ChevronDown v-else class="absolute right-4 top-3.5 h-5 w-5 text-gray-400 pointer-events-none" />
+                            <ChevronDown v-else
+                                class="absolute right-4 top-3.5 h-5 w-5 text-gray-400 pointer-events-none" />
                         </div>
                         <p v-if="clinics.length === 0 && !isLoadingClinics" class="text-xs text-amber-600 mt-1">
                             No clinics available. Please create a clinic first.

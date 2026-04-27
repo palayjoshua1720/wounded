@@ -4,9 +4,6 @@
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div class="space-y-2">
                 <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Product Management</h1>
-                <p class="text-gray-600 dark:text-gray-400 max-w-2xl">
-                    Manage products, their stock levels, and availability in one streamlined interface
-                </p>
             </div>
             <div class="flex items-center gap-4">
                 <button @click="showStats = !showStats"
@@ -188,7 +185,7 @@
                                                     {{ t.label }}
                                                 </span>
                                                 <span class="text-lg font-bold text-gray-900 dark:text-white">{{ t.count
-                                                }}</span>
+                                                    }}</span>
                                             </div>
                                             <div class="text-xs text-gray-500 dark:text-gray-400">
                                                 {{ Math.round((t.count / otherStats.total) * 100) }}% of total
@@ -534,7 +531,7 @@
                                 </td>
                                 <td
                                     class="px-6 py-5 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
-                                    ${{ product.price?.toFixed(2) || '0.00' }}
+                                    {{ formatCurrency(product.price) }}
                                 </td>
                                 <td class="px-6 py-5 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                                     {{ product.stock || 0 }} in stock
@@ -700,13 +697,13 @@
                         </div>
                         <div class="bg-green-50 dark:bg-green-900/20 rounded-xl p-5 text-center">
                             <div class="text-2xl font-bold text-green-700 dark:text-green-300">
-                                ${{ selectedGraftRequest.price?.toFixed(2) || '0.00' }}
+                                {{ formatCurrency(selectedGraftRequest.price) }}
                             </div>
                             <div class="text-sm text-gray-600 dark:text-gray-400 mt-1">Unit Price</div>
                         </div>
                         <div class="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-5 text-center">
                             <div class="text-2xl font-bold text-blue-700 dark:text-blue-300">
-                                {{ selectedGraftRequest.area ? selectedGraftRequest.area.toFixed(2) + ' cm²' : '—' }}
+                                {{ selectedGraftRequest.area ? formatNumber(selectedGraftRequest.area) + ' cm²' : '—' }}
                             </div>
                             <div class="text-sm text-gray-600 dark:text-gray-400 mt-1">Area</div>
                         </div>
@@ -807,7 +804,7 @@
                         </div>
                         <div class="bg-green-50 dark:bg-green-900/20 rounded-xl p-5 text-center">
                             <div class="text-2xl font-bold text-green-700 dark:text-green-300">
-                                ${{ selectedOtherProduct.price?.toFixed(2) || '0.00' }}
+                                {{ formatCurrency(selectedOtherProduct.price) }}
                             </div>
                             <div class="text-sm text-gray-600 dark:text-gray-400 mt-1">Unit Price</div>
                         </div>
@@ -1123,12 +1120,13 @@ import TableLoader from '@/components/ui/TableLoader.vue'
 import {
     Search, Eye, SquarePen, Trash2, Package, Archive, ArchiveRestore, PencilRuler, ListPlus,
     RulerDimensionLine, Diameter, DollarSign, Plus, BarChart2, CheckCircle2, Filter,
-    ChevronDown, Factory, XCircle, AlertCircle, ArrowLeft, PencilLine, Tag
+    ChevronDown, Factory, XCircle, AlertCircle, ArrowLeft, PencilLine, Tag, ReceiptText, LayoutGrid, UploadCloud, Info
 } from 'lucide-vue-next'
 import api from '@/services/api'
 import { toast } from 'vue3-toastify'
 import 'vue3-toastify/dist/index.css'
 import Swal from 'sweetalert2'
+import { formatCurrency, formatNumber } from '@/utils/currency'
 import { useProductStatus } from '@/composables/products/useProductStatus'
 
 const activeTab = ref('grafts')
@@ -1156,8 +1154,16 @@ interface GraftRequest {
     graft_status: number
     created_at: string
     updated_at: string
-    brand?: { brand_id: string; brand_name: string }
-    manufacturer?: { manufacturer_id: string; manufacturer_name: string }
+    notes?: string
+    description?: string
+    brand?: {
+        brand_id: string
+        brand_name: string
+    }
+    manufacturer?: {
+        manufacturer_id: string
+        manufacturer_name: string
+    }
 }
 
 interface Brand {

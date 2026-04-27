@@ -3,9 +3,7 @@
 		<!-- Header -->
 		<div class="flex items-center justify-between">
 			<div>
-				<h1 class="text-2xl font-bold text-gray-900 dark:text-white">Brand Management</h1>
-				<p class="text-gray-600 dark:text-gray-400">View and manage brands — mirror the manufacturer layout for
-					consistency.</p>
+				<h1 class="text-3xl font-bold text-gray-900 dark:text-white">Brand Management</h1>
 			</div>
 			<button @click="selectedBrand = null; showCreateForm = true"
 				class="flex items-center px-5 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg group">
@@ -221,7 +219,7 @@
 								<Factory class="absolute left-3 top-3 w-4 h-4 text-gray-400" />
 								<select v-model="formData.manufacturerId" required
 									class="mt-1 block w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
-									<option v-for="opt in manufacturerOptions" :key="opt.value" :value="opt.value">
+									<option v-for="opt in manufacturerOptions" :key="opt.value ?? 'none'" :value="opt.value">
 										{{ opt.label }}
 									</option>
 								</select>
@@ -685,7 +683,7 @@
 													{{ size.size }}
 												</div>
 												<div v-if="size.area" class="text-sm text-gray-600 dark:text-gray-400">
-													{{ size.area.toFixed(2) }} cm²
+													{{ formatNumber(size.area) }} cm²
 												</div>
 												<div v-else class="text-sm text-gray-500 dark:text-gray-500 italic">
 													— cm²
@@ -696,7 +694,7 @@
 										<!-- Price -->
 										<div class="col-span-2 text-center tabular-nums font-medium">
 											<span v-if="size.price" class="text-emerald-700 dark:text-emerald-400">
-												${{ size.price.toFixed(2) }}
+												{{ formatCurrency(size.price) }}
 											</span>
 											<!-- <span v-else class="text-gray-400">—</span> -->
 										</div>
@@ -754,6 +752,7 @@ import UploadLoader from '@/components/ui/UploadLoader.vue'
 import { Package, PackagePlus, Eye, SquarePen, Trash2, Archive, CircleCheck, CircleX, Factory, TriangleAlert, Hash, RulerDimensionLine, Diameter, DollarSign, PencilRuler, Plus, Search, Funnel, Globe, Ruler, PackageOpen, PackageSearch, ChevronDown, Image, UploadCloud, X, RefreshCw, Minus, Barcode } from 'lucide-vue-next'
 import api from '@/services/api'
 import axios from "axios";
+import { formatCurrency, formatNumber } from '@/utils/currency'
 
 const toast = useToast()
 
@@ -782,6 +781,7 @@ interface Brand {
 	mue?: number | null
 	logoUrl?: string | null
 	description?: string
+	productType?: string
 	graftSizes: GraftSize[]
 	createdAt: string
 	updatedAt: string

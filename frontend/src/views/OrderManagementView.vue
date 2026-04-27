@@ -3,8 +3,7 @@
 		<!-- Header and Create Order -->
 		<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
 			<div class="space-y-2">
-				<h1 class="text-3xl font-bold text-gray-900 dark:text-white">Order Management</h1>
-				<p class="text-gray-600 dark:text-gray-400 max-w-2xl">View, organize, and track every order in one place.</p>
+				<h1 class="text-3xl font-bold text-gray-900 dark:text-white">Order Management</h1> 
 			</div>
 			<button
 				@click="
@@ -298,14 +297,14 @@
 										<td class="px-4 py-3 text-sm text-gray-900 dark:text-white">{{ getBrandName(item.brandId) }}</td>
 										<td class="px-4 py-3 text-sm text-gray-900 dark:text-white">{{ getSizeName(item.graft_id) }}</td>
 										<td class="px-4 py-3 text-sm text-gray-900 dark:text-white">{{ item.quantity }}</td>
-										<td class="px-4 py-3 text-sm text-gray-900 dark:text-white">${{ item.asp.toFixed(2) }}</td>
-										<td class="px-4 py-3 text-right text-sm font-medium text-gray-900 dark:text-white">${{ (item.asp * item.quantity).toFixed(2) }}</td>
+										<td class="px-4 py-3 text-sm text-gray-900 dark:text-white">{{ formatCurrency(item.asp) }}</td>
+										<td class="px-4 py-3 text-right text-sm font-medium text-gray-900 dark:text-white">{{ formatCurrency(item.asp * item.quantity) }}</td>
 									</tr>
 								</tbody>
 								<tfoot class="bg-gray-50 dark:bg-gray-700">
 									<tr>
 										<td colspan="4" class="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white text-right">Total Amount:</td>
-										<td class="px-4 py-3 text-right text-sm font-bold text-gray-900 dark:text-white">${{ selectedOrder.items.reduce((sum, item) => sum + (item.asp * item.quantity), 0).toFixed(2) }}</td>
+										<td class="px-4 py-3 text-right text-sm font-bold text-gray-900 dark:text-white">{{ formatCurrency(selectedOrder.items.reduce((sum, item) => sum + (item.asp * item.quantity), 0)) }}</td>
 									</tr>
 								</tfoot>
 							</table>
@@ -335,10 +334,10 @@
 											{{ product.quantity }}
 										</td>
 										<td class="px-4 py-3 text-sm text-gray-900 dark:text-white text-right">
-											${{ (product.price || 0).toFixed(2) }}
+											{{ formatCurrency(product.price || 0) }}
 										</td>
 										<td class="px-4 py-3 text-right text-sm font-medium text-gray-900 dark:text-white">
-											${{ ((product.price || 0) * (product.quantity || 0)).toFixed(2) }}
+											{{ formatCurrency((product.price || 0) * (product.quantity || 0)) }}
 										</td>
 									</tr>
 								</tbody>
@@ -348,7 +347,7 @@
 											Additional Subtotal:
 										</td>
 										<td class="px-4 py-3 text-right text-sm font-bold text-gray-900 dark:text-white">
-											${{ selectedOrder.other_product_items.reduce((sum, p) => sum + ((p.price || 0) * (p.quantity || 0)), 0).toFixed(2) }}
+											{{ formatCurrency(selectedOrder.other_product_items.reduce((sum, p) => sum + ((p.price || 0) * (p.quantity || 0)), 0)) }}
 										</td>
 									</tr>
 								</tfoot>
@@ -701,7 +700,7 @@
 								</label>
 								<input
 									type="text"
-									:value="item.asp && item.quantity ? `$${(item.asp * item.quantity).toFixed(2)}` : ''"
+									:value="item.asp && item.quantity ? formatCurrency(item.asp * item.quantity) : ''"
 									class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-900/10"
 									placeholder="-----"
 									readonly
@@ -986,6 +985,7 @@ import { toast } from 'vue3-toastify'
 import 'vue3-toastify/dist/index.css'
 import Swal from 'sweetalert2'
 import mammoth from 'mammoth'
+import { formatCurrency } from '@/utils/currency'
 
 interface Order {
 	order_id: number;
@@ -1433,8 +1433,7 @@ function getProductPrice(idx: number) {
 	const qty = Number(product.quantity ?? 1) || 1
 	const unit = Number(otherProduct.price ?? 0) || 0
 
-	const totalPrice = (unit * qty).toFixed(2)
-	return `$${totalPrice}`
+	return formatCurrency(unit * qty)
 }
 
 function resetOrderItems() {

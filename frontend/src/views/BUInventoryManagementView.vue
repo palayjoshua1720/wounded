@@ -4,8 +4,6 @@
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div class="space-y-2">
                 <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Inventory & Serial Tracking</h1>
-                <p class="text-gray-600 dark:text-gray-400 max-w-2xl">Manage inventory items, track serial numbers, and
-                    monitor usage across all clinics</p>
             </div>
             <div class="flex items-center gap-4">
                 <button @click="showStatistics = !showStatistics"
@@ -54,7 +52,7 @@
                         </div>
                         <div>
                             <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ getStatusCount('delivered')
-                                }}</p>
+                            }}</p>
                             <p class="text-sm text-gray-500 dark:text-gray-400">Available</p>
                         </div>
                     </div>
@@ -92,28 +90,28 @@
                                 <Package class="w-4 h-4 mr-2 text-blue-500" /> Delivered
                             </span>
                             <span class="font-semibold text-gray-900 dark:text-white">{{ getStatusCount('delivered')
-                                }}</span>
+                            }}</span>
                         </div>
                         <div class="flex items-center justify-between">
                             <span class="flex items-center text-sm text-gray-600 dark:text-gray-300">
                                 <Clock class="w-4 h-4 mr-2 text-yellow-500" /> Expected
                             </span>
                             <span class="font-semibold text-gray-900 dark:text-white">{{ getStatusCount('expected')
-                                }}</span>
+                            }}</span>
                         </div>
                         <div class="flex items-center justify-between">
                             <span class="flex items-center text-sm text-gray-600 dark:text-gray-300">
                                 <CheckCircle2 class="w-4 h-4 mr-2 text-green-500" /> Used
                             </span>
                             <span class="font-semibold text-gray-900 dark:text-white">{{ getStatusCount('used')
-                                }}</span>
+                            }}</span>
                         </div>
                         <div class="flex items-center justify-between">
                             <span class="flex items-center text-sm text-gray-600 dark:text-gray-300">
                                 <AlertTriangle class="w-4 h-4 mr-2 text-red-500" /> Expired
                             </span>
                             <span class="font-semibold text-gray-900 dark:text-white">{{ getStatusCount('expired')
-                                }}</span>
+                            }}</span>
                         </div>
                         <div class="flex items-center justify-between">
                             <span class="flex items-center text-sm text-gray-600 dark:text-gray-300">
@@ -127,21 +125,21 @@
                                 <CornerUpLeft class="w-4 h-4 mr-2 text-gray-500" /> Returned
                             </span>
                             <span class="font-semibold text-gray-900 dark:text-white">{{ getStatusCount('returned')
-                                }}</span>
+                            }}</span>
                         </div>
                         <div class="flex items-center justify-between">
                             <span class="flex items-center text-sm text-gray-600 dark:text-gray-300">
                                 <Package class="w-4 h-4 mr-2 text-indigo-500" /> Unused
                             </span>
                             <span class="font-semibold text-gray-900 dark:text-white">{{ getStatusCount('unused')
-                                }}</span>
+                            }}</span>
                         </div>
                         <div class="flex items-center justify-between">
                             <span class="flex items-center text-sm text-gray-600 dark:text-gray-300">
                                 <Repeat2 class="w-4 h-4 mr-2 text-orange-500" /> Reassigned
                             </span>
                             <span class="font-semibold text-gray-900 dark:text-white">{{ getStatusCount('reassigned')
-                                }}</span>
+                            }}</span>
                         </div>
                     </div>
                 </div>
@@ -475,7 +473,7 @@
                             <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Order ID</p>
                             <p class="text-sm font-mono font-semibold text-gray-900 dark:text-white">#{{
                                 selectedItem.orderId ?
-                                selectedItem.orderId.slice(-6).toUpperCase() : 'N/A' }}</p>
+                                    selectedItem.orderId.slice(-6).toUpperCase() : 'N/A' }}</p>
                         </div>
                     </div>
 
@@ -565,7 +563,7 @@
                                     <td
                                         class="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white whitespace-nowrap">
                                         {{
-                                        log.patientName }}</td>
+                                            log.patientName }}</td>
                                     <td class="px-6 py-4 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">{{
                                         formatDate(log.dateOfService) }}</td>
                                     <td class="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">{{ log.woundSite }}
@@ -573,7 +571,7 @@
                                     <td class="px-6 py-4 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">{{
                                         getClinicianName(log.clinicianId) }}</td>
                                     <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{{ log.notes || 'N/A'
-                                        }}</td>
+                                    }}</td>
                                 </tr>
                             </tbody>
                         </table>

@@ -4,14 +4,10 @@
 		<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
 			<div class="space-y-2">
 				<h1 class="text-3xl font-bold text-gray-900 dark:text-white">Order Management</h1>
-				<p class="text-gray-600 dark:text-gray-400 max-w-2xl">View, organize, and track every order in one place.</p>
 			</div>
-            <button
-				@click="
-					openCreateForm
-				"
-				class="flex items-center px-5 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg group"
-			>
+			<button @click="
+				openCreateForm
+			" class="flex items-center px-5 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg group">
 				<PackagePlus class="w-4 h-4 mr-2" />
 				Create Order
 			</button>
@@ -30,99 +26,126 @@
 				<div class="flex flex-col sm:flex-row gap-4">
 					<div class="relative">
 						<Funnel class="absolute left-3 top-3.5 h-4 w-4 text-gray-500 dark:text-gray-400" />
-						<select
-						v-model="statusFilter"
-						class="pl-10 pr-8 py-3.5 border-0 bg-gray-50 dark:bg-gray-700/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-gray-700 text-gray-900 dark:text-white appearance-none transition-all duration-200"
-						>
+						<select v-model="statusFilter"
+							class="pl-10 pr-8 py-3.5 border-0 bg-gray-50 dark:bg-gray-700/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-gray-700 text-gray-900 dark:text-white appearance-none transition-all duration-200">
 							<option value="all">All Status</option>
 							<option value="active">Active</option>
 							<option value="inactive">Inactive</option>
 						</select>
-						<ChevronDown class="absolute right-3 top-3.5 h-4 w-4 text-gray-500 dark:text-gray-400 pointer-events-none" />
+						<ChevronDown
+							class="absolute right-3 top-3.5 h-4 w-4 text-gray-500 dark:text-gray-400 pointer-events-none" />
 					</div>
 				</div>
 				<div class="relative">
 					<label for="per-page" class="text-sm text-gray-700 dark:text-gray-300">Rows:</label>
-					<select
-						id="per-page"
-						v-model="itemsPerPage"
-						class="pl-4 pr-8 py-3.5 border-0 bg-gray-50 dark:bg-gray-700/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-gray-700 text-gray-900 dark:text-white appearance-none transition-all duration-200"
-					>
+					<select id="per-page" v-model="itemsPerPage"
+						class="pl-4 pr-8 py-3.5 border-0 bg-gray-50 dark:bg-gray-700/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-gray-700 text-gray-900 dark:text-white appearance-none transition-all duration-200">
 						<option value="10">10</option>
 						<option value="25">25</option>
 						<option value="50">50</option>
 					</select>
-					<ChevronDown class="absolute right-3 top-3.5 h-4 w-4 text-gray-500 dark:text-gray-400 pointer-events-none" />
+					<ChevronDown
+						class="absolute right-3 top-3.5 h-4 w-4 text-gray-500 dark:text-gray-400 pointer-events-none" />
 				</div>
 			</div>
 		</div>
 
 		<!-- Orders Table -->
-		<div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+		<div
+			class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
 			<div class="overflow-x-auto">
 				<table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
 					<thead class="bg-gray-50 dark:bg-gray-700">
 						<tr>
-							<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Order ID</th>
-							<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Clinic</th>
-							<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Patient</th>
-							<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Items</th>
-							<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Date</th>
-							<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
-							<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+							<th
+								class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+								Order ID</th>
+							<th
+								class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+								Clinic</th>
+							<th
+								class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+								Patient</th>
+							<th
+								class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+								Items</th>
+							<th
+								class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+								Date</th>
+							<th
+								class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+								Status</th>
+							<th
+								class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+								Actions</th>
 						</tr>
 					</thead>
 					<tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
 						<TableLoader v-if="tableLoader" :colspan="7" />
 						<template v-else>
-							<tr
-							v-for="order in filteredOrders"
-							:key="order.order_id"
-							class="hover:bg-gray-50 dark:hover:bg-gray-700">
+							<tr v-for="order in filteredOrders" :key="order.order_id"
+								class="hover:bg-gray-50 dark:hover:bg-gray-700">
 								<td class="px-6 py-3 whitespace-nowrap">
 									<div class="flex items-center">
-										<div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+										<div
+											class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
 											<BaggageClaim class="w-5 h-5 text-green-600" />
 										</div>
 										<div class="ml-4">
-											<div class="text-sm text-gray-900 dark:text-white">{{ order.order_code }}</div>
+											<div class="text-sm text-gray-900 dark:text-white">{{ order.order_code }}
+											</div>
 										</div>
 									</div>
 								</td>
 								<td class="px-6 py-4 whitespace-nowrap">
-									<div class="text-sm text-gray-900 dark:text-white">{{ order.clinic?.clinic_name }}</div>
+									<div class="text-sm text-gray-900 dark:text-white">{{ order.clinic?.clinic_name }}
+									</div>
 								</td>
 								<td class="px-6 py-4 whitespace-nowrap">
-									<div class="text-sm text-gray-900 dark:text-white">{{ order.patient?.patient_name || 'Not specified' }}</div>
+									<div class="text-sm text-gray-900 dark:text-white">{{ order.patient?.patient_name ||
+										'Not specified' }}</div>
 								</td>
 								<td class="px-6 py-4">
 									<div class="text-sm text-gray-900 dark:text-white">
 										<div v-for="(item, idx) in order.items" :key="idx" class="mb-1">
-											{{ getBrandName(item.brandId) }} - {{ getSizeName(item.graft_id) }} × {{ item.quantity }}
+											{{ getBrandName(item.brandId) }} - {{ getSizeName(item.graft_id) }} × {{
+												item.quantity }}
 										</div>
 									</div>
 								</td>
 								<td class="px-6 py-4 whitespace-nowrap">
-									<div class="text-sm text-gray-900 dark:text-white">{{ formatDate(order.ordered_at) }}</div>
+									<div class="text-sm text-gray-900 dark:text-white">{{ formatDate(order.ordered_at)
+										}}</div>
 								</td>
 								<td class="px-6 py-4 whitespace-nowrap">
-									<span :class="['inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs font-medium', getStatusColor(order.order_status)]">
+									<span
+										:class="['inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs font-medium', getStatusColor(order.order_status)]">
 										<component :is="getStatusIcon(order.order_status)" class="w-4 h-4" />
 										<span class="capitalize">{{ order.order_status }}</span>
 									</span>
 								</td>
 								<td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
 									<div class="flex items-center space-x-2">
-										<button @click="showOrderDetails(order)" class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">
+										<button @click="showOrderDetails(order)"
+											class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">
 											<Eye class="w-4 h-4" />
 										</button>
-										<button @click="editOrder(order)" class="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300">
+										<button @click="editOrder(order)"
+											class="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300">
 											<SquarePen class="w-4 h-4" />
 										</button>
 										<div class="inline-flex space-x-1">
-											<button v-if="order.order_status === 'submitted'" @click="updateOrderStatusNew(order, 'acknowledged')" class="px-2 py-1 text-xs bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400 rounded hover:bg-purple-200 dark:hover:bg-purple-900/30">Acknowledge?</button>
-											<button v-if="order.order_status === 'acknowledged'" @click="updateOrderStatusNew(order, 'shipped')" class="px-2 py-1 text-xs bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400 rounded hover:bg-blue-200 dark:hover:bg-blue-900/30">Ready to Ship?</button>
-											<button v-if="order.order_status === 'shipped'" @click="updateOrderStatusNew(order, 'delivered')" class="px-2 py-1 text-xs bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400 rounded hover:bg-green-200 dark:hover:bg-green-900/30">Ready to Deliver?</button>
+											<button v-if="order.order_status === 'submitted'"
+												@click="updateOrderStatusNew(order, 'acknowledged')"
+												class="px-2 py-1 text-xs bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400 rounded hover:bg-purple-200 dark:hover:bg-purple-900/30">Acknowledge?</button>
+											<button v-if="order.order_status === 'acknowledged'"
+												@click="updateOrderStatusNew(order, 'shipped')"
+												class="px-2 py-1 text-xs bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400 rounded hover:bg-blue-200 dark:hover:bg-blue-900/30">Ready
+												to Ship?</button>
+											<button v-if="order.order_status === 'shipped'"
+												@click="updateOrderStatusNew(order, 'delivered')"
+												class="px-2 py-1 text-xs bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400 rounded hover:bg-green-200 dark:hover:bg-green-900/30">Ready
+												to Deliver?</button>
 										</div>
 									</div>
 								</td>
@@ -134,12 +157,12 @@
 
 			<div v-if="filteredOrders.length === 0 && !tableLoader" class="text-center py-12">
 				<div
-                    class="mx-auto h-16 w-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mb-4">
-                    <ShoppingCart class="h-8 w-8 text-gray-400 dark:text-gray-500" />
-                </div>
-                <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-1">No orders found</h3>
-                <p class="text-gray-500 dark:text-gray-400 max-w-md mx-auto">Try adjusting your search or filter to find
-                    what you're looking for.</p>
+					class="mx-auto h-16 w-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mb-4">
+					<ShoppingCart class="h-8 w-8 text-gray-400 dark:text-gray-500" />
+				</div>
+				<h3 class="text-lg font-medium text-gray-900 dark:text-white mb-1">No orders found</h3>
+				<p class="text-gray-500 dark:text-gray-400 max-w-md mx-auto">Try adjusting your search or filter to find
+					what you're looking for.</p>
 			</div>
 
 			<template v-if="!tableLoader">
@@ -150,11 +173,9 @@
 		<!-- View Order Modal -->
 		<BaseModal v-model="showOrderModal" title="Order Details">
 			<template v-if="selectedOrder">
-				<div
-					class="flex items-center bg-gradient-to-r from-blue-50 to-indigo-50 
+				<div class="flex items-center bg-gradient-to-r from-blue-50 to-indigo-50 
 					dark:from-blue-900/20 dark:to-indigo-900/20 
-					p-4 rounded-xl border border-blue-100 dark:border-blue-800 shadow-sm"
-				>
+					p-4 rounded-xl border border-blue-100 dark:border-blue-800 shadow-sm">
 					<div class="p-3 bg-blue-600 text-white rounded-lg shadow-md mr-3">
 						<Package class="w-6 h-6" />
 					</div>
@@ -167,14 +188,13 @@
 							</span>
 						</p>
 
-						<span
-							:class="[
-								'mt-1 w-fit inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap',
-								getStatusColor(selectedOrder.order_status),
-							]"
-						>
+						<span :class="[
+							'mt-1 w-fit inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap',
+							getStatusColor(selectedOrder.order_status),
+						]">
 							<CircleCheck class="w-4 h-4" />
-							{{ selectedOrder.order_status.charAt(0).toUpperCase() + selectedOrder.order_status.slice(1) }}
+							{{ selectedOrder.order_status.charAt(0).toUpperCase() + selectedOrder.order_status.slice(1)
+							}}
 						</span>
 					</div>
 				</div>
@@ -193,14 +213,16 @@
 								<CircleUser class="w-5 h-5 text-green-600" />
 								<div>
 									<p class="text-sm font-medium text-gray-700 dark:text-gray-300">Clinician</p>
-									<p class="text-gray-900 dark:text-white">{{ selectedOrder.clinician?.first_name }} {{ selectedOrder.clinician?.last_name }}</p>
+									<p class="text-gray-900 dark:text-white">{{ selectedOrder.clinician?.first_name }}
+										{{ selectedOrder.clinician?.last_name }}</p>
 								</div>
 							</div>
 							<div class="flex items-center space-x-3">
 								<CircleUser class="w-5 h-5 text-purple-600" />
 								<div>
 									<p class="text-sm font-medium text-gray-700 dark:text-gray-300">Patient</p>
-									<p class="text-gray-900 dark:text-white">{{ selectedOrder.patient?.patient_name || 'Not specified' }}</p>
+									<p class="text-gray-900 dark:text-white">{{ selectedOrder.patient?.patient_name ||
+										'Not specified' }}</p>
 								</div>
 							</div>
 						</div>
@@ -209,14 +231,16 @@
 								<Calendar1 class="w-5 h-5 text-orange-600" />
 								<div>
 									<p class="text-sm font-medium text-gray-700 dark:text-gray-300">Order Date</p>
-									<p class="text-gray-900 dark:text-white">{{ formatDate(selectedOrder.ordered_at) }}</p>
+									<p class="text-gray-900 dark:text-white">{{ formatDate(selectedOrder.ordered_at) }}
+									</p>
 								</div>
 							</div>
 							<div v-if="selectedOrder.tracking_num" class="flex items-center space-x-3">
 								<Truck class="w-5 h-5 text-gray-600" />
 								<div>
 									<p class="text-sm font-medium text-gray-700 dark:text-gray-300">Tracking Number</p>
-									<p class="text-gray-900 dark:text-white font-mono">{{ selectedOrder.tracking_num }}</p>
+									<p class="text-gray-900 dark:text-white font-mono">{{ selectedOrder.tracking_num }}
+									</p>
 								</div>
 							</div>
 						</div>
@@ -227,26 +251,45 @@
 							<table class="w-full">
 								<thead class="bg-gray-50 dark:bg-gray-700">
 									<tr>
-										<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Brand</th>
-										<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Size</th>
-										<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Quantity</th>
-										<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">ASP</th>
-										<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Total</th>
+										<th
+											class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+											Brand</th>
+										<th
+											class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+											Size</th>
+										<th
+											class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+											Quantity</th>
+										<th
+											class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+											ASP</th>
+										<th
+											class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+											Total</th>
 									</tr>
 								</thead>
 								<tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
 									<tr v-for="(item, idx) in selectedOrder.items" :key="idx">
-										<td class="px-4 py-3 text-sm text-gray-900 dark:text-white">{{ getBrandName(item.brandId) }}</td>
-										<td class="px-4 py-3 text-sm text-gray-900 dark:text-white">{{ getSizeName(item.graft_id) }}</td>
-										<td class="px-4 py-3 text-sm text-gray-900 dark:text-white">{{ item.quantity }}</td>
-										<td class="px-4 py-3 text-sm text-gray-900 dark:text-white">${{ item.asp.toFixed(2) }}</td>
-										<td class="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">${{ (item.asp * item.quantity).toFixed(2) }}</td>
+										<td class="px-4 py-3 text-sm text-gray-900 dark:text-white">{{
+											getBrandName(item.brandId) }}</td>
+										<td class="px-4 py-3 text-sm text-gray-900 dark:text-white">{{
+											getSizeName(item.graft_id) }}</td>
+										<td class="px-4 py-3 text-sm text-gray-900 dark:text-white">{{ item.quantity }}
+										</td>
+										<td class="px-4 py-3 text-sm text-gray-900 dark:text-white">{{
+											formatCurrency(item.asp) }}</td>
+										<td class="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">{{
+											formatCurrency(item.asp * item.quantity) }}</td>
 									</tr>
 								</tbody>
 								<tfoot class="bg-gray-50 dark:bg-gray-700">
 									<tr>
-										<td colspan="4" class="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white text-right">Total Amount:</td>
-										<td class="px-4 py-3 text-sm font-bold text-gray-900 dark:text-white">${{ selectedOrder.items.reduce((sum, item) => sum + (item.asp * item.quantity), 0).toFixed(2) }}</td>
+										<td colspan="4"
+											class="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white text-right">
+											Total Amount:</td>
+										<td class="px-4 py-3 text-sm font-bold text-gray-900 dark:text-white">{{
+											formatCurrency(selectedOrder.items.reduce((sum, item) => sum + (item.asp * item.quantity),
+											0)) }}</td>
 									</tr>
 								</tfoot>
 							</table>
@@ -269,111 +312,101 @@
 
 						<div class="flex items-start justify-between w-full">
 							<div class="flex space-x-3">
-								<button 
-									v-if="selectedOrder.order_status === 'submitted'" 
-									@click="updateOrderStatusNew(selectedOrder.order_id, 'acknowledged')" 
-									class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-								>
+								<button v-if="selectedOrder.order_status === 'submitted'"
+									@click="updateOrderStatusNew(selectedOrder.order_id, 'acknowledged')"
+									class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
 									Mark Acknowledged
 								</button>
 
-								<button 
-									v-if="selectedOrder.order_status === 'acknowledged'" 
-									@click="updateOrderStatusNew(selectedOrder.order_id, 'shipped')" 
-									class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-								>
+								<button v-if="selectedOrder.order_status === 'acknowledged'"
+									@click="updateOrderStatusNew(selectedOrder.order_id, 'shipped')"
+									class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
 									Mark Shipped
 								</button>
 
-								<button 
-									v-if="selectedOrder.order_status === 'shipped'" 
-									@click="updateOrderStatusNew(selectedOrder.order_id, 'delivered')" 
-									class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-								>
+								<button v-if="selectedOrder.order_status === 'shipped'"
+									@click="updateOrderStatusNew(selectedOrder.order_id, 'delivered')"
+									class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
 									Mark Delivered
 								</button>
 
-								<span 
-									v-if="selectedOrder.order_status === 'delivered'"
-									class="bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400 px-3 py-1 rounded-full text-sm"
-								>
+								<span v-if="selectedOrder.order_status === 'delivered'"
+									class="bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400 px-3 py-1 rounded-full text-sm">
 									Delivered
 								</span>
 							</div>
 
 							<!-- RIGHT: OVERRIDE -->
 							<div class="flex items-center space-x-3">
-								<select
-									v-model="overrideStatus"
-									class="w-56 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 
+								<select v-model="overrideStatus" class="w-56 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 
 									bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-200 
 									shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 
-									transition-all duration-150 cursor-pointer"
-								>
+									transition-all duration-150 cursor-pointer">
 									<option disabled value="">Select Status</option>
 
-									<option value="submitted" :disabled="selectedOrder.order_status === 'submitted'">Submitted</option>
-									<option value="acknowledged" :disabled="selectedOrder.order_status === 'acknowledged'">Acknowledged</option>
-									<option value="shipped" :disabled="selectedOrder.order_status === 'shipped'">Shipped</option>
-									<option value="delivered" :disabled="selectedOrder.order_status === 'delivered'">Delivered</option>
+									<option value="submitted" :disabled="selectedOrder.order_status === 'submitted'">
+										Submitted</option>
+									<option value="acknowledged"
+										:disabled="selectedOrder.order_status === 'acknowledged'">Acknowledged</option>
+									<option value="shipped" :disabled="selectedOrder.order_status === 'shipped'">Shipped
+									</option>
+									<option value="delivered" :disabled="selectedOrder.order_status === 'delivered'">
+										Delivered</option>
 								</select>
-								
-								<button
-									:disabled="!overrideStatus || overrideStatus === selectedOrder.order_status"
-									@click="applyOverride"
-									class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors 
-									disabled:opacity-50 disabled:cursor-not-allowed"
-								>
+
+								<button :disabled="!overrideStatus || overrideStatus === selectedOrder.order_status"
+									@click="applyOverride" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors 
+									disabled:opacity-50 disabled:cursor-not-allowed">
 									Apply Override
 								</button>
 
 							</div>
 
 						</div>
-						
+
 					</div>
 
 				</div>
 			</template>
 			<template #actions>
 				<div class="p-4 flex items-center gap-2">
-					<button
-					type="button"
-					@click="closeForm"
-					class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
+					<button type="button" @click="closeForm"
+						class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
 						Cancel
 					</button>
-					<button
-					type="button"
-					@click="handleCreateOrder"
-					class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-					>
+					<button type="button" @click="handleCreateOrder"
+						class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
 						{{ showCreateForm ? 'Submit Order' : 'Update Order' }}
 					</button>
 				</div>
 			</template>
 		</BaseModal>
 
-        <!-- Create/Edit Order Modal -->
+		<!-- Create/Edit Order Modal -->
 		<BaseModal v-model="showFormModal" :title="showCreateForm ? 'Create New Order' : 'Edit Order Details'">
 			<form @submit.prevent="handleCreateOrder" class="space-y-6">
 				<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 					<!-- Clinic Selection -->
 					<div>
-						<label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Ordering Clinic <span class="text-red-500">*</span></label>
-						<select v-model="formData.clinicId" @change="onClinicChange" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+						<label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Ordering Clinic <span
+								class="text-red-500">*</span></label>
+						<select v-model="formData.clinicId" @change="onClinicChange" required
+							class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
 							<option value="">Select Clinic</option>
 							<option v-if="myClinic" :value="myClinic.clinic_id">
-                                {{ myClinic.clinic_name }} [{{ myClinic.clinic_code }}]
-                            </option>
+								{{ myClinic.clinic_name }} [{{ myClinic.clinic_code }}]
+							</option>
 						</select>
 					</div>
 					<!-- Clinician Selection -->
 					<div>
-						<label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Ordering Clinician <span class="text-red-500">*</span></label>
-						<select v-model="formData.clinicianId" :disabled="!formData.clinicId" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+						<label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Ordering Clinician
+							<span class="text-red-500">*</span></label>
+						<select v-model="formData.clinicianId" :disabled="!formData.clinicId" required
+							class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
 							<option value="">Select Clinician</option>
-							<option v-for="clinician in filteredClinicians" :key="clinician.id" :value="clinician.id">{{ clinician.first_name }}</option>
+							<option v-for="clinician in filteredClinicians" :key="clinician.id" :value="clinician.id">{{
+								clinician.first_name }}</option>
 						</select>
 					</div>
 				</div>
@@ -381,93 +414,78 @@
 				<!-- Patient Selection -->
 				<div>
 					<label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Intended Patient</label>
-					<select v-model="formData.patientId" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+					<select v-model="formData.patientId"
+						class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
 						<option value="">Select Patient (Optional)</option>
-						<option v-for="patient in filteredPatients" :key="patient.patient_id" :value="patient.patient_id">{{ patient.patient_name }}</option>
+						<option v-for="patient in filteredPatients" :key="patient.patient_id"
+							:value="patient.patient_id">{{
+								patient.patient_name }}</option>
 					</select>
 				</div>
 
 				<!-- IVR Section -->
 				<div>
-					<label class="block text-sm font-medium text-gray-700 dark:text-gray-300">List of Requested IVR's <span class="text-red-500">*</span></label>
-					<select
-						v-model="formData.ivrId"
-						:disabled="!formData.patientId"
-						required
-						class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-					>
+					<label class="block text-sm font-medium text-gray-700 dark:text-gray-300">List of Requested IVR's
+						<span class="text-red-500">*</span></label>
+					<select v-model="formData.ivrId" :disabled="!formData.patientId" required
+						class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
 						<option value="">Select requested IVR</option>
 
-						<option 
-							v-for="ivr in selectedPatientIVRs" 
-							:key="ivr.ivr_id" 
-							:value="String(ivr.ivr_id)"
-						>
+						<option v-for="ivr in selectedPatientIVRs" :key="ivr.ivr_id" :value="String(ivr.ivr_id)">
 							{{ ivr.ivr_number }} [{{ ivr.manufacturer?.manufacturer_name }}]
 						</option>
 					</select>
 					<div v-if="selectedIVR" class="mt-2">
-						<div
-							class="p-3 rounded-lg flex items-center space-x-2 border dark:border-opacity-40"
-							:class="{
-								'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-400': getEligibilityLabel(selectedIVR.eligibility_status) === 'Eligible',
-								'bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-400': getEligibilityLabel(selectedIVR.eligibility_status) === 'Not Eligible',
-								'bg-yellow-50 border-yellow-200 dark:bg-yellow-900/20 dark:border-yellow-400': getEligibilityLabel(selectedIVR.eligibility_status) === 'Pending',
-							}"
-						>
+						<div class="p-3 rounded-lg flex items-center space-x-2 border dark:border-opacity-40" :class="{
+							'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-400': getEligibilityLabel(selectedIVR.eligibility_status) === 'Eligible',
+							'bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-400': getEligibilityLabel(selectedIVR.eligibility_status) === 'Not Eligible',
+							'bg-yellow-50 border-yellow-200 dark:bg-yellow-900/20 dark:border-yellow-400': getEligibilityLabel(selectedIVR.eligibility_status) === 'Pending',
+						}">
 							<!-- ICON -->
-							<TriangleAlert
-								class="w-5 h-5"
-								:class="{
-									'text-green-600 dark:text-green-400': getEligibilityLabel(selectedIVR.eligibility_status) === 'Eligible',
-									'text-red-600 dark:text-red-400': getEligibilityLabel(selectedIVR.eligibility_status) === 'Not Eligible',
-									'text-yellow-600 dark:text-yellow-400': getEligibilityLabel(selectedIVR.eligibility_status) === 'Pending',
-								}"
-							/>
+							<TriangleAlert class="w-5 h-5" :class="{
+								'text-green-600 dark:text-green-400': getEligibilityLabel(selectedIVR.eligibility_status) === 'Eligible',
+								'text-red-600 dark:text-red-400': getEligibilityLabel(selectedIVR.eligibility_status) === 'Not Eligible',
+								'text-yellow-600 dark:text-yellow-400': getEligibilityLabel(selectedIVR.eligibility_status) === 'Pending',
+							}" />
 
 							<!-- TEXT -->
-							<span
-								class="text-sm font-medium"
-								:class="{
-									'text-green-800 dark:text-green-400': getEligibilityLabel(selectedIVR.eligibility_status) === 'Eligible',
-									'text-red-800 dark:text-red-400': getEligibilityLabel(selectedIVR.eligibility_status) === 'Not Eligible',
-									'text-yellow-800 dark:text-yellow-400': getEligibilityLabel(selectedIVR.eligibility_status) === 'Pending',
-								}"
-							>
+							<span class="text-sm font-medium" :class="{
+								'text-green-800 dark:text-green-400': getEligibilityLabel(selectedIVR.eligibility_status) === 'Eligible',
+								'text-red-800 dark:text-red-400': getEligibilityLabel(selectedIVR.eligibility_status) === 'Not Eligible',
+								'text-yellow-800 dark:text-yellow-400': getEligibilityLabel(selectedIVR.eligibility_status) === 'Pending',
+							}">
 								IVR Status: {{ getEligibilityLabel(selectedIVR.eligibility_status) }}
 							</span>
 						</div>
 					</div>
 				</div>
-				
+
 				<!-- Order Items -->
 				<div :class="{ 'opacity-40 pointer-events-none': !isSelectedIVREligible }">
 					<div class="flex items-center justify-between mb-4">
 						<h3 class="text-lg font-medium text-gray-900 dark:text-white">Order Items</h3>
-						<button type="button" @click="addOrderItem" class="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+						<button type="button" @click="addOrderItem"
+							class="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
 							<PackagePlus class="w-4 h-4" />
 							<span>Add Item</span>
 						</button>
 					</div>
 
-					<p class="text-xs text-yellow-600 dark:text-yellow-400 mb-2">Note: You may exceed the MUE (Maximum Units per Episode) for a product, but this will be flagged for review. You can still submit the order.</p>
-					<div v-for="(item, idx) in formData.items" :key="item.id" class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 mb-4">
-						<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-[2fr_2fr_1fr_1fr_auto] gap-4 items-end">
+					<p class="text-xs text-yellow-600 dark:text-yellow-400 mb-2">Note: You may exceed the MUE (Maximum
+						Units per
+						Episode) for a product, but this will be flagged for review. You can still submit the order.</p>
+					<div v-for="(item, idx) in formData.items" :key="item.id"
+						class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 mb-4">
+						<div
+							class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-[2fr_2fr_1fr_1fr_auto] gap-4 items-end">
 							<!-- Brand -->
 							<div>
-								<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Brand <span class="text-red-500">*</span></label>
-								<select 
-									v-model="item.brandId"
-									@change="onBrandChange(idx)"
-									required
-									class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-								>
+								<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Brand
+									<span class="text-red-500">*</span></label>
+								<select v-model="item.brandId" @change="onBrandChange(idx)" required
+									class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
 									<option value="">Select Brand</option>
-									<option 
-										v-for="brand in ivrBrands" 
-										:key="brand.brand_id" 
-										:value="brand.brand_id"
-									>
+									<option v-for="brand in ivrBrands" :key="brand.brand_id" :value="brand.brand_id">
 										{{ brand.brand_name }}
 									</option>
 								</select>
@@ -478,23 +496,14 @@
 								<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
 									Size <span class="text-red-500">*</span>
 								</label>
-								<select
-									v-model="item.sizeId"
-									@change="onSizeChange(idx)"
-									:disabled="!selectedBrand(idx)"
-									required
-									class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg 
+								<select v-model="item.sizeId" @change="onSizeChange(idx)"
+									:disabled="!selectedBrand(idx)" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg 
 										bg-white dark:bg-gray-700 text-gray-900 dark:text-white
-										disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
-								>
+										disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed">
 									<option value="">Select Size</option>
-									<option
-										v-for="size in getSizesByBrand(item.brandId)"
-										:key="size.graft_size_id"
-										:value="size.graft_size_id.toString()"
-										:disabled="size.stock <= 0"
-										:class="size.stock <= 0 ? 'text-gray-400' : ''"
-									>
+									<option v-for="size in getSizesByBrand(item.brandId)" :key="size.graft_size_id"
+										:value="size.graft_size_id.toString()" :disabled="size.stock <= 0"
+										:class="size.stock <= 0 ? 'text-gray-400' : ''">
 										{{ size.size }}
 										<span v-if="size.stock <= 0">(Out of Stock)</span>
 									</option>
@@ -503,8 +512,11 @@
 
 							<!-- Quantity -->
 							<div>
-								<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Quantity <span class="text-red-500">*</span></label>
-								<input v-model.number="item.quantity" type="number" min="1" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" :class="!isQuantityValid(idx) ? 'border-red-300 bg-red-50 dark:border-red-400 dark:bg-red-900/10' : 'border-gray-300 dark:border-gray-600'" />
+								<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Quantity
+									<span class="text-red-500">*</span></label>
+								<input v-model.number="item.quantity" type="number" min="1" required
+									class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+									:class="!isQuantityValid(idx) ? 'border-red-300 bg-red-50 dark:border-red-400 dark:bg-red-900/10' : 'border-gray-300 dark:border-gray-600'" />
 							</div>
 
 							<!-- ASP -->
@@ -512,30 +524,35 @@
 								<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
 									ASP
 								</label>
-								<input
-									type="text"
-									:value="item.asp && item.quantity ? `$${(item.asp * item.quantity).toFixed(2)}` : ''"
+								<input type="text"
+									:value="item.asp && item.quantity ? formatCurrency(item.asp * item.quantity) : ''"
 									class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-900/10"
-									placeholder="-----"
-									readonly
-								/>
+									placeholder="-----" readonly />
 							</div>
 
 							<!-- Remove -->
 							<div class="flex justify-end md:justify-center items-end">
-								<button type="button" @click="removeOrderItem(idx)" class="p-2 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/10 rounded-lg transition-colors">
+								<button type="button" @click="removeOrderItem(idx)"
+									class="p-2 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/10 rounded-lg transition-colors">
 									<Trash2 class="w-4 h-4" />
 								</button>
 							</div>
 						</div>
-						<p v-if="!isQuantityValid(idx)" class="text-xs text-red-600 dark:text-red-400 mt-1">Exceeds MUE limit of {{ selectedBrand(idx)?.mue }} for this brand. You may still submit, but this will be flagged for review.</p>
+						<p v-if="!isQuantityValid(idx)" class="text-xs text-red-600 dark:text-red-400 mt-1">Exceeds MUE
+							limit of
+							{{ selectedBrand(idx)?.mue }} for this brand. You may still submit, but this will be flagged
+							for
+							review.</p>
 					</div>
 				</div>
 
 				<!-- Internal Notes -->
 				<div>
-					<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Internal Notes</label>
-					<textarea v-model="formData.notes" rows="3" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white" placeholder="Add any internal notes..." />
+					<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Internal
+						Notes</label>
+					<textarea v-model="formData.notes" rows="3"
+						class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+						placeholder="Add any internal notes..." />
 				</div>
 
 				<!-- Status, Date, Tracking -->
@@ -558,17 +575,12 @@
 			</form>
 			<template #actions>
 				<div class="p-4 flex items-center gap-2">
-					<button
-					type="button"
-					@click="closeForm"
-					class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
+					<button type="button" @click="closeForm"
+						class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
 						Cancel
 					</button>
-					<button
-					type="button"
-					@click="handleCreateOrder"
-					class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-					>
+					<button type="button" @click="handleCreateOrder"
+						class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
 						{{ showCreateForm ? 'Submit Order' : 'Update Order' }}
 					</button>
 				</div>
@@ -583,7 +595,7 @@ import BaseModal from '@/components/common/BaseModal.vue'
 import Pagination from '../components/ui/Pagination.vue'
 import TableLoader from '../components/ui/TableLoader.vue'
 import {
-    Search, Funnel, Eye, CircleCheck,
+	Search, Funnel, Eye, CircleCheck,
 	Truck, Box, CircleUser, Calendar1,
 	FileTextIcon, ShoppingCart, ChevronDown,
 	Package, PackagePlus, TriangleAlert,
@@ -593,6 +605,7 @@ import api from '@/services/api'
 import { toast } from 'vue3-toastify'
 import 'vue3-toastify/dist/index.css'
 import Swal from 'sweetalert2'
+import { formatCurrency } from '@/utils/currency'
 
 interface Order {
 	order_id: number;
@@ -603,7 +616,7 @@ interface Order {
 	notes?: string;
 	items: OrderItem[];
 	tracking_num?: string;
-    manufacturer_name: string
+	manufacturer_name: string
 
 	clinic: Clinic
 	clinician: Clinician
@@ -642,7 +655,7 @@ interface Brand {
 	manufacturer?: {
 		manufacturer_id: string
 		manufacturer_name: string
-        primary_email: string | string[]
+		primary_email: string | string[]
 	}
 }
 
@@ -651,7 +664,7 @@ interface GraftSize {
 	size: string
 	area: string
 	price: number
-    stock: number
+	stock: number
 	graft_status: number
 	brand: Brand
 }
@@ -674,7 +687,7 @@ interface User {
 	id: number
 	first_name: string
 	last_name: string
-    clinic: Clinic
+	clinic: Clinic
 }
 
 type OrderItem = {
@@ -687,7 +700,7 @@ type OrderItem = {
 	asp: number;
 	totalAsp?: number;
 	deviceType?: string;
-    graftStock?: number
+	graftStock?: number
 }
 
 // 0-submitted | 1-acknowledged | 2-shipped | 3-delivered | 4-cancelled
@@ -736,23 +749,23 @@ const formData = ref({
 	patientId: '',
 	ivrId: '',
 	brandId: '',
-    primary_email: '',
+	primary_email: '',
 	sizeId: '',
 	dateOfOrder: '',
 	status: 'submitted' as const,
 	notes: '',
 	items: [
-		{ 
-			id: Date.now().toString(), 
-			brandId: '', 
+		{
+			id: Date.now().toString(),
+			brandId: '',
 			productType: 0 as const,
 			sizeId: '',
 			graft_id: 0,
-			quantity: 1, 
-			asp: 0, 
+			quantity: 1,
+			asp: 0,
 			totalAsp: 0,
 			deviceType: '',
-            graftStock: 0
+			graftStock: 0
 		}
 	],
 	manufacturerId: '',
@@ -760,7 +773,7 @@ const formData = ref({
 })
 
 const myClinic = computed(() => {
-    return currentUser.value?.clinic ?? null
+	return currentUser.value?.clinic ?? null
 })
 
 function getBrandName(brandId: string) {
@@ -796,22 +809,22 @@ function resetCreateForm() {
 		patientId: '',
 		ivrId: '',
 		brandId: '',
-        primary_email: '',
+		primary_email: '',
 		sizeId: '',
 		dateOfOrder: '',
 		status: 'submitted',
 		notes: '',
-		items: [{ 
-			id: Date.now().toString(), 
-			brandId: '', 
-			productType: 0 as const, 
-			sizeId: '', 
+		items: [{
+			id: Date.now().toString(),
+			brandId: '',
+			productType: 0 as const,
+			sizeId: '',
 			graft_id: 0,
-			quantity: 1, 
-			asp: 0, 
-			totalAsp: 0, 
+			quantity: 1,
+			asp: 0,
+			totalAsp: 0,
 			deviceType: '',
-            graftStock: 0
+			graftStock: 0
 		}],
 		manufacturerId: '',
 		trackingNumber: ''
@@ -927,15 +940,15 @@ function isQuantityValid(idx: number) {
 }
 
 function addOrderItem() {
-	formData.value.items.push({ 
-		id: Date.now().toString(), 
-		brandId: '', 
-		productType: 0 as const, 
-		sizeId: '', 
+	formData.value.items.push({
+		id: Date.now().toString(),
+		brandId: '',
+		productType: 0 as const,
+		sizeId: '',
 		graft_id: 0,
-		quantity: 1, 
-		asp: 0, 
-		totalAsp: 0, 
+		quantity: 1,
+		asp: 0,
+		totalAsp: 0,
 		deviceType: '',
 		graftStock: 0
 	})
@@ -990,24 +1003,24 @@ const selectedPatientIVRs = computed(() => {
 })
 
 const isPatientEligible = computed(() => {
-	const patient = selectedPatient.value	
-	
+	const patient = selectedPatient.value
+
 	if (!patient) {
 		console.log('No patient selected')
 		return false
 	}
-	
+
 	if (!Array.isArray(patient.ivrs)) {
 		console.log('Patient IVR is not an array:', patient.ivrs)
 		return false
 	}
-	
+
 	if (patient.ivrs.length === 0) {
 		console.log('Patient has no IVR records')
 		return false
 	}
-	
-	const hasEligibleIVR = patient.ivrs.some((i) => i.eligibility_status === 1)	
+
+	const hasEligibleIVR = patient.ivrs.some((i) => i.eligibility_status === 1)
 	return hasEligibleIVR
 })
 
@@ -1032,7 +1045,7 @@ async function handleCreateOrder() {
 		toast.error('Please add at least one item to the order')
 		return
 	}
-	
+
 	for (let i = 0; i < formData.value.items.length; i++) {
 		const item = formData.value.items[i]
 		if (!item.brandId) {
@@ -1048,7 +1061,7 @@ async function handleCreateOrder() {
 			return
 		}
 	}
-	
+
 	// Check MUE limits
 	const exceedsMUE = formData.value.items.some((item, idx) => !isQuantityValid(idx))
 	if (exceedsMUE) {
@@ -1085,11 +1098,11 @@ function getSizesByBrand(brandId: string) {
 
 function onSizeChange(idx: number) {
 	const item = formData.value.items[idx]
-	
+
 	const graft = graftSizes.value.find(
 		g => g.graft_size_id.toString() === item.sizeId
 	)
-	
+
 	if (!graft) {
 		item.asp = 0
 		item.graft_id = 0
@@ -1112,19 +1125,18 @@ function onSizeChange(idx: number) {
 }
 
 function graftStockCheck(graftId: number) {
-    const graft = graftSizes.value.find(g => g.graft_size_id === graftId)
-    return graft?.stock ?? 0
+	const graft = graftSizes.value.find(g => g.graft_size_id === graftId)
+	return graft?.stock ?? 0
 }
 
-async function getAllOrders(page = 1)
-{
+async function getAllOrders(page = 1) {
 	tableLoader.value = true;
-    try {
-        const { data } = await api.get(`/management/manufacturer/order/getclinicorders?page=${page}&per_page=${itemsPerPage.value}`, {
-            headers: {
-                Authorization: `Bearer ${localStorage.getItem('auth_token')}`
-            }
-        })
+	try {
+		const { data } = await api.get(`/management/manufacturer/order/getclinicorders?page=${page}&per_page=${itemsPerPage.value}`, {
+			headers: {
+				Authorization: `Bearer ${localStorage.getItem('auth_token')}`
+			}
+		})
 
 		const rows = Array.isArray(data?.order_data) ? data.order_data : []
 
@@ -1149,7 +1161,7 @@ async function getAllOrders(page = 1)
 				order_code: String(o.order_code ?? ''),
 				ordered_at: String(o.ordered_at ?? o.created_at ?? ''),
 				followup_last_sent_at: String(o.followup_last_sent_at ?? o.followup_last_sent_at ?? ''),
-				order_status: (['submitted','acknowledged','shipped','delivered','cancelled'][Number(o.order_status ?? 0)] ?? 'submitted') as OrderStatus,
+				order_status: (['submitted', 'acknowledged', 'shipped', 'delivered', 'cancelled'][Number(o.order_status ?? 0)] ?? 'submitted') as OrderStatus,
 				notes: o.notes ?? '',
 				items,
 				tracking_num: o.tracking_num ?? '',
@@ -1157,56 +1169,54 @@ async function getAllOrders(page = 1)
 				clinician: o.clinician,
 				patient: o.patient,
 				brand: o.brand,
-                ivr_num: o.ivr?.ivr_number ?? '',
+				ivr_num: o.ivr?.ivr_number ?? '',
 				manufacturer_name: o.ivr?.manufacturer?.manufacturer_name ?? '',
 			} as Order
 		})
 
 		pagination.value = {
-            current_page: Number(data?.meta.current_page ?? 1),
-            last_page: Number(data?.meta.last_page ?? 1),
-            per_page: Number(data?.meta.per_page ?? itemsPerPage.value),
-            total: Number(data?.meta.total ?? rows.length),
-        }
-    } catch (error: any) {
+			current_page: Number(data?.meta.current_page ?? 1),
+			last_page: Number(data?.meta.last_page ?? 1),
+			per_page: Number(data?.meta.per_page ?? itemsPerPage.value),
+			total: Number(data?.meta.total ?? rows.length),
+		}
+	} catch (error: any) {
 		orders.value = []
 		const backendMessage = error.response?.data?.message || 'Something went wrong';
-    	toast.error(backendMessage);
-    } finally {
-        tableLoader.value = false
-    }
+		toast.error(backendMessage);
+	} finally {
+		tableLoader.value = false
+	}
 }
 
-async function getAllClinics()
-{
+async function getAllClinics() {
 	try {
 		const { data } = await api.get(`/management/order/getclinics`, {
-            headers: {
-                Authorization: `Bearer ${localStorage.getItem('auth_token')}`
-            }
-        })
+			headers: {
+				Authorization: `Bearer ${localStorage.getItem('auth_token')}`
+			}
+		})
 		clinics.value = data.clinic_data || []
 	} catch (error) {
 		clinics.value = []
-    } finally {
-        tableLoader.value = false
-    }
+	} finally {
+		tableLoader.value = false
+	}
 }
 
-async function getAllPatients()
-{
+async function getAllPatients() {
 	try {
 		const { data } = await api.get(`/management/order/users/getpatients`, {
-            headers: {
-                Authorization: `Bearer ${localStorage.getItem('auth_token')}`
-            }
-        })
+			headers: {
+				Authorization: `Bearer ${localStorage.getItem('auth_token')}`
+			}
+		})
 		patients.value = data.patient_data || []
 	} catch (error) {
 		patients.value = []
-    } finally {
-        tableLoader.value = false
-    }
+	} finally {
+		tableLoader.value = false
+	}
 }
 
 async function getAllGraftSizes() {
@@ -1235,20 +1245,20 @@ async function getAllGraftSizes() {
 }
 
 async function loadUser() {
-    try {
-        const { data } = await api.get('/auth/me-with-clinic', {
-            headers: {
-                Authorization: `Bearer ${localStorage.getItem('auth_token')}`
-            }
-        });
+	try {
+		const { data } = await api.get('/auth/me-with-clinic', {
+			headers: {
+				Authorization: `Bearer ${localStorage.getItem('auth_token')}`
+			}
+		});
 
-        currentUser.value = data.user_data;
-    } catch {
-        currentUser.value = null;
-    }
+		currentUser.value = data.user_data;
+	} catch {
+		currentUser.value = null;
+	}
 }
 
-async function addNewOrder(){
+async function addNewOrder() {
 	const payload = {
 		clinic_id: formData.value.clinicId,
 		clinician_id: formData.value.clinicianId,
@@ -1299,22 +1309,22 @@ async function addNewOrder(){
 			closeForm()
 		} else if (showEditForm.value) {
 			const { data } = await api.put(
-                `/management/order/update/${selectedOrderForEdit.value?.order_id}/updateorderbyclinic`,
-                payload,
-                {
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                    }
-                }
-         	)
+				`/management/order/update/${selectedOrderForEdit.value?.order_id}/updateorderbyclinic`,
+				payload,
+				{
+					headers: {
+						'Content-Type': 'application/json',
+						'Accept': 'application/json',
+					}
+				}
+			)
 
 			Swal.close()
 			toast.success(data.message || 'Order details updated Successfully!')
 			await getAllOrders(1)
 			closeForm()
 		}
-		
+
 	} catch (error: any) {
 		Swal.close()
 		if (error.response) {
@@ -1417,7 +1427,7 @@ async function updateOrderStatusNew(orderOrId: Order | number, newStatus: OrderS
 async function applyOverride() {
 	console.log('overrideStatus.value: ' + overrideStatus.value);
 	console.log('selectedOrder.value?.order_id: ' + selectedOrder.value?.order_id);
-	
+
 	if (!overrideStatus.value) return;
 
 	const result = await Swal.fire({
@@ -1458,7 +1468,7 @@ async function applyOverride() {
 }
 
 onMounted(async () => {
-    getAllOrders(1)
+	getAllOrders(1)
 	getAllClinics()
 	getAllPatients()
 	await getAllGraftSizes()
@@ -1466,7 +1476,7 @@ onMounted(async () => {
 })
 
 watch(itemsPerPage, () => {
-    getAllOrders(1)
+	getAllOrders(1)
 })
 
 watch(() => formData.value.items, (items) => {
@@ -1480,7 +1490,7 @@ watch(() => formData.value.ivrId, () => {
 
 	formData.value.manufacturerId = selectedIVR.value.manufacturer?.manufacturer_id;
 	formData.value.primary_email = selectedIVR.value.manufacturer?.primary_email;
-	
+
 	if (selectedIVR.value.eligibility_status !== 1) {
 		toast.error(
 			`This IVR is ${getEligibilityLabel(selectedIVR.value.eligibility_status)}. Ordering is disabled.`
@@ -1489,8 +1499,8 @@ watch(() => formData.value.ivrId, () => {
 })
 
 watch(myClinic, (val) => {
-    if (val && !formData.value.clinicId) {
-        formData.value.clinicId = val.clinic_id.toString();
-    }
+	if (val && !formData.value.clinicId) {
+		formData.value.clinicId = val.clinic_id.toString();
+	}
 });
 </script>

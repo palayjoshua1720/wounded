@@ -4,8 +4,6 @@
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div class="space-y-2">
                 <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Inventory & Serial Tracking</h1>
-                <p class="text-gray-600 dark:text-gray-400 max-w-2xl">Manage inventory items, track serial numbers, and
-                    monitor usage across all clinics</p>
             </div>
             <div class="flex items-center gap-4">
                 <button @click="showStatistics = !showStatistics"
@@ -49,7 +47,7 @@
                         </div>
                         <div>
                             <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ getStatusCount('delivered')
-                            }}</p>
+                                }}</p>
                             <p class="text-sm text-gray-500 dark:text-gray-400">Available</p>
                         </div>
                     </div>
@@ -87,7 +85,7 @@
                                 <Package class="w-4 h-4 mr-2 text-blue-500" /> Delivered
                             </span>
                             <span class="font-semibold text-gray-900 dark:text-white">{{ getStatusCount('delivered')
-                            }}</span>
+                                }}</span>
                         </div>
                         <!-- <div class="flex items-center justify-between">
                             <span class="flex items-center text-sm text-gray-600 dark:text-gray-300">
@@ -101,14 +99,14 @@
                                 <CheckCircle2 class="w-4 h-4 mr-2 text-green-500" /> Used
                             </span>
                             <span class="font-semibold text-gray-900 dark:text-white">{{ getStatusCount('used')
-                            }}</span>
+                                }}</span>
                         </div>
                         <div class="flex items-center justify-between">
                             <span class="flex items-center text-sm text-gray-600 dark:text-gray-300">
                                 <AlertTriangle class="w-4 h-4 mr-2 text-red-500" /> Expired
                             </span>
                             <span class="font-semibold text-gray-900 dark:text-white">{{ getStatusCount('expired')
-                            }}</span>
+                                }}</span>
                         </div>
                         <div class="flex items-center justify-between">
                             <span class="flex items-center text-sm text-gray-600 dark:text-gray-300">
@@ -122,21 +120,21 @@
                                 <CornerUpLeft class="w-4 h-4 mr-2 text-gray-500" /> Returned
                             </span>
                             <span class="font-semibold text-gray-900 dark:text-white">{{ getStatusCount('returned')
-                            }}</span>
+                                }}</span>
                         </div>
                         <div class="flex items-center justify-between">
                             <span class="flex items-center text-sm text-gray-600 dark:text-gray-300">
                                 <Package class="w-4 h-4 mr-2 text-indigo-500" /> Unused
                             </span>
                             <span class="font-semibold text-gray-900 dark:text-white">{{ getStatusCount('unused')
-                            }}</span>
+                                }}</span>
                         </div>
                         <div class="flex items-center justify-between">
                             <span class="flex items-center text-sm text-gray-600 dark:text-gray-300">
                                 <Repeat2 class="w-4 h-4 mr-2 text-orange-500" /> Reassigned
                             </span>
                             <span class="font-semibold text-gray-900 dark:text-white">{{ getStatusCount('reassigned')
-                            }}</span>
+                                }}</span>
                         </div>
                     </div>
                 </div>
@@ -260,7 +258,7 @@
                                 </td>
                                 <td class="px-6 py-5 whitespace-nowrap">
                                     <div class="text-sm text-gray-900 dark:text-white">{{ getClinicName(item.clinicId)
-                                        }}
+                                    }}
                                     </div>
                                 </td>
                                 <td class="px-6 py-5 whitespace-nowrap">
@@ -271,24 +269,27 @@
                                 </td>
                                 <td class="px-6 py-5 whitespace-nowrap">
                                     <div class="flex flex-col gap-1">
-                                        <span class="text-sm text-gray-900 dark:text-white">{{ formatDate(item.expiryDate) }}</span>
+                                        <span class="text-sm text-gray-900 dark:text-white">{{
+                                            formatDate(item.expiryDate) }}</span>
                                         <!-- Expiry Status Badge -->
-                                        <span v-if="getExpiryStatus(item.expiryDate)" 
-                                            :class="[
-                                                'inline-flex items-center w-fit px-2 py-0.5 rounded-full text-xs font-medium',
-                                                getExpiryStatus(item.expiryDate)?.bgClass,
-                                                getExpiryStatus(item.expiryDate)?.colorClass
-                                            ]">
+                                        <span v-if="getExpiryStatus(item.expiryDate)" :class="[
+                                            'inline-flex items-center w-fit px-2 py-0.5 rounded-full text-xs font-medium',
+                                            getExpiryStatus(item.expiryDate)?.bgClass,
+                                            getExpiryStatus(item.expiryDate)?.colorClass
+                                        ]">
                                             <template v-if="getExpiryStatus(item.expiryDate)?.status === 'expired'">
                                                 <XCircle class="w-3 h-3 mr-1" />
                                             </template>
-                                            <template v-else-if="getExpiryStatus(item.expiryDate)?.status === 'critical'">
+                                            <template
+                                                v-else-if="getExpiryStatus(item.expiryDate)?.status === 'critical'">
                                                 <AlertCircle class="w-3 h-3 mr-1" />
                                             </template>
-                                            <template v-else-if="getExpiryStatus(item.expiryDate)?.status === 'warning'">
+                                            <template
+                                                v-else-if="getExpiryStatus(item.expiryDate)?.status === 'warning'">
                                                 <AlertTriangle class="w-3 h-3 mr-1" />
                                             </template>
-                                            <template v-else-if="getExpiryStatus(item.expiryDate)?.status === 'caution'">
+                                            <template
+                                                v-else-if="getExpiryStatus(item.expiryDate)?.status === 'caution'">
                                                 <Clock class="w-3 h-3 mr-1" />
                                             </template>
                                             <template v-else>
@@ -359,7 +360,7 @@
                             Drag and drop your file here, or click to browse
                         </p>
                     </div>
-        
+
                     <input type="file" @change="handleFileUpload" accept=".pdf,.jpg,.jpeg,.png" class="hidden"
                         id="file-upload" ref="fileInput" />
                     <label for="file-upload"
@@ -368,7 +369,7 @@
                         Choose File
                     </label>
                 </div>
-        
+
                 <!-- OCR Processing Display -->
                 <div v-if="isProcessingOCR"
                     class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-xl p-6">
@@ -378,7 +379,7 @@
                     <p class="text-center text-gray-700 dark:text-gray-300 font-medium">Processing image with OCR...</p>
                     <p class="text-center text-sm text-gray-500 dark:text-gray-400 mt-2">{{ ocrProgress }}%</p>
                 </div>
-        
+
                 <!-- File Preview -->
                 <div v-if="uploadedFile && !isProcessingOCR" class="space-y-4">
                     <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4">
@@ -388,7 +389,7 @@
                                 <div>
                                     <p class="text-sm font-medium text-gray-900 dark:text-white">{{ uploadedFile.name }}
                                     </p>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400">{{-
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">{{ -
                                         formatFileSize(uploadedFile.size) }}
                                     </p>
                                 </div>
@@ -397,154 +398,157 @@
                                 <X class="w-5 h-5" />
                             </button>
                         </div>
-        
+
                         <!-- Image Preview -->
                         <div v-if="previewUrl" class="mb-3">
                             <img :src="previewUrl" alt="Preview"
                                 class="max-h-48 mx-auto rounded-lg border border-gray-300 dark:border-gray-600" />
                         </div>
                     </div>
-        
+
                     <!-- Extracted Data Form -->
                     <div
                         class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-5 border border-gray-200 dark:border-gray-600">
-                        <h4 class="text-base font-semibold text-gray-900 dark:text-white mb-4">Extracted Information</h4>
+                        <h4 class="text-base font-semibold text-gray-900 dark:text-white mb-4">Extracted Information
+                        </h4>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">Serial
-                                        Number</label>
-                                    <input v-model="extractedData.serialNumber" type="text"
-                                        class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                                        placeholder="Enter serial number" />
-                                </div>
-
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">Patient
-                                        Name</label>
-                                    <input v-model="extractedData.patientName" type="text"
-                                        class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                                        placeholder="Enter patient name" />
-                                </div>
-
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">Date of
-                                        Service</label>
-                                    <input v-model="extractedData.dateOfService" type="date"
-                                        class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
-                                </div>
-
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">Wound
-                                        Part</label>
-                                    <input v-model="extractedData.woundSite" type="text"
-                                        class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                                        placeholder="Enter wound location" />
-                                </div>
-
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">Quantity
-                                        Used</label>
-                                    <input v-model.number="extractedData.quantityUsed" type="number" min="1"
-                                        class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                                        placeholder="Enter quantity" />
-                                </div>
-
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">Patient
-                                        ID</label>
-                                    <input v-model="extractedData.patientId" type="text"
-                                        class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                                        placeholder="Enter patient ID" />
-                                </div>
-
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">Clinician
-                                        ID</label>
-                                    <input v-model="extractedData.clinicianId" type="text"
-                                        class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                                        placeholder="Enter clinician ID" />
-                                </div>
-
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">Graft
-                                        Size
-                                        ID</label>
-                                    <input v-model="extractedData.graftSizeId" type="text"
-                                        class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                                        placeholder="Enter graft size ID" />
-                                </div>
-
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">Clinic
-                                        ID</label>
-                                    <input v-model="extractedData.clinicId" type="text"
-                                        class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                                        placeholder="Enter clinic ID" />
-                                </div>
-
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">Expired
-                                        At</label>
-                                    <input v-model="extractedData.expiredAt" type="date"
-                                        class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
-                                </div>
-
-                                <div class="md:col-span-2">
-                                    <label
-                                        class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">Notes/Description</label>
-                                    <textarea v-model="extractedData.notes" rows="2"
-                                        class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                                        placeholder="Enter additional notes"></textarea>
-                                </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">Serial
+                                    Number</label>
+                                <input v-model="extractedData.serialNumber" type="text"
+                                    class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                    placeholder="Enter serial number" />
                             </div>
 
-                            <!-- Raw OCR Text (Collapsible) -->
-                            <div v-if="rawOcrText" class="mt-3">
-                                <button @click="showRawOcrText = !showRawOcrText"
-                                    class="flex items-center text-xs text-blue-600 dark:text-blue-400 hover:underline">
-                                    <ChevronDown :class="{ 'rotate-180': showRawOcrText }"
-                                        class="w-4 h-4 mr-1 transition-transform" />
-                                    {{ showRawOcrText ? 'Hide' : 'Show' }} Raw OCR Text
-                                </button>
-                                <div v-if="showRawOcrText"
-                                    class="mt-2 p-3 bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600 max-h-32 overflow-y-auto">
-                                    <pre class="text-xs text-gray-700 dark:text-gray-300 whitespace-pre-wrap font-mono">{{-
-                                        rawOcrText }}</pre>
-                                </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">Patient
+                                    Name</label>
+                                <input v-model="extractedData.patientName" type="text"
+                                    class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                    placeholder="Enter patient name" />
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">Date of
+                                    Service</label>
+                                <input v-model="extractedData.dateOfService" type="date"
+                                    class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">Wound
+                                    Part</label>
+                                <input v-model="extractedData.woundSite" type="text"
+                                    class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                    placeholder="Enter wound location" />
+                            </div>
+
+                            <div>
+                                <label
+                                    class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">Quantity
+                                    Used</label>
+                                <input v-model.number="extractedData.quantityUsed" type="number" min="1"
+                                    class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                    placeholder="Enter quantity" />
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">Patient
+                                    ID</label>
+                                <input v-model="extractedData.patientId" type="text"
+                                    class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                    placeholder="Enter patient ID" />
+                            </div>
+
+                            <div>
+                                <label
+                                    class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">Clinician
+                                    ID</label>
+                                <input v-model="extractedData.clinicianId" type="text"
+                                    class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                    placeholder="Enter clinician ID" />
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">Graft
+                                    Size
+                                    ID</label>
+                                <input v-model="extractedData.graftSizeId" type="text"
+                                    class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                    placeholder="Enter graft size ID" />
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">Clinic
+                                    ID</label>
+                                <input v-model="extractedData.clinicId" type="text"
+                                    class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                    placeholder="Enter clinic ID" />
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">Expired
+                                    At</label>
+                                <input v-model="extractedData.expiredAt" type="date"
+                                    class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+                            </div>
+
+                            <div class="md:col-span-2">
+                                <label
+                                    class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">Notes/Description</label>
+                                <textarea v-model="extractedData.notes" rows="2"
+                                    class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                    placeholder="Enter additional notes"></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Raw OCR Text (Collapsible) -->
+                        <div v-if="rawOcrText" class="mt-3">
+                            <button @click="showRawOcrText = !showRawOcrText"
+                                class="flex items-center text-xs text-blue-600 dark:text-blue-400 hover:underline">
+                                <ChevronDown :class="{ 'rotate-180': showRawOcrText }"
+                                    class="w-4 h-4 mr-1 transition-transform" />
+                                {{ showRawOcrText ? 'Hide' : 'Show' }} Raw OCR Text
+                            </button>
+                            <div v-if="showRawOcrText"
+                                class="mt-2 p-3 bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600 max-h-32 overflow-y-auto">
+                                <pre class="text-xs text-gray-700 dark:text-gray-300 whitespace-pre-wrap font-mono">{{ -
+                                    rawOcrText }}</pre>
                             </div>
                         </div>
                     </div>
                 </div>
-            
-        
-                <!-- Supported Formats Info -->
-                <div v-if="!uploadedFile"
-                        class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
-                        <div class="flex items-start space-x-3">
-                            <div
-                                class="flex-shrink-0 w-5 h-5 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mt-0.5">
-                                <Info class="w-3 h-3 text-blue-600 dark:text-blue-400" />
+            </div>
+
+
+            <!-- Supported Formats Info -->
+            <div v-if="!uploadedFile"
+                class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+                <div class="flex items-start space-x-3">
+                    <div
+                        class="flex-shrink-0 w-5 h-5 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mt-0.5">
+                        <Info class="w-3 h-3 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="text-xs font-semibold text-gray-900 dark:text-white mb-2">OCR will extract text
+                            from:
+                        </h4>
+                        <div class="grid grid-cols-2 gap-2 text-xs text-gray-600 dark:text-gray-400">
+                            <div class="flex items-center">
+                                <span class="w-1.5 h-1.5 bg-green-500 rounded-full mr-2"></span>
+                                PDF (.pdf)
                             </div>
-                            <div class="flex-1">
-                                <h4 class="text-xs font-semibold text-gray-900 dark:text-white mb-2">OCR will extract text
-                                    from:
-                                </h4>
-                                <div class="grid grid-cols-2 gap-2 text-xs text-gray-600 dark:text-gray-400">
-                                    <div class="flex items-center">
-                                        <span class="w-1.5 h-1.5 bg-green-500 rounded-full mr-2"></span>
-                                        PDF (.pdf)
-                                    </div>
-                                    <div class="flex items-center">
-                                        <span class="w-1.5 h-1.5 bg-green-500 rounded-full mr-2"></span>
-                                        Image Files (.jpg, .png)
-                                    </div>
-                                </div>
-                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-2 italic">Tesseract OCR will
-                                    automatically
-                                    extract information from your uploaded document</p>
+                            <div class="flex items-center">
+                                <span class="w-1.5 h-1.5 bg-green-500 rounded-full mr-2"></span>
+                                Image Files (.jpg, .png)
                             </div>
                         </div>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-2 italic">Tesseract OCR will
+                            automatically
+                            extract information from your uploaded document</p>
                     </div>
+                </div>
+            </div>
             <template #actions>
                 <div class="flex justify-end space-x-3 px-6 py-4">
                     <button @click="closeUploadModal"
@@ -603,26 +607,29 @@
         <BaseModal v-model="showItemModal" title="Inventory Details" width="max-w-3xl">
             <div v-if="selectedItem" class="space-y-6">
                 <!-- Blue Banner (Serial Part) - Keep as is -->
-                <div class="relative bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-700 dark:to-indigo-800 rounded-2xl p-5 shadow-md overflow-hidden">
+                <div
+                    class="relative bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-700 dark:to-indigo-800 rounded-2xl p-5 shadow-md overflow-hidden">
                     <!-- Simple decorative accent -->
                     <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12"></div>
-                    
+
                     <div class="relative flex items-center justify-between gap-4">
                         <!-- Left: Serial Number -->
                         <div class="flex-1 min-w-0">
                             <p class="text-blue-100 dark:text-blue-200 text-xs font-medium mb-1">Serial Number</p>
-                            <p class="text-white text-xl font-bold font-mono break-all">{{ selectedItem.serialNumber }}</p>
+                            <p class="text-white text-xl font-bold font-mono break-all">{{ selectedItem.serialNumber }}
+                            </p>
                         </div>
-                        
+
                         <!-- Right: Badges -->
                         <div class="flex items-center gap-2 flex-shrink-0">
                             <!-- Item ID Badge -->
                             <div class="bg-white/20 backdrop-blur-sm rounded-md px-3 py-1 border border-white/30">
                                 <p class="text-xs font-semibold text-white">#{{ selectedItem.id }}</p>
                             </div>
-                            
+
                             <!-- Status Badge -->
-                            <span :class="`inline-flex items-center justify-center px-2.5 py-1 rounded-md text-xs font-semibold shadow-lg ${getStatusColor(selectedItem.status)}`">
+                            <span
+                                :class="`inline-flex items-center justify-center px-2.5 py-1 rounded-md text-xs font-semibold shadow-lg ${getStatusColor(selectedItem.status)}`">
                                 {{ formatStatusText(selectedItem.status) }}
                             </span>
                         </div>
@@ -630,20 +637,19 @@
                 </div>
 
                 <!-- Expiry Countdown Notification -->
-                <div v-if="selectedItem.expiryDate && getExpiryStatus(selectedItem.expiryDate)" 
-                    :class="[
-                        'rounded-xl p-4 border-2',
-                        getExpiryStatus(selectedItem.expiryDate)?.bgClass,
-                        getExpiryStatus(selectedItem.expiryDate)?.borderClass
-                    ]">
+                <div v-if="selectedItem.expiryDate && getExpiryStatus(selectedItem.expiryDate)" :class="[
+                    'rounded-xl p-4 border-2',
+                    getExpiryStatus(selectedItem.expiryDate)?.bgClass,
+                    getExpiryStatus(selectedItem.expiryDate)?.borderClass
+                ]">
                     <div class="flex items-center gap-3">
                         <div :class="[
                             'h-10 w-10 rounded-lg flex items-center justify-center flex-shrink-0',
                             getExpiryStatus(selectedItem.expiryDate)?.status === 'expired' ? 'bg-red-200 dark:bg-red-800' :
-                            getExpiryStatus(selectedItem.expiryDate)?.status === 'critical' ? 'bg-red-200 dark:bg-red-800' :
-                            getExpiryStatus(selectedItem.expiryDate)?.status === 'warning' ? 'bg-orange-200 dark:bg-orange-800' :
-                            getExpiryStatus(selectedItem.expiryDate)?.status === 'caution' ? 'bg-amber-200 dark:bg-amber-800' :
-                            'bg-green-200 dark:bg-green-800'
+                                getExpiryStatus(selectedItem.expiryDate)?.status === 'critical' ? 'bg-red-200 dark:bg-red-800' :
+                                    getExpiryStatus(selectedItem.expiryDate)?.status === 'warning' ? 'bg-orange-200 dark:bg-orange-800' :
+                                        getExpiryStatus(selectedItem.expiryDate)?.status === 'caution' ? 'bg-amber-200 dark:bg-amber-800' :
+                                            'bg-green-200 dark:bg-green-800'
                         ]">
                             <template v-if="getExpiryStatus(selectedItem.expiryDate)?.status === 'expired'">
                                 <XCircle class="w-5 h-5 text-red-700 dark:text-red-300" />
@@ -677,14 +683,15 @@
                         </div>
                     </div>
                     <!-- Visual Progress Bar for non-expired items -->
-                    <div v-if="getExpiryStatus(selectedItem.expiryDate)?.status !== 'expired' && getExpiryStatus(selectedItem.expiryDate)?.daysUntil !== undefined" class="mt-3">
+                    <div v-if="getExpiryStatus(selectedItem.expiryDate)?.status !== 'expired' && getExpiryStatus(selectedItem.expiryDate)?.daysUntil !== undefined"
+                        class="mt-3">
                         <div class="w-full bg-white/50 dark:bg-black/20 rounded-full h-2">
                             <div :class="[
                                 'h-2 rounded-full transition-all duration-500',
                                 getExpiryStatus(selectedItem.expiryDate)?.status === 'critical' ? 'bg-red-500 w-[95%]' :
-                                getExpiryStatus(selectedItem.expiryDate)?.status === 'warning' ? 'bg-orange-500 w-[75%]' :
-                                getExpiryStatus(selectedItem.expiryDate)?.status === 'caution' ? 'bg-amber-500 w-[50%]' :
-                                'bg-green-500 w-[25%]'
+                                    getExpiryStatus(selectedItem.expiryDate)?.status === 'warning' ? 'bg-orange-500 w-[75%]' :
+                                        getExpiryStatus(selectedItem.expiryDate)?.status === 'caution' ? 'bg-amber-500 w-[50%]' :
+                                            'bg-green-500 w-[25%]'
                             ]"></div>
                         </div>
                     </div>
@@ -695,12 +702,16 @@
                     <!-- Brand -->
                     <div class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
                         <div class="flex items-center space-x-3">
-                            <div class="h-10 w-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
+                            <div
+                                class="h-10 w-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
                                 <Package class="w-5 h-5 text-blue-600 dark:text-blue-400" />
                             </div>
                             <div>
-                                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Brand</p>
-                                <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ getBrandName(selectedItem.brandId) }}</p>
+                                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                                    Brand
+                                </p>
+                                <p class="text-sm font-semibold text-gray-900 dark:text-white">{{
+                                    getBrandName(selectedItem.brandId) }}</p>
                             </div>
                         </div>
                     </div>
@@ -708,12 +719,15 @@
                     <!-- Size -->
                     <div class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
                         <div class="flex items-center space-x-3">
-                            <div class="h-10 w-10 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
+                            <div
+                                class="h-10 w-10 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
                                 <Maximize2 class="w-5 h-5 text-purple-600 dark:text-purple-400" />
                             </div>
                             <div>
-                                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Size</p>
-                                <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ getSizeName(selectedItem.brandId, selectedItem.sizeId) }}</p>
+                                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                                    Size</p>
+                                <p class="text-sm font-semibold text-gray-900 dark:text-white">{{
+                                    getSizeName(selectedItem.brandId, selectedItem.sizeId) }}</p>
                             </div>
                         </div>
                     </div>
@@ -721,12 +735,16 @@
                     <!-- Clinic -->
                     <div class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
                         <div class="flex items-center space-x-3">
-                            <div class="h-10 w-10 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
+                            <div
+                                class="h-10 w-10 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
                                 <MapPin class="w-5 h-5 text-green-600 dark:text-green-400" />
                             </div>
                             <div>
-                                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Clinic</p>
-                                <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ getClinicName(selectedItem.clinicId) }}</p>
+                                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                                    Clinic
+                                </p>
+                                <p class="text-sm font-semibold text-gray-900 dark:text-white">{{
+                                    getClinicName(selectedItem.clinicId) }}</p>
                             </div>
                         </div>
                     </div>
@@ -734,12 +752,17 @@
                     <!-- Patient -->
                     <div class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
                         <div class="flex items-center space-x-3">
-                            <div class="h-10 w-10 bg-teal-100 dark:bg-teal-900/30 rounded-lg flex items-center justify-center">
+                            <div
+                                class="h-10 w-10 bg-teal-100 dark:bg-teal-900/30 rounded-lg flex items-center justify-center">
                                 <User class="w-5 h-5 text-teal-600 dark:text-teal-400" />
                             </div>
                             <div>
-                                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Patient</p>
-                                <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ selectedItem.patientName || 'N/A' }}</p>
+                                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                                    Patient
+                                </p>
+                                <p class="text-sm font-semibold text-gray-900 dark:text-white">{{
+                                    selectedItem.patientName ||
+                                    'N/A' }}</p>
                             </div>
                         </div>
                     </div>
@@ -747,12 +770,16 @@
                     <!-- Order Code -->
                     <div v-if="selectedItem.orderCode" class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
                         <div class="flex items-center space-x-3">
-                            <div class="h-10 w-10 bg-orange-100 dark:bg-orange-900/30 rounded-lg flex items-center justify-center">
+                            <div
+                                class="h-10 w-10 bg-orange-100 dark:bg-orange-900/30 rounded-lg flex items-center justify-center">
                                 <FileText class="w-5 h-5 text-orange-600 dark:text-orange-400" />
                             </div>
                             <div>
-                                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Order Code</p>
-                                <p class="text-sm font-mono font-semibold text-gray-900 dark:text-white">{{ selectedItem.orderCode }}</p>
+                                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                                    Order
+                                    Code</p>
+                                <p class="text-sm font-mono font-semibold text-gray-900 dark:text-white">{{
+                                    selectedItem.orderCode }}</p>
                             </div>
                         </div>
                     </div>
@@ -760,12 +787,16 @@
                     <!-- Order ID -->
                     <div v-if="selectedItem.orderId" class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
                         <div class="flex items-center space-x-3">
-                            <div class="h-10 w-10 bg-amber-100 dark:bg-amber-900/30 rounded-lg flex items-center justify-center">
+                            <div
+                                class="h-10 w-10 bg-amber-100 dark:bg-amber-900/30 rounded-lg flex items-center justify-center">
                                 <Hash class="w-5 h-5 text-amber-600 dark:text-amber-400" />
                             </div>
                             <div>
-                                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Order ID</p>
-                                <p class="text-sm font-mono font-semibold text-gray-900 dark:text-white">#{{ selectedItem.orderId }}</p>
+                                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                                    Order ID
+                                </p>
+                                <p class="text-sm font-mono font-semibold text-gray-900 dark:text-white">#{{
+                                    selectedItem.orderId }}</p>
                             </div>
                         </div>
                     </div>
@@ -773,31 +804,34 @@
                     <!-- Date of Service -->
                     <div v-if="selectedItem.deliveryDate" class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
                         <div class="flex items-center space-x-3">
-                            <div class="h-10 w-10 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg flex items-center justify-center">
+                            <div
+                                class="h-10 w-10 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg flex items-center justify-center">
                                 <Calendar class="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                             </div>
                             <div>
-                                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Date of Service</p>
-                                <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ formatDate(selectedItem.deliveryDate) }}</p>
+                                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                                    Date of
+                                    Service</p>
+                                <p class="text-sm font-semibold text-gray-900 dark:text-white">{{
+                                    formatDate(selectedItem.deliveryDate) }}</p>
                             </div>
                         </div>
                     </div>
 
                     <!-- Expiry Date -->
-                    <div v-if="selectedItem.expiryDate && getExpiryStatus(selectedItem.expiryDate)" 
-                        :class="[
-                            'rounded-xl p-4 border-2',
-                            getExpiryStatus(selectedItem.expiryDate)?.bgClass,
-                            getExpiryStatus(selectedItem.expiryDate)?.borderClass
-                        ]">
+                    <div v-if="selectedItem.expiryDate && getExpiryStatus(selectedItem.expiryDate)" :class="[
+                        'rounded-xl p-4 border-2',
+                        getExpiryStatus(selectedItem.expiryDate)?.bgClass,
+                        getExpiryStatus(selectedItem.expiryDate)?.borderClass
+                    ]">
                         <div class="flex items-center space-x-3">
                             <div :class="[
                                 'h-10 w-10 rounded-lg flex items-center justify-center flex-shrink-0',
                                 getExpiryStatus(selectedItem.expiryDate)?.status === 'expired' ? 'bg-red-200 dark:bg-red-800' :
-                                getExpiryStatus(selectedItem.expiryDate)?.status === 'critical' ? 'bg-red-200 dark:bg-red-800' :
-                                getExpiryStatus(selectedItem.expiryDate)?.status === 'warning' ? 'bg-orange-200 dark:bg-orange-800' :
-                                getExpiryStatus(selectedItem.expiryDate)?.status === 'caution' ? 'bg-amber-200 dark:bg-amber-800' :
-                                'bg-green-200 dark:bg-green-800'
+                                    getExpiryStatus(selectedItem.expiryDate)?.status === 'critical' ? 'bg-red-200 dark:bg-red-800' :
+                                        getExpiryStatus(selectedItem.expiryDate)?.status === 'warning' ? 'bg-orange-200 dark:bg-orange-800' :
+                                            getExpiryStatus(selectedItem.expiryDate)?.status === 'caution' ? 'bg-amber-200 dark:bg-amber-800' :
+                                                'bg-green-200 dark:bg-green-800'
                             ]">
                                 <template v-if="getExpiryStatus(selectedItem.expiryDate)?.status === 'expired'">
                                     <XCircle class="w-5 h-5 text-red-700 dark:text-red-300" />
@@ -832,21 +866,28 @@
                 </div>
 
                 <!-- Usage Information - Highlighted Section -->
-                <div v-if="selectedItem.woundPart || selectedItem.quantity" class="bg-gradient-to-br from-pink-50 to-rose-50 dark:from-pink-950/20 dark:to-rose-950/20 rounded-2xl border-2 border-pink-200 dark:border-pink-900/50 p-5">
+                <div v-if="selectedItem.woundPart || selectedItem.quantity"
+                    class="bg-gradient-to-br from-pink-50 to-rose-50 dark:from-pink-950/20 dark:to-rose-950/20 rounded-2xl border-2 border-pink-200 dark:border-pink-900/50 p-5">
                     <div class="flex items-start gap-3">
-                        <div class="h-10 w-10 bg-pink-100 dark:bg-pink-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <div
+                            class="h-10 w-10 bg-pink-100 dark:bg-pink-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
                             <FileStack class="w-5 h-5 text-pink-600 dark:text-pink-400" />
                         </div>
                         <div class="flex-1">
-                            <p class="text-xs font-medium text-pink-600 dark:text-pink-400 uppercase tracking-wide mb-1">Usage Information</p>
+                            <p
+                                class="text-xs font-medium text-pink-600 dark:text-pink-400 uppercase tracking-wide mb-1">
+                                Usage
+                                Information</p>
                             <div class="space-y-2">
                                 <div v-if="selectedItem.woundPart" class="flex items-center justify-between">
                                     <span class="text-sm text-pink-700 dark:text-pink-300">Wound Part</span>
-                                    <span class="text-sm font-semibold text-pink-900 dark:text-pink-100">{{ selectedItem.woundPart }}</span>
+                                    <span class="text-sm font-semibold text-pink-900 dark:text-pink-100">{{
+                                        selectedItem.woundPart }}</span>
                                 </div>
                                 <div v-if="selectedItem.quantity" class="flex items-center justify-between">
                                     <span class="text-sm text-pink-700 dark:text-pink-300">Quantity Used</span>
-                                    <span class="text-sm font-semibold text-pink-900 dark:text-pink-100">{{ selectedItem.quantity }}</span>
+                                    <span class="text-sm font-semibold text-pink-900 dark:text-pink-100">{{
+                                        selectedItem.quantity }}</span>
                                 </div>
                             </div>
                         </div>
@@ -854,14 +895,20 @@
                 </div>
 
                 <!-- Description/Notes - Highlighted Section -->
-                <div v-if="selectedItem.description" class="bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-amber-950/20 dark:to-yellow-950/20 rounded-2xl border-2 border-amber-200 dark:border-amber-900/50 p-5">
+                <div v-if="selectedItem.description"
+                    class="bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-amber-950/20 dark:to-yellow-950/20 rounded-2xl border-2 border-amber-200 dark:border-amber-900/50 p-5">
                     <div class="flex items-start gap-3">
-                        <div class="h-10 w-10 bg-amber-100 dark:bg-amber-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <div
+                            class="h-10 w-10 bg-amber-100 dark:bg-amber-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
                             <MessageSquare class="w-5 h-5 text-amber-600 dark:text-amber-400" />
                         </div>
                         <div class="flex-1">
-                            <p class="text-xs font-medium text-amber-600 dark:text-amber-400 uppercase tracking-wide mb-1">Notes & Description</p>
-                            <p class="text-sm text-amber-800 dark:text-amber-200 whitespace-pre-wrap leading-relaxed">{{ selectedItem.description }}</p>
+                            <p
+                                class="text-xs font-medium text-amber-600 dark:text-amber-400 uppercase tracking-wide mb-1">
+                                Notes
+                                & Description</p>
+                            <p class="text-sm text-amber-800 dark:text-amber-200 whitespace-pre-wrap leading-relaxed">{{
+                                selectedItem.description }}</p>
                         </div>
                     </div>
                 </div>
@@ -869,11 +916,14 @@
                 <!-- Attached File -->
                 <div v-if="selectedItem.filepath" class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
                     <div class="flex items-center space-x-3 mb-4">
-                        <div class="h-10 w-10 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg flex items-center justify-center">
+                        <div
+                            class="h-10 w-10 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg flex items-center justify-center">
                             <ImageIcon class="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                         </div>
                         <div>
-                            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Attached Document</p>
+                            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                                Attached
+                                Document</p>
                             <p class="text-sm font-semibold text-gray-900 dark:text-white">File Available</p>
                         </div>
                     </div>
@@ -946,7 +996,7 @@
                                     <td class="px-6 py-4 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">{{
                                         getClinicianName(log.clinicianId) }}</td>
                                     <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{{ log.notes || 'N/A'
-                                    }}</td>
+                                        }}</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -1161,7 +1211,7 @@
                                 <Lock class="w-4 h-4 text-gray-400 dark:text-gray-500 mr-2" />
                                 <span class="text-gray-900 dark:text-white font-medium">{{ editingItem.patientName ||
                                     'N/A'
-                                    }}</span>
+                                }}</span>
                                 <span class="ml-auto text-xs text-gray-500 dark:text-gray-400 italic">Read-only</span>
                             </div>
                         </div>
@@ -1817,16 +1867,16 @@ interface ExpiryInfo {
 
 function getExpiryStatus(expiryDateString?: string): ExpiryInfo | null {
     if (!expiryDateString) return null
-    
+
     const expiryDate = new Date(expiryDateString)
     expiryDate.setHours(23, 59, 59, 999)
-    
+
     const today = new Date()
     today.setHours(0, 0, 0, 0)
-    
+
     const diffTime = expiryDate.getTime() - today.getTime()
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-    
+
     if (diffDays < 0) {
         return {
             status: 'expired',

@@ -54,13 +54,6 @@ class AuthController extends Controller
             ], 401);
         }
         
-        // Check if user has enabled backup codes but not one-time email verification
-        if ($user->backup_codes_enabled && !$user->one_time_email_verification && !$user->tfa_enabled) {
-            // Return response indicating backup code is required
-            return response()->json([
-                'message' => 'The provided credentials are incorrect.',
-            ], 401);
-        }
         
         if (! Hash::check($request->password, $user->password)) {
             $this->logAudit($request, 'authentication', "login failed", null, 1, $request->email);

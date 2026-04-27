@@ -288,7 +288,7 @@
                                     </h2>
                                     <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
                                         Area: {{ selectedGraftRequest.area ? `${selectedGraftRequest.area} cm²` : 'N/A' }} •
-                                        Price: ${{ selectedGraftRequest.price ? selectedGraftRequest.price.toFixed(2) : 'N/A' }}
+                                        Price: {{ selectedGraftRequest.price ? formatCurrency(selectedGraftRequest.price) : 'N/A' }}
                                     </p>
                                 </div>
                                 <span :class="['inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium', getStatusColor(selectedGraftRequest.graft_status)]" :aria-label="`Status: ${graftStatus[selectedGraftRequest.graft_status as keyof typeof graftStatus].label}`">
@@ -333,7 +333,7 @@
                                 <DollarSign class="w-5 h-5 text-green-500 flex-shrink-0" />
                                 <div class="min-w-0 flex-1">
                                     <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Price</p>
-                                    <p class="text-gray-900 dark:text-white truncate">{{ selectedGraftRequest.price ? selectedGraftRequest.price.toFixed(2) : 'N/A' }}</p>
+                                    <p class="text-gray-900 dark:text-white truncate">{{ selectedGraftRequest.price ? formatCurrency(selectedGraftRequest.price) : 'N/A' }}</p>
                                 </div>
                             </div>
                         </div>
@@ -506,6 +506,7 @@ import api from '@/services/api'
 import { toast } from 'vue3-toastify'
 import 'vue3-toastify/dist/index.css'
 import Swal from 'sweetalert2'
+import { formatCurrency } from '@/utils/currency'
 
 interface GraftSize {
     id?: string
@@ -557,7 +558,7 @@ const selectedGraftRequest = ref<GraftRequest | null>(null)
 const showCreateForm = ref(false)
 const showEditForm = ref(false)
 const showStats = ref(false)
-const graftStatus = {
+const graftStatus: Record<number, { label: string; classes: string }> = {
     0: { label: 'Active', classes: 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400' },
     1: { label: 'Inactive', classes: 'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400' },
     2: { label: 'Archived', classes: 'bg-orange-50 text-orange-700 dark:bg-orange-900/20 dark:text-orange-400' },
