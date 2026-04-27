@@ -31,8 +31,11 @@ class Manufacturer extends Model
         'contact_person',
         'contact_number',
         'ivr_file',
+        'ivr_file_extension',
         'order_file',
+        'order_file_extension',
         'onboarding_file',
+        'onboarding_file_extension',
         'manufacturer_status',
         'logo',
     ];

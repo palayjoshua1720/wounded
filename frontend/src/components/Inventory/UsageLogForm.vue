@@ -5,14 +5,14 @@
       <svg class="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
       </svg>
-      <p class="text-sm text-blue-800 dark:text-blue-200">Record graft usage for patient treatment. All fields marked with * are required.</p>
+      <p class="text-sm text-blue-800 dark:text-blue-200">Record graft usage for patient treatment. All fields marked with <span class="text-red-500">*</span> are required.</p>
     </div>
 
     <div v-if="showBulkUpload"
       class="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
       <h3 class="font-medium text-blue-900 dark:text-blue-100 mb-2">Bulk Upload Usage Logs</h3>
       <p class="text-sm text-blue-700 dark:text-blue-300 mb-3">
-        Upload a CSV or Excel file with usage log data. Required columns: Serial Number, Patient Name, Date of Service,
+        Upload a CSV or Excel file with usage log data. Required columns: Product Code, Patient Name, Date of Service,
         Wound Site, Clinician, Notes
       </p>
       <input type="file" accept=".csv,.xlsx,.xls" @change="handleFileUpload"
@@ -31,7 +31,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div class="space-y-2">
             <label class="block text-sm font-medium text-gray-900 dark:text-gray-200">
-              Serial Number <span class="text-red-500">*</span>
+              Product Code <span class="text-red-500">*</span>
             </label>
             <div class="relative">
               <DocumentTextIcon

@@ -16,9 +16,17 @@ class UserController extends Controller
 {
     /**
      * Display a listing of users
+     * 
+     * Note: first_name, last_name, and email are encrypted fields.
+     * Search must be performed in-memory after decryption.
      */
     public function index(Request $request): JsonResponse
     {
+        $currentUser = $request->user();
+        $search = $request->search ?? '';
+        $hasSearch = !empty($search);
+        
+        // Build base query with non-encrypted filters
         $query = User::with(['clinic', 'manufacturer'])
             ->select([
                 'id',
@@ -35,9 +43,6 @@ class UserController extends Controller
                 'phone'
             ]);
 
-        // Get the current authenticated user
-        $currentUser = $request->user();
-        
         // Hide admin users from office staff
         if ($currentUser && $currentUser->user_role === 1) {
             $query->where('user_role', '!=', 0);
@@ -54,11 +59,12 @@ class UserController extends Controller
             $query->where('id', '!=', $currentUser->id);
         }
 
-        // Apply filters
+        // Apply role filter (non-encrypted field)
         if ($request->has('role') && $request->role !== 'all') {
             $query->where('user_role', $request->role);
         }
 
+        // Apply status filter (non-encrypted field)
         if ($request->has('status') && $request->status !== 'all') {
             $statusMap = [
                 'active' => 0,
@@ -68,15 +74,44 @@ class UserController extends Controller
             $query->where('user_status', $statusMap[$request->status] ?? 1);
         }
 
-        if ($request->has('search') && !empty($request->search)) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('first_name', 'like', "%{$search}%")
-                  ->orWhere('last_name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
+        // Note: We cannot use LIKE on encrypted fields (first_name, last_name, email)
+        // Instead, we fetch filtered results and search in-memory after decryption
+        if ($hasSearch) {
+            // Get all matching users (role/status already filtered)
+            $allMatchingUsers = $query->orderBy('created_at', 'desc')->get();
+            
+            // Filter in-memory after decryption (case-insensitive partial match)
+            $searchLower = mb_strtolower($search);
+            $filteredUsers = $allMatchingUsers->filter(function ($user) use ($searchLower) {
+                $firstNameLower = mb_strtolower($user->first_name ?? '');
+                $lastNameLower = mb_strtolower($user->last_name ?? '');
+                $emailLower = mb_strtolower($user->email ?? '');
+                $middleNameLower = mb_strtolower($user->middle_name ?? '');
+                
+                // Check if search matches any name field or email (partial match)
+                return str_contains($firstNameLower, $searchLower) ||
+                       str_contains($lastNameLower, $searchLower) ||
+                       str_contains($middleNameLower, $searchLower) ||
+                       str_contains($emailLower, $searchLower);
             });
+            
+            // Manual pagination
+            $page = $request->page ?? 1;
+            $perPage = 10;
+            $total = $filteredUsers->count();
+            $paginatedUsers = $filteredUsers->slice(($page - 1) * $perPage, $perPage)->values();
+            
+            return response()->json([
+                'users' => $paginatedUsers->map(function ($user) {
+                    return $this->formatUserResponse($user);
+                }),
+                'total' => $total,
+                'current_page' => (int) $page,
+                'per_page' => $perPage,
+            ]);
         }
 
+        // No search - use standard pagination
         $users = $query->orderBy('created_at', 'desc')->paginate(10);
 
         return response()->json([
@@ -158,7 +193,21 @@ class UserController extends Controller
             'clinic_id' => 'nullable|exists:woundmed_clinics,clinic_id',
             'manufacturer_id' => 'nullable|exists:woundmed_manufacturers,manufacturer_id',
             'phone' => 'nullable|string|max:20',
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'password' => [
+                'required',
+                'confirmed',
+                'min:8',
+                'max:64',
+                'regex:/^[^\s]+$/',           // No spaces
+                'regex:/[a-z]/',               // At least one lowercase letter
+                'regex:/[A-Z]/',               // At least one uppercase letter
+                'regex:/[0-9]/',               // At least one number
+                'regex:/[!@#$%^&*()_+\-=\[\]{};\':"\\|,.<>\/?]/', // At least one special character
+            ],
+        ], [
+            'password.regex' => 'Password contains invalid characters or spaces.',
+            'password.min' => 'Password must be at least 8 characters.',
+            'password.max' => 'Password cannot exceed 64 characters.',
         ]);
 
         // Restriction: Office staff cannot create admin or office staff accounts
@@ -227,8 +276,8 @@ class UserController extends Controller
             $emailParams = [
                 'to'        => $user->email,
                 'from'      => 'noreply@woundmed.com',
-                'from_name' => 'WoundMed Support',
-                'subject'   => 'Welcome to WoundMed - Your Account Details',
+                'from_name' => 'WOUNDMED INC. Support',
+                'subject'   => 'Welcome to WOUNDMED INC. - Your Account Details',
                 'body'      => $emailBody,
             ];
 

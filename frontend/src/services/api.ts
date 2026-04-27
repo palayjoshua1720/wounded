@@ -152,10 +152,10 @@ export const userService = {
 
 export const inventoryService = {
   /**
-   * Get all inventory items from usage logs
+   * Get all inventory items from usage logs (paginated)
    */
-  getAllInventory() {
-    return api.get('/inventory/all');
+  getAllInventory(params?: { page?: number; per_page?: number; search?: string; status?: string; brand_id?: string }) {
+    return api.get('/inventory/all', { params });
   },
 
   /**
@@ -219,6 +219,20 @@ export const inventoryService = {
    */
   getClinicians() {
     return api.get('/inventory/clinicians');
+  },
+
+  /**
+   * Get lightweight brands list for dropdowns (id + name only)
+   */
+  getBrandsList() {
+    return api.get('/inventory/brands-list');
+  },
+
+  /**
+   * Get lightweight graft sizes list for dropdowns (minimal fields only)
+   */
+  getGraftSizesList() {
+    return api.get('/inventory/graft-sizes-list');
   },
 
   /**
@@ -378,6 +392,75 @@ export const notificationService = {
     return api.post('/notifications/mark-all-read', { ids })
   }
 }
+
+// ============================================================================
+// INVENTORY LEDGER MANAGEMENT MODULE - SERVICE
+// ----------------------------------------------------------------------------
+// This service handles API calls for the standalone Inventory Ledger
+// Management feature. To remove this module, delete this service block
+// and all related frontend files.
+// ============================================================================
+export const inventoryLedgerService = {
+  /**
+   * Combined init endpoint: returns brands, clinics, products, invoices, stats
+   * in a single request. Reduces 5 separate HTTP calls to 1.
+   */
+  getInitData() {
+    return api.get('/inventory-ledger/init')
+  },
+
+  getAll(params?: {
+    page?: number
+    per_page?: number
+    search?: string
+    status?: string
+    brand_id?: string
+    clinic_id?: string
+    invoice_status?: string
+    product_type?: string
+  }) {
+    return api.get('/inventory-ledger', { params })
+  },
+
+  getStats() {
+    return api.get('/inventory-ledger/stats')
+  },
+
+  getById(id: string | number) {
+    return api.get(`/inventory-ledger/${id}`)
+  },
+
+  create(data: any) {
+    return api.post('/inventory-ledger', data)
+  },
+
+  update(id: string | number, data: any) {
+    return api.put(`/inventory-ledger/${id}`, data)
+  },
+
+  delete(id: string | number) {
+    return api.delete(`/inventory-ledger/${id}`)
+  },
+
+  restore(id: string | number) {
+    return api.post(`/inventory-ledger/${id}/restore`)
+  },
+
+  getProducts() {
+    return api.get('/inventory-ledger/products/list')
+  },
+
+  getInvoices() {
+    return api.get('/inventory-ledger/invoices/list')
+  },
+
+  searchOrders(search: string, limit = 10) {
+    return api.get('/inventory-ledger/orders/search', { params: { search, limit } })
+  },
+}
+// ============================================================================
+// END INVENTORY LEDGER MANAGEMENT MODULE
+// ============================================================================
 
 export { api }
 export default api 

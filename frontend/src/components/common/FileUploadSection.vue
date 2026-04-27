@@ -40,7 +40,7 @@
             class="mt-3 flex items-center justify-between gap-3 text-sm text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 px-3 py-2 rounded-lg">
             <div class="flex items-center gap-2">
                 <FileText class="w-4 h-4 text-gray-400" />
-                <span>Current file: <span class="font-medium">{{ existingFilename }}</span></span>
+                <span>Current file: <span class="font-medium">{{ displayFilename }}</span></span>
             </div>
             <div class="flex items-center gap-2">
                 <button @click="emit('preview')" class="text-blue-600 hover:text-blue-700 text-xs font-medium">
@@ -55,6 +55,7 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import { UploadCloud, FileText, X } from 'lucide-vue-next'
 
 const props = defineProps<{
@@ -62,9 +63,20 @@ const props = defineProps<{
     previewUrl?: string | null
     removeFlag?: boolean
     existingFilename?: string
+    existingFileExtension?: string
     label: string
     accept: string
 }>()
+
+// Compute display filename - replace .enc with actual extension
+const displayFilename = computed(() => {
+    if (!props.existingFilename) return ''
+    if (!props.existingFileExtension) return props.existingFilename
+    
+    // Remove .enc extension and add the actual extension
+    const baseName = props.existingFilename.replace(/\.enc$/i, '')
+    return `${baseName}.${props.existingFileExtension}`
+})
 
 const emit = defineEmits<{
     (e: 'update:selectedFile', file: File | null): void

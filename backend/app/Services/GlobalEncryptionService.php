@@ -64,6 +64,7 @@ class GlobalEncryptionService
         'action_type',
         'status',
         'entity_type',
+        'graft_status',
         
         // Boolean flags
         'backup_codes_enabled',
@@ -77,6 +78,7 @@ class GlobalEncryptionService
         'price',
         'total',
         'item_no',
+        'area',
         
         // Array/JSON fields (stored as JSON)
         'items',
@@ -107,6 +109,11 @@ class GlobalEncryptionService
         'onboarding_file',
         'filepath',
         'logo',
+        
+        // File extension fields (stored as plaintext for display)
+        'ivr_file_extension',
+        'order_file_extension',
+        'onboarding_file_extension',
     ];
 
     /**

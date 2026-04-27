@@ -334,16 +334,30 @@
                     Order File Attachment
                 </h2>
                 <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl dark:bg-gray-800">
-                    <FileText class="w-6 h-6 text-gray-700 dark:text-gray-300" />
-                    <div>
-                        <p class="text-sm text-gray-500 font-medium">Attached File</p>
+                    <div class="h-10 w-10 rounded-lg bg-gray-50 dark:bg-gray-700 flex items-center justify-center flex-shrink-0">
+                        <FileText :class="getFileTypeIcon(displayOrder.orderFileExtension || 'pdf')" class="w-5 h-5" />
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <span :class="[
+                                'inline-flex px-2 py-0.5 text-xs rounded-full font-medium',
+                                (displayOrder.orderFileExtension || 'pdf') === 'pdf'
+                                    ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
+                                    : 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400'
+                            ]">
+                                {{ (displayOrder.orderFileExtension || 'pdf').toUpperCase() }}
+                            </span>
+                            <span class="text-xs text-gray-600 dark:text-gray-400">
+                                {{ getFileTypeDisplay(displayOrder.orderFileExtension || 'pdf') }}
+                            </span>
+                        </div>
                         <a 
                             :href="`${api.defaults.baseURL}/private-order-file/${displayOrder.orderFile}`" 
                             target="_blank" 
                             rel="noopener noreferrer"
-                            class="text-blue-600 hover:text-blue-800 underline"
+                            class="text-sm text-blue-600 hover:text-blue-800 underline mt-0.5 inline-block"
                         >
-                            {{ displayOrder.orderFile.split('/').pop() }}
+                            Download File
                         </a>
                     </div>
                 </div>
@@ -406,6 +420,7 @@ interface Order {
     tracking_code?: string;
     tracking_link?: string;
     order_file?: string;
+    order_file_extension?: string;
 
 	clinic?: Clinic;
 	clinician?: Clinician;
@@ -542,6 +557,7 @@ interface DisplayOrder {
     totalAmount: number;
     trackingCode?: string;
     orderFile?: string;
+    orderFileExtension?: string;
 }
 
 type OrderStatus = 'submitted' | 'acknowledged' | 'shipped' | 'delivered' | 'cancelled'
@@ -826,7 +842,8 @@ const displayOrder = computed<DisplayOrder | null>(() => {
         items,
         other_product_items: otherProductItems,
         totalAmount: items.reduce((sum, item) => sum + item.subtotal, 0) + otherProductItems.reduce((sum, p) => sum + (Number(p.subtotal ?? 0)), 0),
-        orderFile: current.order_file || undefined
+        orderFile: current.order_file || undefined,
+        orderFileExtension: current.order_file_extension || undefined
     };
 });
 
@@ -881,6 +898,25 @@ function isImageFile(filename: string) {
 function isPDFFile(filename: string) {
     if (!filename) return false
     return filename.toLowerCase().endsWith('.pdf')
+}
+
+const getFileTypeDisplay = (extension: string): string => {
+    const typeMap: Record<string, string> = {
+        'pdf': 'PDF Document',
+        'doc': 'Word Document',
+        'docx': 'Word Document'
+    }
+    return typeMap[extension] || 'Document'
+}
+
+const getFileTypeIcon = (extension: string): string => {
+    if (!extension) return 'text-gray-400'
+    const iconMap: Record<string, string> = {
+        'pdf': 'text-red-500',
+        'doc': 'text-blue-500',
+        'docx': 'text-blue-500'
+    }
+    return iconMap[extension] || 'text-gray-500'
 }
 
 /** Status badges */

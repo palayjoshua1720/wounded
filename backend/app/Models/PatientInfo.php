@@ -24,6 +24,7 @@ class PatientInfo extends Model
         'user_id',
         'patient_name',
         'email',
+        'email_hash',
         'clinic_id',
         'updated_by',
     ];

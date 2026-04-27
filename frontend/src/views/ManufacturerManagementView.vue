@@ -520,7 +520,8 @@
               <h3 class="text-md font-semibold text-gray-900 dark:text-gray-100">IVR Information</h3>
             </div>
             <FileUploadSection v-model:selectedFile="selectedIvrFile" v-model:previewUrl="ivrPreviewUrl"
-              v-model:removeFlag="removeIvrFlag" :existingFilename="formData.ivrFilename" label="IVR Form"
+              v-model:removeFlag="removeIvrFlag" :existingFilename="formData.ivrFilename"
+              :existingFileExtension="formData.ivrFileExtension" label="IVR Form"
               accept=".pdf,.doc,.docx" @remove-existing="removeExistingIvr" @preview="previewExistingFile('ivr')" />
           </div>
 
@@ -531,7 +532,8 @@
               <h3 class="text-md font-semibold text-gray-900 dark:text-gray-100">Order Form</h3>
             </div>
             <FileUploadSection v-model:selectedFile="selectedOrderFile" v-model:previewUrl="orderPreviewUrl"
-              v-model:removeFlag="removeOrderFlag" :existingFilename="formData.orderFilename" label="Order Form"
+              v-model:removeFlag="removeOrderFlag" :existingFilename="formData.orderFilename"
+              :existingFileExtension="formData.orderFileExtension" label="Order Form"
               accept=".pdf,.doc,.docx" @remove-existing="removeExistingOrder" @preview="previewExistingFile('order')" />
           </div>
 
@@ -543,6 +545,7 @@
             </div>
             <FileUploadSection v-model:selectedFile="selectedOnboardingFile" v-model:previewUrl="onboardingPreviewUrl"
               v-model:removeFlag="removeOnboardingFlag" :existingFilename="formData.onboardingFilename"
+              :existingFileExtension="formData.onboardingFileExtension"
               label="Onboarding File" accept=".pdf,.doc,.docx" @remove-existing="removeExistingOnboarding"
               @preview="previewExistingFile('onboarding')" />
           </div>
@@ -838,7 +841,7 @@
                 <div class="flex items-center justify-between mb-3">
                   <div class="flex items-center space-x-3">
                     <div class="w-10 h-10 rounded-lg bg-gray-50 dark:bg-gray-700 flex items-center justify-center">
-                      <FileText :class="getFileTypeIcon(getFileExtension(viewManufacturer.ivrFilename))"
+                      <FileText :class="getFileTypeIcon(viewManufacturer.ivrFileExtension || 'pdf')"
                         class="w-5 h-5" />
                     </div>
                     <div>
@@ -846,14 +849,14 @@
                       <div v-if="viewManufacturer.ivrFilename" class="flex items-center gap-2 mt-1">
                         <span :class="[
                           'inline-flex px-2 py-0.5 text-xs rounded-full font-medium',
-                          getFileExtension(viewManufacturer.ivrFilename) === 'pdf'
+                          (viewManufacturer.ivrFileExtension || 'pdf') === 'pdf'
                             ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
                             : 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400'
                         ]">
-                          {{ getFileExtension(viewManufacturer.ivrFilename).toUpperCase() }}
+                          {{ (viewManufacturer.ivrFileExtension || 'pdf').toUpperCase() }}
                         </span>
                         <span class="text-xs text-gray-600 dark:text-gray-400">
-                          {{ getFileTypeDisplay(getFileExtension(viewManufacturer.ivrFilename)) }}
+                          {{ getFileTypeDisplay(viewManufacturer.ivrFileExtension || 'pdf') }}
                         </span>
                       </div>
                       <div v-else class="mt-1">
@@ -877,7 +880,7 @@
                 <div class="flex items-center justify-between mb-3">
                   <div class="flex items-center space-x-3">
                     <div class="w-10 h-10 rounded-lg bg-gray-50 dark:bg-gray-700 flex items-center justify-center">
-                      <FileText :class="getFileTypeIcon(getFileExtension(viewManufacturer.orderFilename))"
+                      <FileText :class="getFileTypeIcon(viewManufacturer.orderFileExtension || 'pdf')"
                         class="w-5 h-5" />
                     </div>
                     <div>
@@ -885,14 +888,14 @@
                       <div v-if="viewManufacturer.orderFilename" class="flex items-center gap-2 mt-1">
                         <span :class="[
                           'inline-flex px-2 py-0.5 text-xs rounded-full font-medium',
-                          getFileExtension(viewManufacturer.orderFilename) === 'pdf'
+                          (viewManufacturer.orderFileExtension || 'pdf') === 'pdf'
                             ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
                             : 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400'
                         ]">
-                          {{ getFileExtension(viewManufacturer.orderFilename).toUpperCase() }}
+                          {{ (viewManufacturer.orderFileExtension || 'pdf').toUpperCase() }}
                         </span>
                         <span class="text-xs text-gray-600 dark:text-gray-400">
-                          {{ getFileTypeDisplay(getFileExtension(viewManufacturer.orderFilename)) }}
+                          {{ getFileTypeDisplay(viewManufacturer.orderFileExtension || 'pdf') }}
                         </span>
                       </div>
                       <div v-else class="mt-1">
@@ -916,7 +919,7 @@
                 <div class="flex items-center justify-between mb-3">
                   <div class="flex items-center space-x-3">
                     <div class="w-10 h-10 rounded-lg bg-gray-50 dark:bg-gray-700 flex items-center justify-center">
-                      <FileText :class="getFileTypeIcon(getFileExtension(viewManufacturer.onboardingFilename))"
+                      <FileText :class="getFileTypeIcon(viewManufacturer.onboardingFileExtension || 'pdf')"
                         class="w-5 h-5" />
                     </div>
                     <div>
@@ -924,14 +927,14 @@
                       <div v-if="viewManufacturer.onboardingFilename" class="flex items-center gap-2 mt-1">
                         <span :class="[
                           'inline-flex px-2 py-0.5 text-xs rounded-full font-medium',
-                          getFileExtension(viewManufacturer.onboardingFilename) === 'pdf'
+                          (viewManufacturer.onboardingFileExtension || 'pdf') === 'pdf'
                             ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
                             : 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400'
                         ]">
-                          {{ getFileExtension(viewManufacturer.onboardingFilename).toUpperCase() }}
+                          {{ (viewManufacturer.onboardingFileExtension || 'pdf').toUpperCase() }}
                         </span>
                         <span class="text-xs text-gray-600 dark:text-gray-400">
-                          {{ getFileTypeDisplay(getFileExtension(viewManufacturer.onboardingFilename)) }}
+                          {{ getFileTypeDisplay(viewManufacturer.onboardingFileExtension || 'pdf') }}
                         </span>
                       </div>
                       <div v-else class="mt-1">
@@ -1047,8 +1050,11 @@ interface Manufacturer {
   contactPerson: string
   contactNumber: string
   ivrFilename?: string
+  ivrFileExtension?: string
   orderFilename?: string
+  orderFileExtension?: string
   onboardingFilename?: string
+  onboardingFileExtension?: string
   manufacturerStatus: number
   logoUrl?: string | null
   brands?: Brand[]
@@ -1082,8 +1088,11 @@ const formData = ref({
   manufacturerStatus: 0,
   logoUrl: '',
   ivrFilename: '',
+  ivrFileExtension: '',
   orderFilename: '',
+  orderFileExtension: '',
   onboardingFilename: '',
+  onboardingFileExtension: '',
 })
 
 // ── Logo handling ────────────────────────────────────────────────────────────
@@ -1212,8 +1221,11 @@ async function getAllManufacturers(page = 1) {
       contactPerson: m.contactPerson,
       contactNumber: m.contactNumber,
       ivrFilename: m.ivrFilename || '',
+      ivrFileExtension: m.ivr_file_extension || m.ivrFileExtension || '',
       orderFilename: m.orderFilename || '',
+      orderFileExtension: m.order_file_extension || m.orderFileExtension || '',
       onboardingFilename: m.onboardingFilename || '',
+      onboardingFileExtension: m.onboarding_file_extension || m.onboardingFileExtension || '',
       manufacturerStatus: m.manufacturerStatus,
       logoUrl: m.logoUrl,
       brands: (m.brands || []).map((b: any) => ({
@@ -1252,8 +1264,11 @@ function editManufacturer(m: Manufacturer) {
     manufacturerStatus: m.manufacturerStatus ?? 0,
     logoUrl: m.logoUrl || '',
     ivrFilename: m.ivrFilename || '',
+    ivrFileExtension: m.ivrFileExtension || '',
     orderFilename: m.orderFilename || '',
+    orderFileExtension: m.orderFileExtension || '',
     onboardingFilename: m.onboardingFilename || '',
+    onboardingFileExtension: m.onboardingFileExtension || '',
   }
   showEditForm.value = true
 }
@@ -1595,8 +1610,11 @@ function closeForm() {
     manufacturerStatus: 0,
     logoUrl: '',
     ivrFilename: '',
+    ivrFileExtension: '',
     orderFilename: '',
+    orderFileExtension: '',
     onboardingFilename: '',
+    onboardingFileExtension: '',
   }
   selectedLogoFile.value = null
   logoObjectUrl.value = null

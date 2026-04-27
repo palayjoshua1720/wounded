@@ -144,8 +144,86 @@
         </transition>
 
         <!-- Filters Card -->
-        <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
-            <div class="flex flex-col lg:flex-row gap-6">
+        <div class="bg-white dark:bg-gray-800 p-4 lg:p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+            <!-- Mobile: Stacked Layout -->
+            <div class="lg:hidden space-y-3">
+                <!-- Search Input -->
+                <div class="relative">
+                    <Search class="absolute left-3.5 top-3 h-5 w-5 text-gray-400 dark:text-gray-500" />
+                    <input v-model="searchTerm" type="text" placeholder="Search inventory..."
+                        class="w-full pl-11 pr-10 py-2.5 border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white text-sm transition-all duration-200" />
+                    <button v-if="searchTerm" @click="searchTerm = ''" class="absolute right-3 top-2.5 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                        <X class="w-4 h-4" />
+                    </button>
+                </div>
+                
+                <!-- Filter Pills Row -->
+                <div class="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 scrollbar-hide">
+                    <button @click="showFilters = !showFilters" 
+                        class="flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg text-xs font-medium">
+                        <SlidersHorizontal class="w-3.5 h-3.5" />
+                        Filters
+                        <span v-if="statusFilter !== 'all' || brandFilter !== 'all'" class="w-2 h-2 bg-blue-500 rounded-full"></span>
+                    </button>
+                    <span v-if="statusFilter !== 'all'" class="flex-shrink-0 inline-flex items-center gap-1 px-2.5 py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-lg text-xs">
+                        {{ formatStatusText(statusFilter) }}
+                        <button @click="statusFilter = 'all'" class="hover:text-blue-900">
+                            <X class="w-3 h-3" />
+                        </button>
+                    </span>
+                    <span v-if="brandFilter !== 'all'" class="flex-shrink-0 inline-flex items-center gap-1 px-2.5 py-2 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 rounded-lg text-xs">
+                        {{ brandFilter }}
+                        <button @click="brandFilter = 'all'" class="hover:text-indigo-900">
+                            <X class="w-3 h-3" />
+                        </button>
+                    </span>
+                </div>
+                
+                <!-- Expandable Filters -->
+                <div v-if="showFilters" class="space-y-3 pt-2 border-t border-gray-100 dark:border-gray-700">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Status</label>
+                        <div class="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                            <button @click="statusFilter = 'all'" 
+                                :class="['flex-shrink-0 py-2 px-3 rounded-lg text-xs font-medium transition-colors', statusFilter === 'all' ? 'bg-blue-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300']">
+                                All
+                            </button>
+                            <button @click="statusFilter = 'delivered'" 
+                                :class="['flex-shrink-0 py-2 px-3 rounded-lg text-xs font-medium transition-colors', statusFilter === 'delivered' ? 'bg-blue-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300']">
+                                Delivered
+                            </button>
+                            <button @click="statusFilter = 'used'" 
+                                :class="['flex-shrink-0 py-2 px-3 rounded-lg text-xs font-medium transition-colors', statusFilter === 'used' ? 'bg-blue-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300']">
+                                Used
+                            </button>
+                            <button @click="statusFilter = 'unused'" 
+                                :class="['flex-shrink-0 py-2 px-3 rounded-lg text-xs font-medium transition-colors', statusFilter === 'unused' ? 'bg-blue-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300']">
+                                Unused
+                            </button>
+                            <button @click="statusFilter = 'expired'" 
+                                :class="['flex-shrink-0 py-2 px-3 rounded-lg text-xs font-medium transition-colors', statusFilter === 'expired' ? 'bg-blue-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300']">
+                                Expired
+                            </button>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Brand</label>
+                        <div class="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                            <button @click="brandFilter = 'all'" 
+                                :class="['flex-shrink-0 py-2 px-3 rounded-lg text-xs font-medium transition-colors', brandFilter === 'all' ? 'bg-indigo-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300']">
+                                All
+                            </button>
+                            <button v-for="brand in uniqueBrands.slice(0, 5)" :key="brand" @click="brandFilter = brand" 
+                                :class="['flex-shrink-0 py-2 px-3 rounded-lg text-xs font-medium transition-colors', brandFilter === brand ? 'bg-indigo-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300']">
+                                {{ brand }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Desktop: Original Layout -->
+            <div class="hidden lg:flex flex-col lg:flex-row gap-6">
                 <div class="flex-1">
                     <div class="relative">
                         <Search class="absolute left-4 top-3.5 h-5 w-5 text-gray-400 dark:text-gray-500" />
@@ -185,9 +263,112 @@
             </div>
         </div>
 
-        <!-- Inventory Table Card -->
+        <!-- Mobile Card View -->
+        <div class="lg:hidden space-y-3">
+            <!-- Loading State -->
+            <div v-if="tableLoader" class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-8">
+                <div class="flex flex-col items-center justify-center">
+                    <div class="w-8 h-8 rounded-full border-4 border-gray-200 border-t-red-600 animate-spin"></div>
+                    <div class="text-center text-gray-400 py-4 text-sm">Fetching Inventory</div>
+                </div>
+            </div>
+
+            <!-- Inventory Cards -->
+            <template v-else>
+                <div v-if="filteredInventory.length === 0" class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-8">
+                    <div class="flex flex-col items-center justify-center gap-2">
+                        <Package class="w-10 h-10 mb-1 text-gray-400" />
+                        <span class="text-gray-400">No inventory items found.</span>
+                    </div>
+                </div>
+                <div v-else class="space-y-3">
+                    <div v-for="item in paginatedInventory" :key="item.id"
+                        class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+                        <!-- Card Header -->
+                        <div class="bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-700 dark:to-indigo-800 px-4 py-3">
+                            <div class="flex items-center justify-between">
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-xs text-blue-100 dark:text-blue-200 mb-0.5">Product Code</p>
+                                    <p class="text-white font-semibold font-mono truncate">{{ item.serialNumber || '-' }}</p>
+                                </div>
+                                <div class="flex items-center gap-2 ml-3">
+                                    <span :class="['inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-white/20 text-white']">
+                                        {{ formatStatusText(item.status) }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card Body -->
+                        <div class="p-4 space-y-3">
+                            <!-- Brand & Patient Row -->
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Brand</p>
+                                    <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ item.brandName || 'N/A' }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Patient</p>
+                                    <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ item.patientName || 'Unknown' }}</p>
+                                </div>
+                            </div>
+
+                            <!-- Clinic & Size Row -->
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Clinic</p>
+                                    <p class="text-sm font-medium text-gray-900 dark:text-white">{{ getClinicName(item.clinicId) }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Size</p>
+                                    <p class="text-sm font-medium text-gray-900 dark:text-white">{{ getSizeName(item.brandId, item.sizeId) || '-' }}</p>
+                                </div>
+                            </div>
+
+                            <!-- Expiry Date (only show if not already shown in status) -->
+                            <div v-if="item.expiryDate && item.status !== 'expired'">
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Expiry Date</p>
+                                <p class="text-sm font-medium" :class="getExpiryStatus(item.expiryDate)?.colorClass || 'text-gray-900 dark:text-white'">
+                                    {{ formatDate(item.expiryDate) }}
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Card Actions -->
+                        <div class="px-4 pt-2 pb-3 bg-gray-50 dark:bg-gray-700/30 border-t border-gray-100 dark:border-gray-700">
+                            <div class="flex items-center justify-end gap-2">
+                                <button @click="handleViewItem(item)" 
+                                    class="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors">
+                                    <Eye class="w-4 h-4" />
+                                    View
+                                </button>
+                                <button @click="handleEditItem(item)" 
+                                    class="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-medium text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 rounded-lg hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors">
+                                    <FilePenLine class="w-4 h-4" />
+                                    Edit
+                                </button>
+                                <button v-if="authStore.user?.user_role !== 1" @click="handleDeleteItem(item)" 
+                                    class="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors">
+                                    <Trash2 class="w-4 h-4" />
+                                    Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </template>
+
+            <!-- Mobile Pagination -->
+            <Pagination
+                v-if="pagination.total > 0"
+                :pagination="pagination"
+                @update:page="goToPage"
+            />
+        </div>
+
+        <!-- Inventory Table Card (Desktop) -->
         <div
-            class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+            class="hidden lg:block bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                     <thead class="bg-gray-50/80 dark:bg-gray-700/50 backdrop-blur-sm">
@@ -202,7 +383,7 @@
                             </th>
                             <th
                                 class="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                Serial Number
+                                Product Code
                             </th>
                             <th
                                 class="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
@@ -229,7 +410,7 @@
                     <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                         <TableLoader v-if="tableLoader" :colspan="8" />
                         <template v-else>
-                            <tr v-for="item in filteredInventory" :key="item.id"
+                            <tr v-for="item in paginatedInventory" :key="item.id"
                                 class="hover:bg-gray-50/70 dark:hover:bg-gray-700/50 transition-colors duration-150">
                                 <td class="px-6 py-5 whitespace-nowrap">
                                     <div class="text-sm font-mono text-blue-600 dark:text-blue-400 font-semibold">
@@ -301,19 +482,19 @@
                                 <td class="px-6 py-5 whitespace-nowrap text-sm font-medium">
                                     <div class="flex items-center space-x-2">
                                         <button @click="handleViewItem(item)"
-                                            class="p-2 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all duration-200"
+                                            class="inline-flex items-center justify-center w-9 h-9 text-gray-400 dark:text-gray-500 hover:bg-blue-100 dark:hover:bg-blue-900/30 hover:text-blue-700 dark:hover:text-blue-400 rounded-lg transition-all duration-200"
                                             title="View Details">
-                                            <Eye class="w-4 h-4" />
+                                            <Eye class="w-5 h-5" />
                                         </button>
                                         <button @click="handleEditItem(item)"
-                                            class="p-2 text-gray-500 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-all duration-200"
+                                            class="inline-flex items-center justify-center w-9 h-9 text-gray-400 dark:text-gray-500 hover:bg-amber-100 dark:hover:bg-amber-900/30 hover:text-amber-700 dark:hover:text-amber-400 rounded-lg transition-all duration-200"
                                             title="Edit Item">
-                                            <FilePenLine class="w-4 h-4" />
+                                            <FilePenLine class="w-5 h-5" />
                                         </button>
-                                        <button @click="handleDeleteItem(item)"
-                                            class="p-2 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all duration-200"
+                                        <button v-if="authStore.user?.user_role !== 1" @click="handleDeleteItem(item)"
+                                            class="inline-flex items-center justify-center w-9 h-9 text-gray-400 dark:text-gray-500 hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-700 dark:hover:text-red-400 rounded-lg transition-all duration-200"
                                             title="Delete Item">
-                                            <Trash2 class="w-4 h-4" />
+                                            <Trash2 class="w-5 h-5" />
                                         </button>
                                     </div>
                                 </td>
@@ -341,6 +522,13 @@
                 <p class="text-gray-500 dark:text-gray-400 max-w-md mx-auto">Try adjusting your search or filter to find
                     what you're looking for.</p>
             </div>
+
+            <!-- Desktop Pagination -->
+            <Pagination
+                v-if="pagination.total > 0"
+                :pagination="pagination"
+                @update:page="goToPage"
+            />
         </div>
 
         <!-- Upload Modal -->
@@ -348,14 +536,14 @@
             <div class="space-y-6">
                 <!-- Upload Area -->
                 <div v-if="!uploadedFile"
-                    class="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-2 border-dashed border-blue-300 dark:border-blue-600 rounded-2xl p-8 text-center transition-all duration-300 hover:border-blue-500 dark:hover:border-blue-400 hover:shadow-lg group">
-                    <div class="mb-4">
+                    class="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-2 border-dashed border-blue-300 dark:border-blue-600 rounded-xl sm:rounded-2xl p-4 sm:p-8 text-center transition-all duration-300 hover:border-blue-500 dark:hover:border-blue-400 hover:shadow-lg group">
+                    <div class="mb-3 sm:mb-4">
                         <div
-                            class="inline-flex items-center justify-center w-16 h-16 bg-white dark:bg-gray-800 rounded-full shadow-md mb-3 group-hover:scale-110 transition-transform duration-300">
-                            <UploadCloud class="w-8 h-8 text-blue-600 dark:text-blue-400" />
+                            class="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 bg-white dark:bg-gray-800 rounded-full shadow-md mb-2 sm:mb-3 group-hover:scale-110 transition-transform duration-300">
+                            <UploadCloud class="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 dark:text-blue-400" />
                         </div>
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Upload Log Usage</h3>
-                        <p class="text-sm text-gray-600 dark:text-gray-400 max-w-md mx-auto">
+                        <h3 class="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-1 sm:mb-2">Upload Log Usage</h3>
+                        <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-400 max-w-md mx-auto">
                             Drag and drop your file here, or click to browse
                         </p>
                     </div>
@@ -363,8 +551,8 @@
                     <input type="file" @change="handleFileUpload" accept=".pdf,.jpg,.jpeg,.png" class="hidden"
                         id="file-upload" ref="fileInput" />
                     <label for="file-upload"
-                        class="inline-flex items-center px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl shadow-md hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 cursor-pointer font-medium group-hover:shadow-xl">
-                        <FileText class="w-5 h-5 mr-2" />
+                        class="inline-flex items-center px-4 sm:px-6 py-2 sm:py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl shadow-md hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 cursor-pointer font-medium text-sm sm:text-base group-hover:shadow-xl">
+                        <FileText class="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                         Choose File
                     </label>
                 </div>
@@ -407,9 +595,9 @@
         
                     <!-- Extracted Data Form -->
                     <div
-                        class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-5 border border-gray-200 dark:border-gray-600">
-                        <h4 class="text-base font-semibold text-gray-900 dark:text-white mb-4">Extracted Information</h4>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-3 sm:p-5 border border-gray-200 dark:border-gray-600">
+                        <h4 class="text-sm sm:text-base font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">Extracted Information</h4>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                                 <div>
                                     <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">Serial
                                         Number</label>
@@ -519,7 +707,7 @@
         
                 <!-- Supported Formats Info -->
                 <div v-if="!uploadedFile"
-                        class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+                        class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4 border border-gray-200 dark:border-gray-600 mt-6">
                         <div class="flex items-start space-x-3">
                             <div
                                 class="flex-shrink-0 w-5 h-5 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mt-0.5">
@@ -546,13 +734,13 @@
                         </div>
                     </div>
             <template #actions>
-                <div class="flex justify-end space-x-3 px-6 py-4">
+                <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 sm:gap-3">
                     <button @click="closeUploadModal"
-                        class="px-5 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm text-gray-700 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-700 transition-all duration-200 font-medium">
+                        class="w-full sm:w-auto px-5 py-2.5 border-2 border-gray-300 dark:border-gray-600 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-700 transition-all duration-200 font-medium">
                         Cancel
                     </button>
                     <button v-if="uploadedFile && !isProcessingOCR" @click="submitExtractedData"
-                        class="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl shadow-md hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 font-medium hover:shadow-lg">
+                        class="w-full sm:w-auto px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl shadow-md hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 font-medium hover:shadow-lg">
                         Submit Usage Log
                     </button>
                 </div>
@@ -561,31 +749,34 @@
 
         <!-- Log Usage Choice Modal -->
         <BaseModal v-model="showLogUsageChoiceModal" title="Log Usage">
-            <div class="space-y-4">
-                <p class="text-gray-600 dark:text-gray-400">Choose how you want to log the usage:</p>
+            <div class="space-y-6">
+                <p class="text-gray-600 dark:text-gray-400 text-sm">Choose how you want to log the usage:</p>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <button @click="showUsageLogForm = true; showLogUsageChoiceModal = false"
-                        class="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-gray-700 transition-colors">
-                        <Edit class="w-8 h-8 text-blue-600 dark:text-blue-400 mb-2" />
-                        <span class="font-medium text-gray-900 dark:text-white">Manual Entry</span>
-                        <span class="text-sm text-gray-500 dark:text-gray-400 mt-1">Enter usage details manually</span>
+                        class="group flex flex-col items-center justify-center p-6 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-2 border-blue-200 dark:border-blue-700 rounded-xl hover:border-blue-500 dark:hover:border-blue-500 hover:shadow-lg transition-all duration-200">
+                        <div class="w-12 h-12 bg-blue-100 dark:bg-blue-800/50 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-200">
+                            <Edit class="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                        </div>
+                        <span class="font-semibold text-gray-900 dark:text-white text-base">Manual Entry</span>
+                        <span class="text-sm text-gray-500 dark:text-gray-400 mt-1.5 text-center">Enter usage details manually</span>
                     </button>
 
                     <button @click="showUploadModal = true; showLogUsageChoiceModal = false"
-                        class="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-purple-500 hover:bg-purple-50 dark:hover:bg-gray-700 transition-colors">
-                        <UploadCloud class="w-8 h-8 text-purple-600 dark:text-purple-400 mb-2" />
-                        <span class="font-medium text-gray-900 dark:text-white">Upload File</span>
-                        <span class="text-sm text-gray-500 dark:text-gray-400 mt-1">Upload usage data via
-                            file/OCR</span>
+                        class="group flex flex-col items-center justify-center p-6 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border-2 border-purple-200 dark:border-purple-700 rounded-xl hover:border-purple-500 dark:hover:border-purple-500 hover:shadow-lg transition-all duration-200">
+                        <div class="w-12 h-12 bg-purple-100 dark:bg-purple-800/50 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-200">
+                            <UploadCloud class="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                        </div>
+                        <span class="font-semibold text-gray-900 dark:text-white text-base">Upload File</span>
+                        <span class="text-sm text-gray-500 dark:text-gray-400 mt-1.5 text-center">Upload usage data via file/OCR</span>
                     </button>
                 </div>
             </div>
 
             <template #actions>
-                <div class="flex justify-end w-full p-5">
+                <div class="flex justify-end">
                     <button @click="showLogUsageChoiceModal = false"
-                        class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
+                        class="px-5 py-2.5 border-2 border-gray-300 dark:border-gray-600 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-700 transition-all duration-200 font-medium">
                         Cancel
                     </button>
                 </div>
@@ -601,17 +792,17 @@
 
         <!-- Item Details Modal -->
         <BaseModal v-model="showItemModal" title="Inventory Details" width="max-w-3xl">
-            <div v-if="selectedItem" class="space-y-6">
+            <div v-if="selectedItem" class="space-y-4 sm:space-y-6">
                 <!-- Blue Banner (Serial Part) - Keep as is -->
-                <div class="relative bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-700 dark:to-indigo-800 rounded-2xl p-5 shadow-md overflow-hidden">
+                <div class="relative bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-700 dark:to-indigo-800 rounded-xl sm:rounded-2xl p-4 sm:p-5 shadow-md overflow-hidden">
                     <!-- Simple decorative accent -->
                     <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12"></div>
                     
-                    <div class="relative flex items-center justify-between gap-4">
-                        <!-- Left: Serial Number -->
+                    <div class="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+                        <!-- Left: Product Code -->
                         <div class="flex-1 min-w-0">
-                            <p class="text-blue-100 dark:text-blue-200 text-xs font-medium mb-1">Serial Number</p>
-                            <p class="text-white text-xl font-bold font-mono break-all">{{ selectedItem.serialNumber }}</p>
+                            <p class="text-blue-100 dark:text-blue-200 text-xs font-medium mb-1">Product Code</p>
+                            <p class="text-white text-lg sm:text-xl font-bold font-mono break-all">{{ selectedItem.serialNumber }}</p>
                         </div>
                         
                         <!-- Right: Badges -->
@@ -740,32 +931,6 @@
                             <div>
                                 <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Patient</p>
                                 <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ selectedItem.patientName || 'N/A' }}</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Order Code -->
-                    <div v-if="selectedItem.orderCode" class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
-                        <div class="flex items-center space-x-3">
-                            <div class="h-10 w-10 bg-orange-100 dark:bg-orange-900/30 rounded-lg flex items-center justify-center">
-                                <FileText class="w-5 h-5 text-orange-600 dark:text-orange-400" />
-                            </div>
-                            <div>
-                                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Order Code</p>
-                                <p class="text-sm font-mono font-semibold text-gray-900 dark:text-white">{{ selectedItem.orderCode }}</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Order ID -->
-                    <div v-if="selectedItem.orderId" class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
-                        <div class="flex items-center space-x-3">
-                            <div class="h-10 w-10 bg-amber-100 dark:bg-amber-900/30 rounded-lg flex items-center justify-center">
-                                <Hash class="w-5 h-5 text-amber-600 dark:text-amber-400" />
-                            </div>
-                            <div>
-                                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Order ID</p>
-                                <p class="text-sm font-mono font-semibold text-gray-900 dark:text-white">#{{ selectedItem.orderId }}</p>
                             </div>
                         </div>
                     </div>
@@ -954,29 +1119,90 @@
                 </div>
             </div>
             <template #actions>
-                <div>
-                    <div v-if="selectedItem" class="px-6 py-4">
-                        <!-- Compact Status Bar with Actions -->
-                        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                            <!-- Current Status Badge -->
+                <div v-if="selectedItem" class="w-full">
+                    <!-- Mobile Layout -->
+                    <div class="lg:hidden">
+                        <!-- Modern Status Card -->
+                        <div class="mx-4 mb-3">
+                            <div class="bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-750 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+                                <!-- Status Header -->
+                                <div class="flex items-center justify-between px-4 py-3">
+                                    <div class="flex items-center gap-3">
+                                        <div :class="['w-10 h-10 rounded-xl flex items-center justify-center shadow-sm', getStatusIconBg(selectedItem.status)]">
+                                            <component :is="getStatusIcon(selectedItem.status)" class="w-5 h-5" :class="getStatusIconColor(selectedItem.status)" />
+                                        </div>
+                                        <div>
+                                            <p class="text-xs text-gray-500 dark:text-gray-400 font-medium">Current Status</p>
+                                            <p class="text-sm font-bold text-gray-900 dark:text-white">{{ formatStatusText(selectedItem.status) }}</p>
+                                        </div>
+                                    </div>
+                                    <button @click="showStatusInfo = !showStatusInfo"
+                                        class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-600 transition-all"
+                                        :class="{ 'rotate-180': showStatusInfo }">
+                                        <ChevronDown class="w-4 h-4" />
+                                    </button>
+                                </div>
+                                
+                                <!-- Expandable Status Info -->
+                                <div v-if="showStatusInfo" class="border-t border-gray-100 dark:border-gray-700 bg-blue-50/30 dark:bg-blue-900/10 px-4 py-3">
+                                    <p class="text-xs font-semibold text-blue-900 dark:text-blue-100">{{ getStatusDescription(selectedItem.status).title }}</p>
+                                    <p class="text-xs text-blue-700 dark:text-blue-300 mt-1 leading-relaxed">{{ getStatusDescription(selectedItem.status).description }}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Quick Actions Section - Only show if actions exist -->
+                        <div v-if="getAllActions(selectedItem.status).length > 0" class="px-4 pb-4">
+                            <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 px-1">Quick Actions</p>
+                            
+                            <!-- Primary Actions - Horizontal Scroll -->
+                            <div class="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
+                                <template v-for="action in getAllActions(selectedItem.status).slice(0, 3)" :key="action.status">
+                                    <button @click="handleStatusUpdate(selectedItem.id, action.status)"
+                                        :class="action.class"
+                                        class="flex-shrink-0 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 text-xs font-medium">
+                                        <component :is="action.icon" class="w-4 h-4" />
+                                        <span>{{ action.shortLabel || action.label }}</span>
+                                    </button>
+                                </template>
+                                <button v-if="getAllActions(selectedItem.status).length > 3" @click="showMoreActions = !showMoreActions"
+                                    class="flex-shrink-0 inline-flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl shadow-sm hover:shadow-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 text-xs font-medium"
+                                    :class="{ 'border-blue-400 dark:border-blue-500 bg-blue-50 dark:bg-blue-900/20': showMoreActions }">
+                                    <MoreVertical class="w-4 h-4" />
+                                    <span>More</span>
+                                </button>
+                            </div>
+
+                            <!-- Expanded More Actions - Grid -->
+                            <div v-if="showMoreActions" class="mt-2 grid grid-cols-2 gap-2 animate-in slide-in-from-top-2">
+                                <template v-for="action in getAllActions(selectedItem.status).slice(3)" :key="action.status">
+                                    <button @click="handleStatusUpdate(selectedItem.id, action.status); showMoreActions = false"
+                                        :class="action.class"
+                                        class="flex items-center justify-center gap-2 py-3 px-3 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 text-xs font-medium">
+                                        <component :is="action.icon" class="w-4 h-4" />
+                                        <span>{{ action.shortLabel || action.label }}</span>
+                                    </button>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Desktop Layout (Original) -->
+                    <div class="hidden lg:block px-6 py-4">
+                        <div class="flex items-center justify-between gap-4">
                             <div class="flex items-center gap-3">
                                 <span class="text-sm font-medium text-gray-600 dark:text-gray-400">Status:</span>
                                 <span :class="getStatusColor(selectedItem.status)"
                                     class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold shadow-sm">
                                     {{ formatStatusText(selectedItem.status) }}
                                 </span>
-                                <!-- Status Description Tooltip Button -->
                                 <button @click="showStatusInfo = !showStatusInfo"
                                     class="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors">
                                     <Info class="w-4 h-4 text-gray-500 dark:text-gray-400" />
                                 </button>
                             </div>
-
-                            <!-- Quick Actions Dropdown -->
                             <div class="flex items-center gap-2">
-                                <!-- Primary Actions (Always Visible) -->
-                                <template v-for="action in getPrimaryActions(selectedItem.status).slice(0, 2)"
-                                    :key="action.status">
+                                <template v-for="action in getPrimaryActions(selectedItem.status).slice(0, 2)" :key="action.status">
                                     <button @click="handleStatusUpdate(selectedItem.id, action.status)"
                                         :class="action.class"
                                         class="inline-flex items-center px-3 py-2 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 text-xs font-medium">
@@ -984,49 +1210,30 @@
                                         {{ action.label }}
                                     </button>
                                 </template>
-
-                                <!-- More Actions Dropdown -->
-                                <div v-if="getSecondaryActions(selectedItem.status).length > 0 || getPrimaryActions(selectedItem.status).length > 2"
-                                    class="relative">
+                                <div v-if="getSecondaryActions(selectedItem.status).length > 0 || getPrimaryActions(selectedItem.status).length > 2" class="relative">
                                     <button @click="showMoreActions = !showMoreActions"
                                         class="inline-flex items-center px-3 py-2 bg-white dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg shadow-sm hover:shadow-md hover:bg-gray-50 dark:hover:bg-gray-600 transition-all duration-200 text-xs font-medium">
                                         <MoreVertical class="w-3.5 h-3.5 mr-1.5" />
                                         More Actions
                                     </button>
-
-                                    <!-- Dropdown Menu -->
                                     <div v-if="showMoreActions" @click.stop
-                                        class="absolute right-0 bottom-full mb-2 w-56 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-xl z-50 overflow-hidden">
-                                        <!-- Remaining Primary Actions -->
-                                        <template v-for="action in getPrimaryActions(selectedItem.status).slice(2)"
-                                            :key="'primary-' + action.status">
-                                            <button
-                                                @click="handleStatusUpdate(selectedItem.id, action.status); showMoreActions = false"
+                                        class="absolute right-0 bottom-full mb-2 w-56 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-xl z-[60] overflow-hidden">
+                                        <template v-for="action in getPrimaryActions(selectedItem.status).slice(2)" :key="'primary-' + action.status">
+                                            <button @click="handleStatusUpdate(selectedItem.id, action.status); showMoreActions = false"
                                                 class="w-full flex items-center px-4 py-2.5 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-700">
-                                                <component :is="action.icon"
-                                                    class="w-4 h-4 mr-3 text-green-600 dark:text-green-400" />
-                                                <span class="text-sm font-medium text-gray-900 dark:text-white">{{
-                                                    action.label }}</span>
+                                                <component :is="action.icon" class="w-4 h-4 mr-3 text-green-600 dark:text-green-400" />
+                                                <span class="text-sm font-medium text-gray-900 dark:text-white">{{ action.label }}</span>
                                             </button>
                                         </template>
-
-                                        <!-- Secondary Actions -->
-                                        <div v-if="getSecondaryActions(selectedItem.status).length > 0"
-                                            class="border-t-2 border-gray-200 dark:border-gray-600">
+                                        <div v-if="getSecondaryActions(selectedItem.status).length > 0" class="border-t-2 border-gray-200 dark:border-gray-600">
                                             <div class="px-3 py-1.5 bg-gray-50 dark:bg-gray-700/50">
-                                                <span
-                                                    class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Other
-                                                    Actions</span>
+                                                <span class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Other Actions</span>
                                             </div>
-                                            <template v-for="action in getSecondaryActions(selectedItem.status)"
-                                                :key="'secondary-' + action.status">
-                                                <button
-                                                    @click="handleStatusUpdate(selectedItem.id, action.status); showMoreActions = false"
+                                            <template v-for="action in getSecondaryActions(selectedItem.status)" :key="'secondary-' + action.status">
+                                                <button @click="handleStatusUpdate(selectedItem.id, action.status); showMoreActions = false"
                                                     class="w-full flex items-center px-4 py-2.5 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-700 last:border-0">
-                                                    <component :is="action.icon"
-                                                        class="w-4 h-4 mr-3 text-gray-600 dark:text-gray-400" />
-                                                    <span class="text-sm text-gray-700 dark:text-gray-300">{{
-                                                        action.label }}</span>
+                                                    <component :is="action.icon" class="w-4 h-4 mr-3 text-gray-600 dark:text-gray-400" />
+                                                    <span class="text-sm text-gray-700 dark:text-gray-300">{{ action.label }}</span>
                                                 </button>
                                             </template>
                                         </div>
@@ -1034,17 +1241,12 @@
                                 </div>
                             </div>
                         </div>
-
-                        <!-- Status Info (Collapsible) -->
-                        <div v-if="showStatusInfo"
-                            class="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg">
+                        <div v-if="showStatusInfo" class="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg">
                             <div class="flex items-start">
                                 <Info class="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5 mr-2 flex-shrink-0" />
                                 <div class="flex-1">
-                                    <p class="text-xs font-semibold text-blue-900 dark:text-blue-100">{{
-                                        getStatusDescription(selectedItem.status).title }}</p>
-                                    <p class="text-xs text-blue-700 dark:text-blue-300 mt-0.5">{{
-                                        getStatusDescription(selectedItem.status).description }}</p>
+                                    <p class="text-xs font-semibold text-blue-900 dark:text-blue-100">{{ getStatusDescription(selectedItem.status).title }}</p>
+                                    <p class="text-xs text-blue-700 dark:text-blue-300 mt-0.5">{{ getStatusDescription(selectedItem.status).description }}</p>
                                 </div>
                             </div>
                         </div>
@@ -1055,40 +1257,40 @@
 
         <!-- Edit Modal -->
         <BaseModal v-model="showEditModal" title="Edit Inventory Item" width="max-w-3xl">
-            <div v-if="editingItem" class="space-y-6">
-                <!-- Serial Number -->
-                <div
-                    class="bg-gradient-to-r from-gray-50 to-blue-50 dark:from-gray-700/50 dark:to-blue-900/20 border border-gray-200 dark:border-gray-600 rounded-xl p-4">
-                    <label
-                        class="block text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-2">
-                        Serial Number
+            <div v-if="editingItem" class="space-y-4 sm:space-y-6">
+                <!-- Product Code Header -->
+                <div class="bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-700 dark:to-indigo-800 rounded-xl p-4 sm:p-5 text-white">
+                    <label class="block text-xs font-medium text-blue-100 dark:text-blue-200 uppercase tracking-wide mb-2">
+                        Product Code
                     </label>
-                    <div class="flex items-center">
-                        <div
-                            class="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center mr-3">
-                            <Package class="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur-sm flex-shrink-0">
+                            <Package class="w-5 h-5 text-white" />
                         </div>
                         <input v-model="editingItem.serialNumber" type="text"
-                            class="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 font-mono text-lg font-bold text-gray-900 dark:text-white transition-all duration-200"
+                            class="flex-1 px-3 sm:px-4 py-2.5 sm:py-3 bg-white/10 border border-white/30 rounded-xl focus:ring-2 focus:ring-white/50 focus:border-white/50 font-mono text-base sm:text-lg font-bold text-white placeholder-blue-200 transition-all duration-200"
                             placeholder="Enter serial number" />
                     </div>
                 </div>
 
                 <!-- Product Information Section -->
-                <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6">
-                    <h3
-                        class="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wide mb-4 flex items-center">
-                        <div class="w-1 h-5 bg-blue-600 rounded-full mr-3"></div>
+                <div class="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4 sm:p-5">
+                    <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                        <div class="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center mr-3">
+                            <ClipboardList class="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                        </div>
                         Usage Information
                     </h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                        <div>
-                            <label
-                                class="block text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-2">
+                    
+                    <!-- Form Grid -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                        <!-- Graft Size -->
+                        <div class="space-y-1.5">
+                            <label class="block text-xs font-medium text-gray-600 dark:text-gray-400">
                                 Graft Size
                             </label>
                             <select v-model="editingItem.sizeId"
-                                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200">
+                                class="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm transition-all duration-200">
                                 <option value="">No Size Selected</option>
                                 <option v-for="size in graftSizes" :key="size.graft_size_id"
                                     :value="size.graft_size_id">
@@ -1097,14 +1299,13 @@
                             </select>
                         </div>
 
-                        <div>
-                            <label
-                                class="block text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-2">
+                        <!-- Status -->
+                        <div class="space-y-1.5">
+                            <label class="block text-xs font-medium text-gray-600 dark:text-gray-400">
                                 Status
                             </label>
                             <select v-model="editingItem.status"
-                                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200">
-                                <!-- <option value="expected">Expected</option> -->
+                                class="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm transition-all duration-200">
                                 <option value="delivered">Delivered</option>
                                 <option value="used">Used</option>
                                 <option value="partially_used">Partially Used</option>
@@ -1114,65 +1315,62 @@
                             </select>
                         </div>
 
-                        <div>
-                            <label
-                                class="block text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-2">
+                        <!-- Date of Service -->
+                        <div class="space-y-1.5">
+                            <label class="block text-xs font-medium text-gray-600 dark:text-gray-400">
                                 Date of Service
                             </label>
                             <input v-model="editingItem.deliveryDate" type="date"
-                                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200" />
+                                class="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm transition-all duration-200" />
                         </div>
 
-                        <div>
-                            <label
-                                class="block text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-2">
+                        <!-- Expiry Date -->
+                        <div class="space-y-1.5">
+                            <label class="block text-xs font-medium text-gray-600 dark:text-gray-400">
                                 Expiry Date
                             </label>
                             <input v-model="editingItem.expiryDate" type="date"
-                                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200" />
+                                class="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm transition-all duration-200" />
                         </div>
 
-                        <div>
-                            <label
-                                class="block text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-2">
+                        <!-- Wound Part -->
+                        <div class="space-y-1.5">
+                            <label class="block text-xs font-medium text-gray-600 dark:text-gray-400">
                                 Wound Part
                             </label>
                             <input v-model="editingItem.woundPart" type="text" placeholder="Enter wound part/location"
-                                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200" />
+                                class="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm transition-all duration-200" />
                         </div>
 
-                        <div>
-                            <label
-                                class="block text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-2">
+                        <!-- Quantity Used -->
+                        <div class="space-y-1.5">
+                            <label class="block text-xs font-medium text-gray-600 dark:text-gray-400">
                                 Quantity Used
                             </label>
                             <input v-model.number="editingItem.quantity" type="number" min="0"
                                 placeholder="Enter quantity"
-                                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200" />
+                                class="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm transition-all duration-200" />
                         </div>
 
-                        <div class="md:col-span-2">
-                            <label
-                                class="block text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-2">
+                        <!-- Patient Name - Full Width -->
+                        <div class="sm:col-span-2 space-y-1.5">
+                            <label class="block text-xs font-medium text-gray-600 dark:text-gray-400">
                                 Patient Name
                             </label>
-                            <div
-                                class="flex items-center px-4 py-3 bg-gray-50 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-xl">
-                                <Lock class="w-4 h-4 text-gray-400 dark:text-gray-500 mr-2" />
-                                <span class="text-gray-900 dark:text-white font-medium">{{ editingItem.patientName ||
-                                    'N/A'
-                                    }}</span>
-                                <span class="ml-auto text-xs text-gray-500 dark:text-gray-400 italic">Read-only</span>
+                            <div class="flex items-center px-3 py-2.5 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg">
+                                <Lock class="w-4 h-4 text-gray-400 dark:text-gray-500 mr-2 flex-shrink-0" />
+                                <span class="text-gray-900 dark:text-white font-medium text-sm truncate">{{ editingItem.patientName || 'N/A' }}</span>
+                                <span class="ml-auto text-xs text-gray-500 dark:text-gray-400 italic flex-shrink-0">Read-only</span>
                             </div>
                         </div>
 
-                        <div class="md:col-span-2">
-                            <label
-                                class="block text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-2">
+                        <!-- Notes - Full Width -->
+                        <div class="sm:col-span-2 space-y-1.5">
+                            <label class="block text-xs font-medium text-gray-600 dark:text-gray-400">
                                 Notes/Description
                             </label>
                             <textarea v-model="editingItem.productName" rows="3"
-                                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200"
+                                class="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm transition-all duration-200 resize-none"
                                 placeholder="Enter additional notes or description"></textarea>
                         </div>
                     </div>
@@ -1180,18 +1378,18 @@
             </div>
 
             <template #actions>
-                <div class="flex justify-between items-center px-6 py-4">
-                    <p class="text-xs text-gray-500 dark:text-gray-400 flex items-center">
-                        <Info class="w-3.5 h-3.5 mr-1.5" />
-                        Changes will be saved immediately&nbsp;&nbsp;&nbsp;&nbsp;
+                <div class="flex flex-col-reverse sm:flex-row sm:justify-between sm:items-center gap-3 w-full">
+                    <p class="text-xs text-gray-500 dark:text-gray-400 flex items-center justify-center sm:justify-start">
+                        <Info class="w-3.5 h-3.5 mr-1.5 flex-shrink-0" />
+                        Changes saved immediately
                     </p>
-                    <div class="flex space-x-3">
+                    <div class="flex flex-col-reverse sm:flex-row sm:items-center gap-2 sm:gap-3">
                         <button @click="showEditModal = false"
-                            class="px-5 py-2.5 border-2 border-gray-300 dark:border-gray-600 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-700 transition-all duration-200 font-medium">
+                            class="w-full sm:w-auto px-4 sm:px-5 py-2.5 border-2 border-gray-300 dark:border-gray-600 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 font-medium text-sm">
                             Cancel
                         </button>
                         <button @click="handleSaveEdit"
-                            class="inline-flex items-center px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg font-medium">
+                            class="w-full sm:w-auto inline-flex items-center justify-center px-5 sm:px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg font-medium text-sm">
                             <Save class="w-4 h-4 mr-2" />
                             Save Changes
                         </button>
@@ -1205,7 +1403,7 @@
             <div class="space-y-6">
                 <!-- Warning Icon -->
                 <div class="flex justify-center">
-                    <div class="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
+                    <div class="w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
                         <AlertTriangle class="w-8 h-8 text-red-600 dark:text-red-400" />
                     </div>
                 </div>
@@ -1213,39 +1411,42 @@
                 <!-- Message -->
                 <div class="text-center space-y-2">
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Are you sure?</h3>
-                    <p class="text-gray-600 dark:text-gray-400">You are about to delete the inventory item:</p>
-                    <div class="bg-gray-100 dark:bg-gray-700 rounded-lg p-3 mt-3">
-                        <p class="font-mono font-bold text-lg text-gray-900 dark:text-white">{{
-                            itemToDelete?.serialNumber }}
-                        </p>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">You are about to delete this inventory item:</p>
+                </div>
+
+                <!-- Item Details -->
+                <div v-if="itemToDelete" class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 space-y-3">
+                    <div>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Product Code</p>
+                        <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ itemToDelete.serialNumber }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Brand</p>
+                        <p class="text-sm font-medium text-gray-900 dark:text-white">{{ getBrandName(itemToDelete.brandId) }}</p>
                     </div>
                 </div>
 
                 <!-- Warning Message -->
-                <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4">
-                    <div class="flex items-start">
-                        <AlertTriangle class="w-5 h-5 text-red-600 dark:text-red-400 mr-3 flex-shrink-0 mt-0.5" />
-                        <div>
-                            <h4 class="text-sm font-semibold text-red-900 dark:text-red-200 mb-1">Warning: This action
-                                cannot be
-                                undone</h4>
-                            <p class="text-sm text-red-800 dark:text-red-300">All data associated with this inventory
-                                item will
-                                be permanently removed from the system.</p>
-                        </div>
-                    </div>
+                <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                    <p class="text-xs font-semibold text-red-800 dark:text-red-400 flex items-center justify-center mb-2">
+                        <AlertTriangle class="w-4 h-4 mr-1.5" />
+                        Warning: This action cannot be reverted
+                    </p>
+                    <p class="text-xs text-red-700 dark:text-red-300 text-center">
+                        Once deleted, this inventory item will be permanently removed from the system.
+                    </p>
                 </div>
             </div>
             <template #actions>
-                <div class="flex justify-end space-x-3 px-6 py-4">
+                <div class="flex justify-end gap-3 px-6 py-4">
                     <button @click="showDeleteModal = false"
-                        class="px-5 py-2.5 border-2 border-gray-300 dark:border-gray-600 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-700 transition-all duration-200 font-medium">
+                        class="px-5 py-2.5 border-2 border-gray-300 dark:border-gray-600 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 font-medium">
                         Cancel
                     </button>
                     <button @click="confirmDeleteItem"
-                        class="px-5 py-2.5 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl hover:from-red-700 hover:to-red-800 transition-all duration-200 shadow-md hover:shadow-lg font-medium focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">
-                        <Trash2 class="w-4 h-4 inline mr-2" />
-                        Delete Permanently
+                        class="px-5 py-2.5 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl hover:from-red-700 hover:to-red-800 transition-all duration-200 shadow-md hover:shadow-lg font-medium flex items-center">
+                        <Trash2 class="w-4 h-4 mr-2" />
+                        Delete Item
                     </button>
                 </div>
             </template>
@@ -1254,12 +1455,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import BaseModal from '@/components/common/BaseModal.vue'
 import InventoryList from '@/components/Inventory/InventoryList.vue'
 import UsageLogForm from '@/components/Inventory/UsageLogForm.vue'
 import TableLoader from '@/components/ui/TableLoader.vue'
-import { inventoryService, graftSizeService, userService, orderService, brandService, patientService } from '@/services/api'
+import Pagination from '@/components/ui/Pagination.vue'
+import { inventoryService } from '@/services/api'
 import { useAuthStore } from '@/stores/auth'
 // Replaced Heroicons with Lucide icons
 import {
@@ -1294,7 +1496,9 @@ import {
     Image as ImageIcon,
     MoreVertical,
     Save,
-    Lock
+    Lock,
+    SlidersHorizontal,
+    ClipboardList
 } from 'lucide-vue-next';
 import Swal from 'sweetalert2'
 import { createWorker } from 'tesseract.js'
@@ -1314,8 +1518,6 @@ interface InventoryItem {
     brandName?: string
     sizeId: string
     sizeName?: string
-    orderId?: string
-    orderCode?: string
     receivedDate?: string
     usedDate?: string
     deliveryDate?: string
@@ -1330,23 +1532,28 @@ interface InventoryItem {
 const inventory = ref<InventoryItem[]>([])
 const authStore = useAuthStore()
 const graftSizes = ref<Array<{ graft_size_id: string; brand_id: string; size: string; area: number; price: number }>>([])
-const orders = ref<Array<any>>([])
+
+// Pagination state
+const currentPage = ref(1)
+const itemsPerPage = ref(10)
+const totalResults = ref(0)
 
 const fetchInventory = async () => {
+    tableLoader.value = true
     try {
-        const response = await inventoryService.getAllInventory()
+        const params = {
+            page: currentPage.value,
+            per_page: itemsPerPage.value,
+            search: searchTerm.value || undefined,
+            status: statusFilter.value === 'all' ? undefined : statusFilter.value,
+            brand_id: brandFilter.value === 'all' ? undefined : brandFilter.value
+        }
+        
+        const response = await inventoryService.getAllInventory(params)
         const payload = response.data
         const rawItems: any[] = Array.isArray(payload?.data) ? payload.data : Array.isArray(payload) ? payload : []
 
         inventory.value = rawItems.map((item: any) => {
-            // Match order based on brand, graft size, clinic, and patient
-            const matchedOrder = findMatchingOrder(
-                item.brandId,
-                item.sizeId,
-                item.clinicId,
-                item.patientId
-            )
-
             return {
                 id: String(item.id ?? item.serialNumber),
                 serialNumber: String(item.serialNumber ?? ''),
@@ -1368,114 +1575,41 @@ const fetchInventory = async () => {
                 woundPart: item.woundPart ?? undefined,
                 filepath: item.filepath ?? undefined,
                 quantity: item.quantity ?? undefined,
-                orderId: matchedOrder?.order_id ? String(matchedOrder.order_id) : undefined,
-                orderCode: matchedOrder?.order_code ?? undefined,
             }
         })
-    } catch (error) {
+        
+        // Update pagination from backend response
+        totalResults.value = payload.total || rawItems.length
+    } catch (error: any) {
         console.error('Failed to fetch inventory:', error)
+        
+        // Log more details about the error
+        if (error.response) {
+            console.error('Error response:', error.response.data)
+            console.error('Error status:', error.response.status)
+        }
 
-        // Show error to user
+        // Show error to user with more details
         await Swal.fire({
             title: 'Error Loading Inventory',
-            text: 'Failed to load inventory data from the backend. Please check the console for details.',
+            text: error.response?.data?.message || error.message || 'Failed to load inventory data from the backend. Please check the console for details.',
             icon: 'error',
             confirmButtonColor: '#2563eb'
         })
+    } finally {
+        tableLoader.value = false
     }
 }
 
-const findMatchingOrder = (
-    brandId: any,
-    graftId: any,
-    clinicId: any,
-    patientId: any
-): any | undefined => {
-    if (!brandId || !graftId || !clinicId || !patientId) return undefined
-
-    // Find orders that match all criteria
-    return orders.value.find((order: any) => {
-        // Check if order has items array
-        if (!Array.isArray(order.items)) return false
-
-        // Check basic order-level matches
-        const orderMatches =
-            String(order.clinic_id) === String(clinicId) &&
-            String(order.patient_id) === String(patientId)
-
-        if (!orderMatches) return false
-
-        // Check if any item in the order matches brand and graft size
-        return order.items.some((item: any) =>
-            String(item.brand_id) === String(brandId) &&
-            String(item.graft_id) === String(graftId)
-        )
-    })
-}
-
 onMounted(() => {
-    tableLoader.value = true
-    Promise.all([
-        // Fetch orders first so we can match them
-        orderService.getAllOrders({ per_page: 1000 })
-            .then(({ data }) => {
-                const rows: any[] = Array.isArray(data?.order_data) ? data.order_data : []
-                orders.value = rows
-            }),
-        // Fetch brands
-        brandService.getAllBrands({ per_page: 1000 })
-            .then(({ data }) => {
-                const rows: any[] = Array.isArray(data?.data) ? data.data : []
-                brands.value = rows
-            }),
-        // Fetch clinics
-        userService.getClinics()
-            .then(({ data }) => {
-                const rows: any[] = Array.isArray(data?.clinic_data) ? data.clinic_data : Array.isArray(data) ? data : []
-                clinics.value = rows
-            }),
-        // Fetch graft sizes
-        graftSizeService.getAllGraftSizes({ per_page: 1000 })
-            .then(({ data }) => {
-                const rows: any[] = Array.isArray(data?.graftData) ? data.graftData : []
-                graftSizes.value = rows.map((g: any) => ({
-                    graft_size_id: String(g.graft_size_id),
-                    brand_id: String(g.brand_id),
-                    size: g.size,
-                    area: Number(g.area ?? 0),
-                    price: Number(g.price ?? 0),
-                }))
-            }),
-        // Fetch clinicians
-        inventoryService.getClinicians()
-            .then(({ data }) => {
-                const rows: any[] = Array.isArray(data) ? data : []
-                clinicians.value = rows.map((c: any) => ({
-                    id: String(c.id),
-                    name: c.name || 'Unknown Clinician',
-                    clinic_id: c.clinic_id,
-                    clinic_name: c.clinic_name
-                }))
-            }),
-        // Fetch patients
-        patientService.getAllPatients()
-            .then(({ data }) => {
-                const rows: any[] = Array.isArray(data?.patient_info) ? data.patient_info : Array.isArray(data) ? data : []
-                patients.value = rows
-            })
-    ]).then(() => {
-        // Fetch inventory after other data is loaded
-        return fetchInventory()
-    }).catch((error) => {
-        console.error('Failed to load data', error)
-    }).finally(() => {
-        tableLoader.value = false
-    })
+    // Only fetch paginated inventory on mount — brand/clinic/size names come from the backend
+    fetchInventory()
 })
 
 const searchTerm = ref('')
 const statusFilter = ref('all')
 const brandFilter = ref('all')
+const showFilters = ref(false)
 const showUploadModal = ref(false)
 const showItemModal = ref(false)
 const selectedItem = ref<InventoryItem | null>(null)
@@ -1512,11 +1646,46 @@ const extractedData = ref({
     quantityUsed: 1
 })
 
-// Data from backend
+// Data from backend (lazy-loaded when UsageLogForm opens)
 const brands = ref<Array<any>>([])
-const clinics = ref<Array<any>>([])
 const clinicians = ref<Array<{ id: string; name: string; clinic_id?: string; clinic_name?: string }>>([])
-const patients = ref<Array<any>>([])
+const formDataLoaded = ref(false)
+
+// Lazy-load brands, graft sizes, and clinicians only when the form is opened
+const loadFormData = async () => {
+    if (formDataLoaded.value) return
+    try {
+        const [brandsRes, graftSizesRes, cliniciansRes] = await Promise.all([
+            inventoryService.getBrandsList(),
+            inventoryService.getGraftSizesList(),
+            inventoryService.getClinicians(),
+        ])
+
+        const brandRows: any[] = Array.isArray(brandsRes.data?.data) ? brandsRes.data.data : []
+        brands.value = brandRows
+
+        const graftSizeRows: any[] = Array.isArray(graftSizesRes.data?.data) ? graftSizesRes.data.data : []
+        graftSizes.value = graftSizeRows.map((g: any) => ({
+            graft_size_id: String(g.graft_size_id),
+            brand_id: String(g.brand_id),
+            size: g.size,
+            area: Number(g.area ?? 0),
+            price: Number(g.price ?? 0),
+        }))
+
+        const clinicianRows: any[] = Array.isArray(cliniciansRes.data) ? cliniciansRes.data : []
+        clinicians.value = clinicianRows.map((c: any) => ({
+            id: String(c.id),
+            name: c.name || 'Unknown Clinician',
+            clinic_id: c.clinic_id,
+            clinic_name: c.clinic_name
+        }))
+
+        formDataLoaded.value = true
+    } catch (error) {
+        console.error('Failed to load form data:', error)
+    }
+}
 
 const uniqueBrands = computed(() => {
     const brandNames = inventory.value
@@ -1526,16 +1695,48 @@ const uniqueBrands = computed(() => {
 })
 
 const filteredInventory = computed(() => {
+    const searchLower = searchTerm.value.toLowerCase()
     return inventory.value.filter(item => {
         const brandName = item.brandName || 'Unknown Brand'
-        const matchesSearch = item.serialNumber.toLowerCase().includes(searchTerm.value.toLowerCase()) ||
-            (item.productName?.toLowerCase() || '').includes(searchTerm.value.toLowerCase()) ||
-            brandName.toLowerCase().includes(searchTerm.value.toLowerCase())
+        const sizeName = item.sizeName || ''
+        const serialNumber = item.serialNumber || ''
+        const description = item.description || ''
+        const patientName = item.patientName || ''
+
+        // Search across multiple fields: serial number, brand, size (product), description, patient name
+        const matchesSearch = !searchTerm.value ||
+            serialNumber.toLowerCase().includes(searchLower) ||
+            brandName.toLowerCase().includes(searchLower) ||
+            sizeName.toLowerCase().includes(searchLower) ||
+            description.toLowerCase().includes(searchLower) ||
+            patientName.toLowerCase().includes(searchLower)
+
         const matchesStatus = statusFilter.value === 'all' || item.status === statusFilter.value
         const matchesBrand = brandFilter.value === 'all' || brandName === brandFilter.value
         return matchesSearch && matchesStatus && matchesBrand
     })
 })
+
+// Pagination computed properties - using backend pagination
+const totalPages = computed(() => {
+    return Math.max(1, Math.ceil(totalResults.value / itemsPerPage.value))
+})
+
+const pagination = computed(() => ({
+    current_page: currentPage.value,
+    last_page: totalPages.value,
+    per_page: itemsPerPage.value,
+    total: totalResults.value
+}))
+
+// Inventory is already paginated from backend, no need for client-side pagination
+const paginatedInventory = computed(() => inventory.value)
+
+function goToPage(page: number) {
+    if (page < 1 || page > totalPages.value) return
+    currentPage.value = page
+    fetchInventory() // Fetch new page from backend
+}
 
 // New computed properties for statistics
 const statusCounts = computed(() => {
@@ -1562,14 +1763,14 @@ function formatStatusText(status: string) {
 }
 
 function getBrandName(brandId?: string) {
-    // First try to find in current inventory items (which have brandName from backend)
+    // Brand names come from the backend via inventory items
     const item = inventory.value.find(i => i.brandId === brandId)
     if (item?.brandName) return item.brandName
 
-    // Fallback to brands data
+    // Fallback to brands list (loaded lazily when form is opened)
     if (!brandId) return 'Unknown Brand'
-    const brand = brands.value.find((b: any) => String(b.brand_id) === String(brandId) || String(b.id) === String(brandId))
-    return brand?.brand_name || brand?.brandName || 'Unknown Brand'
+    const brand = brands.value.find((b: any) => String(b.brand_id) === String(brandId))
+    return brand?.brand_name || 'Unknown Brand'
 }
 
 function getSizeName(brandId?: string, sizeId?: string) {
@@ -1606,16 +1807,6 @@ function getStatusColor(status: string) {
     }
 }
 
-function getStatusIcon(status: string) {
-    switch (status) {
-        // case 'expected': return Clock
-        case 'delivered': return Package
-        case 'used': return CheckCircle2
-        case 'expired': return AlertTriangle
-        default: return null
-    }
-}
-
 function getStatusDescription(status: string): { title: string; description: string } {
     const descriptions: Record<string, { title: string; description: string }> = {
         // 'expected': {
@@ -1648,6 +1839,42 @@ function getStatusDescription(status: string): { title: string; description: str
         }
     }
     return descriptions[status] || { title: status, description: '' }
+}
+
+function getStatusIcon(status: string) {
+    const icons: Record<string, any> = {
+        'delivered': Package,
+        'used': CheckCircle2,
+        'partially_used': Repeat2,
+        'reassigned': Repeat2,
+        'unused': Package,
+        'expired': AlertTriangle
+    }
+    return icons[status] || Package
+}
+
+function getStatusIconBg(status: string) {
+    const bgClasses: Record<string, string> = {
+        'delivered': 'bg-blue-100 dark:bg-blue-900/30',
+        'used': 'bg-green-100 dark:bg-green-900/30',
+        'partially_used': 'bg-purple-100 dark:bg-purple-900/30',
+        'reassigned': 'bg-orange-100 dark:bg-orange-900/30',
+        'unused': 'bg-gray-100 dark:bg-gray-700/50',
+        'expired': 'bg-red-100 dark:bg-red-900/30'
+    }
+    return bgClasses[status] || 'bg-gray-100 dark:bg-gray-700/50'
+}
+
+function getStatusIconColor(status: string) {
+    const colorClasses: Record<string, string> = {
+        'delivered': 'text-blue-600 dark:text-blue-400',
+        'used': 'text-green-600 dark:text-green-400',
+        'partially_used': 'text-purple-600 dark:text-purple-400',
+        'reassigned': 'text-orange-600 dark:text-orange-400',
+        'unused': 'text-gray-600 dark:text-gray-400',
+        'expired': 'text-red-600 dark:text-red-400'
+    }
+    return colorClasses[status] || 'text-gray-600 dark:text-gray-400'
 }
 
 function getPrimaryActions(currentStatus: string) {
@@ -1730,6 +1957,16 @@ function getSecondaryActions(currentStatus: string) {
     }
 
     return actions
+}
+
+function getAllActions(currentStatus: string) {
+    const primary = getPrimaryActions(currentStatus)
+    const secondary = getSecondaryActions(currentStatus)
+    // Add short labels for mobile grid
+    return [
+        ...primary.map(a => ({ ...a, shortLabel: a.label.replace('Mark ', '').replace('Complete ', '') })),
+        ...secondary.map(a => ({ ...a, shortLabel: a.label.replace('Mark ', '').replace('Complete ', '') }))
+    ]
 }
 
 async function handleStatusUpdate(itemId: string, newStatus: InventoryItem['status']) {
@@ -1897,12 +2134,11 @@ function isExpiringSoon(expiryDateString?: string): boolean {
 }
 
 function getClinicName(clinicId?: string) {
+    // Clinic names come from the backend via inventory items
     const item = inventory.value.find(i => i.clinicId === clinicId)
     if (item?.clinicName) return item.clinicName
 
-    if (!clinicId) return 'Unknown Clinic'
-    const clinic = clinics.value.find((c: any) => String(c.clinic_id) === String(clinicId) || String(c.id) === String(clinicId))
-    return clinic?.clinic_name || clinic?.name || 'Unknown Clinic'
+    return 'Unknown Clinic'
 }
 
 function getClinicianName(clinicianId: string) {
@@ -2107,6 +2343,7 @@ async function handleUsageLogSubmit(usageLog: {
 
 function handleUsageLogCancel() {
     showUsageLogForm.value = false
+    showLogUsageChoiceModal.value = true
 }
 
 function handleUsageLogSubmitAndHide(log: any) {
@@ -2116,6 +2353,7 @@ function handleUsageLogSubmitAndHide(log: any) {
 function handleUsageLogCancelAndHide() {
     handleUsageLogCancel()
     showUsageLogForm.value = false
+    showLogUsageChoiceModal.value = true
 }
 
 function handleDeleteItem(item: InventoryItem) {
@@ -2294,6 +2532,7 @@ function clearUpload() {
 function closeUploadModal() {
     clearUpload()
     showUploadModal.value = false
+    showLogUsageChoiceModal.value = true
 }
 
 async function submitExtractedData() {
@@ -2301,7 +2540,7 @@ async function submitExtractedData() {
     if (!extractedData.value.serialNumber) {
         await Swal.fire({
             title: 'Missing Information',
-            text: 'Serial Number is required',
+            text: 'Product Code is required',
             icon: 'warning',
             confirmButtonColor: '#2563eb'
         })
@@ -2414,8 +2653,18 @@ function handleBulkUpload() {
 }
 
 // Watch for selectedItem changes to show modal
-import { watch } from 'vue'
 watch(selectedItem, (newItem) => {
     showItemModal.value = !!newItem
+})
+
+// Lazy-load form dropdown data when UsageLogForm is opened
+watch(showUsageLogForm, (isOpen) => {
+    if (isOpen) loadFormData()
+})
+
+// Reset to page 1 when filters change and refetch
+watch([searchTerm, statusFilter, brandFilter], () => {
+    currentPage.value = 1
+    fetchInventory()
 })
 </script>

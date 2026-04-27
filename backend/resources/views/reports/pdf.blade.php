@@ -172,17 +172,48 @@
             </div>
         </div>
 
-        @if(isset($data['summary']))
+        @if(isset($data['summary']) && (isset($data['summary']['total_orders']) || isset($data['summary']['total_patients']) || isset($data['summary']['total_ivr_requests']) || isset($data['summary']['total_invoices'])))
         <div class="section">
-            <div class="section-title">Summary</div>
+            <div class="section-title">Clinic Summary</div>
             <div class="summary">
-                @foreach($data['summary'] as $key => $value)
+                @if(isset($data['summary']['total_orders']))
                 <div class="summary-card">
-                    <div class="value">{{ is_numeric($value) ? number_format($value) : $value }}</div>
-                    <div class="label">{{ ucwords(str_replace('_', ' ', $key)) }}</div>
+                    <div class="value">{{ number_format($data['summary']['total_orders']) }}</div>
+                    <div class="label">Total Orders</div>
                 </div>
-                @endforeach
+                @endif
+                @if(isset($data['summary']['total_patients']))
+                <div class="summary-card">
+                    <div class="value">{{ number_format($data['summary']['total_patients']) }}</div>
+                    <div class="label">Total Patients</div>
+                </div>
+                @endif
+                @if(isset($data['summary']['total_ivr_requests']))
+                <div class="summary-card">
+                    <div class="value">{{ number_format($data['summary']['total_ivr_requests']) }}</div>
+                    <div class="label">Total IVR Requests</div>
+                </div>
+                @endif
+                @if(isset($data['summary']['total_invoices']))
+                <div class="summary-card">
+                    <div class="value">{{ number_format($data['summary']['total_invoices']) }}</div>
+                    <div class="label">Total Invoices</div>
+                </div>
+                @endif
             </div>
+        </div>
+        @endif
+
+        @if(isset($data['summary']['total_patients']))
+        <div class="section">
+            <div class="section-title">Patients</div>
+            <div class="summary">
+                <div class="summary-card">
+                    <div class="value">{{ number_format($data['summary']['total_patients']) }}</div>
+                    <div class="label">Total Patients</div>
+                </div>
+            </div>
+            <p style="font-size: 10px; color: #6b7280; margin-top: 10px;">* Patient details excluded for HIPAA compliance</p>
         </div>
         @endif
 

@@ -14,6 +14,7 @@ import ProductManagementView from '@/views/ProductManagementView.vue'
 import NotificationCenterView from '@/views/NotificationCenterView.vue'
 import OrderManagementView from '@/views/OrderManagementView.vue'
 import ReportCenterView from '@/views/ReportCenterView.vue'
+import ClinicReportView from '@/views/ClinicReportView.vue'
 import ReturnManagementView from '@/views/ReturnManagementView.vue'
 import UsageLoggingView from '@/views/UsageLoggingView.vue'
 import UserManagementView from '@/views/UserManagementView.vue'
@@ -33,10 +34,11 @@ import OrderMagicLinkView from '@/views/OrderMagicLinkView.vue'
 import IVRMagicLinkView from '@/views/IVRMagicLinkView.vue'
 import InvalidMagicLinkView from '@/views/InvalidMagicLinkView.vue'
 import BillerTrackingForm from '@/views/BillerTrackingForm.vue'
+import InventoryLedgerManagementView from '@/views/InventoryLedgerManagementView.vue'
 import { pageLoader } from '@/composables/ui/usePageLoader'
 
 // Icons
-import { LayoutDashboard, UsersRound, Hospital, Factory, Package, ShieldCheck, ShoppingCart, ClipboardList, PencilRuler, ScanBarcode, BellRing, ChartColumn, CircleUserRound, Calculator, RotateCcw, Layers, FileSpreadsheet, UserCircle } from 'lucide-vue-next'
+import { LayoutDashboard, UsersRound, Hospital, Factory, Package, ShieldCheck, ShoppingCart, ClipboardList, PencilRuler, ScanBarcode, BellRing, ChartColumn, CircleUserRound, Calculator, RotateCcw, Layers, FileSpreadsheet, UserCircle, BookOpen } from 'lucide-vue-next'
 
 // Types
 interface NavigationItem {
@@ -451,6 +453,37 @@ const routes: RouteRecordRaw[] = [
 					role: 1
 				}
 			},
+			// ============================================================================
+			// INVENTORY LEDGER MANAGEMENT MODULE - ROUTES
+			// ----------------------------------------------------------------------------
+			// These routes register the standalone Inventory Ledger Management page.
+			// To remove this module, delete these routes and the view import.
+			// ============================================================================
+			{
+				path: 'admin/inventory-ledger',
+				name: 'admin-inventory-ledger',
+				component: InventoryLedgerManagementView,
+				meta: {
+					requiresAuth: true,
+					title: 'Inventory Ledger',
+					icon: BookOpen,
+					role: 0
+				}
+			},
+			{
+				path: 'office-staff/inventory-ledger',
+				name: 'office-staff-inventory-ledger',
+				component: InventoryLedgerManagementView,
+				meta: {
+					requiresAuth: true,
+					title: 'Inventory Ledger',
+					icon: BookOpen,
+					role: 1
+				}
+			},
+			// ============================================================================
+			// END INVENTORY LEDGER MANAGEMENT MODULE
+			// ============================================================================
 			// {
 			// 	path: 'manufacturer/inventory',
 			// 	name: 'manufacturer-inventory',
@@ -508,12 +541,32 @@ const routes: RouteRecordRaw[] = [
 				}
 			},
 			{
-				path: 'reports',
+				path: 'admin/reports',
 				name: 'reports',
 				component: ReportCenterView,
 				meta: {
 					requiresAuth: true,
 					title: 'Reports',
+					icon: ChartColumn
+				}
+			},
+			{
+				path: 'office-staff/reports',
+				name: 'office-staff-reports',
+				component: ReportCenterView,
+				meta: {
+					requiresAuth: true,
+					title: 'Reports',
+					icon: ChartColumn
+				}
+			},
+			{
+				path: 'clinic/clinic-reports',
+				name: 'clinic-reports',
+				component: ClinicReportView,
+				meta: {
+					requiresAuth: true,
+					title: 'Report',
 					icon: ChartColumn
 				}
 			},
@@ -663,6 +716,16 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 		// Inventory Management
 		'admin-inventory': [0],
 		'office-staff-inventory': [1],
+		// ============================================================================
+		// INVENTORY LEDGER MANAGEMENT MODULE - NAVIGATION ROLES
+		// ----------------------------------------------------------------------------
+		// To remove this module, delete these navigation role entries.
+		// ============================================================================
+		'admin-inventory-ledger': [0],
+		'office-staff-inventory-ledger': [1],
+		// ============================================================================
+		// END INVENTORY LEDGER MANAGEMENT MODULE
+		// ============================================================================
 		// 'manufacturer-inventory': [4],
 		'biller-inventory': [5],
 		'invoice-management': [0, 1, 2],
@@ -678,6 +741,8 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 		'usage': [],
 		'smart-selector': [],
 		'reports': [0],
+		'office-staff-reports': [1],
+		'clinic-reports': [2, 3],
 		'notifications': [0, 1, 2, 3],
 		'profile': [],
 	}
@@ -699,6 +764,7 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 					'admin-order-management',
 					'admin-invoice-management',
 					'admin-inventory',
+					'admin-inventory-ledger',
 					'returns',
 					'reports',
 				].includes(route.name as string)
@@ -717,7 +783,9 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 					'office-staff-ivr-management',
 					'office-staff-order-management',
 					'office-staff-invoice-management',
-					'office-staff-inventory'
+					'office-staff-inventory',
+					'office-staff-inventory-ledger',
+					'office-staff-reports',
 				].includes(route.name as string)
 			}
 
@@ -729,7 +797,8 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 					'clinic-patients',
 					'clinic-ivr-management',
 					'clinic-order-management',
-					'clinic-invoice-management'
+					'clinic-invoice-management',
+					'clinic-reports',
 				].includes(route.name as string)
 			}
 
@@ -739,7 +808,8 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 					'clinician-dashboard',
 					'clinician-ivr-management',
 					'clinician-order-management',
-					'clinician-invoice-management'
+					'clinician-invoice-management',
+					'clinic-reports'
 				].includes(route.name as string)
 			}
 

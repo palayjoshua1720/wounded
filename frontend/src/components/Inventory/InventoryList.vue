@@ -41,7 +41,7 @@
 				<thead class="bg-gray-50 dark:bg-gray-700">
 					<tr>
 						<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-						Serial Number
+						Product Code
 						</th>
 						<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
 						Brand & Size

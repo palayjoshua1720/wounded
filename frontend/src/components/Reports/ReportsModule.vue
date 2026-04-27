@@ -188,8 +188,8 @@
 			</p>
 			
 			<!-- Action Buttons Bar -->
-			<div class="mt-5 pt-4 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between">
-				<div class="flex items-center gap-3">
+			<div class="mt-5 pt-4 border-t border-gray-100 dark:border-gray-700 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+				<div class="contents sm:flex sm:items-center sm:gap-3">
 					<button
 						@click="handleGenerateReport"
 						:disabled="isLoadingData || (dateRange === 'custom' && dateRangeError !== '')"
@@ -208,7 +208,7 @@
 						<button
 							@click="toggleExportDropdown"
 							:disabled="isExporting || !reportGenerated"
-							class="flex items-center space-x-2 px-4 py-2.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+							class="flex items-center justify-center space-x-2 px-4 py-2.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
 						>
 							<ArrowDownTrayIcon v-if="!isExporting" class="w-4 h-4" />
 							<svg v-else class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -224,7 +224,7 @@
 						<!-- Export Options Dropdown -->
 						<div
 							v-if="showExportDropdown"
-							class="absolute left-0 mt-2 w-44 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50 overflow-hidden"
+							class="absolute left-0 right-0 sm:right-auto sm:w-44 mt-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50 overflow-hidden"
 						>
 							<div class="py-1">
 								<button
@@ -251,8 +251,8 @@
 				</div>
 				
 				<!-- Report Info -->
-				<div v-if="reportGenerated" class="text-xs text-gray-500 dark:text-gray-400 flex items-center">
-					<svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+				<div v-if="reportGenerated" class="text-xs text-gray-500 dark:text-gray-400 flex items-center justify-center sm:justify-start whitespace-nowrap">
+					<svg class="w-3 h-3 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
 					</svg>
 					<span>Report generated</span>
@@ -265,7 +265,7 @@
 			<!-- Report Header - Simplified -->
 			<div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
 				<!-- Title Row -->
-				<div class="flex items-center justify-between mb-4">
+				<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
 					<div>
 						<h2 class="text-xl font-bold text-gray-900 dark:text-white">
 							{{ selectedReportType.name }}
@@ -274,7 +274,7 @@
 							{{ dateRange === 'custom' ? `${startDate} to ${endDate}` : dateRangeOptions.find(opt => opt.value === dateRange)?.label }}
 						</p>
 					</div>
-					<div class="text-right">
+					<div class="sm:text-right">
 						<span class="inline-flex items-center px-2.5 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 text-xs font-medium rounded-md">
 							Generated {{ currentTimestamp }}
 						</span>

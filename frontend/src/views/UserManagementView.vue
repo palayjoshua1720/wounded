@@ -91,7 +91,7 @@
                                 <Briefcase class="w-4 h-4 mr-2 text-blue-500" /> Office Staff
                             </span>
                             <span class="font-semibold text-gray-900 dark:text-white">{{ stats.roles['office-staff']
-                                }}</span>
+                            }}</span>
                         </div>
                         <div class="flex items-center justify-between">
                             <span class="flex items-center text-sm text-gray-600 dark:text-gray-300">
@@ -110,7 +110,7 @@
                                 <Factory class="w-4 h-4 mr-2 text-orange-500" /> Manufacturers
                             </span>
                             <span class="font-semibold text-gray-900 dark:text-white">{{ stats.roles.manufacturer
-                                }}</span>
+                            }}</span>
                         </div>
                         <div class="flex items-center justify-between">
                             <span class="flex items-center text-sm text-gray-600 dark:text-gray-300">
@@ -124,8 +124,102 @@
         </transition>
 
         <!-- Filters Card -->
-        <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
-            <div class="flex flex-col lg:flex-row gap-6">
+        <div class="bg-white dark:bg-gray-800 p-4 lg:p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+            <!-- Mobile: Stacked Layout -->
+            <div class="lg:hidden space-y-3">
+                <!-- Search Input -->
+                <div class="relative">
+                    <Search class="absolute left-3.5 top-3 h-5 w-5 text-gray-400 dark:text-gray-500" />
+                    <input v-model="searchTerm" type="text" placeholder="Search users..."
+                        class="w-full pl-11 pr-10 py-2.5 border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white text-sm transition-all duration-200" />
+                    <button v-if="searchTerm" @click="searchTerm = ''" class="absolute right-3 top-2.5 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                        <X class="w-4 h-4" />
+                    </button>
+                </div>
+                
+                <!-- Filter Pills Row -->
+                <div class="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 scrollbar-hide">
+                    <button @click="showFilters = !showFilters" 
+                        class="flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg text-xs font-medium">
+                        <SlidersHorizontal class="w-3.5 h-3.5" />
+                        Filters
+                        <span v-if="roleFilter !== 'all' || statusFilter !== 'all'" class="w-2 h-2 bg-blue-500 rounded-full"></span>
+                    </button>
+                    <span v-if="roleFilter !== 'all'" class="flex-shrink-0 inline-flex items-center gap-1 px-2.5 py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-lg text-xs">
+                        {{ roleFilter === 'office-staff' ? 'Office' : roleFilter.charAt(0).toUpperCase() + roleFilter.slice(1) }}
+                        <button @click="roleFilter = 'all'" class="hover:text-blue-900">
+                            <X class="w-3 h-3" />
+                        </button>
+                    </span>
+                    <span v-if="statusFilter !== 'all'" class="flex-shrink-0 inline-flex items-center gap-1 px-2.5 py-2 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 rounded-lg text-xs">
+                        {{ statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1) }}
+                        <button @click="statusFilter = 'all'" class="hover:text-green-900">
+                            <X class="w-3 h-3" />
+                        </button>
+                    </span>
+                </div>
+                
+                <!-- Expandable Filters -->
+                <div v-if="showFilters" class="space-y-3 pt-2 border-t border-gray-100 dark:border-gray-700">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Role</label>
+                        <div class="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                            <button @click="roleFilter = 'all'" 
+                                :class="['flex-shrink-0 py-2 px-3 rounded-lg text-xs font-medium transition-colors', roleFilter === 'all' ? 'bg-blue-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300']">
+                                All
+                            </button>
+                            <button @click="roleFilter = 'admin'" 
+                                :class="['flex-shrink-0 py-2 px-3 rounded-lg text-xs font-medium transition-colors', roleFilter === 'admin' ? 'bg-blue-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300']">
+                                Admin
+                            </button>
+                            <button @click="roleFilter = 'office-staff'" 
+                                :class="['flex-shrink-0 py-2 px-3 rounded-lg text-xs font-medium transition-colors', roleFilter === 'office-staff' ? 'bg-blue-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300']">
+                                Office
+                            </button>
+                            <button @click="roleFilter = 'clinic'" 
+                                :class="['flex-shrink-0 py-2 px-3 rounded-lg text-xs font-medium transition-colors', roleFilter === 'clinic' ? 'bg-blue-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300']">
+                                Clinic
+                            </button>
+                            <button @click="roleFilter = 'clinician'" 
+                                :class="['flex-shrink-0 py-2 px-3 rounded-lg text-xs font-medium transition-colors', roleFilter === 'clinician' ? 'bg-blue-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300']">
+                                Clinician
+                            </button>
+                            <button @click="roleFilter = 'manufacturer'" 
+                                :class="['flex-shrink-0 py-2 px-3 rounded-lg text-xs font-medium transition-colors', roleFilter === 'manufacturer' ? 'bg-blue-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300']">
+                                Mfg
+                            </button>
+                            <button @click="roleFilter = 'biller'" 
+                                :class="['flex-shrink-0 py-2 px-3 rounded-lg text-xs font-medium transition-colors', roleFilter === 'biller' ? 'bg-blue-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300']">
+                                Biller
+                            </button>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Status</label>
+                        <div class="flex gap-2">
+                            <button @click="statusFilter = 'all'" 
+                                :class="['flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-colors', statusFilter === 'all' ? 'bg-green-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300']">
+                                All
+                            </button>
+                            <button @click="statusFilter = 'active'" 
+                                :class="['flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-colors', statusFilter === 'active' ? 'bg-green-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300']">
+                                Active
+                            </button>
+                            <button @click="statusFilter = 'inactive'" 
+                                :class="['flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-colors', statusFilter === 'inactive' ? 'bg-green-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300']">
+                                Inactive
+                            </button>
+                            <button @click="statusFilter = 'archived'" 
+                                :class="['flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-colors', statusFilter === 'archived' ? 'bg-green-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300']">
+                                Archived
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Desktop: Original Layout -->
+            <div class="hidden lg:flex flex-col lg:flex-row gap-6">
                 <div class="flex-1">
                     <div class="relative">
                         <Search class="absolute left-4 top-3.5 h-5 w-5 text-gray-400 dark:text-gray-500" />
@@ -164,9 +258,102 @@
             </div>
         </div>
 
-        <!-- Users Table Card -->
+        <!-- Mobile Card View -->
+        <div class="lg:hidden space-y-4">
+            <div v-if="tableLoader" class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-8">
+                <div class="flex flex-col items-center justify-center">
+                    <div class="w-8 h-8 rounded-full border-4 border-gray-200 border-t-red-600 animate-spin"></div>
+                    <div class="text-center text-gray-400 py-4 text-sm">Fetching Users</div>
+                </div>
+            </div>
+            <template v-else>
+                <div v-if="filteredUsers.length === 0" class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-8">
+                    <div class="flex flex-col items-center justify-center gap-2">
+                        <Users class="w-10 h-10 mb-1 text-gray-400" />
+                        <span class="text-gray-400">No users found.</span>
+                    </div>
+                </div>
+                <div v-else class="space-y-3">
+                    <div v-for="user in paginatedUsers" :key="user.id"
+                        class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+                        <!-- Card Header -->
+                        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 px-4 py-3">
+                            <div class="flex items-center justify-between">
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-xs text-blue-600 dark:text-blue-400 mb-0.5">User Name</p>
+                                    <p class="text-gray-900 dark:text-white font-semibold truncate">{{ formatFullName(user) }}</p>
+                                </div>
+                                <div class="flex items-center gap-2 ml-3">
+                                    <span :class="['inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-white/60 dark:bg-white/10', 
+                                        user.isArchived ? 'text-orange-700 dark:text-orange-300' :
+                                            user.isActive ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300']">
+                                        {{ user.isArchived ? 'Archived' : (user.isActive ? 'Active' : 'Inactive') }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card Body -->
+                        <div class="p-4 space-y-3">
+                            <!-- Email & Role Row -->
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Email</p>
+                                    <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ user.email }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Role</p>
+                                    <p class="text-sm font-medium text-gray-900 dark:text-white">{{ formatRoleName(user.role) }}</p>
+                                </div>
+                            </div>
+
+                            <!-- Created Date -->
+                            <div>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Created Date</p>
+                                <p class="text-sm font-medium text-gray-900 dark:text-white">{{ formatDate(user.createdAt) }}</p>
+                            </div>
+                        </div>
+
+                        <!-- Card Actions -->
+                        <div class="px-4 pt-2 pb-3 bg-gray-50 dark:bg-gray-700/30 border-t border-gray-100 dark:border-gray-700">
+                            <div class="flex items-center justify-end gap-2">
+                                <button @click="selectedUser = user"
+                                    class="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors">
+                                    <Eye class="w-5 h-5" />
+                                    View
+                                </button>
+                                <button @click="editUser(user)"
+                                    class="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-medium text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 rounded-lg hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors">
+                                    <FilePenLine class="w-5 h-5" />
+                                    Edit
+                                </button>
+                                <button v-if="!user.isArchived" @click="handleArchiveUser(user.id)"
+                                    class="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-medium text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/20 rounded-lg hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-colors">
+                                    <Archive class="w-5 h-5" />
+                                    Archive
+                                </button>
+                                <button v-else-if="!isOfficeStaff" @click="handleDeleteUser(user.id)"
+                                    class="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors">
+                                    <Trash2 class="w-5 h-5" />
+                                    Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </template>
+
+            <!-- Mobile Pagination -->
+            <Pagination
+                v-if="pagination.total > 0"
+                :pagination="pagination"
+                @update:page="goToPage"
+            />
+        </div>
+
+        <!-- Users Table Card (Desktop) -->
         <div
-            class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+            class="hidden lg:block bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                     <thead class="bg-gray-50/80 dark:bg-gray-700/50 backdrop-blur-sm">
@@ -196,151 +383,132 @@
                     <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                         <TableLoader v-if="tableLoader" :colspan="5" />
                         <template v-else>
-                        <tr v-for="user in paginatedUsers" :key="user.id"
-                            class="hover:bg-gray-50/70 dark:hover:bg-gray-700/50 transition-colors duration-150">
-                            <td class="px-6 py-5 whitespace-nowrap">
-                                <div class="flex items-center">
-                                    <div
-                                        class="flex-shrink-0 h-10 w-10 bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-lg flex items-center justify-center text-blue-600 dark:text-blue-400 font-medium text-sm">
-                                        {{ getUserInitials(user) }}
+                            <tr v-for="user in paginatedUsers" :key="user.id"
+                                class="hover:bg-gray-50/70 dark:hover:bg-gray-700/50 transition-colors duration-150">
+                                <td class="px-6 py-5 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <div
+                                            class="flex-shrink-0 h-10 w-10 bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-lg flex items-center justify-center text-blue-600 dark:text-blue-400 font-medium text-sm">
+                                            {{ getUserInitials(user) }}
+                                        </div>
+                                        <div class="ml-4">
+                                            <div class="text-sm font-semibold text-gray-900 dark:text-white">
+                                                {{ formatFullName(user) }}</div>
+                                            <div class="text-sm text-gray-500 dark:text-gray-400">{{ user.email }}</div>
+                                        </div>
                                     </div>
-                                    <div class="ml-4">
-                                        <div class="text-sm font-semibold text-gray-900 dark:text-white">{{formatFullName(user) }}</div>
-                                        <div class="text-sm text-gray-500 dark:text-gray-400">{{ user.email }}</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="px-6 py-5 whitespace-nowrap">
-                                <span
-                                    :class="['inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200', getRoleColor(user.role)]">
-                                    {{ formatRoleName(user.role) }}
-                                </span>
-                            </td>
-                            <td class="px-6 py-5 whitespace-nowrap">
-                                <span
-                                    :class="['inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200', 
+                                </td>
+                                <td class="px-6 py-5 whitespace-nowrap">
+                                    <span
+                                        :class="['inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200', getRoleColor(user.role)]">
+                                        {{ formatRoleName(user.role) }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-5 whitespace-nowrap">
+                                    <span :class="['inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200',
                                         user.isArchived ? 'bg-orange-50 text-orange-700 dark:bg-orange-900/20 dark:text-orange-400' :
-                                        user.isActive ? 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400' : 
-                                        'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400']">
-                                    <component :is="user.isArchived ? Archive : (user.isActive ? CheckCircle2 : XCircle)" class="w-3 h-3 mr-1.5" />
-                                    {{ user.isArchived ? 'Archived' : (user.isActive ? 'Active' : 'Inactive') }}
-                                </span>
-                            </td>
-                            <td class="px-6 py-5 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                {{ formatDate(user.createdAt) }}
-                            </td>
-                            <td class="px-6 py-5 whitespace-nowrap text-sm font-medium">
-                                <div class="flex items-center space-x-2">
-                                    <button @click="selectedUser = user"
-                                        class="p-2 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all duration-200"
-                                        title="View Details">
-                                        <Eye class="w-4 h-4" />
-                                    </button>
-                                    <button @click="editUser(user)"
-                                        class="p-2 text-gray-500 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-all duration-200"
-                                        title="Edit User">
-                                        <FilePenLine class="w-4 h-4" />
-                                    </button>
-                                    <button @click="handleToggleStatus(user.id)" :class="[
-                                        'p-2 rounded-lg transition-all duration-200',
-                                        user.isActive
-                                            ? 'text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20'
-                                            : 'text-gray-500 hover:text-green-600 dark:text-gray-400 dark:hover:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20'
-                                    ]" :title="user.isActive ? 'Deactivate' : 'Activate'">
-                                        <component :is="user.isActive ? XCircle : CheckCircle2" class="w-4 h-4" />
-                                    </button>
-                                    <button v-if="!user.isArchived"
-                                        @click="handleArchiveUser(user.id)"
-                                        class="p-2 text-gray-500 hover:text-orange-600 dark:text-gray-400 dark:hover:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded-lg transition-all duration-200"
-                                        title="Archive User">
-                                        <Archive class="w-4 h-4" />
-                                    </button>
-                                    <button v-else-if="!isOfficeStaff" @click="handleDeleteUser(user.id)"
-                                        class="p-2 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all duration-200"
-                                        title="Delete User">
-                                        <Trash2 class="w-4 h-4" />
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr v-if="filteredUsers.length === 0 && !tableLoader">
-                            <td colspan="5" class="text-center text-gray-400 py-12">
-                                <div class="flex flex-col items-center justify-center gap-2">
-                                    <Users class="w-10 h-10 mb-1" />
-                                    <span>No users found.</span>
-                                </div>
-                            </td>
-                        </tr>
+                                            user.isActive ? 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400' :
+                                                'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400']">
+                                        <component
+                                            :is="user.isArchived ? Archive : (user.isActive ? CheckCircle2 : XCircle)"
+                                            class="w-3 h-3 mr-1.5" />
+                                        {{ user.isArchived ? 'Archived' : (user.isActive ? 'Active' : 'Inactive') }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-5 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                    {{ formatDate(user.createdAt) }}
+                                </td>
+                                <td class="px-6 py-5 whitespace-nowrap text-sm font-medium">
+                                    <div class="flex items-center space-x-2">
+                                        <button @click="selectedUser = user"
+                                            class="inline-flex items-center justify-center w-9 h-9 text-gray-400 dark:text-gray-500 hover:bg-blue-100 dark:hover:bg-blue-900/30 hover:text-blue-700 dark:hover:text-blue-400 rounded-lg transition-all duration-200"
+                                            title="View Details">
+                                            <Eye class="w-5 h-5" />
+                                        </button>
+                                        <button @click="editUser(user)"
+                                            class="inline-flex items-center justify-center w-9 h-9 text-gray-400 dark:text-gray-500 hover:bg-amber-100 dark:hover:bg-amber-900/30 hover:text-amber-700 dark:hover:text-amber-400 rounded-lg transition-all duration-200"
+                                            title="Edit User">
+                                            <FilePenLine class="w-5 h-5" />
+                                        </button>
+                                        <button @click="handleToggleStatus(user.id)" :class="[
+                                            'inline-flex items-center justify-center w-9 h-9 rounded-lg transition-all duration-200',
+                                            user.isActive
+                                                ? 'text-gray-400 dark:text-gray-500 hover:text-red-700 dark:hover:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30'
+                                                : 'text-gray-400 dark:text-gray-500 hover:text-green-700 dark:hover:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/30'
+                                        ]" :title="user.isActive ? 'Deactivate' : 'Activate'">
+                                            <component :is="user.isActive ? XCircle : CheckCircle2" class="w-5 h-5" />
+                                        </button>
+                                        <button v-if="!user.isArchived" @click="handleArchiveUser(user.id)"
+                                            class="inline-flex items-center justify-center w-9 h-9 text-gray-400 dark:text-gray-500 hover:text-orange-700 dark:hover:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/30 rounded-lg transition-all duration-200"
+                                            title="Archive User">
+                                            <Archive class="w-5 h-5" />
+                                        </button>
+                                        <button v-else-if="!isOfficeStaff" @click="handleDeleteUser(user.id)"
+                                            class="inline-flex items-center justify-center w-9 h-9 text-gray-400 dark:text-gray-500 hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-700 dark:hover:text-red-400 rounded-lg transition-all duration-200"
+                                            title="Delete User">
+                                            <Trash2 class="w-5 h-5" />
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr v-if="filteredUsers.length === 0 && !tableLoader">
+                                <td colspan="5" class="text-center text-gray-400 py-12">
+                                    <div class="flex flex-col items-center justify-center gap-2">
+                                        <Users class="w-10 h-10 mb-1" />
+                                        <span>No users found.</span>
+                                    </div>
+                                </td>
+                            </tr>
                         </template>
                     </tbody>
                 </table>
             </div>
 
             <!-- Pagination -->
-            <div v-if="filteredUsers.length > 0"
-                class="flex items-center justify-between px-6 py-4 border-t border-gray-200 dark:border-gray-700">
-                <p class="text-sm text-gray-600 dark:text-gray-400">
-                    Showing <span class="font-semibold text-gray-800 dark:text-white">{{ (currentPage - 1) *
-                        itemsPerPage + 1 }}</span> to <span class="font-semibold text-gray-800 dark:text-white">{{
-        Math.min(currentPage * itemsPerPage, totalResults) }}</span> of <span
-                        class="font-semibold text-gray-800 dark:text-white">{{ totalResults }}</span> results
-                </p>                <nav class="flex items-center space-x-2">
-                    <button @click="previousPage" :disabled="currentPage === 1"
-                        class="px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-                        Previous
-                    </button>
-
-                    <div class="flex items-center space-x-1">
-                        <template v-for="(page, index) in paginationNumbers" :key="index">
-                            <span v-if="page === '...'"
-                                class="px-3 py-1.5 text-sm text-gray-500 dark:text-gray-400">...</span>
-                            <button v-else @click="goToPage(page as number)"
-                                :class="['px-3 py-1.5 text-sm font-medium rounded-lg transition-colors', currentPage === page ? 'bg-blue-600 text-white' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700']">
-                                {{ page }}
-                            </button>
-                        </template>
-                    </div>
-
-                    <button @click="nextPage" :disabled="currentPage === totalPages"
-                        class="px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-                        Next
-                    </button>
-                </nav>
-            </div>
+            <Pagination
+                v-if="pagination.total > 0"
+                :pagination="pagination"
+                @update:page="goToPage"
+            />
         </div>
 
         <!-- User Details Modal -->
         <BaseModal v-model="showUserDetailsModal" title="User Information" size="lg">
             <template v-if="selectedUser">
-                <div class="space-y-6">
+                <div class="space-y-4 sm:space-y-6">
                     <!-- Header Card -->
-                    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-2xl p-6">
-                        <div class="flex items-center space-x-5">
+                    <div
+                        class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl sm:rounded-2xl p-4 sm:p-6">
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:space-x-5">
                             <div
-                                class="h-20 w-20 bg-white dark:bg-gray-800 rounded-2xl shadow-sm flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold text-2xl">
+                                class="h-16 w-16 sm:h-20 sm:w-20 bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl shadow-sm flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold text-xl sm:text-2xl mx-auto sm:mx-0">
                                 {{ getUserInitials(selectedUser) }}
                             </div>
-                            <div class="flex-1">
-                                <h2 class="text-2xl font-bold text-gray-900 dark:text-white">{{ formatFullName(selectedUser) }}</h2>
-                                <div class="flex items-center mt-2 space-x-4">
-                                    <span class="inline-flex items-center text-sm text-gray-600 dark:text-gray-400">
+                            <div class="flex-1 text-center sm:text-left mt-4 sm:mt-0">
+                                <h2 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">{{
+                                    formatFullName(selectedUser) }}</h2>
+                                <div class="flex flex-col sm:flex-row sm:items-center mt-2 sm:space-x-4 space-y-1 sm:space-y-0">
+                                    <span class="inline-flex items-center text-sm text-gray-600 dark:text-gray-400 justify-center sm:justify-start">
                                         <Mail class="w-4 h-4 mr-1.5 text-gray-400" />
                                         {{ selectedUser.email }}
                                     </span>
-                                    <span v-if="selectedUser.phone" class="inline-flex items-center text-sm text-gray-600 dark:text-gray-400">
+                                    <span v-if="selectedUser.phone"
+                                        class="inline-flex items-center text-sm text-gray-600 dark:text-gray-400 justify-center sm:justify-start">
                                         <Phone class="w-4 h-4 mr-1.5 text-gray-400" />
                                         {{ selectedUser.phone }}
                                     </span>
                                 </div>
-                                <div class="mt-3 flex items-center space-x-2">
-                                    <span :class="['px-3 py-1 text-xs font-medium rounded-full', getRoleColor(selectedUser.role)]">
+                                <div class="mt-3 flex items-center justify-center sm:justify-start space-x-2">
+                                    <span
+                                        :class="['px-3 py-1 text-xs font-medium rounded-full', getRoleColor(selectedUser.role)]">
                                         {{ formatRoleName(selectedUser.role) }}
                                     </span>
-                                    <span :class="['px-3 py-1 text-xs font-medium rounded-full', 
+                                    <span :class="['px-3 py-1 text-xs font-medium rounded-full',
                                         selectedUser.isArchived ? 'bg-orange-100 dark:bg-orange-800 text-orange-700 dark:text-orange-300' :
-                                        selectedUser.isActive ? 'bg-green-100 dark:bg-green-800 text-green-700 dark:text-green-300' : 
-                                        'bg-red-100 dark:bg-red-800 text-red-700 dark:text-red-300']">
-                                        {{ selectedUser.isArchived ? 'Archived' : (selectedUser.isActive ? 'Active' : 'Inactive') }}
+                                            selectedUser.isActive ? 'bg-green-100 dark:bg-green-800 text-green-700 dark:text-green-300' :
+                                                'bg-red-100 dark:bg-red-800 text-red-700 dark:text-red-300']">
+                                        {{ selectedUser.isArchived ? 'Archived' : (selectedUser.isActive ? 'Active' :
+                                            'Inactive') }}
                                     </span>
                                 </div>
                             </div>
@@ -352,12 +520,16 @@
                         <!-- Role -->
                         <div class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
                             <div class="flex items-center space-x-3">
-                                <div class="h-10 w-10 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
+                                <div
+                                    class="h-10 w-10 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
                                     <ShieldCheck class="w-5 h-5 text-purple-600 dark:text-purple-400" />
                                 </div>
                                 <div>
-                                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Role</p>
-                                    <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ formatRoleName(selectedUser.role) }}</p>
+                                    <p
+                                        class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                                        Role</p>
+                                    <p class="text-sm font-semibold text-gray-900 dark:text-white">{{
+                                        formatRoleName(selectedUser.role) }}</p>
                                 </div>
                             </div>
                         </div>
@@ -365,20 +537,22 @@
                         <!-- Status -->
                         <div class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
                             <div class="flex items-center space-x-3">
-                                <div class="h-10 w-10 rounded-lg flex items-center justify-center"
-                                    :class="selectedUser.isArchived ? 'bg-orange-100 dark:bg-orange-900/30' : 
-                                            selectedUser.isActive ? 'bg-green-100 dark:bg-green-900/30' : 
-                                            'bg-red-100 dark:bg-red-900/30'">
-                                    <component :is="selectedUser.isArchived ? Archive : (selectedUser.isActive ? CheckCircle2 : XCircle)"
-                                        class="w-5 h-5" 
-                                        :class="selectedUser.isArchived ? 'text-orange-600 dark:text-orange-400' : 
-                                                selectedUser.isActive ? 'text-green-600 dark:text-green-400' : 
+                                <div class="h-10 w-10 rounded-lg flex items-center justify-center" :class="selectedUser.isArchived ? 'bg-orange-100 dark:bg-orange-900/30' :
+                                    selectedUser.isActive ? 'bg-green-100 dark:bg-green-900/30' :
+                                        'bg-red-100 dark:bg-red-900/30'">
+                                    <component
+                                        :is="selectedUser.isArchived ? Archive : (selectedUser.isActive ? CheckCircle2 : XCircle)"
+                                        class="w-5 h-5" :class="selectedUser.isArchived ? 'text-orange-600 dark:text-orange-400' :
+                                            selectedUser.isActive ? 'text-green-600 dark:text-green-400' :
                                                 'text-red-600 dark:text-red-400'" />
                                 </div>
                                 <div>
-                                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Status</p>
+                                    <p
+                                        class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                                        Status</p>
                                     <p class="text-sm font-semibold text-gray-900 dark:text-white">
-                                        {{ selectedUser.isArchived ? 'Archived' : (selectedUser.isActive ? 'Active' : 'Inactive') }}
+                                        {{ selectedUser.isArchived ? 'Archived' : (selectedUser.isActive ? 'Active' :
+                                            'Inactive') }}
                                     </p>
                                 </div>
                             </div>
@@ -387,30 +561,38 @@
                         <!-- Created Date -->
                         <div class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
                             <div class="flex items-center space-x-3">
-                                <div class="h-10 w-10 bg-orange-100 dark:bg-orange-900/30 rounded-lg flex items-center justify-center">
+                                <div
+                                    class="h-10 w-10 bg-orange-100 dark:bg-orange-900/30 rounded-lg flex items-center justify-center">
                                     <Calendar class="w-5 h-5 text-orange-600 dark:text-orange-400" />
                                 </div>
                                 <div>
-                                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Created Date</p>
-                                    <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ formatDate(selectedUser.createdAt) }}</p>
+                                    <p
+                                        class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                                        Created Date</p>
+                                    <p class="text-sm font-semibold text-gray-900 dark:text-white">{{
+                                        formatDate(selectedUser.createdAt) }}</p>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- User ID -->
+                        <!-- User ID (Front-facing UID) -->
                         <div class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
                             <div class="flex items-center space-x-3">
-                                <div class="h-10 w-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
+                                <div
+                                    class="h-10 w-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
                                     <Fingerprint class="w-5 h-5 text-blue-600 dark:text-blue-400" />
                                 </div>
                                 <div class="flex-1 min-w-0">
-                                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">User ID</p>
-                                    <div class="flex items-center space-x-2">
-                                        <code class="text-sm font-semibold text-gray-900 dark:text-white truncate">{{ selectedUser.id }}</code>
-                                        <button @click="copyId(selectedUser.id)" 
-                                                class="p-1 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                                                title="Copy ID">
-                                            <Copy class="w-3.5 h-3.5" />
+                                    <p
+                                        class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                                        User ID</p>
+                                    <div class="flex items-center justify-between mt-1">
+                                        <code
+                                            class="text-sm font-semibold text-gray-900 dark:text-white">{{ generateUserUID(selectedUser.id) }}</code>
+                                        <button @click="copyId(generateUserUID(selectedUser.id))"
+                                            class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors">
+                                            <Copy class="w-3.5 h-3.5 mr-1.5" />
+                                            Copy
                                         </button>
                                     </div>
                                 </div>
@@ -418,48 +600,60 @@
                         </div>
                     </div>
 
-                    <!-- Department/Facility Info -->
-                    <div v-if="selectedUser.department" class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
-                        <div class="flex items-start space-x-3">
-                            <div class="h-10 w-10 bg-teal-100 dark:bg-teal-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
-                                <Building class="w-5 h-5 text-teal-600 dark:text-teal-400" />
-                            </div>
-                            <div class="flex-1">
-                                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                                    <span v-if="selectedUser.role === 'clinic'">Managing Clinic Facility</span>
-                                    <span v-else-if="selectedUser.role === 'clinician'">Works at Clinic Facility</span>
-                                    <span v-else-if="selectedUser.role === 'manufacturer'">Associated Manufacturer</span>
-                                    <span v-else>Department</span>
-                                </p>
-                                <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ selectedUser.department }}</p>
-                                <p v-if="selectedUser.role === 'clinic'" class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                    This user is the administrator of this clinic facility.
-                                </p>
-                                <p v-else-if="selectedUser.role === 'clinician'" class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                    This clinician provides medical services at this facility.
-                                </p>
-                                <p v-else-if="selectedUser.role === 'manufacturer'" class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                    This user is associated with the specified manufacturer.
-                                </p>
+                    <!-- Department/Facility Info & Clinic Code (side by side for clinic users) -->
+                    <div v-if="selectedUser.department || selectedUser.clinicCode" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <!-- Department/Facility Info -->
+                        <div v-if="selectedUser.department" class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
+                            <div class="flex items-start space-x-3">
+                                <div
+                                    class="h-10 w-10 bg-teal-100 dark:bg-teal-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
+                                    <Building class="w-5 h-5 text-teal-600 dark:text-teal-400" />
+                                </div>
+                                <div class="flex-1">
+                                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                                        <span v-if="selectedUser.role === 'clinic'">Managing Clinic Facility</span>
+                                        <span v-else-if="selectedUser.role === 'clinician'">Works at Clinic Facility</span>
+                                        <span v-else-if="selectedUser.role === 'manufacturer'">Associated
+                                            Manufacturer</span>
+                                        <span v-else>Department</span>
+                                    </p>
+                                    <p class="text-sm font-semibold text-gray-900 dark:text-white">{{
+                                        selectedUser.department }}</p>
+                                    <p v-if="selectedUser.role === 'clinic'"
+                                        class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                        This user is the administrator of this clinic facility.
+                                    </p>
+                                    <p v-else-if="selectedUser.role === 'clinician'"
+                                        class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                        This clinician provides medical services at this facility.
+                                    </p>
+                                    <p v-else-if="selectedUser.role === 'manufacturer'"
+                                        class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                        This user is associated with the specified manufacturer.
+                                    </p>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- Clinic Code -->
-                    <div v-if="selectedUser.clinicCode" class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
-                        <div class="flex items-center space-x-3">
-                            <div class="h-10 w-10 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg flex items-center justify-center">
-                                <Hash class="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-                            </div>
-                            <div class="flex-1">
-                                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Associated Clinic Code</p>
-                                <div class="flex items-center justify-between mt-1">
-                                    <code class="text-sm font-semibold text-gray-900 dark:text-white">{{ selectedUser.clinicCode }}</code>
-                                    <button @click="copyId(selectedUser.clinicCode)" 
+                        <!-- Clinic Code -->
+                        <div v-if="selectedUser.clinicCode" class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
+                            <div class="flex items-center space-x-3">
+                                <div
+                                    class="h-10 w-10 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg flex items-center justify-center">
+                                    <Hash class="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                                </div>
+                                <div class="flex-1">
+                                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                                        Associated Clinic Code</p>
+                                    <div class="flex items-center justify-between mt-1">
+                                        <code
+                                            class="text-sm font-semibold text-gray-900 dark:text-white">{{ selectedUser.clinicCode }}</code>
+                                        <button @click="copyId(selectedUser.clinicCode)"
                                             class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors">
-                                        <Copy class="w-3.5 h-3.5 mr-1.5" />
-                                        Copy
-                                    </button>
+                                            <Copy class="w-3.5 h-3.5 mr-1.5" />
+                                            Copy
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -468,30 +662,35 @@
                     <!-- Clinicians Section (for Clinic Admins) -->
                     <div v-if="selectedUser.role === 'clinic'" class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
                         <!-- Accordion Header -->
-                        <button @click="isCliniciansAccordionOpen = !isCliniciansAccordionOpen" class="w-full flex items-center justify-between text-left focus:outline-none group">
+                        <button @click="isCliniciansAccordionOpen = !isCliniciansAccordionOpen"
+                            class="w-full flex items-center justify-between text-left focus:outline-none group">
                             <div class="flex items-center space-x-3">
-                                <div class="h-10 w-10 bg-teal-100 dark:bg-teal-900/30 rounded-lg flex items-center justify-center">
+                                <div
+                                    class="h-10 w-10 bg-teal-100 dark:bg-teal-900/30 rounded-lg flex items-center justify-center">
                                     <Stethoscope class="w-5 h-5 text-teal-600 dark:text-teal-400" />
                                 </div>
                                 <div>
-                                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Clinicians at this Facility</p>
-                                    <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ associatedClinicians.length }} Medical Staff</p>
+                                    <p
+                                        class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                                        Clinicians at this Facility</p>
+                                    <p class="text-sm font-semibold text-gray-900 dark:text-white">{{
+                                        associatedClinicians.length }} Medical Staff</p>
                                 </div>
                             </div>
-                            <ChevronDown class="w-5 h-5 text-gray-500 dark:text-gray-400 transition-transform duration-300 transform" :class="{ 'rotate-180': isCliniciansAccordionOpen }" />
+                            <ChevronDown
+                                class="w-5 h-5 text-gray-500 dark:text-gray-400 transition-transform duration-300 transform"
+                                :class="{ 'rotate-180': isCliniciansAccordionOpen }" />
                         </button>
-                        
+
                         <!-- Accordion Content -->
-                        <transition
-                            enter-active-class="transition ease-out duration-200"
-                            enter-from-class="opacity-0 -translate-y-2"
-                            enter-to-class="opacity-100 translate-y-0"
+                        <transition enter-active-class="transition ease-out duration-200"
+                            enter-from-class="opacity-0 -translate-y-2" enter-to-class="opacity-100 translate-y-0"
                             leave-active-class="transition ease-in duration-150"
-                            leave-from-class="opacity-100 translate-y-0"
-                            leave-to-class="opacity-0 -translate-y-2">
-                            <div v-if="isCliniciansAccordionOpen" class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
+                            leave-from-class="opacity-100 translate-y-0" leave-to-class="opacity-0 -translate-y-2">
+                            <div v-if="isCliniciansAccordionOpen"
+                                class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
                                 <div v-if="associatedClinicians.length > 0">
-                                     <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
                                         Medical staff working at {{ selectedUser.department }}
                                     </p>
                                     <ul class="space-y-3">
@@ -505,7 +704,8 @@
                                                 <div class="ml-3">
                                                     <p class="text-sm font-medium text-gray-900 dark:text-white">{{
                                                         formatFullName(clinician) }}</p>
-                                                    <p class="text-xs text-gray-500 dark:text-gray-400">{{ clinician.email }}</p>
+                                                    <p class="text-xs text-gray-500 dark:text-gray-400">{{
+                                                        clinician.email }}</p>
                                                 </div>
                                             </div>
                                             <span
@@ -517,11 +717,13 @@
                                     <div v-if="associatedClinicians.length > initialClinicianCount" class="mt-3">
                                         <button @click="showAllClinicians = !showAllClinicians"
                                             class="w-full text-center px-4 py-2 text-sm font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors">
-                                            {{ showAllClinicians ? 'Show Less' : `Show ${associatedClinicians.length - initialClinicianCount} More` }}
+                                            {{ showAllClinicians ? 'Show Less' : `Show ${associatedClinicians.length -
+                                                initialClinicianCount} More` }}
                                         </button>
                                     </div>
                                 </div>
-                                <div v-else class="bg-white dark:bg-gray-800 rounded-lg p-4 border border-dashed border-gray-300 dark:border-gray-600">
+                                <div v-else
+                                    class="bg-white dark:bg-gray-800 rounded-lg p-4 border border-dashed border-gray-300 dark:border-gray-600">
                                     <p class="text-sm text-gray-500 dark:text-gray-400 text-center">
                                         No clinicians are currently assigned to this clinic facility.
                                     </p>
@@ -532,43 +734,49 @@
 
                     <!-- Quick Actions -->
                     <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
-                        <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">Quick Actions</p>
-                        <div class="flex flex-wrap gap-3">
-                            <button @click="editUser(selectedUser); selectedUser = null"
-                                class="inline-flex items-center px-4 py-2 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900/30 transition-colors text-sm font-medium">
-                                <FilePenLine class="w-4 h-4 mr-2" />
-                                Edit User
+                        <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
+                            Quick Actions</p>
+                        <div class="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:gap-3">
+                            <button @click="editUser(selectedUser)"
+                                class="inline-flex items-center justify-center px-3 sm:px-4 py-2 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 rounded-lg hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors text-sm font-medium">
+                                <FilePenLine class="w-5 h-5 mr-1 sm:mr-2" />
+                                <span class="hidden sm:inline">Edit User</span>
+                                <span class="sm:hidden">Edit</span>
                             </button>
-                            <button v-if="!selectedUser.isArchived" @click="handleToggleStatus(selectedUser.id); selectedUser = null"
-                                :class="['inline-flex items-center px-4 py-2 rounded-lg transition-colors text-sm font-medium', 
-                                    selectedUser.isActive 
-                                        ? 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/30' 
+                            <button v-if="!selectedUser.isArchived"
+                                @click="handleToggleStatus(selectedUser.id)"
+                                :class="['inline-flex items-center justify-center px-3 sm:px-4 py-2 rounded-lg transition-colors text-sm font-medium',
+                                    selectedUser.isActive
+                                        ? 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/30'
                                         : 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 hover:bg-green-100 dark:hover:bg-green-900/30']">
-                                <component :is="selectedUser.isActive ? XCircle : CheckCircle2" class="w-4 h-4 mr-2" />
+                                <component :is="selectedUser.isActive ? XCircle : CheckCircle2" class="w-5 h-5 mr-1 sm:mr-2" />
                                 {{ selectedUser.isActive ? 'Deactivate' : 'Activate' }}
                             </button>
-                            <button v-if="!selectedUser.isArchived" @click="handleArchiveUser(selectedUser.id); selectedUser = null"
-                                class="inline-flex items-center px-4 py-2 bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300 rounded-lg hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-colors text-sm font-medium">
-                                <Archive class="w-4 h-4 mr-2" />
-                                Archive User
+                            <button v-if="!selectedUser.isArchived"
+                                @click="handleArchiveUser(selectedUser.id)"
+                                class="inline-flex items-center justify-center px-3 sm:px-4 py-2 bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300 rounded-lg hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-colors text-sm font-medium">
+                                <Archive class="w-5 h-5 mr-1 sm:mr-2" />
+                                <span class="hidden sm:inline">Archive User</span>
+                                <span class="sm:hidden">Archive</span>
                             </button>
-                            <button v-else-if="!isOfficeStaff" @click="handleDeleteUser(selectedUser.id); selectedUser = null"
-                                class="inline-flex items-center px-4 py-2 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors text-sm font-medium">
-                                <Trash2 class="w-4 h-4 mr-2" />
-                                Delete User
+                            <button v-else-if="!isOfficeStaff"
+                                @click="handleDeleteUser(selectedUser.id)"
+                                class="inline-flex items-center justify-center px-3 sm:px-4 py-2 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors text-sm font-medium">
+                                <Trash2 class="w-5 h-5 mr-1 sm:mr-2" />
+                                <span class="hidden sm:inline">Delete User</span>
+                                <span class="sm:hidden">Delete</span>
                             </button>
                         </div>
                     </div>
 
                     <!-- Copy Tooltip -->
-                    <transition
-                        enter-active-class="transition ease-out duration-200"
-                        enter-from-class="transform opacity-0 scale-95"
-                        enter-to-class="transform opacity-100 scale-100"
+                    <transition enter-active-class="transition ease-out duration-200"
+                        enter-from-class="transform opacity-0 scale-95" enter-to-class="transform opacity-100 scale-100"
                         leave-active-class="transition ease-in duration-100"
                         leave-from-class="transform opacity-100 scale-100"
                         leave-to-class="transform opacity-0 scale-95">
-                        <div v-if="copiedTooltip" class="fixed bottom-4 right-4 px-4 py-2 text-sm text-white bg-gray-800 dark:bg-gray-900 rounded-lg shadow-lg">
+                        <div v-if="copiedTooltip"
+                            class="fixed bottom-4 right-4 px-4 py-2 text-sm text-white bg-gray-800 dark:bg-gray-900 rounded-lg shadow-lg">
                             Copied to clipboard!
                         </div>
                     </transition>
@@ -578,23 +786,27 @@
 
         <!-- Create/Edit User Form Modal -->
         <BaseModal v-model="showFormModal" :title="showCreateForm ? 'Create New User' : 'Edit User'" size="2xl">
-            <form @submit.prevent="handleSubmitForm" class="space-y-6">
+            <form @submit.prevent="handleSubmitForm" class="space-y-4 sm:space-y-5">
                 <!-- User Header (only shown when editing) -->
-                <div v-if="!showCreateForm && selectedUser" class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-4">
-                    <div class="flex items-center space-x-4">
-                        <div class="h-12 w-12 bg-white dark:bg-gray-800 rounded-xl shadow-sm flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold text-lg">
+                <div v-if="!showCreateForm && selectedUser"
+                    class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-3 sm:p-4">
+                    <div class="flex items-center space-x-3 sm:space-x-4">
+                        <div
+                            class="h-10 w-10 sm:h-12 sm:w-12 bg-white dark:bg-gray-800 rounded-lg sm:rounded-xl shadow-sm flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold text-base sm:text-lg">
                             {{ getUserInitials(selectedUser) }}
                         </div>
-                        <div>
-                            <p class="text-sm text-gray-500 dark:text-gray-400">Editing User</p>
-                            <p class="text-lg font-semibold text-gray-900 dark:text-white">{{ formatFullName(selectedUser) }}</p>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Editing User</p>
+                            <p class="text-base sm:text-lg font-semibold text-gray-900 dark:text-white truncate">
+                                {{ formatFullName(selectedUser) }}
+                            </p>
                         </div>
                     </div>
                 </div>
 
                 <!-- Form Fields -->
-                <div class="space-y-5">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <div class="space-y-4 sm:space-y-5">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 <span class="flex items-center">
@@ -603,7 +815,7 @@
                                 </span>
                             </label>
                             <input v-model="formData.firstName" type="text" required
-                                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200"
+                                class="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200"
                                 placeholder="Enter first name" />
                         </div>
                         <div>
@@ -614,7 +826,7 @@
                                 </span>
                             </label>
                             <input v-model="formData.middleName" type="text"
-                                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200"
+                                class="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200"
                                 placeholder="Enter middle name" />
                         </div>
                         <div>
@@ -625,12 +837,12 @@
                                 </span>
                             </label>
                             <input v-model="formData.lastName" type="text" required
-                                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200"
+                                class="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200"
                                 placeholder="Enter last name" />
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 <span class="flex items-center">
@@ -639,7 +851,7 @@
                                 </span>
                             </label>
                             <input v-model="formData.email" type="email" required
-                                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200"
+                                class="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200"
                                 placeholder="Enter email address" />
                         </div>
                         <div>
@@ -650,105 +862,182 @@
                                 </span>
                             </label>
                             <input v-model="formData.phone" type="tel"
-                                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200"
+                                class="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200"
                                 placeholder="Enter phone number" />
                         </div>
                     </div>
 
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Role<span
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
+                        <div>
+                            <span class="flex items-center mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                                <IdCardLanyard class="w-4 h-4 mr-2 text-gray-400" />
+                                Role<span class="text-red-500 ml-1">*</span>
+                            </span>
+                            <div class="relative">
+                                <select v-model="formData.role" required
+                                    class="w-full px-3 sm:px-4 pr-10 py-2.5 sm:py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white appearance-none transition-all duration-200">
+                                    <!-- Office Staff only visible to admins -->
+                                    <option v-if="!isOfficeStaff" value="office-staff">Office Staff</option>
+                                    <!-- Roles available to both admin and office staff -->
+                                    <option value="clinic">Clinic Administrator</option>
+                                    <option value="clinician">Clinician (Medical Staff)</option>
+                                    <option value="manufacturer">Manufacturer</option>
+                                    <option value="biller">Biller</option>
+                                </select>
+                                <ChevronDown class="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400 pointer-events-none" />
+                            </div>
+                        </div>
+                        <div>
+                            <span class="flex items-center mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                                <Loader class="w-4 h-4 mr-2 text-gray-400" />
+                                Status<span class="text-red-500 ml-1">*</span>
+                            </span>
+                            <div class="relative">
+                                <select v-model="formData.isActive" required
+                                    class="w-full px-3 sm:px-4 pr-10 py-2.5 sm:py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white appearance-none transition-all duration-200">
+                                    <option :value="true">Active</option>
+                                    <option :value="false">Inactive</option>
+                                </select>
+                                <ChevronDown class="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400 pointer-events-none" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div v-if="formData.role === 'clinic'">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Clinic Facility
+                            <span class="text-red-500 ml-1">*</span>
+                        </label>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">Select the clinic facility this user
+                            will
+                            manage</p>
+                        <div class="relative">
+                            <select v-model="formData.clinicId" :required="formData.role === 'clinic'"
+                                class="w-full px-3 sm:px-4 pr-10 py-2.5 sm:py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white appearance-none transition-all duration-200">
+                                <option disabled value="">Select a clinic facility</option>
+                                <option v-for="dept in departments" :key="dept.id" :value="dept.id">
+                                    {{ dept.name }}
+                                </option>
+                            </select>
+                            <ChevronDown class="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400 pointer-events-none" />
+                        </div>
+                    </div>
+
+                    <div v-if="formData.role === 'manufacturer'">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Manufacturer<span
                                 class="text-red-500 ml-1">*</span></label>
-                        <select v-model="formData.role" required
-                            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white appearance-none transition-all duration-200">
-                            <!-- Office Staff only visible to admins -->
-                            <option v-if="!isOfficeStaff" value="office-staff">Office Staff</option>
-                            <!-- Roles available to both admin and office staff -->
-                            <option value="clinic">Clinic Administrator</option>
-                            <option value="clinician">Clinician (Medical Staff)</option>
-                            <option value="manufacturer">Manufacturer</option>
-                            <option value="biller">Biller</option>
-                        </select>
+                        <div class="relative">
+                            <select v-model="formData.manufacturerId" :required="formData.role === 'manufacturer'"
+                                class="w-full px-3 sm:px-4 pr-10 py-2.5 sm:py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white appearance-none transition-all duration-200">
+                                <option disabled value="">Select a manufacturer</option>
+                                <option v-for="manu in manufacturers" :key="manu.id" :value="manu.id">
+                                    {{ manu.name }}
+                                </option>
+                            </select>
+                            <ChevronDown class="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400 pointer-events-none" />
+                        </div>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Status<span
-                                class="text-red-500 ml-1">*</span></label>
-                        <select v-model="formData.isActive" required
-                            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white appearance-none transition-all duration-200">
-                            <option :value="true">Active</option>
-                            <option :value="false">Inactive</option>
-                        </select>
+
+                    <div v-if="formData.role === 'clinician'">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Associated Clinic
+                            Facility
+                            <span class="text-red-500 ml-1">*</span>
+                        </label>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">Select the clinic facility where this
+                            clinician
+                            works</p>
+                        <div class="relative">
+                            <select v-model="formData.clinicId" :required="formData.role === 'clinician'"
+                                class="w-full px-3 sm:px-4 pr-10 py-2.5 sm:py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white appearance-none transition-all duration-200">
+                                <option disabled value="">Select a clinic facility</option>
+                                <option v-for="dept in departments" :key="dept.id" :value="dept.id">
+                                    {{ dept.name }}
+                                </option>
+                            </select>
+                            <ChevronDown class="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400 pointer-events-none" />
+                        </div>
                     </div>
-                </div>
 
-                <div v-if="formData.role === 'clinic'">
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Clinic Facility
-                        <span class="text-red-500 ml-1">*</span>
-                    </label>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">Select the clinic facility this user will manage</p>
-                    <select v-model="formData.clinicId" :required="formData.role === 'clinic'"
-                        class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white appearance-none transition-all duration-200">
-                        <option disabled value="">Select a clinic facility</option>
-                        <option v-for="dept in departments" :key="dept.id" :value="dept.id">
-                            {{ dept.name }}
-                        </option>
-                    </select>
-                </div>
+                    <div v-if="showCreateForm">
+                        <span class="flex items-center mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                            <LockKeyhole class="w-4 h-4 mr-2 text-gray-400" />
+                            Password<span class="text-red-500 ml-1">*</span>
+                        </span>
+                        <div class="relative">
+                            <input v-model="formData.password" type="text" :required="showCreateForm"
+                                :class="['w-full px-3 sm:px-4 py-2.5 sm:py-3 border rounded-xl focus:ring-2 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200 pr-12', passwordValidationError ? 'border-red-300 dark:border-red-500 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-blue-500']"
+                                placeholder="Enter or generate a password" />
+                            <button type="button" @click="generateRandomPassword"
+                                class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400"
+                                title="Generate Random Password">
+                                <Sparkles class="w-5 h-5" />
+                            </button>
+                        </div>
 
-                <div v-if="formData.role === 'manufacturer'">
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Manufacturer<span
-                            class="text-red-500 ml-1">*</span></label>
-                    <select v-model="formData.manufacturerId" :required="formData.role === 'manufacturer'"
-                        class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white appearance-none transition-all duration-200">
-                        <option disabled value="">Select a manufacturer</option>
-                        <option v-for="manu in manufacturers" :key="manu.id" :value="manu.id">
-                            {{ manu.name }}
-                        </option>
-                    </select>
-                </div>
-
-                <div v-if="formData.role === 'clinician'">
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Associated Clinic Facility
-                        <span class="text-red-500 ml-1">*</span>
-                    </label>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">Select the clinic facility where this clinician works</p>
-                    <select v-model="formData.clinicId" :required="formData.role === 'clinician'"
-                        class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white appearance-none transition-all duration-200">
-                        <option disabled value="">Select a clinic facility</option>
-                        <option v-for="dept in departments" :key="dept.id" :value="dept.id">
-                            {{ dept.name }}
-                        </option>
-                    </select>
-                </div>
-
-                <div v-if="showCreateForm">
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Password<span
-                            class="text-red-500 ml-1">*</span></label>
-                    <div class="relative">
-                        <input v-model="formData.password" type="text" :required="showCreateForm"
-                            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200 pr-12"
-                            placeholder="Enter or generate a password" />
-                        <button type="button" @click="generateRandomPassword"
-                            class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400"
-                            title="Generate Random Password">
-                            <Sparkles class="w-5 h-5" />
-                        </button>
+                        <!-- Password Requirements -->
+                        <div v-if="formData.password" class="mt-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                            <p class="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">Password Requirements:
+                            </p>
+                            <ul class="space-y-1">
+                                <li class="flex items-center text-xs">
+                                    <component :is="passwordRequirements.minLength ? 'CheckCircle2' : 'XCircle'"
+                                        :class="['w-3.5 h-3.5 mr-2', passwordRequirements.minLength ? 'text-green-500' : 'text-gray-400']" />
+                                    <span
+                                        :class="passwordRequirements.minLength ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'">At
+                                        least 8 characters</span>
+                                </li>
+                                <li class="flex items-center text-xs">
+                                    <component :is="passwordRequirements.noSpaces ? 'CheckCircle2' : 'XCircle'"
+                                        :class="['w-3.5 h-3.5 mr-2', passwordRequirements.noSpaces ? 'text-green-500' : 'text-gray-400']" />
+                                    <span
+                                        :class="passwordRequirements.noSpaces ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'">No
+                                        spaces allowed</span>
+                                </li>
+                                <li class="flex items-center text-xs">
+                                    <component :is="passwordRequirements.hasLower ? 'CheckCircle2' : 'XCircle'"
+                                        :class="['w-3.5 h-3.5 mr-2', passwordRequirements.hasLower ? 'text-green-500' : 'text-gray-400']" />
+                                    <span
+                                        :class="passwordRequirements.hasLower ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'">At
+                                        least one lowercase letter (a-z)</span>
+                                </li>
+                                <li class="flex items-center text-xs">
+                                    <component :is="passwordRequirements.hasUpper ? 'CheckCircle2' : 'XCircle'"
+                                        :class="['w-3.5 h-3.5 mr-2', passwordRequirements.hasUpper ? 'text-green-500' : 'text-gray-400']" />
+                                    <span
+                                        :class="passwordRequirements.hasUpper ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'">At
+                                        least one uppercase letter (A-Z)</span>
+                                </li>
+                                <li class="flex items-center text-xs">
+                                    <component :is="passwordRequirements.hasNumber ? 'CheckCircle2' : 'XCircle'"
+                                        :class="['w-3.5 h-3.5 mr-2', passwordRequirements.hasNumber ? 'text-green-500' : 'text-gray-400']" />
+                                    <span
+                                        :class="passwordRequirements.hasNumber ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'">At
+                                        least one number (0-9)</span>
+                                </li>
+                                <li class="flex items-center text-xs">
+                                    <component :is="passwordRequirements.hasSpecial ? 'CheckCircle2' : 'XCircle'"
+                                        :class="['w-3.5 h-3.5 mr-2', passwordRequirements.hasSpecial ? 'text-green-500' : 'text-gray-400']" />
+                                    <span
+                                        :class="passwordRequirements.hasSpecial ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'">At
+                                        least one special character (!@#$%^&*...)</span>
+                                </li>
+                            </ul>
+                        </div>
                     </div>
-                </div>
 
                 </div>
 
                 <!-- Action Buttons -->
-                <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700">
-                    <button type="button" @click="closeForm"
-                        class="px-5 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200">
+                <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 sm:space-x-3 sm:gap-0 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <button type="button" @click="closeForm" :disabled="isSubmitting"
+                        class="w-full sm:w-auto px-5 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
                         Cancel
                     </button>
-                    <button type="submit"
-                        class="inline-flex items-center px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-md">
-                        <Save class="w-4 h-4 mr-2" />
-                        {{ showCreateForm ? 'Create User' : 'Save Changes' }}
+                    <button type="submit" :disabled="isSubmitting"
+                        class="w-full sm:w-auto inline-flex items-center justify-center px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-md disabled:opacity-70 disabled:cursor-not-allowed sm:min-w-[140px]">
+                        <Loader2 v-if="isSubmitting" class="w-4 h-4 mr-2 animate-spin" />
+                        <Save v-else class="w-4 h-4 mr-2" />
+                        {{ isSubmitting ? 'Saving...' : (showCreateForm ? 'Create User' : 'Save Changes') }}
                     </button>
                 </div>
             </form>
@@ -760,6 +1049,7 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import BaseModal from '@/components/common/BaseModal.vue'
 import TableLoader from '@/components/ui/TableLoader.vue'
+import Pagination from '@/components/ui/Pagination.vue'
 import { userService } from '@/services/api'
 import { useAuthStore } from '@/stores/auth'
 import Swal from 'sweetalert2'
@@ -792,6 +1082,12 @@ import {
     Fingerprint,
     Hash,
     Calendar,
+    Loader2,
+    IdCardLanyard,
+    Loader,
+    LockKeyhole,
+    SlidersHorizontal,
+    X
 } from 'lucide-vue-next'
 
 interface User {
@@ -822,6 +1118,7 @@ const authStore = useAuthStore()
 const searchTerm = ref('')
 const roleFilter = ref('all')
 const statusFilter = ref('all')
+const showFilters = ref(false)
 const tableLoader = ref(false)
 const selectedUser = ref<User | null>(null)
 const associatedCliniciansData = ref<User[]>([])
@@ -835,6 +1132,7 @@ const copiedTooltip = ref(false);
 const isCliniciansAccordionOpen = ref(false);
 const showAllClinicians = ref(false);
 const initialClinicianCount = 3;
+const isSubmitting = ref(false);
 
 // Check if current user is office staff
 const isOfficeStaff = computed(() => authStore.currentUser?.user_role === 1)
@@ -907,7 +1205,7 @@ const displayedClinicians = computed(() => {
 const fetchCliniciansForClinic = async (clinicId: string) => {
     try {
         // Fetch all clinicians (no pagination) for this clinic
-        const { data } = await userService.getUsers({ 
+        const { data } = await userService.getUsers({
             role: 3, // clinician role
             status: 'all'
         })
@@ -928,10 +1226,10 @@ const fetchCliniciansForClinic = async (clinicId: string) => {
             lastLogin: u.lastLogin ?? undefined,
             createdAt: u.createdAt ?? u.created_at ?? new Date().toISOString(),
         } as User))
-        
+
         // Filter by clinic ID
         associatedCliniciansData.value = allClinicians.filter(c => c.clinicId === clinicId)
-        
+
         console.log('Clinic ID:', clinicId)
         console.log('All fetched clinicians:', allClinicians.map(c => ({ id: c.id, name: formatFullName(c), clinicId: c.clinicId })))
         console.log('Filtered clinicians for this clinic:', associatedCliniciansData.value.map(c => ({ id: c.id, name: formatFullName(c), clinicId: c.clinicId })))
@@ -947,7 +1245,7 @@ async function handleToggleStatus(userId: string) {
 
     const action = user.isActive ? 'deactivate' : 'activate'
     const actionTitle = user.isActive ? 'Deactivate User' : 'Activate User'
-    
+
     const result = await Swal.fire({
         title: actionTitle,
         text: `Are you sure you want to ${action} ${formatFullName(user)}?`,
@@ -988,6 +1286,9 @@ async function handleToggleStatus(userId: string) {
         if (statusFilter.value !== 'all') {
             await fetchUsers()
         }
+
+        // Close modal before showing success
+        selectedUser.value = null
 
         // Success notification
         await Swal.fire({
@@ -1051,6 +1352,9 @@ async function handleArchiveUser(userId: string) {
         }
         await fetchUserStats()
 
+        // Close modal before showing success
+        selectedUser.value = null
+
         // Success notification
         await Swal.fire({
             title: 'Archived!',
@@ -1093,6 +1397,9 @@ async function handleDeleteUser(userId: string) {
         users.value = users.value.filter(user => user.id !== userId)
         await fetchUserStats()
 
+        // Close modal before showing success
+        selectedUser.value = null
+
         // Success notification
         await Swal.fire({
             title: 'Deleted!',
@@ -1132,6 +1439,18 @@ function editUser(user: User) {
 
 async function handleSubmitForm() {
     if (showCreateForm.value) {
+        // Validate password requirements
+        if (passwordValidationError.value) {
+            await Swal.fire({
+                title: 'Invalid Password',
+                text: 'Please ensure your password meets all the requirements.',
+                icon: 'error',
+                confirmButtonColor: '#2563eb'
+            });
+            return;
+        }
+
+        isSubmitting.value = true
         try {
             const payload: any = {
                 first_name: formData.value.firstName,
@@ -1167,7 +1486,10 @@ async function handleSubmitForm() {
             }
             users.value.unshift(newUser)
             await fetchUserStats()
-            
+
+            // Close modal before showing success
+            closeForm()
+
             // Success notification
             await Swal.fire({
                 title: 'User Created Successfully!',
@@ -1181,18 +1503,16 @@ async function handleSubmitForm() {
                 timer: 4000,
                 showConfirmButton: true
             })
-            
-            closeForm()
         } catch (err: any) {
             console.error('Failed to create user', err)
-            
+
             // Handle specific validation errors
             const errorMessage = err.response?.data?.message || 'Failed to create user. Please try again.'
             const errorCode = err.response?.data?.error
-            
+
             let title = 'Error!'
             let icon: 'error' | 'warning' = 'error'
-            
+
             if (errorCode === 'manufacturer_account_exists') {
                 title = 'Manufacturer Account Already Exists'
                 icon = 'warning'
@@ -1203,15 +1523,18 @@ async function handleSubmitForm() {
                 title = 'Unauthorized Role Creation'
                 icon = 'error'
             }
-            
+
             await Swal.fire({
                 title: title,
                 text: errorMessage,
                 icon: icon,
                 confirmButtonColor: '#2563eb'
             })
+        } finally {
+            isSubmitting.value = false
         }
     } else if (showEditForm.value && selectedUser.value) {
+        isSubmitting.value = true
         try {
             const payload: any = {
                 first_name: formData.value.firstName,
@@ -1246,7 +1569,10 @@ async function handleSubmitForm() {
             const idx = users.value.findIndex(x => x.id === updated.id)
             if (idx !== -1) users.value[idx] = updated
             await fetchUserStats()
-            
+
+            // Close modal before showing success
+            closeForm()
+
             // Success notification
             await Swal.fire({
                 title: 'Success!',
@@ -1256,18 +1582,16 @@ async function handleSubmitForm() {
                 timer: 2000,
                 showConfirmButton: false
             })
-            
-            closeForm()
         } catch (err: any) {
             console.error('Failed to update user', err)
-            
+
             // Handle specific validation errors
             const errorMessage = err.response?.data?.message || 'Failed to update user. Please try again.'
             const errorCode = err.response?.data?.error
-            
+
             let title = 'Error!'
             let icon: 'error' | 'warning' = 'error'
-            
+
             if (errorCode === 'manufacturer_account_exists') {
                 title = 'Manufacturer Account Already Exists'
                 icon = 'warning'
@@ -1275,13 +1599,15 @@ async function handleSubmitForm() {
                 title = 'Clinic Admin Already Exists'
                 icon = 'warning'
             }
-            
+
             await Swal.fire({
                 title: title,
                 text: errorMessage,
                 icon: icon,
                 confirmButtonColor: '#2563eb'
             })
+        } finally {
+            isSubmitting.value = false
         }
     }
 }
@@ -1312,6 +1638,28 @@ const copyId = (id: string | undefined) => {
     document.body.removeChild(textArea);
 }
 
+// Generate a front-facing User ID (UID) from the database ID
+// Uses a simple hash to create a consistent, user-friendly identifier
+const generateUserUID = (dbId: string): string => {
+    if (!dbId) return 'UID-000000';
+    
+    // Create a numeric hash from the string ID
+    let hash = 0;
+    for (let i = 0; i < dbId.length; i++) {
+        const char = dbId.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash; // Convert to 32bit integer
+    }
+    
+    // Convert to positive number and take absolute value
+    const positiveHash = Math.abs(hash);
+    
+    // Format as 6-digit number with leading zeros
+    const randomNumber = String(positiveHash % 1000000).padStart(6, '0');
+    
+    return `UID-${randomNumber}`;
+}
+
 const formatFullName = (user: { firstName: string, middleName?: string, lastName: string }) => {
     return [user.firstName, user.middleName, user.lastName].filter(Boolean).join(' ');
 }
@@ -1321,6 +1669,14 @@ const filteredUsers = computed(() => users.value)
 const totalPages = computed(() => {
     return Math.max(1, Math.ceil(filteredUsers.value.length / itemsPerPage.value))
 })
+
+// Pagination object for the Pagination component
+const pagination = computed(() => ({
+    current_page: currentPage.value,
+    last_page: totalPages.value,
+    per_page: itemsPerPage.value,
+    total: filteredUsers.value.length
+}))
 
 const paginatedUsers = computed(() => {
     return filteredUsers.value
@@ -1406,7 +1762,10 @@ const formatRoleName = (role: User['role']) => {
 }
 
 const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    const date = new Date(dateStr)
+    const formattedDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    const formattedTime = date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+    return `${formattedDate} [${formattedTime}]`
 }
 
 // Map backend numeric roles to UI role strings
@@ -1440,34 +1799,34 @@ const roleToInt = (role: User['role']): number => {
 const fetchUsers = async () => {
     tableLoader.value = true
     try {
-    const params = {
-        search: searchTerm.value || undefined,
-        role: roleFilter.value === 'all' ? undefined : roleToInt(roleFilter.value as User['role']),
-        status: statusFilter.value,
-        page: currentPage.value,
-    }
-    const { data } = await userService.getUsers(params)
-    const incoming: any[] = Array.isArray(data.users) ? data.users : []
-    users.value = incoming.map((u) => ({
-        id: String(u.id),
-        email: u.email,
-        firstName: u.firstName ?? u.first_name ?? '',
-        middleName: u.middleName ?? u.middle_name ?? '',
-        lastName: u.lastName ?? u.last_name ?? '',
-        phone: u.phone ?? '',
-        role: normalizeRole(u.role),
-        department: u.department ?? undefined,
-        clinicId: u.clinicId ?? u.clinic_id ?? undefined,
-        clinicCode: u.clinicCode ?? u.clinic_code ?? undefined,
-        manufacturerId: u.manufacturerId ?? u.manufacturer_id ?? undefined,
-        isActive: Boolean(u.isActive),
-        isArchived: Boolean(u.isArchived ?? false),
-        lastLogin: u.lastLogin ?? undefined,
-        createdAt: u.createdAt ?? u.created_at ?? new Date().toISOString(),
-    }))
-    // Update total results to reflect filtered count from backend
-    totalResults.value = data.total
-    if (data.per_page) itemsPerPage.value = Number(data.per_page)
+        const params = {
+            search: searchTerm.value || undefined,
+            role: roleFilter.value === 'all' ? undefined : roleToInt(roleFilter.value as User['role']),
+            status: statusFilter.value,
+            page: currentPage.value,
+        }
+        const { data } = await userService.getUsers(params)
+        const incoming: any[] = Array.isArray(data.users) ? data.users : []
+        users.value = incoming.map((u) => ({
+            id: String(u.id),
+            email: u.email,
+            firstName: u.firstName ?? u.first_name ?? '',
+            middleName: u.middleName ?? u.middle_name ?? '',
+            lastName: u.lastName ?? u.last_name ?? '',
+            phone: u.phone ?? '',
+            role: normalizeRole(u.role),
+            department: u.department ?? undefined,
+            clinicId: u.clinicId ?? u.clinic_id ?? undefined,
+            clinicCode: u.clinicCode ?? u.clinic_code ?? undefined,
+            manufacturerId: u.manufacturerId ?? u.manufacturer_id ?? undefined,
+            isActive: Boolean(u.isActive),
+            isArchived: Boolean(u.isArchived ?? false),
+            lastLogin: u.lastLogin ?? undefined,
+            createdAt: u.createdAt ?? u.created_at ?? new Date().toISOString(),
+        }))
+        // Update total results to reflect filtered count from backend
+        totalResults.value = data.total
+        if (data.per_page) itemsPerPage.value = Number(data.per_page)
     } catch (err) {
         console.error('Failed to fetch users', err)
     } finally {
@@ -1500,17 +1859,17 @@ const fetchClinics = async () => {
     try {
         const { data } = await userService.getClinics()
         // Handle both possible response structures
-        const items = Array.isArray(data) 
-            ? data 
-            : (Array.isArray(data?.user_data) 
-                ? data.user_data 
+        const items = Array.isArray(data)
+            ? data
+            : (Array.isArray(data?.user_data)
+                ? data.user_data
                 : (Array.isArray(data?.clinics) ? data.clinics : []))
-        
-        departments.value = items.map((c: any) => ({ 
-            id: String(c.clinic_id ?? c.id), 
-            name: c.clinic_name ?? c.name 
+
+        departments.value = items.map((c: any) => ({
+            id: String(c.clinic_id ?? c.id),
+            name: c.clinic_name ?? c.name
         }))
-        
+
         console.log('Clinics loaded:', departments.value)
     } catch (err) {
         console.error('Failed to fetch clinics', err)
@@ -1521,15 +1880,15 @@ const fetchManufacturers = async () => {
     try {
         const { data } = await userService.getManufacturers()
         // Handle both possible response structures
-        const items = Array.isArray(data) 
-            ? data 
-            : (Array.isArray(data?.manufacturerData) 
-                ? data.manufacturerData 
+        const items = Array.isArray(data)
+            ? data
+            : (Array.isArray(data?.manufacturerData)
+                ? data.manufacturerData
                 : (Array.isArray(data?.manufacturers) ? data.manufacturers : []))
-        
-        manufacturers.value = items.map((m: any) => ({ 
-            id: String(m.manufacturer_id ?? m.id), 
-            name: m.manufacturer_name ?? m.manufacturerName ?? m.name 
+
+        manufacturers.value = items.map((m: any) => ({
+            id: String(m.manufacturer_id ?? m.id),
+            name: m.manufacturer_name ?? m.manufacturerName ?? m.name
         }))
     } catch (err) {
         console.error('Failed to fetch manufacturers', err)
@@ -1579,6 +1938,25 @@ const getUserInitials = (user: { firstName: string, lastName: string }) => {
     const lastInitial = user.lastName ? user.lastName.charAt(0) : '';
     return `${firstInitial}${lastInitial}`.toUpperCase();
 }
+
+// Password validation
+const passwordRequirements = computed(() => {
+    const password = formData.value.password || '';
+    return {
+        minLength: password.length >= 8,
+        noSpaces: !/\s/.test(password),
+        hasLower: /[a-z]/.test(password),
+        hasUpper: /[A-Z]/.test(password),
+        hasNumber: /[0-9]/.test(password),
+        hasSpecial: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password),
+    };
+});
+
+const passwordValidationError = computed(() => {
+    if (!formData.value.password) return false;
+    const req = passwordRequirements.value;
+    return !(req.minLength && req.noSpaces && req.hasLower && req.hasUpper && req.hasNumber && req.hasSpecial);
+});
 
 const generateRandomPassword = () => {
     const length = 14;

@@ -39,7 +39,7 @@ class FollowupOrderNotificationEmail
 
                     <p style="color: #475569; font-size: 14px; line-height: 1.6;">
                         Hello,<br>
-                        This is a follow-up reminder regarding an order previously submitted in the WoundMed System.
+                        This is a follow-up reminder regarding an order previously submitted in the WOUNDMED INC. System.
                         Please review the order details below and take the necessary action as soon as possible.
                     </p>
 
@@ -78,7 +78,7 @@ class FollowupOrderNotificationEmail
                     </table>
 
                     <p style="color: #475569; font-size: 13px; margin-top: 20px; line-height: 1.6; background:#f1f5f9; padding:10px 12px; border-radius:6px; border-left:4px solid #fbbf24;">
-                        <strong>Reminder:</strong> This order is still awaiting your action. Please acknowledge, update, or complete the order status in the WoundMed system as appropriate.
+                        <strong>Reminder:</strong> This order is still awaiting your action. Please acknowledge, update, or complete the order status in the WOUNDMED INC. system as appropriate.
                     </p>
 
                     <a href="' . $orderLink . '" 
@@ -87,7 +87,7 @@ class FollowupOrderNotificationEmail
                     </a>
 
                     <p style="font-size: 12px; color: #94a3b8; margin-top: 30px; text-align: center;">
-                        This is an automated follow-up notification from the WoundMed System.<br>
+                        This is an automated follow-up notification from the WOUNDMED INC. System.<br>
                         &copy; ' . date('Y') . ' WOUNDMED INC.
                     </p>
 

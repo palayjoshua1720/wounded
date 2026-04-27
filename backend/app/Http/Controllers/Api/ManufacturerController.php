@@ -58,8 +58,11 @@ class ManufacturerController extends Controller
                 'contactPerson'     => $m->contact_person,
                 'contactNumber'     => $m->contact_number,
                 'ivrFilename'       => $m->ivr_file       ? basename($m->ivr_file)       : '',
+                'ivrFileExtension'  => $m->ivr_file_extension ?? 'pdf',
                 'orderFilename'     => $m->order_file     ? basename($m->order_file)     : '',
+                'orderFileExtension' => $m->order_file_extension ?? 'pdf',
                 'onboardingFilename' => $m->onboarding_file ? basename($m->onboarding_file) : '',
+                'onboardingFileExtension' => $m->onboarding_file_extension ?? 'pdf',
                 'manufacturerStatus' => (int) $m->manufacturer_status,
                 'logoUrl'           => $logoUrl,
                 'brands'            => $formattedBrands,
@@ -364,13 +367,20 @@ class ManufacturerController extends Controller
             $fileService = app(\App\Services\FileEncryptionService::class);
             $fileData    = $fileService->decryptAndRetrieve($path, 'local');
 
-            // Derive original filename: strip .enc, keep the real extension from the enc filename
-            $originalName = pathinfo(basename($path), PATHINFO_FILENAME); // e.g. 6_ivr_file_20260316_...
-            $mime         = 'application/pdf';
+            // Derive original filename: strip .enc, keep the real extension from stored extension
+            $extension = $manufacturer->{$type . '_file_extension'} ?? 'pdf';
+            $downloadName = $type . '_form.' . $extension;
+
+            // Determine mime type based on extension
+            $mime = match ($extension) {
+                'doc'  => 'application/msword',
+                'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                default => 'application/pdf',
+            };
 
             return response($fileData['contents'], 200, [
                 'Content-Type'        => $mime,
-                'Content-Disposition' => 'inline; filename="' . $type . '_form.pdf"',
+                'Content-Disposition' => 'inline; filename="' . $downloadName . '"',
                 'Content-Length'      => strlen($fileData['contents']),
             ]);
         }

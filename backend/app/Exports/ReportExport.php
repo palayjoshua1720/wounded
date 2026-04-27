@@ -41,8 +41,8 @@ class ReportExport implements FromArray, WithHeadings, WithTitle, WithStyles, Sh
         }
         $exportData[] = [''];
 
-        // Add summary section
-        if (isset($this->data['summary'])) {
+        // Add summary section (skip for clinic report as it has its own summary)
+        if (isset($this->data['summary']) && $this->reportType !== 'clinic') {
             $exportData[] = ['Summary:'];
             foreach ($this->data['summary'] as $key => $value) {
                 $exportData[] = [ucwords(str_replace('_', ' ', $key)), $value];
@@ -86,9 +86,10 @@ class ReportExport implements FromArray, WithHeadings, WithTitle, WithStyles, Sh
             'orders' => 'Orders Report',
             'inventory' => 'Inventory Report',
             'usage' => 'Usage Report',
-            'invoice' => 'Invoice Report',
+            'invoices' => 'Invoice Report',
             'ivr' => 'IVR Report',
             'returns' => 'Returns Report',
+            'clinic' => 'Clinic Report',
         ];
 
         return $titles[$this->reportType] ?? 'Report';
@@ -103,10 +104,12 @@ class ReportExport implements FromArray, WithHeadings, WithTitle, WithStyles, Sh
                 return $this->getInventoryData();
             case 'usage':
                 return $this->getUsageData();
-            case 'invoice':
+            case 'invoices':
                 return $this->getInvoiceData();
             case 'ivr':
                 return $this->getIVRData();
+            case 'clinic':
+                return $this->getClinicData();
             default:
                 return [];
         }
@@ -300,5 +303,83 @@ class ReportExport implements FromArray, WithHeadings, WithTitle, WithStyles, Sh
         }
 
         return $data;
+    }
+
+    private function getClinicData(): array
+    {
+        $rows = [];
+        $summary = $this->data['summary'] ?? [];
+        $orderStatusBreakdown = $this->data['orderStatusBreakdown'] ?? [];
+        $orders = $this->data['orders'] ?? [];
+        $patients = $this->data['patients'] ?? [];
+        $ivrRequests = $this->data['ivrRequests'] ?? [];
+        $invoices = $this->data['invoices'] ?? [];
+
+        // Clinic Summary section
+        $rows[] = ['CLINIC SUMMARY'];
+        $rows[] = ['Metric', 'Value'];
+        $rows[] = ['Total Orders', $summary['total_orders'] ?? 0];
+        $rows[] = ['Total Patients', $summary['total_patients'] ?? 0];
+        $rows[] = ['Total IVR Requests', $summary['total_ivr_requests'] ?? 0];
+        $rows[] = ['Total Invoices', $summary['total_invoices'] ?? 0];
+        $rows[] = []; // blank row separator
+
+        // Order Status Breakdown
+        $rows[] = ['ORDER STATUS BREAKDOWN'];
+        $rows[] = ['Status', 'Count', 'Percentage'];
+        foreach ($orderStatusBreakdown as $statusItem) {
+            $rows[] = [
+                $statusItem['status'] ?? '',
+                $statusItem['count'] ?? 0,
+                ($statusItem['percentage'] ?? 0) . '%',
+            ];
+        }
+        $rows[] = [];
+
+        // Orders List
+        $rows[] = ['ORDERS'];
+        $rows[] = ['Order #', 'Date', 'Product', 'Brand', 'Graft Size', 'Status'];
+        foreach ($orders as $order) {
+            $rows[] = [
+                $order['order_code'] ?? '',
+                $order['ordered_at'] ?? '',
+                $order['product_name'] ?? '',
+                $order['brand_name'] ?? '',
+                $order['graft_size'] ?? '',
+                $order['status'] ?? '',
+            ];
+        }
+        $rows[] = [];
+
+        // Patients - Count only for HIPAA compliance (no PHI)
+        $rows[] = ['PATIENTS'];
+        $rows[] = ['Total Patient Count', $summary['total_patients'] ?? 0];
+        $rows[] = ['Note: Patient details excluded for HIPAA compliance'];
+        $rows[] = [];
+
+        // IVR Requests - Patient info excluded for HIPAA compliance
+        $rows[] = ['IVR REQUESTS'];
+        $rows[] = ['Eligibility Status', 'Request Date'];
+        foreach ($ivrRequests as $ivr) {
+            $rows[] = [
+                $ivr['eligibility_status'] ?? '',
+                $ivr['created_at'] ?? '',
+            ];
+        }
+        $rows[] = [];
+
+        // Invoices
+        $rows[] = ['INVOICES'];
+        $rows[] = ['Invoice #', 'Total Amount', 'Status', 'Due Date'];
+        foreach ($invoices as $invoice) {
+            $rows[] = [
+                $invoice['invoice_number'] ?? '',
+                $invoice['total_amount'] ?? 0,
+                $invoice['status'] ?? '',
+                $invoice['due_date'] ?? '',
+            ];
+        }
+
+        return $rows;
     }
 }

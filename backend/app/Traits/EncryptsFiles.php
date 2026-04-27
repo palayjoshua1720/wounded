@@ -56,6 +56,7 @@ trait EncryptsFiles
                 if ($file instanceof UploadedFile) {
                     $result = $fileEncryptionService->encryptAndStore($file, $path, 'local');
                     $this->attributes[$field] = $result['path'];
+                    $this->attributes[$field . '_extension'] = $result['extension'];
                 }
                 // Handle file path string (file already stored on disk)
                 elseif (is_string($file)) {
@@ -66,6 +67,7 @@ trait EncryptsFiles
                         $result = $fileEncryptionService->encryptAndStore($fullPath, $path, 'local');
                         Storage::disk($disk)->delete($file);
                         $this->attributes[$field] = $result['path'];
+                        $this->attributes[$field . '_extension'] = $result['extension'];
                     }
                 }
             } catch (\Exception $e) {

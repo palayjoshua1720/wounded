@@ -25,15 +25,57 @@ class InventoryController extends Controller
         return 'usage_log';
     }
     /**
-     * Get all inventory items from usage logs with related data
+     * Get all inventory items from usage logs with related data (paginated)
      */
-    public function getInventory()
+    public function getInventory(Request $request)
     {
-        $usageLogs = UsageLog::with([
+        $perPage = $request->query('per_page', 10);
+        $page = $request->query('page', 1);
+
+        $query = UsageLog::with([
             'patient.clinic',
             'clinician',
             'graftSize.brand.manufacturer'
-        ])->get();
+        ]);
+
+        // Apply search filter if provided
+        if ($request->has('search') && !empty($request->search)) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('serial_number', 'like', "%{$search}%")
+                  ->orWhereHas('patient', function ($pq) use ($search) {
+                      $pq->where('patient_name', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('graftSize.brand', function ($bq) use ($search) {
+                      $bq->where('brand_name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        // Apply status filter if provided
+        if ($request->has('status') && !empty($request->status) && $request->status !== 'all') {
+            $statusMap = [
+                'delivered' => 'delivered',
+                'used' => 'used',
+                'partially_used' => 'partially_used',
+                'reassigned' => 'reassigned',
+                'unused' => 'unused',
+                'expired' => 'expired'
+            ];
+            if (isset($statusMap[$request->status])) {
+                $query->where('log_status', $statusMap[$request->status]);
+            }
+        }
+
+        // Apply brand filter if provided
+        if ($request->has('brand_id') && !empty($request->brand_id) && $request->brand_id !== 'all') {
+            $query->whereHas('graftSize', function ($q) use ($request) {
+                $q->where('brand_id', $request->brand_id);
+            });
+        }
+
+        $usageLogs = $query->orderBy('logged_at', 'desc')
+            ->paginate($perPage, ['*'], 'page', $page);
 
         $inventory = $usageLogs->map(function ($log) {
             return [
@@ -71,7 +113,10 @@ class InventoryController extends Controller
         return response()->json([
             'success' => true,
             'data' => $inventory,
-            'total' => $inventory->count()
+            'total' => $usageLogs->total(),
+            'current_page' => $usageLogs->currentPage(),
+            'per_page' => $usageLogs->perPage(),
+            'last_page' => $usageLogs->lastPage()
         ]);
     }
 
@@ -335,10 +380,18 @@ class InventoryController extends Controller
             ]);
         }
 
+        // patient_name is encrypted, so SQL LIKE won't match.
+        // Fetch patients and filter in PHP after decryption.
+        $searchLower = strtolower($query);
+
         $patients = PatientInfo::with('clinic')
-            ->where('patient_name', 'like', '%' . $query . '%')
-            ->limit(10)
+            ->orderBy('created_at', 'desc')
             ->get()
+            ->filter(function ($patient) use ($searchLower) {
+                $nameLower = strtolower($patient->patient_name ?? '');
+                return str_contains($nameLower, $searchLower);
+            })
+            ->take(10)
             ->map(function ($patient) {
                 return [
                     'id' => $patient->patient_id,
@@ -346,7 +399,8 @@ class InventoryController extends Controller
                     'clinic_id' => $patient->clinic_id,
                     'clinic_name' => $patient->clinic?->clinic_name ?? null,
                 ];
-            });
+            })
+            ->values();
 
         return response()->json([
             'success' => true,
@@ -409,6 +463,53 @@ class InventoryController extends Controller
                 'status' => $this->getStatusFromLogStatus($usageLog->log_status),
                 'logStatus' => $usageLog->log_status
             ]
+        ]);
+    }
+
+    /**
+     * Get a lightweight list of brands for dropdowns (id + name only)
+     */
+    public function getBrandsList()
+    {
+        $brands = Brand::select('brand_id', 'brand_name')
+            ->whereNull('deleted_at')
+            ->orderBy('brand_name')
+            ->get()
+            ->map(function ($brand) {
+                return [
+                    'brand_id' => (string) $brand->brand_id,
+                    'brand_name' => $brand->brand_name ?? 'N/A',
+                ];
+            });
+
+        return response()->json([
+            'success' => true,
+            'data' => $brands,
+        ]);
+    }
+
+    /**
+     * Get a lightweight list of graft sizes for dropdowns (minimal fields only)
+     */
+    public function getGraftSizesList()
+    {
+        $graftSizes = GraftSize::select('graft_size_id', 'brand_id', 'size', 'area', 'price')
+            ->whereNull('deleted_at')
+            ->orderBy('size')
+            ->get()
+            ->map(function ($g) {
+                return [
+                    'graft_size_id' => (string) $g->graft_size_id,
+                    'brand_id' => (string) $g->brand_id,
+                    'size' => $g->size,
+                    'area' => (float) ($g->area ?? 0),
+                    'price' => (float) ($g->price ?? 0),
+                ];
+            });
+
+        return response()->json([
+            'success' => true,
+            'data' => $graftSizes,
         ]);
     }
 
