@@ -96,7 +96,13 @@ class AdminDashboardController extends Controller
                         'patient'   => $log->patient?->patient_name ?? null,
                         'detail'    => $log->graftSize?->size ?? null,
                         'serial'    => $log->serial_number ?? null,
-                        'status'    => $log->log_status === 0 ? 'Active' : 'Disposed',
+                        'status'    => match ((int) $log->log_status) {
+                            0 => 'Used',
+                            1 => 'Unused',
+                            2 => 'Expired',
+                            3 => 'Returned',
+                            default => 'Unknown',
+                        },
                         'timestamp' => $log->logged_at ? $log->logged_at->format('Y-m-d H:i:s') : null,
                     ]);
                 });
@@ -210,13 +216,15 @@ class AdminDashboardController extends Controller
                 ->get()
                 ->each(function ($invoice) use ($events) {
                     $action = match (true) {
-                        $invoice->paid_date !== null    => 'Invoice paid',
+                        $invoice->status === 'pending_review' => 'Invoice pending review',
+                        $invoice->status === 'pending' => 'Invoice payment pending',
+                        $invoice->status === 'paid'     => 'Invoice paid',
                         $invoice->status === 'overdue'  => 'Invoice overdue',
-                        $invoice->status === 'partial'  => 'Partial payment received',
+                        $invoice->status === 'cancelled'  => 'Invoice cancelled',
                         default                         => 'Invoice created',
                     };
 
-                    $statusLabel = ucfirst($invoice->status ?? 'pending');
+                    $statusLabel = ucwords(str_replace('_', ' ', $invoice->status ?? 'pending'));
 
                     $events->push([
                         'id'        => 'invoice_' . $invoice->id,

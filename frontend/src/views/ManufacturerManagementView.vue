@@ -328,242 +328,250 @@
 
     <!-- Create/Edit Form Modal -->
     <BaseModal v-model="showFormModal" :title="showCreateForm ? 'Add New Manufacturer' : 'Edit Manufacturer'">
-      <form @submit.prevent="handleSubmitForm" class="space-y-6">
-        <!-- Manufacturer Information -->
-        <div>
-          <div class="flex items-center gap-2 mb-2">
-            <Building2 class="w-5 h-5 text-green-500" />
-            <h3 class="text-md font-semibold text-gray-900 dark:text-gray-100">Manufacturer Information</h3>
+      <form @submit.prevent="handleSubmitForm" class="flex flex-col h-full">
+        <div class="flex-1 overflow-y-auto space-y-6 px-6">
+          <!-- Manufacturer Information -->
+          <div>
+            <div class="flex items-center gap-2 mb-2">
+              <Building2 class="w-5 h-5 text-green-500" />
+              <h3 class="text-md font-semibold text-gray-900 dark:text-gray-100">Manufacturer Information</h3>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-600 dark:text-gray-400">
+                  Name<span class="text-red-500">*</span>
+                </label>
+                <div class="relative">
+                  <Factory class="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+                  <input v-model="formData.manufacturerName" type="text" required placeholder="Manufacturer Name"
+                    class="mt-1 block w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-600 dark:text-gray-400">
+                  Status<span class="text-red-500">*</span>
+                </label>
+                <div class="relative">
+                  <CircleCheck class="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+                  <select v-model="formData.manufacturerStatus" required
+                    class="mt-1 block w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                    <option :value="0">Active</option>
+                    <option :value="1">Inactive</option>
+                    <option :value="2">Archived</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="sm:col-span-2">
+                <label class="block text-sm font-medium text-gray-600 dark:text-gray-400">Website (Optional)</label>
+                <div class="relative">
+                  <Globe class="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+                  <input v-model="formData.website" type="text" placeholder="https://" @blur="fixWebsite"
+                    class="mt-1 block w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+                </div>
+              </div>
+
+              <div class="sm:col-span-2">
+                <label class="block text-sm font-medium text-gray-600 dark:text-gray-400">Address (Optional)</label>
+                <div class="relative">
+                  <MapPin class="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+                  <input v-model="formData.address" type="text" placeholder="Manufacturer Address"
+                    class="mt-1 block w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+                </div>
+              </div>
+            </div>
           </div>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-600 dark:text-gray-400">
-                Name<span class="text-red-500">*</span>
-              </label>
-              <div class="relative">
-                <Factory class="absolute left-3 top-3 w-4 h-4 text-gray-400" />
-                <input v-model="formData.manufacturerName" type="text" required placeholder="Manufacturer Name"
-                  class="mt-1 block w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
-              </div>
-            </div>
 
-            <div>
-              <label class="block text-sm font-medium text-gray-600 dark:text-gray-400">
-                Status<span class="text-red-500">*</span>
-              </label>
-              <div class="relative">
-                <CircleCheck class="absolute left-3 top-3 w-4 h-4 text-gray-400" />
-                <select v-model="formData.manufacturerStatus" required
-                  class="mt-1 block w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
-                  <option :value="0">Active</option>
-                  <option :value="1">Inactive</option>
-                  <option :value="2">Archived</option>
-                </select>
-              </div>
+          <!-- Logo Upload -->
+          <div>
+            <div class="flex items-center gap-2 mb-2">
+              <Image class="w-5 h-5 text-green-500" />
+              <h3 class="text-md font-semibold text-gray-900 dark:text-gray-100">Manufacturer Logo (Optional)</h3>
             </div>
-
-            <div class="sm:col-span-2">
-              <label class="block text-sm font-medium text-gray-600 dark:text-gray-400">Website (Optional)</label>
-              <div class="relative">
-                <Globe class="absolute left-3 top-3 w-4 h-4 text-gray-400" />
-                <input v-model="formData.website" type="text" placeholder="https://" @blur="fixWebsite"
-                  class="mt-1 block w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
-              </div>
-            </div>
-
-            <div class="sm:col-span-2">
-              <label class="block text-sm font-medium text-gray-600 dark:text-gray-400">Address (Optional)</label>
-              <div class="relative">
-                <MapPin class="absolute left-3 top-3 w-4 h-4 text-gray-400" />
-                <input v-model="formData.address" type="text" placeholder="Manufacturer Address"
-                  class="mt-1 block w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Logo Upload -->
-        <div>
-          <div class="flex items-center gap-2 mb-2">
-            <Image class="w-5 h-5 text-green-500" />
-            <h3 class="text-md font-semibold text-gray-900 dark:text-gray-100">Manufacturer Logo (Optional)</h3>
-          </div>
-          <!-- Drag & Drop Area (only shown when no image selected) -->
-          <div v-if="!selectedLogoFile && !formData.logoUrl"
-            class="mt-1 flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer
+            <!-- Drag & Drop Area (only shown when no image selected) -->
+            <div v-if="!selectedLogoFile && !formData.logoUrl"
+              class="mt-1 flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer
                                 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition cursor-pointer" @drop.prevent="handleLogoDrop"
-            @dragover.prevent="allowLogoDrop">
-            <input id="logo-upload" type="file" accept="image/png,image/jpeg,image/jpg" class="hidden"
-              @change="handleLogoChange" />
-            <label for="logo-upload" class="flex flex-col items-center justify-center text-center">
-              <UploadCloud class="w-10 h-10 mb-3 text-gray-400" />
-              <p class="mb-2 text-sm text-gray-500 dark:text-gray-400">
-                <span class="font-semibold text-purple-600 dark:text-purple-400">Click to upload</span> or drag and drop
-              </p>
-              <p class="text-xs text-gray-500 dark:text-gray-400">JPEG, JPG, PNG (max. 2MB)</p>
-            </label>
+              @dragover.prevent="allowLogoDrop">
+              <input id="logo-upload" type="file" accept="image/png,image/jpeg,image/jpg" class="hidden"
+                @change="handleLogoChange" />
+              <label for="logo-upload" class="flex flex-col items-center justify-center text-center">
+                <UploadCloud class="w-10 h-10 mb-3 text-gray-400" />
+                <p class="mb-2 text-sm text-gray-500 dark:text-gray-400">
+                  <span class="font-semibold text-purple-600 dark:text-purple-400">Click to upload</span> or drag and
+                  drop
+                </p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">JPEG, JPG, PNG (max. 2MB)</p>
+              </label>
+            </div>
+
+            <!-- Selected (cropped) file preview -->
+            <div v-if="selectedLogoFile"
+              class="mt-3 flex items-center justify-between gap-3 text-sm text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 px-3 py-2 rounded-lg">
+              <div class="flex items-center gap-2">
+                <Image class="w-4 h-4 text-gray-400" />
+                <span>Selected: <span class="font-medium">{{ selectedLogoFile.name }}</span></span>
+                <img :src="formData.logoUrl" class="w-8 h-8 rounded object-cover ml-2 border" />
+              </div>
+              <button @click="removeCurrentLogo" class="text-red-500 hover:text-red-600 transition">
+                <X class="w-5 h-5" />
+              </button>
+            </div>
+
+            <!-- Existing logo preview (when editing) -->
+            <div v-else-if="formData.logoUrl && !selectedLogoFile"
+              class="mt-3 flex items-center justify-between gap-3 text-sm text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 px-3 py-2 rounded-lg">
+              <div class="flex items-center gap-2">
+                <Image class="w-4 h-4 text-gray-400" />
+                <span>Current logo:</span>
+                <img :src="formData.logoUrl" class="w-8 h-8 rounded object-cover border" />
+              </div>
+              <button @click="removeCurrentLogo" class="text-red-500 hover:text-red-600 transition">
+                <X class="w-5 h-5" />
+              </button>
+            </div>
           </div>
 
-          <!-- Selected (cropped) file preview -->
-          <div v-if="selectedLogoFile"
-            class="mt-3 flex items-center justify-between gap-3 text-sm text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 px-3 py-2 rounded-lg">
-            <div class="flex items-center gap-2">
-              <Image class="w-4 h-4 text-gray-400" />
-              <span>Selected: <span class="font-medium">{{ selectedLogoFile.name }}</span></span>
-              <img :src="formData.logoUrl" class="w-8 h-8 rounded object-cover ml-2 border" />
-            </div>
-            <button @click="removeCurrentLogo" class="text-red-500 hover:text-red-600 transition">
-              <X class="w-5 h-5" />
-            </button>
-          </div>
-
-          <!-- Existing logo preview (when editing) -->
-          <div v-else-if="formData.logoUrl && !selectedLogoFile"
-            class="mt-3 flex items-center justify-between gap-3 text-sm text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 px-3 py-2 rounded-lg">
-            <div class="flex items-center gap-2">
-              <Image class="w-4 h-4 text-gray-400" />
-              <span>Current logo:</span>
-              <img :src="formData.logoUrl" class="w-8 h-8 rounded object-cover border" />
-            </div>
-            <button @click="removeCurrentLogo" class="text-red-500 hover:text-red-600 transition">
-              <X class="w-5 h-5" />
-            </button>
-          </div>
-        </div>
-
-        <!-- Contact Information -->
-        <div>
-          <div class="flex items-center gap-2 mb-2">
-            <Contact class="w-5 h-5 text-green-500" />
-            <h3 class="text-md font-semibold text-gray-900 dark:text-gray-100">Contact Information</h3>
-          </div>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-600 dark:text-gray-400">Contact Person<span
-                  class="text-red-500">*</span></label>
-              <div class="relative">
-                <UserRound class="absolute left-3 top-3 w-4 h-4 text-gray-400" />
-                <input v-model="formData.contactPerson" type="text" required placeholder="Contact Person"
-                  class="mt-1 block w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
-                                            focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
-              </div>
-            </div>
-
-            <!-- Contact Number -->
-            <div>
-              <label class="block text-sm font-medium text-gray-600 dark:text-gray-400">Contact Number<span
-                  class="text-red-500">*</span></label>
-              <div class="relative">
-                <Phone class="absolute left-3 top-3 w-4 h-4 text-gray-400" />
-                <input v-model="formData.contactNumber" type="text" required placeholder="Phone/Tel"
-                  class="mt-1 block w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
-                                            focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
-              </div>
-            </div>
-
-            <!-- Primary Email -->
-            <div>
-              <label class="block text-sm font-medium text-gray-600 dark:text-gray-400">Primary Email<span
-                  class="text-red-500">*</span></label>
-              <div class="relative">
-                <Mail class="absolute left-3 top-3 w-4 h-4 text-gray-400" />
-                <input v-model="formData.primaryEmail" type="email" required placeholder="example@manufacturer.com"
-                  class="mt-1 block w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
-                                            focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
-              </div>
-            </div>
-
-            <!-- Secondary Email -->
-            <div>
-              <label class="block text-sm font-medium text-gray-600 dark:text-gray-400">Secondary Email
-                (Optional)</label>
-              <div class="relative">
-                <Mail class="absolute left-3 top-3 w-4 h-4 text-gray-400" />
-                <input v-model="formData.secondaryEmail" type="email" placeholder="example@manufacturer.com"
-                  class="mt-1 block w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
-                                            focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
-              </div>
-            </div>
-
-            <!-- Order Email -->
-            <div>
-              <label class="block text-sm font-medium text-gray-600 dark:text-gray-400">Email for Orders<span
-                  class="text-red-500">*</span></label>
-              <div class="relative">
-                <Mail class="absolute left-3 top-3 w-4 h-4 text-gray-400" />
-                <input v-model="formData.orderEmail" type="email" required placeholder="example@manufacturer.com"
-                  class="mt-1 block w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
-                                            focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
-              </div>
-            </div>
-
-            <!-- Eligibility Email -->
-            <div>
-              <label class="block text-sm font-medium text-gray-600 dark:text-gray-400">Email for Eligibility
-                Checking<span class="text-red-500">*</span></label>
-              <div class="relative">
-                <Mail class="absolute left-3 top-3 w-4 h-4 text-gray-400" />
-                <input v-model="formData.eligibilityEmail" type="email" required placeholder="example@manufacturer.com"
-                  class="mt-1 block w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
-                                            focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- File Upload Sections -->
-        <div class="space-y-8">
-          <!-- IVR -->
+          <!-- Contact Information -->
           <div>
             <div class="flex items-center gap-2 mb-2">
-              <FilePenLine class="w-5 h-5 text-green-500" />
-              <h3 class="text-md font-semibold text-gray-900 dark:text-gray-100">IVR Information</h3>
+              <Contact class="w-5 h-5 text-green-500" />
+              <h3 class="text-md font-semibold text-gray-900 dark:text-gray-100">Contact Information</h3>
             </div>
-            <FileUploadSection v-model:selectedFile="selectedIvrFile" v-model:previewUrl="ivrPreviewUrl"
-              v-model:removeFlag="removeIvrFlag" :existingFilename="formData.ivrFilename" label="IVR Form"
-              accept=".pdf,.doc,.docx" @remove-existing="removeExistingIvr" @preview="previewExistingFile('ivr')" />
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-600 dark:text-gray-400">Contact Person<span
+                    class="text-red-500">*</span></label>
+                <div class="relative">
+                  <UserRound class="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+                  <input v-model="formData.contactPerson" type="text" required placeholder="Contact Person"
+                    class="mt-1 block w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
+                                            focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+                </div>
+              </div>
+
+              <!-- Contact Number -->
+              <div>
+                <label class="block text-sm font-medium text-gray-600 dark:text-gray-400">Contact Number<span
+                    class="text-red-500">*</span></label>
+                <div class="relative">
+                  <Phone class="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+                  <input v-model="formData.contactNumber" type="text" required placeholder="Phone/Tel"
+                    @input="(e: Event) => { const target = e.target as HTMLInputElement; formData.contactNumber = formatContactNumber(target.value) }"
+                    class="mt-1 block w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
+                                            focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+                </div>
+              </div>
+
+              <!-- Primary Email -->
+              <div>
+                <label class="block text-sm font-medium text-gray-600 dark:text-gray-400">Primary Email<span
+                    class="text-red-500">*</span></label>
+                <div class="relative">
+                  <Mail class="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+                  <input v-model="formData.primaryEmail" type="email" required placeholder="example@manufacturer.com"
+                    class="mt-1 block w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
+                                            focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+                </div>
+              </div>
+
+              <!-- Secondary Email -->
+              <div>
+                <label class="block text-sm font-medium text-gray-600 dark:text-gray-400">Secondary Email
+                  (Optional)</label>
+                <div class="relative">
+                  <Mail class="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+                  <input v-model="formData.secondaryEmail" type="email" placeholder="example@manufacturer.com"
+                    class="mt-1 block w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
+                                            focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+                </div>
+              </div>
+
+              <!-- Order Email -->
+              <div>
+                <label class="block text-sm font-medium text-gray-600 dark:text-gray-400">Email for Orders<span
+                    class="text-red-500">*</span></label>
+                <div class="relative">
+                  <Mail class="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+                  <input v-model="formData.orderEmail" type="email" required placeholder="example@manufacturer.com"
+                    class="mt-1 block w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
+                                            focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+                </div>
+              </div>
+
+              <!-- Eligibility Email -->
+              <div>
+                <label class="block text-sm font-medium text-gray-600 dark:text-gray-400">Email for Eligibility
+                  Checking<span class="text-red-500">*</span></label>
+                <div class="relative">
+                  <Mail class="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+                  <input v-model="formData.eligibilityEmail" type="email" required
+                    placeholder="example@manufacturer.com"
+                    class="mt-1 block w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
+                                            focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+                </div>
+              </div>
+            </div>
           </div>
 
-          <!-- Order -->
-          <div>
-            <div class="flex items-center gap-2 mb-2">
-              <FilePenLine class="w-5 h-5 text-green-500" />
-              <h3 class="text-md font-semibold text-gray-900 dark:text-gray-100">Order Form</h3>
+          <!-- File Upload Sections -->
+          <div class="space-y-8">
+            <!-- IVR -->
+            <div>
+              <div class="flex items-center gap-2 mb-2">
+                <FilePenLine class="w-5 h-5 text-green-500" />
+                <h3 class="text-md font-semibold text-gray-900 dark:text-gray-100">IVR Information</h3>
+              </div>
+              <FileUploadSection v-model:selectedFile="selectedIvrFile" v-model:previewUrl="ivrPreviewUrl"
+                v-model:removeFlag="removeIvrFlag" :existingFilename="formData.ivrFilename" label="IVR Form"
+                accept=".pdf,.doc,.docx" @remove-existing="removeExistingIvr" @preview="previewExistingFile('ivr')" />
             </div>
-            <FileUploadSection v-model:selectedFile="selectedOrderFile" v-model:previewUrl="orderPreviewUrl"
-              v-model:removeFlag="removeOrderFlag" :existingFilename="formData.orderFilename" label="Order Form"
-              accept=".pdf,.doc,.docx" @remove-existing="removeExistingOrder" @preview="previewExistingFile('order')" />
-          </div>
 
-          <!-- Onboarding -->
-          <div>
-            <div class="flex items-center gap-2 mb-2">
-              <FilePenLine class="w-5 h-5 text-green-500" />
-              <h3 class="text-md font-semibold text-gray-900 dark:text-gray-100">Onboarding File</h3>
+            <!-- Order -->
+            <div>
+              <div class="flex items-center gap-2 mb-2">
+                <FilePenLine class="w-5 h-5 text-green-500" />
+                <h3 class="text-md font-semibold text-gray-900 dark:text-gray-100">Order Form</h3>
+              </div>
+              <FileUploadSection v-model:selectedFile="selectedOrderFile" v-model:previewUrl="orderPreviewUrl"
+                v-model:removeFlag="removeOrderFlag" :existingFilename="formData.orderFilename" label="Order Form"
+                accept=".pdf,.doc,.docx" @remove-existing="removeExistingOrder"
+                @preview="previewExistingFile('order')" />
             </div>
-            <FileUploadSection v-model:selectedFile="selectedOnboardingFile" v-model:previewUrl="onboardingPreviewUrl"
-              v-model:removeFlag="removeOnboardingFlag" :existingFilename="formData.onboardingFilename"
-              label="Onboarding File" accept=".pdf,.doc,.docx" @remove-existing="removeExistingOnboarding"
-              @preview="previewExistingFile('onboarding')" />
+
+            <!-- Onboarding -->
+            <div>
+              <div class="flex items-center gap-2 mb-2">
+                <FilePenLine class="w-5 h-5 text-green-500" />
+                <h3 class="text-md font-semibold text-gray-900 dark:text-gray-100">Onboarding File</h3>
+              </div>
+              <FileUploadSection v-model:selectedFile="selectedOnboardingFile" v-model:previewUrl="onboardingPreviewUrl"
+                v-model:removeFlag="removeOnboardingFlag" :existingFilename="formData.onboardingFilename"
+                label="Onboarding File" accept=".pdf,.doc,.docx" @remove-existing="removeExistingOnboarding"
+                @preview="previewExistingFile('onboarding')" />
+            </div>
           </div>
         </div>
-
-        <!-- Submit Buttons -->
-        <div class="flex justify-end space-x-3 pt-4">
+      </form>
+      <template #actions>
+        <!-- Actions -->
+        <div class="p-4 flex items-center gap-2">
           <button type="button" @click="closeForm"
             class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
             Cancel
           </button>
-          <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+          <button type="button" @click="handleSubmitForm"
+            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
             {{ showCreateForm ? 'Create Manufacturer' : 'Update Manufacturer' }}
           </button>
         </div>
-      </form>
+      </template>
     </BaseModal>
 
     <!-- Logo Cropper Modal -->
     <BaseModal v-model="showLogoCropModal" title="Crop Logo" max-width="520px">
-      <div class="p-6 space-y-6">
+      <div class="space-y-6">
         <!-- Instructions -->
         <div class="text-center">
           <p class="text-sm text-gray-600 dark:text-gray-400">
@@ -669,7 +677,7 @@
 
       <!-- Modal Footer -->
       <template #actions>
-        <div class="flex justify-end gap-3 px-6 pb-6 border-t border-gray-200 dark:border-gray-700 pt-6">
+        <div class="p-4 flex items-center gap-2">
           <button @click="logoCancelCrop"
             class="px-6 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-600 transition-all duration-200 shadow-sm hover:shadow">
             Cancel
@@ -993,7 +1001,7 @@
       </template>
 
       <template #actions>
-        <div class="p-4">
+        <div class="p-4 flex items-center gap-2">
           <button type="button" @click="viewManufacturer = null"
             class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
             Close
@@ -1713,6 +1721,11 @@ function fixWebsite() {
   if (url && !/^https?:\/\//i.test(url)) {
     formData.value.website = 'https://' + url
   }
+}
+
+function formatContactNumber(value: string) {
+  // Allow only numbers, hyphens, parentheses, plus sign, and spaces
+  return value.replace(/[^0-9\-\(\)\+\s]/g, '')
 }
 
 // ──────────────────────────────────────────────────────────────────────────────

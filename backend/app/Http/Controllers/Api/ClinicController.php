@@ -51,10 +51,23 @@ class ClinicController extends Controller
             ->where('u.user_role', 3);
 
         if ($simple) {
-            $clinicians = $query
-                ->select('u.id', DB::raw("CONCAT(u.first_name, ' ', IFNULL(u.middle_name, ''), ' ', u.last_name) as name"), 'u.user_role')
-                ->orderBy('u.created_at', 'desc')
+            // Load User models to get decrypted values
+            $userIds = $query->pluck('u.id');
+            $users = User::whereIn('id', $userIds)
+                ->orderBy('created_at', 'desc')
                 ->get();
+
+            $clinicians = $users->map(function (User $user) {
+                $fullname = $user->first_name .
+                    ($user->middle_name ? ' ' . $user->middle_name . '. ' : ' ') .
+                    $user->last_name;
+
+                return [
+                    'id' => (string) $user->id,
+                    'name' => $fullname,
+                    'user_role' => $user->user_role,
+                ];
+            });
 
             return response()->json($clinicians);
         }
@@ -87,16 +100,29 @@ class ClinicController extends Controller
             ->orderBy('u.created_at', 'desc')
             ->paginate($perPage);
 
-        $formattedUsers = $users->map(function ($user) {
-            $fullname = $user->first_name . 
-                ($user->middle_name ? ' ' . $user->middle_name . '. ' : ' ') . 
-                $user->last_name;
+        // Collect user IDs and load User models to get decrypted values
+        $userIds = $users->pluck('id')->toArray();
+        $userModels = User::whereIn('id', $userIds)->get()->keyBy('id');
+
+        $formattedUsers = $users->map(function ($user) use ($userModels) {
+            // Get decrypted values from User model if available
+            $userModel = $userModels->get($user->id);
+
+            $firstName = $userModel ? $userModel->first_name : $user->first_name;
+            $middleName = $userModel ? $userModel->middle_name : $user->middle_name;
+            $lastName = $userModel ? $userModel->last_name : $user->last_name;
+            $email = $userModel ? $userModel->email : $user->email;
+            $phone = $userModel ? $userModel->phone : $user->phone;
+
+            $fullname = $firstName .
+                ($middleName ? ' ' . $middleName . '. ' : ' ') .
+                $lastName;
 
             return [
                 'id'        => (string) $user->id,
-                'email'     => $user->email,
+                'email'     => $email,
                 'name'      => $fullname,
-                'phone'     => $user->phone,
+                'phone'     => $phone,
                 'role'      => 'Clinician',
                 // 'clinicPubId' => $user->clinic_public_id,
                 'clinicIds' => $user->clinic_ids ? explode(',', $user->clinic_ids) : [],
@@ -228,20 +254,10 @@ class ClinicController extends Controller
     {
         $perPage = $request->query('per_page', 9);
 
-        $clinics = DB::table('woundmed_clinics')
-            // ->where('clinic_status', 0)
-            ->whereNull('deleted_at')
+        $clinics = Clinic::whereNull('deleted_at')
             ->paginate($perPage);
-        
-        $clinics->getCollection()->transform(function ($clinic) {
-            if ($clinic->logo) {
-                $logoName = basename($clinic->logo);
-                $clinic->logo = url('/storage/clinics/logos/' . $logoName);
-            }
-            return $clinic;
-        });
 
-        $formattedClinics = $clinics->map(function ($clinic) {
+        $formattedClinics = $clinics->map(function (Clinic $clinic) {
             $clinicians = DB::table('woundmed_clinic_clinician as cc')
                 ->join('woundmed_users as u', 'cc.clinician_id', '=', 'u.id')
                 ->where('cc.clinic_id', $clinic->clinic_id)
@@ -261,22 +277,11 @@ class ClinicController extends Controller
                     ];
                 });
 
-            return [
-                'id'            => (string) $clinic->clinic_id,
-                'clinicId'      => (string) $clinic->clinic_code,
-                'clinicPubId'   => $clinic->clinic_public_id,
-                'name'          => $clinic->clinic_name,
-                'email'         => $clinic->email,
-                'contactPerson' => $clinic->contact_person ?? null,
-                'phone'         => $clinic->phone ?? null,
-                'address'       => $clinic->address ?? null,
-                'isActive'      => $clinic->clinic_status,
-                'createdAt'     => $clinic->created_at,
-                'updatedAt'     => $clinic->updated_at,
-                'clinicians'    => $clinicians,
-                'logo'          => $clinic->logo ?? null,
-                'assigned_clinician_ids'    => $clinicians,
-            ];
+            $formatted = $this->formatClinicResponse($clinic);
+            $formatted['clinicians'] = $clinicians;
+            $formatted['assigned_clinician_ids'] = $clinicians;
+
+            return $formatted;
         });
 
         return response()->json([
@@ -335,7 +340,7 @@ class ClinicController extends Controller
 
         return response()->json([
             'message' => 'Clinic created successfully',
-            'data' => $clinic,
+            'data' => $this->formatClinicResponse($clinic),
         ]);
     }
 
@@ -386,7 +391,7 @@ class ClinicController extends Controller
 
         return response()->json([
             'message' => 'Clinic updated successfully',
-            'data' => $clinic,
+            'data' => $this->formatClinicResponse($clinic),
         ]);
     }
 
@@ -468,5 +473,26 @@ class ClinicController extends Controller
             ->latest('audit_log_id')
             ->first();
         return $last?->row_hash ?? null;
+    }
+
+    /**
+     * Format clinic response for frontend (handles decryption via attribute access)
+     */
+    private function formatClinicResponse(Clinic $clinic): array
+    {
+        return [
+            'id'            => (string) $clinic->clinic_id,
+            'clinicId'      => (string) $clinic->clinic_code,
+            'clinicPubId'   => $clinic->clinic_public_id,
+            'name'          => $clinic->clinic_name,
+            'email'         => $clinic->email,
+            'contactPerson' => $clinic->contact_person ?? null,
+            'phone'         => $clinic->phone ?? null,
+            'address'       => $clinic->address ?? null,
+            'isActive'      => $clinic->clinic_status,
+            'createdAt'     => $clinic->created_at,
+            'updatedAt'     => $clinic->updated_at,
+            'logo'          => $clinic->logo ?? null,
+        ];
     }
 }

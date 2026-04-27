@@ -7,7 +7,7 @@
 		<div :class="headerWrapperClass">
 			<!-- Header -->
 			<header v-if="!$route.meta.hideHeader"
-				class="sticky top-0 z-10 flex h-16 flex-shrink-0 bg-white dark:bg-gray-800 shadow">
+				class="sticky top-0 z-40 flex h-16 flex-shrink-0 bg-white dark:bg-gray-800 shadow overflow-visible">
 				<!-- Mobile Menu Button -->
 				<button type="button"
 					class="px-4 text-gray-500 dark:text-gray-400 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 lg:hidden"
@@ -21,14 +21,15 @@
 				</button>
 
 				<!-- Header Content -->
-				<div class="flex flex-1 justify-between px-4">
+				<div class="flex flex-1 justify-between px-4" style="overflow: visible;">
 					<div class="flex flex-1">
 						<!-- Add your header content here -->
 					</div>
 					<!-- User Profile Section -->
-					<div class="ml-auto mr-4 flex items-center md:ml-6 space-x-4">
+					<div class="ml-auto mr-2 sm:mr-4 flex items-center md:ml-6 space-x-2 sm:space-x-4"
+						style="overflow: visible;">
 						<!-- Notification Icon -->
-						<div class="relative">
+						<div class="relative" style="overflow: visible;">
 							<button type="button"
 								class="relative p-2 text-gray-400 hover:text-gray-500 dark:text-gray-300 dark:hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 rounded-full"
 								@click="toggleNotifications">
@@ -41,7 +42,7 @@
 							</button>
 
 							<div v-if="isNotificationsOpen"
-								class="absolute right-0 z-10 mt-2 w-96 origin-top-right rounded-lg bg-white dark:bg-gray-800 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+								class="fixed sm:absolute inset-x-4 sm:inset-x-auto sm:right-0 z-50 sm:mt-2 w-auto sm:w-96 origin-top sm:origin-top-right rounded-lg bg-white dark:bg-gray-800 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none max-h-[80vh] sm:max-h-[70vh] overflow-y-auto"
 								role="menu">
 								<div
 									class="px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">

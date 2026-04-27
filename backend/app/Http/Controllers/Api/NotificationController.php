@@ -62,9 +62,14 @@ class NotificationController extends Controller
                         'message'     => "Serial {$log->serial_number} logged at {$clinicName}",
                         'clinic'      => $clinicName,
                         'patient'     => $log->patient?->patient_name ?? null,
-                        'detail'      => $log->graftSize?->size ?? null,
                         'serial'      => $log->serial_number ?? null,
-                        'status'      => $log->log_status === 0 ? 'Active' : 'Disposed',
+                        'status'      => match ((int) $log->log_status) {
+                            0 => 'Used',
+                            1 => 'Unused',
+                            2 => 'Expired',
+                            3 => 'Returned',
+                            default => 'Unknown',
+                        },
                         'created_at'  => $log->logged_at?->toIso8601String(),
                         'is_read'     => in_array($notifId, $readIds),
                     ]);
@@ -196,13 +201,15 @@ class NotificationController extends Controller
 
                 $query->get()->each(function ($invoice) use ($events, $readIds) {
                     $action = match (true) {
-                        $invoice->paid_date !== null    => 'Invoice paid',
+                        $invoice->status === 'pending_review' => 'Invoice pending review',
+                        $invoice->status === 'pending' => 'Invoice payment pending',
+                        $invoice->status === 'paid'     => 'Invoice paid',
                         $invoice->status === 'overdue'  => 'Invoice overdue',
-                        $invoice->status === 'partial'  => 'Partial payment received',
+                        $invoice->status === 'cancelled'  => 'Invoice cancelled',
                         default                         => 'Invoice created',
                     };
 
-                    $statusLabel = ucfirst($invoice->status ?? 'pending');
+                    $statusLabel = ucwords(str_replace('_', ' ', $invoice->status ?? 'pending'));
 
                     $notifId = 'invoice_' . $invoice->id;
 
