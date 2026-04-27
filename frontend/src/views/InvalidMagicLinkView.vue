@@ -36,19 +36,19 @@
 					<!-- Action Buttons -->
 					<div class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
 						<router-link
-							to="/"
+							to="/login"
 							class="btn btn-primary w-full sm:w-auto group flex items-center justify-center space-x-2"
 						>
 							<House class="w-4 h-4" />
 							<span>Return to Home</span>
 						</router-link>
-						<button
+						<!-- <button
 							@click="handleGoBack"
 							class="btn btn-info w-full sm:w-auto group flex items-center justify-center space-x-2"
 						>
 							<ArrowLeft class="w-4 h-4" />
 							<span>Go Back</span>
-						</button>
+						</button> -->
 					</div>
 				</div>
 			</div>
@@ -79,6 +79,8 @@ onMounted(() => {
 
 // Handle going back
 const handleGoBack = () => {
+	console.log('test back');
+	
   	router.back()
 }
 </script>

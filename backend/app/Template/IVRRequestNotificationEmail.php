@@ -30,7 +30,7 @@ class IVRRequestNotificationEmail
 
                     <p style="color: #475569; font-size: 14px; line-height: 1.6;">
                         Hello,<br>
-                        A new IVR request has been submitted in the WoundMed system.
+                        A new IVR request has been submitted in the WOUNDMED INC. system.
                     </p>
 
                     <p style="color: #0f172a; font-size: 14px; margin: 16px 0;">
@@ -58,7 +58,7 @@ class IVRRequestNotificationEmail
                     </p>
 
                     <p style="font-size: 12px; color: #94a3b8; margin-top: 30px; text-align: center;">
-                        This is an automated notification from the WoundMed System.<br>
+                        This is an automated notification from the WOUNDMED INC. System.<br>
                         &copy; ' . date('Y') . ' WOUNDMED INC.
                     </p>
 

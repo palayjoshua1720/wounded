@@ -175,6 +175,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/management/order/getbrands', [OrderController::class, 'getAllPatients']);
     Route::get('/management/order/getgraftsizes', [OrderController::class, 'getAllGraftSizes']);
     Route::get('/management/order/users/getpatients', [OrderController::class, 'getAllPatients']);
+    Route::get('/management/order/download/{id}/downloadOrderFile', [OrderController::class, 'downloadOrderFile']);
 
     Route::post('/management/order/add/neworder', [OrderController::class, 'addNewOrder']);
     Route::put('/management/order/update/{id}/updateorder', [OrderController::class, 'updateOrder']);

@@ -484,8 +484,8 @@ class OrderController extends Controller
         $params = [
             'to'        => $email,
             'from'      => 'noreply@woundmed.com',
-            'from_name' => 'WoundMed Orders',
-            'subject'   => "New Order Created: {$order->orderCode}",
+            'from_name' => 'WOUNDMED INC. Order Notification',
+            'subject'   => "New Order Created ({$order['order_code']})",
             'body'      => $emailBody,
         ];
 
@@ -495,8 +495,8 @@ class OrderController extends Controller
             // 'cc'        => ['woundmedinc@gmail.com', 'info@woundmedinc.com'], // live
             'cc'        => ['prospteam@gmail.com', 'joshuapalay.web2@gmail.com'], // test
             'from'      => 'noreply@woundmed.com',
-            'from_name' => 'WoundMed Orders',
-            'subject'   => "Other Product Order Details: {$order->orderCode}",
+            'from_name' => 'WOUNDMED INC. Other Product Order Notification',
+            'subject'   => "Other Product Order Details ({$order['order_code']})",
             'body'      => $otherProductEmailBody,
         ];
 
@@ -1053,8 +1053,8 @@ class OrderController extends Controller
                 $emailService->send_email([
                     'to'        => $to,
                     'from'      => 'noreply@woundmed.com',
-                    'from_name' => 'WoundMed Admin',
-                    'subject'   => "Follow-Up Required: {$order->order_code}",
+                    'from_name' => 'WOUNDMED INC. Follow up Notification',
+                    'subject'   => "Follow-Up Required ({$order->order_code})",
                     'body'      => $emailBody,
                 ], 'Follow-up email sent', 'Follow-up email sent');
             }
@@ -1418,6 +1418,12 @@ class OrderController extends Controller
             'order_link'          => $orderUrl,
         ]);
 
+        echo '<pre>';
+        print_r($emailBody);
+        echo '<br>';
+        echo '</pre>';
+        exit;
+        
         # prepare other product data to email template
         $otherProductEmailBody = OtherProductOrderNotificationEmail::getTemplate([
             'order_code'          => $order['order_code'],
@@ -1445,7 +1451,7 @@ class OrderController extends Controller
             $mainParams = [
                 'to'        => $toEmail,
                 'from'      => 'noreply@woundmed.com',
-                'from_name' => 'WoundMed Orders',
+                'from_name' => 'WOUNDMED INC. Orders',
                 'subject'   => "New Clinic Order: {$order->order_code}",
                 'body'      => $emailBody,
             ];
@@ -1464,7 +1470,7 @@ class OrderController extends Controller
                     // 'cc'     => ['woundmedinc@gmail.com', 'info@woundmedinc.com'], // ← live
                     'cc'        => ['prospteam@gmail.com', 'joshuapalay.web2@gmail.com'], // ← test / dev
                     'from'      => 'noreply@woundmed.com',
-                    'from_name' => 'WoundMed Orders',
+                    'from_name' => 'WOUNDMED INC. Orders',
                     'subject'   => "Other Products – Clinic Order: {$order->order_code}",
                     'body'      => $otherProductEmailBody,
                 ];
@@ -1638,5 +1644,50 @@ class OrderController extends Controller
         //         'Last-Modified'       => gmdate('D, d M Y H:i:s', $lastMod) . ' GMT',
         //         'Cache-Control'       => 'private, max-age=3600', // 1 hour – adjust as needed
         //     ]);
+    }
+
+    public function downloadOrderFile(Request $request, $id)
+    {
+        try {
+            $manufacturer = Manufacturer::findOrFail($id);
+
+            if (!$manufacturer->order_file || !Storage::disk('private')->exists($manufacturer->order_file)) {
+                return response()->json(['error' => 'File not found'], 404);
+            }
+
+            $path = $manufacturer->order_file;
+
+            // Handle encrypted files (.enc) — decrypt on-the-fly
+            if (str_ends_with($path, '.enc')) {
+                if (!Storage::disk('local')->exists($path)) {
+                    return response()->json(['error' => 'File not found'], 404);
+                }
+                $fileService = app(\App\Services\FileEncryptionService::class);
+                $fileData    = $fileService->decryptAndRetrieve($path, 'local');
+                return response($fileData['contents'], 200, [
+                    'Content-Type'        => 'application/pdf',
+                    'Content-Disposition' => 'inline; filename="order_form.pdf"',
+                    'Content-Length'      => strlen($fileData['contents']),
+                ]);
+            }
+
+            $this->logAudit($request, 'download_order_file', "Downloaded Order file for manufacturer: {$manufacturer->manufacturer_name}", $manufacturer->manufacturer_id, 0, $request->user()?->id);
+
+            // Legacy: plain file
+            if (!Storage::disk('private')->exists($path)) {
+                return response()->json(['error' => 'File not found'], 404);
+            }
+            $filename = basename($path);
+            return Storage::disk('private')->download($path, $filename);
+        } catch (\Throwable $e) {
+            \Log::critical('Downloading Order file failed: ' . $e->getMessage());
+
+            $this->logAudit($request, 'download_order_file', "Failed to download Order file for manufacturer: {$manufacturer->manufacturer_name}", $manufacturer->manufacturer_id, 1, $request->user()?->id);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'An unexpected error occurred.'
+            ], 500);
+        }
     }
 }

@@ -17,7 +17,7 @@
                             <ReceiptText class="w-6 h-6" />
                             Order Details ({{ displayOrder.orderCode }})
                         </h1>
-                        <p class="text-gray-600">WoundMed System - New Order Notification</p>
+                        <p class="text-gray-600">WOUNDMED INC. System - New Order Notification</p>
                     </div>
                     <span class="inline-flex items-center gap-1" :class="getStatusBadge(displayOrder.statusLabel)">
                         <component :is='getStatusIcon(displayOrder.statusLabel)' class="w-4 h-4 "/>
@@ -55,6 +55,9 @@
                             <p class="text-md font-semibold text-gray-900 dark:text-white">
                                 {{ order?.order_number }}
                             </p>
+                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                The internal order number assigned by your manufacturer. 
+                            </p>
                         </div>
                     </div>
                     <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl dark:bg-gray-800">
@@ -63,6 +66,9 @@
                             <p class="text-sm text-gray-500 font-medium">Tracking Number</p>
                             <p class="text-md font-semibold text-gray-900 dark:text-white">
                                 {{ displayOrder.trackingNumber }}
+                            </p>
+                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                This is a system-generated tracking number used to identify and monitor the order within the platform.
                             </p>
                         </div>
                     </div>
@@ -111,7 +117,7 @@
                             required
                         >
                         <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                            Enter the shipping or tracking link provided by the courier (e.g., FedEx, UPS, USPS).
+                            Enter the full shipping or tracking link provided by the courier inlcuding <b>http://</b> or <b>https://</b> at the beginning. (e.g., FedEx, UPS, USPS).
                         </p>
                     </div>
                 </div>
@@ -1022,9 +1028,15 @@ async function handleAction(newStatus: OrderStatus) {
                         ${
                             isBothMissing
                                 ? `
-                                    <ul class="mt-2 text-xs text-red-500 list-disc pl-5">
-                                        <li>Tracking Code (e.g. FedEx / UPS / USPS)</li>
-                                        <li>Tracking Link (courier tracking URL)</li>
+                                    <ul class="mt-4 space-y-2 text-sm">
+                                        <li class="flex items-start gap-2">
+                                            <span class="text-red-500 mt-0.5">•</span>
+                                            <span><strong>Tracking Code</strong> (e.g. FedEx / UPS / USPS)</span>
+                                        </li>
+                                        <li class="flex items-start gap-2">
+                                            <span class="text-red-500 mt-0.5">•</span>
+                                            <span><strong>Tracking Link</strong> (courier tracking URL)</span>
+                                        </li>
                                     </ul>
                                 `
                                 : `

@@ -29,12 +29,13 @@ class OrderNotificationEmail
             $subtotal  = number_format((float) ($item['subtotal'] ?? 0), 2);
 
             $itemsHtml .= "
-            <tr>
-                <td style='padding:8px;border:1px solid #e2e8f0;'>{$brandName}</td>
-                <td style='padding:8px;border:1px solid #e2e8f0;'>{$sizeName}</td>
-                <td style='padding:8px;border:1px solid #e2e8f0;text-align:center;'>{$quantity}</td>
-                <td style='padding:8px;border:1px solid #e2e8f0;text-align:right;'>\${$subtotal}</td>
-            </tr>";
+            <tr style='border-bottom:1px solid #f1f5f9;'>
+                <td style='padding:10px 0;color:#0f172a;font-weight:500;'>{$brandName}</td>
+                <td style='padding:10px 0;color:#475569;'>{$sizeName}</td>
+                <td style='padding:10px 0;text-align:center;color:#0f172a;'>{$quantity}</td>
+                <td style='padding:10px 0;text-align:right;color:#0f172a;'>\${$subtotal}</td>
+            </tr>
+            ";
         }
 
         $graftSubtotal = number_format((float) ($data['graft_subtotal'] ?? 0), 2);
@@ -76,75 +77,100 @@ class OrderNotificationEmail
         */
 
         $html = "
-            <body style='font-family:Arial,sans-serif;background:#f8fafc;margin:0;padding:0;'>
-            <div style='max-width:600px;margin:40px auto;background:#fff;padding:30px;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,0.1);'>
+            <body style='font-family:Arial,sans-serif;background:#f1f5f9;margin:0;padding:0;'>
+            <div style='max-width:580px;margin:40px auto;background:#fff;border-radius:10px;border:1px solid #e2e8f0;overflow:hidden;'>
 
-            <h2 style='color:#1e293b;font-size:20px;margin-bottom:8px;'>New Order Notification</h2>
-            <p style='color:#475569;font-size:14px;margin:0 0 16px 0;'>
-            <strong>Manufacturer:</strong> {$manufacturerName}
-            </p>
-
-            <p style='color:#475569;font-size:14px;line-height:1.6;'>
-            Hello,<br>
-            A new order has been created in the WoundMed System.
-            </p>
-
-            <p style='color:#0f172a;font-size:14px;margin:16px 0;'>
-            <strong>Order Code:</strong> {$orderCode}<br>
-            <strong>Tracking Number:</strong> {$trackingNumber}<br>
-            <strong>Ordering Clinic:</strong> {$clinic}<br>
-            <strong>Ordering Clinician:</strong> {$clinician}<br>
-            <strong>Patient Name:</strong> {$patient}
-            </p>
-
-            <h3 style='margin-top:20px;'>Order Items (Grafts)</h3>
-
-            <table width='100%' cellpadding='0' cellspacing='0' style='border-collapse:collapse;margin-top:10px;'>
-            <thead>
-            <tr>
-            <th style='text-align:left;padding:8px;background:#f1f5f9;border:1px solid #e2e8f0;'>Brand</th>
-            <th style='text-align:left;padding:8px;background:#f1f5f9;border:1px solid #e2e8f0;'>Graft Size</th>
-            <th style='text-align:center;padding:8px;background:#f1f5f9;border:1px solid #e2e8f0;'>Qty</th>
-            <th style='text-align:right;padding:8px;background:#f1f5f9;border:1px solid #e2e8f0;'>Subtotal</th>
-            </tr>
-            </thead>
-            <tbody>
-            {$itemsHtml}
-            </tbody>
-            <tfoot>
-            <tr>
-            <td colspan='3' style='padding:10px;text-align:right;background:#f8fafc;border:1px solid #e2e8f0;font-weight:bold;'>Graft Subtotal:</td>
-            <td style='padding:10px;background:#f8fafc;border:1px solid #e2e8f0;font-weight:bold;text-align:right;'>\${$graftSubtotal}</td>
-            </tr>
-            </tfoot>
-            </table>
-        ";
-
-        $html .= "
-            <div style='margin-top:24px;padding:16px;background:#eff6ff;border-radius:8px;text-align:right;'>
-            <strong style='font-size:18px;color:#1e40af;'>
-            Total Order Amount: \${$graftSubtotal}
-            </strong>
+            <!-- Header -->
+            <div style='padding:22px 28px 18px;border-bottom:1px solid #e2e8f0;'>
+                <p style='font-size:12px;letter-spacing:0.08em;color:#94a3b8;margin:0 0 4px;text-transform:uppercase;'>Woundmed Inc.</p>
+                <h2 style='font-size:18px;font-weight:600;color:#0f172a;margin:0;'>New Order</h2>
             </div>
 
-            <p style='color:#475569;font-size:13px;margin-top:20px;line-height:1.6;background:#f1f5f9;padding:10px 12px;border-radius:6px;border-left:4px solid #2563eb;'>
-            <strong>Note:</strong> Please review this order and update the status accordingly (Acknowledged, Shipped, or Delivered) in the WoundMed system.
-            </p>
+            <!-- Body -->
+            <div style='padding:20px 28px 0;'>
+                <p style='font: size 15px;px;color:#334155;margin:0 0 18px;line-height:1.6;'>
+                Hello <strong style='color:#0f172a;'>{$manufacturerName}</strong>,<br>
+                A new order has been placed in the system.
+                </p>
 
-            <a href='{$orderLink}' style='display:inline-block;padding:12px 20px;background:#2563eb;color:#fff;text-decoration:none;border-radius:6px;font-weight:bold;margin-top:20px;'>
-            View Order Details
-            </a>
+                <!-- Info Cards -->
+                <table width='100%' cellpadding='0' cellspacing='8' style='margin-bottom:20px;'>
+                <tr>
+                    <td width='50%' style='background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0;padding:10px 14px;vertical-align:top;'>
+                    <p style='font-size:12px;color:#94a3b8;margin:0 0 3px;letter-spacing:0.04em;'>Order code</p>
+                    <p style='font-size:14px;font-weight:600;color:#0f172a;margin:0;letter-spacing:0.02em;'>{$orderCode}</p>
+                    </td>
+                    <td width='50%' style='background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0;padding:10px 14px;vertical-align:top;'>
+                    <p style='font-size:12px;color:#94a3b8;margin:0 0 3px;letter-spacing:0.04em;'>Tracking number</p>
+                    <p style='font-size:14px;font-weight:600;color:#0f172a;margin:0;letter-spacing:0.02em;'>{$trackingNumber}</p>
+                    </td>
+                </tr>
+                <tr>
+                    <td style='background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0;padding:10px 14px;vertical-align:top;'>
+                    <p style='font-size:12px;color:#94a3b8;margin:0 0 3px;letter-spacing:0.04em;'>Ordering clinic</p>
+                    <p style='font-size:14px;font-weight:600;color:#0f172a;margin:0;'>{$clinic}</p>
+                    </td>
+                    <td style='background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0;padding:10px 14px;vertical-align:top;'>
+                    <p style='font-size:12px;color:#94a3b8;margin:0 0 3px;letter-spacing:0.04em;'>Clinician</p>
+                    <p style='font-size:14px;font-weight:600;color:#0f172a;margin:0;'>{$clinician}</p>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan='2' style='background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0;padding:10px 14px;'>
+                    <p style='font-size:12px;color:#94a3b8;margin:0 0 3px;letter-spacing:0.04em;'>Patient name</p>
+                    <p style='font-size:14px;font-weight:600;color:#0f172a;margin:0;'>{$patient}</p>
+                    </td>
+                </tr>
+                </table>
 
-            <p style='font-size:12px;color:#94a3b8;margin-top:30px;text-align:center;'>
-            This is an automated notification from the WoundMed System.<br>
-            © {$year} WOUNDMED INC.
-            </p>
+                <!-- Order Items -->
+                <p style='font-size:12px;font-weight:700;color:#64748b;margin:0 0 10px;text-transform:uppercase;letter-spacing:0.08em;'>Order items (grafts)</p>
+                <table width='100%' cellpadding='0' cellspacing='0' style='border-collapse:collapse;font-size:13px;margin-bottom:20px;'>
+                <thead>
+                    <tr style='border-bottom:1px solid #e2e8f0;'>
+                    <th style='text-align:left;padding:8px 0;color:#94a3b8;font-weight:500;font-size:13px;width:38%;'>Brand</th>
+                    <th style='text-align:left;padding:8px 0;color:#94a3b8;font-weight:500;font-size:13px;width:28%;'>Graft size</th>
+                    <th style='text-align:center;padding:8px 0;color:#94a3b8;font-weight:500;font-size:13px;width:14%;'>Qty</th>
+                    <th style='text-align:right;padding:8px 0;color:#94a3b8;font-weight:500;font-size:13px;width:20%;'>Subtotal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {$itemsHtml}
+                </tbody>
+                <tfoot>
+                    <tr>
+                    <td colspan='3' style='padding:12px 0 4px;text-align:right;color:#64748b;font-size:13px;font-weight:500;'>Total</td>
+                    <td style='padding:12px 0 4px;text-align:right;font-size:16px;font-weight:700;color:#0f172a;'>\${$graftSubtotal}</td>
+                    </tr>
+                </tfoot>
+                </table>
+            </div>
+
+            <!-- Footer Note + CTA -->
+            <div style='padding:16px 28px;border-top:1px solid #e2e8f0;background:#f8fafc;'>
+                <p style='font-size:12px;color:#475569;margin:0 0 14px;line-height:1.7;'>
+                Please review this order and update its status &mdash; <strong style='color:#334155;'>Acknowledged</strong>, <strong style='color:#334155;'>Shipped</strong>, or <strong style='color:#334155;'>Delivered</strong> &mdash; in the WOUNDMED INC. system.
+                </p>
+                <a href='{$orderLink}' style='display:inline-block;padding:9px 18px;background:#0f172a;color:#fff;text-decoration:none;border-radius:6px;font-size:13px;font-weight:600;'>
+                View order details
+                </a>
+            </div>
+
+            <!-- Bottom Footer -->
+            <div style='padding:14px 28px;border-top:1px solid #e2e8f0;background:#fff;'>
+                <p style='font-size:11px;color:#94a3b8;margin:0;text-align:center;'>
+                This is an automated notification from the WOUNDMED INC. system.
+                <span>
+                &copy; {$year} WOUNDMED INC.
+                </span>
+                </p>
+            </div>
 
             </div>
             </body>
-        ";
+            ";
 
-        return $html;
+            return $html;
     }
 
 }
