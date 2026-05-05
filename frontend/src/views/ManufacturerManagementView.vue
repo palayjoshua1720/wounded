@@ -62,7 +62,7 @@
                 <img :src="manufacturer.logoUrl" :alt="`${manufacturer.manufacturerName} logo`"
                   class="w-full h-full object-cover" />
               </div>
-              <div v-else class="p-2 bg-green-100 rounded-lg">
+              <div v-else class="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center">
                 <Factory class="w-5 h-5 text-green-600" />
               </div>
               <div class="flex flex-col">
@@ -115,7 +115,7 @@
               title="Archive">
               <Archive class="w-4 h-4" />
             </button>
-            <button v-if="manufacturer.manufacturerStatus === 2" @click="handleDeleteManufacturer(manufacturer.id)"
+            <button v-if="manufacturer.manufacturerStatus === 2" @click="handleDeleteManufacturer(manufacturer)"
               class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300" title="Delete">
               <Trash2 class="w-4 h-4" />
             </button>
@@ -338,7 +338,7 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label class="block text-sm font-medium text-gray-600 dark:text-gray-400">
-                  Name<span class="text-red-500">*</span>
+                  Name <span class="text-red-500">*</span>
                 </label>
                 <div class="relative">
                   <Factory class="absolute left-3 top-3 w-4 h-4 text-gray-400" />
@@ -440,7 +440,7 @@
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label class="block text-sm font-medium text-gray-600 dark:text-gray-400">Contact Person<span
+                <label class="block text-sm font-medium text-gray-600 dark:text-gray-400">Contact Person <span
                     class="text-red-500">*</span></label>
                 <div class="relative">
                   <UserRound class="absolute left-3 top-3 w-4 h-4 text-gray-400" />
@@ -452,7 +452,7 @@
 
               <!-- Contact Number -->
               <div>
-                <label class="block text-sm font-medium text-gray-600 dark:text-gray-400">Contact Number<span
+                <label class="block text-sm font-medium text-gray-600 dark:text-gray-400">Contact Number <span
                     class="text-red-500">*</span></label>
                 <div class="relative">
                   <Phone class="absolute left-3 top-3 w-4 h-4 text-gray-400" />
@@ -465,7 +465,7 @@
 
               <!-- Primary Email -->
               <div>
-                <label class="block text-sm font-medium text-gray-600 dark:text-gray-400">Primary Email<span
+                <label class="block text-sm font-medium text-gray-600 dark:text-gray-400">Primary Email <span
                     class="text-red-500">*</span></label>
                 <div class="relative">
                   <Mail class="absolute left-3 top-3 w-4 h-4 text-gray-400" />
@@ -489,7 +489,7 @@
 
               <!-- Order Email -->
               <div>
-                <label class="block text-sm font-medium text-gray-600 dark:text-gray-400">Email for Orders<span
+                <label class="block text-sm font-medium text-gray-600 dark:text-gray-400">Email for Orders <span
                     class="text-red-500">*</span></label>
                 <div class="relative">
                   <Mail class="absolute left-3 top-3 w-4 h-4 text-gray-400" />
@@ -502,7 +502,7 @@
               <!-- Eligibility Email -->
               <div>
                 <label class="block text-sm font-medium text-gray-600 dark:text-gray-400">Email for Eligibility
-                  Checking<span class="text-red-500">*</span></label>
+                  Checking <span class="text-red-500">*</span></label>
                 <div class="relative">
                   <Mail class="absolute left-3 top-3 w-4 h-4 text-gray-400" />
                   <input v-model="formData.eligibilityEmail" type="email" required
@@ -515,58 +515,66 @@
           </div>
 
           <!-- File Upload Sections -->
-          <div class="space-y-8">
-            <!-- IVR -->
-            <div>
-              <div class="flex items-center gap-2 mb-2">
-                <FilePenLine class="w-5 h-5 text-green-500" />
-                <h3 class="text-md font-semibold text-gray-900 dark:text-gray-100">IVR Information</h3>
-              </div>
-              <FileUploadSection v-model:selectedFile="selectedIvrFile" v-model:previewUrl="ivrPreviewUrl"
-                v-model:removeFlag="removeIvrFlag" :existingFilename="formData.ivrFilename"
-                :existingFileExtension="formData.ivrFileExtension" label="IVR Form" accept=".pdf,.doc,.docx"
-                @remove-existing="removeExistingIvr" @preview="previewExistingFile('ivr')" />
+          <div class="space-y-3">
+            <div class="flex items-center gap-2 pb-2 border-b border-gray-200 dark:border-gray-700">
+              <FilePenLine class="w-3.5 h-3.5 text-green-600" />
+              <span class="text-xs font-medium uppercase tracking-widest text-gray-400 dark:text-gray-500">Document
+                Uploads</span>
             </div>
+            <div class="space-y-4">
 
-            <!-- Order -->
-            <div>
-              <div class="flex items-center gap-2 mb-2">
-                <FilePenLine class="w-5 h-5 text-green-500" />
-                <h3 class="text-md font-semibold text-gray-900 dark:text-gray-100">Order Form</h3>
+              <!-- IVR -->
+              <div class="space-y-1">
+                <label class="text-xs font-medium text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                  IVR Form <span class="text-red-500">*</span>
+                </label>
+                <FileUploadSection v-model:selectedFile="selectedIvrFile" v-model:previewUrl="ivrPreviewUrl"
+                  v-model:removeFlag="removeIvrFlag" :existingFilename="formData.ivrFilename"
+                  :existingFileExtension="formData.ivrFileExtension" label="IVR Form" accept=".pdf,.doc,.docx"
+                  @remove-existing="removeExistingIvr" @preview="previewExistingFile('ivr')" />
               </div>
-              <FileUploadSection v-model:selectedFile="selectedOrderFile" v-model:previewUrl="orderPreviewUrl"
-                v-model:removeFlag="removeOrderFlag" :existingFilename="formData.orderFilename"
-                :existingFileExtension="formData.orderFileExtension" label="Order Form" accept=".pdf,.doc,.docx"
-                @remove-existing="removeExistingOrder" @preview="previewExistingFile('order')" />
-            </div>
 
-            <!-- Onboarding -->
-            <div>
-              <div class="flex items-center gap-2 mb-2">
-                <FilePenLine class="w-5 h-5 text-green-500" />
-                <h3 class="text-md font-semibold text-gray-900 dark:text-gray-100">Onboarding File</h3>
+              <!-- Order Form -->
+              <div class="space-y-1">
+                <label class="text-xs font-medium text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                  Order Form <span class="text-red-500">*</span>
+                </label>
+                <FileUploadSection v-model:selectedFile="selectedOrderFile" v-model:previewUrl="orderPreviewUrl"
+                  v-model:removeFlag="removeOrderFlag" :existingFilename="formData.orderFilename"
+                  :existingFileExtension="formData.orderFileExtension" label="Order Form" accept=".pdf,.doc,.docx"
+                  @remove-existing="removeExistingOrder" @preview="previewExistingFile('order')" />
               </div>
-              <FileUploadSection v-model:selectedFile="selectedOnboardingFile" v-model:previewUrl="onboardingPreviewUrl"
-                v-model:removeFlag="removeOnboardingFlag" :existingFilename="formData.onboardingFilename"
-                :existingFileExtension="formData.onboardingFileExtension" label="Onboarding File"
-                accept=".pdf,.doc,.docx" @remove-existing="removeExistingOnboarding"
-                @preview="previewExistingFile('onboarding')" />
-            </div>
-          </div>
 
-          <!-- Submit Buttons -->
-          <div class="flex justify-end space-x-3 pt-4">
-            <button type="button" @click="closeForm"
-              class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
-              Cancel
-            </button>
-            <button type="button" @click="handleSubmitForm"
-              class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-              {{ showCreateForm ? 'Create Manufacturer' : 'Update Manufacturer' }}
-            </button>
+              <!-- Onboarding File -->
+              <div class="space-y-1">
+                <label class="text-xs font-medium text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                  Onboarding File <span class="text-red-500">*</span>
+                </label>
+                <FileUploadSection v-model:selectedFile="selectedOnboardingFile"
+                  v-model:previewUrl="onboardingPreviewUrl" v-model:removeFlag="removeOnboardingFlag"
+                  :existingFilename="formData.onboardingFilename"
+                  :existingFileExtension="formData.onboardingFileExtension" label="Onboarding File"
+                  accept=".pdf,.doc,.docx" @remove-existing="removeExistingOnboarding"
+                  @preview="previewExistingFile('onboarding')" />
+              </div>
+
+            </div>
           </div>
         </div>
-        </form>
+      </form>
+      <template #actions>
+        <!-- Actions -->
+        <div class="p-4 flex items-center gap-2">
+          <button type="button" @click="closeForm"
+            class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
+            Cancel
+          </button>
+          <button type="button" @click="handleSubmitForm"
+            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+            {{ showCreateForm ? 'Create Manufacturer' : 'Update Manufacturer' }}
+          </button>
+        </div>
+      </template>
     </BaseModal>
 
     <!-- Logo Cropper Modal -->
@@ -697,11 +705,12 @@
           <!-- Header -->
           <div class="flex items-center space-x-4">
             <!-- Logo -->
-            <div v-if="viewManufacturer.logoUrl" class="w-16 h-16 rounded-full overflow-hidden bg-gray-100">
+            <!-- <div v-if="viewManufacturer.logoUrl" class="w-16 h-16 rounded-full overflow-hidden bg-gray-100"> -->
+            <div v-if="viewManufacturer.logoUrl" class="w-16 h-16 rounded-lg overflow-hidden bg-gray-100">
               <img :src="viewManufacturer.logoUrl" :alt="`${viewManufacturer.manufacturerName} logo`"
                 class="w-full h-full object-cover" />
             </div>
-            <div v-else class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+            <div v-else class="w-16 h-16 bg-green-100 rounded-lg flex items-center justify-center">
               <Factory class="w-8 h-8 text-green-500" />
             </div>
 
@@ -846,8 +855,7 @@
                 <div class="flex items-center justify-between mb-3">
                   <div class="flex items-center space-x-3">
                     <div class="w-10 h-10 rounded-lg bg-gray-50 dark:bg-gray-700 flex items-center justify-center">
-                      <FileText :class="getFileTypeIcon(viewManufacturer.ivrFileExtension || 'pdf')"
-                        class="w-5 h-5" />
+                      <FileText :class="getFileTypeIcon(viewManufacturer.ivrFileExtension || 'pdf')" class="w-5 h-5" />
                     </div>
                     <div>
                       <h4 class="text-sm font-semibold text-gray-900 dark:text-white">IVR Form</h4>
@@ -1702,11 +1710,14 @@ async function handleArchiveManufacturer(id: number) {
   }
 }
 
-async function handleDeleteManufacturer(id: number) {
+async function handleDeleteManufacturer(manufacturer: Manufacturer) {
   try {
     const result = await Swal.fire({
       title: 'Delete Manufacturer?',
-      text: "This action cannot be undone.",
+      html: `
+        Are you sure you want to delete <b>${manufacturer.manufacturerName}</b>?<br>
+        <span style="color:#d33;">This action cannot be undone!</span>
+      `,
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#d33',
@@ -1715,8 +1726,8 @@ async function handleDeleteManufacturer(id: number) {
       cancelButtonText: 'Cancel'
     })
     if (result.isConfirmed) {
-      await api.delete(`/management/manufacturers/${id}`)
-      manufacturers.value = manufacturers.value.filter(m => m.id !== id)
+      await api.delete(`/management/manufacturers/${manufacturer.id}`)
+      manufacturers.value = manufacturers.value.filter(m => m.id !== manufacturer.id)
       toast.success('Manufacturer deleted successfully')
     }
   } catch (error) {
