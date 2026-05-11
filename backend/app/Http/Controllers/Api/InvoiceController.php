@@ -140,6 +140,103 @@ class InvoiceController extends Controller
 
         $updateData = $requestData;
         
+        // Validate serials if provided
+        if ($request->has('serials')) {
+            $serials = $request->serials ?? [];
+            if (is_array($serials)) {
+                // Filter empty values first
+                $serials = array_filter($serials, function($serial) {
+                    return !empty($serial) && is_string($serial);
+                });
+                
+                // Check for duplicate serials
+                $uniqueSerials = array_unique(array_map('strtoupper', array_map('trim', $serials)));
+                if (count($uniqueSerials) < count($serials)) {
+                    // Found duplicates - collect them for error message
+                    $duplicates = [];
+                    $seen = [];
+                    foreach ($serials as $serial) {
+                        $normalized = strtoupper(trim($serial));
+                        if (in_array($normalized, $seen)) {
+                            $duplicates[] = $serial;
+                        } else {
+                            $seen[] = $normalized;
+                        }
+                    }
+                    return response()->json([
+                        'errors' => [
+                            'serials' => ['Duplicate serial number(s) detected: ' . implode(', ', array_unique($duplicates)) . '. Each serial must be unique.']
+                        ]
+                    ], 422);
+                }
+                
+                $updateData['serials'] = array_values($uniqueSerials);
+            }
+        }
+        
+        // Validate line_items serials if provided
+        if ($request->has('line_items')) {
+            $lineItems = $requestData['line_items'] ?? [];
+            
+            if (!empty($lineItems)) {
+                $lineItemSerials = [];
+                $lineItemDuplicates = [];
+                
+                foreach ($lineItems as $item) {
+                    if (!empty($item['serial']) && is_string($item['serial'])) {
+                        $normalizedSerial = strtoupper(trim($item['serial']));
+                        if (in_array($normalizedSerial, $lineItemSerials)) {
+                            $lineItemDuplicates[] = $item['serial'];
+                        } else {
+                            $lineItemSerials[] = $normalizedSerial;
+                        }
+                    }
+                }
+                
+                if (!empty($lineItemDuplicates)) {
+                    return response()->json([
+                        'errors' => [
+                            'line_items' => ['Duplicate serial number(s) in line items: ' . implode(', ', array_unique($lineItemDuplicates)) . '. Each serial must be unique.']
+                        ]
+                    ], 422);
+                }
+            }
+        }
+        
+        // Check if any serial numbers already exist in OTHER invoices
+        $serials = $updateData['serials'] ?? [];
+        $lineItems = $requestData['line_items'] ?? [];
+        $allSerialNumbers = array_merge($serials, array_column(array_filter($lineItems, fn($item) => !empty($item['serial'])), 'serial'));
+        
+        if (!empty($allSerialNumbers)) {
+            $existingSerials = [];
+            
+            foreach ($allSerialNumbers as $serial) {
+                if (!empty($serial) && is_string($serial)) {
+                    // Search for this serial in any existing invoice EXCEPT the current one being updated
+                    // Check both in serials array and line_items serials
+                    $existingInvoice = Invoice::where('id', '!=', $invoice->id)
+                        ->where(function($query) use ($serial) {
+                            $query->whereRaw("UPPER(JSON_UNQUOTE(JSON_SEARCH(serials, 'one', ?))) IS NOT NULL", [$serial])
+                                ->orWhereRaw("JSON_SEARCH(line_items, 'all', ?) IS NOT NULL", [$serial]);
+                        })
+                        ->first();
+                    
+                    if ($existingInvoice) {
+                        $existingSerials[] = $serial;
+                    }
+                }
+            }
+            
+            if (!empty($existingSerials)) {
+                return response()->json([
+                    'errors' => [
+                        'serials' => ['Serial number(s) already exist in other invoices: ' . implode(', ', array_unique($existingSerials)) . '. Each serial must be unique across all invoices.']
+                    ]
+                ], 422);
+            }
+        }
+        
         // Handle bill_to field specifically
         if ($request->has('bill_to')) {
             $updateData['bill_to'] = $request->bill_to;
@@ -1347,10 +1444,33 @@ class InvoiceController extends Controller
         // Ensure serials are unique and properly formatted
         $serials = $request->serials ?? [];
         if (is_array($serials)) {
-            // Remove duplicates and empty values
-            $serials = array_unique(array_filter($serials, function($serial) {
+            // Filter empty values first
+            $serials = array_filter($serials, function($serial) {
                 return !empty($serial) && is_string($serial);
-            }));
+            });
+            
+            // Check for duplicate serials
+            $uniqueSerials = array_unique(array_map('strtoupper', array_map('trim', $serials)));
+            if (count($uniqueSerials) < count($serials)) {
+                // Found duplicates - collect them for error message
+                $duplicates = [];
+                $seen = [];
+                foreach ($serials as $serial) {
+                    $normalized = strtoupper(trim($serial));
+                    if (in_array($normalized, $seen)) {
+                        $duplicates[] = $serial;
+                    } else {
+                        $seen[] = $normalized;
+                    }
+                }
+                return response()->json([
+                    'errors' => [
+                        'serials' => ['Duplicate serial number(s) detected: ' . implode(', ', array_unique($duplicates)) . '. Each serial must be unique.']
+                    ]
+                ], 422);
+            }
+            
+            $serials = array_values(array_unique($serials));
         } else {
             $serials = [];
         }
@@ -1358,6 +1478,61 @@ class InvoiceController extends Controller
         // Process line items
         $lineItems = $requestData['line_items'] ?? [];
         $hasLineItems = !empty($lineItems);
+        
+        // Validate line_items serials are unique
+        if (!empty($lineItems)) {
+            $lineItemSerials = [];
+            $lineItemDuplicates = [];
+            
+            foreach ($lineItems as $item) {
+                if (!empty($item['serial']) && is_string($item['serial'])) {
+                    $normalizedSerial = strtoupper(trim($item['serial']));
+                    if (in_array($normalizedSerial, $lineItemSerials)) {
+                        $lineItemDuplicates[] = $item['serial'];
+                    } else {
+                        $lineItemSerials[] = $normalizedSerial;
+                    }
+                }
+            }
+            
+            if (!empty($lineItemDuplicates)) {
+                return response()->json([
+                    'errors' => [
+                        'line_items' => ['Duplicate serial number(s) in line items: ' . implode(', ', array_unique($lineItemDuplicates)) . '. Each serial must be unique.']
+                    ]
+                ], 422);
+            }
+        }
+        
+        // Check if any serial numbers already exist in other invoices
+        $allSerialNumbers = array_merge($serials, array_column(array_filter($lineItems, fn($item) => !empty($item['serial'])), 'serial'));
+        
+        if (!empty($allSerialNumbers)) {
+            $existingSerials = [];
+            
+            foreach ($allSerialNumbers as $serial) {
+                if (!empty($serial) && is_string($serial)) {
+                    $normalizedSerial = strtoupper(trim($serial));
+                    
+                    // Search for this serial in any existing invoice
+                    $existingInvoice = Invoice::whereRaw("UPPER(JSON_UNQUOTE(JSON_SEARCH(serials, 'one', ?))) IS NOT NULL", [$serial])
+                        ->orWhereRaw("JSON_SEARCH(line_items, 'all', ?) IS NOT NULL", [$serial])
+                        ->first();
+                    
+                    if ($existingInvoice) {
+                        $existingSerials[] = $serial;
+                    }
+                }
+            }
+            
+            if (!empty($existingSerials)) {
+                return response()->json([
+                    'errors' => [
+                        'serials' => ['Serial number(s) already exist in other invoices: ' . implode(', ', array_unique($existingSerials)) . '. Each serial must be unique across all invoices.']
+                    ]
+                ], 422);
+            }
+        }
         
         $invoice = Invoice::create([
             'invoice_number' => $request->invoice_number,

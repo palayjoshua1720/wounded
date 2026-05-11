@@ -222,8 +222,8 @@
             <span class="font-medium">{{ extractionPreview.serials?.length || 0 }}</span>
           </div>
           <div v-if="extractionPreview.line_items && extractionPreview.line_items.length > 0" class="mt-3">
-            <h5 class="font-medium text-gray-900 dark:text-white mb-2">Line Items ({{ extractionPreview.line_items.length }}):</h5>
-            <div class="max-h-32 overflow-y-auto">
+            <h5 class="font-medium text-gray-900 dark:text-white mb-2">Product Items ({{ extractionPreview.line_items.length }}):</h5>
+            <div>
               <div v-for="(item, index) in extractionPreview.line_items" :key="index"
                 class="flex justify-between text-xs py-1 border-b border-gray-200 dark:border-gray-700">
                 <span class="text-gray-600 dark:text-gray-400 truncate mr-2">{{ item.description }}</span>
@@ -309,10 +309,10 @@
         </div>
       </div>
 
-      <!-- Line Items -->
+      <!-- Product Items -->
       <div class="border-t pt-4">
         <div class="flex justify-between items-center mb-3">
-          <h4 class="text-lg font-medium text-gray-900 dark:text-white">Line Items</h4>
+          <h4 class="text-lg font-medium text-gray-900 dark:text-white">Product Items</h4>
           <button type="button" @click="addProduct"
             class="flex items-center px-2 py-1 text-sm bg-blue-100 text-blue-700 rounded hover:bg-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:hover:bg-blue-900/40">
             <Plus class="w-4 h-4 mr-1" />
@@ -360,6 +360,9 @@
                 <Minus class="w-4 h-4 mr-1" />
                 Remove
               </button>
+              <span v-else class="text-gray-500 dark:text-gray-400 text-sm italic">
+                At least 1 product item required
+              </span>
             </div>
           </div>
         </div>
@@ -419,11 +422,11 @@
         </div>
       </div>
 
-      <!-- Line Items -->
+      <!-- Product Items -->
       <div class="border-t pt-4">
         <h4 class="text-lg font-medium text-gray-900 dark:text-white mb-3">Product Details</h4>
-        <div class="max-h-96 overflow-y-auto">
-          <!-- Display line items if available -->
+        <div>
+          <!-- Display product Items if available -->
           <div v-if="selectedInvoice.has_line_items && selectedInvoice.line_items && selectedInvoice.line_items.length > 0">
             <div v-for="(item, index) in selectedInvoice.line_items" :key="index"
               class="py-2 border-b border-gray-200 dark:border-gray-700 text-sm">
@@ -442,8 +445,8 @@
               </div>
             </div>
           </div>
-          <!-- Fallback to parsing notes if no line items -->
-          <div v-else-if="selectedInvoice.notes && (selectedInvoice.notes.includes('Line Items:') || selectedInvoice.notes.includes('Line Items :'))">
+          <!-- Fallback to parsing notes if no product Items -->
+          <div v-else-if="selectedInvoice.notes && (selectedInvoice.notes.includes('Product Items:') || selectedInvoice.notes.includes('Product Items :'))">
             <div v-for="(product, index) in parseLineItems(selectedInvoice.notes)" :key="index"
               class="py-2 border-b border-gray-200 dark:border-gray-700 text-sm">
               <div class="font-medium text-gray-900 dark:text-white">{{ product.size ? product.name + ' ' + product.size : product.name }}</div>
@@ -591,17 +594,17 @@
           </div>
         </div>
 
-        <!-- Line Items -->
+        <!-- Product Items -->
         <div class="border-t pt-4">
           <div class="flex justify-between items-center mb-3">
-            <h4 class="text-lg font-medium text-gray-900 dark:text-white">Line Items</h4>
+            <h4 class="text-lg font-medium text-gray-900 dark:text-white">Product Items</h4>
             <button @click="addLineItem"
               class="flex items-center px-2 py-1 text-sm bg-blue-100 text-blue-700 rounded hover:bg-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:hover:bg-blue-900/40">
               <Plus class="w-4 h-4 mr-1" />
               Add Item
             </button>
           </div>
-          <div class="max-h-96 overflow-y-auto space-y-3">
+          <div class="space-y-3">
             <div v-for="(item, index) in extractedInvoiceData.line_items" :key="index"
               class="p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800">
               <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-2">
@@ -637,10 +640,13 @@
                 </div>
               </div>
               <div class="flex justify-end">
-                <button @click="removeLineItem(index)" class="text-red-600 hover:text-red-800 text-sm flex items-center">
+                <button v-if="extractedInvoiceData.line_items.length > 1" @click="removeLineItem(index)" class="text-red-600 hover:text-red-800 text-sm flex items-center">
                   <Minus class="w-4 h-4 mr-1" />
                   Remove
                 </button>
+                <span v-else class="text-gray-500 dark:text-gray-400 text-sm italic">
+                  At least 1 product item required
+                </span>
               </div>
             </div>
           </div>
@@ -764,7 +770,7 @@
               {{ formatCurrency(calculateEditTotalAmount()) }}
             </div>
             <input v-model.number="invoiceToEdit.amount" type="hidden" />
-            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Automatically calculated from line items</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Automatically calculated from product Items.</p>
           </div>
 
           <div>
@@ -787,17 +793,17 @@
           </div>
         </div>
 
-        <!-- Line Items -->
+        <!-- Product Items -->
         <div class="border-t pt-4">
           <div class="flex justify-between items-center mb-3">
-            <h4 class="text-lg font-medium text-gray-900 dark:text-white">Line Items</h4>
+            <h4 class="text-lg font-medium text-gray-900 dark:text-white">Product Items</h4>
             <button type="button" @click="addEditLineItem"
               class="flex items-center px-2 py-1 text-sm bg-blue-100 text-blue-700 rounded hover:bg-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:hover:bg-blue-900/40">
               <Plus class="w-4 h-4 mr-1" />
               Add Item
             </button>
           </div>
-          <div class="max-h-96 overflow-y-auto space-y-3">
+          <div class="space-y-3">
             <div v-for="(item, index) in invoiceToEdit.line_items" :key="index"
               class="p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800">
               <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-2">
@@ -833,11 +839,14 @@
                 </div>
               </div>
               <div class="flex justify-end">
-                <button type="button" @click="removeEditLineItem(index)"
+                <button v-if="invoiceToEdit.line_items.length > 1" type="button" @click="removeEditLineItem(index)"
                   class="text-red-600 hover:text-red-800 text-sm flex items-center">
                   <Minus class="w-4 h-4 mr-1" />
                   Remove
                 </button>
+                <span v-else class="text-gray-500 dark:text-gray-400 text-sm italic">
+                  At least 1 product item required
+                </span>
               </div>
             </div>
           </div>
@@ -1304,6 +1313,35 @@ async function confirmDeleteInvoice(invoice: Invoice) {
 async function handleEditInvoiceSubmit() {
   if (!invoiceToEdit.value) return
 
+  // Validate that all serial numbers are unique
+  const allSerialNumbers: string[] = []
+  const duplicateSerials: string[] = []
+
+  if (invoiceToEdit.value.line_items && invoiceToEdit.value.line_items.length > 0) {
+    invoiceToEdit.value.line_items.forEach((item) => {
+      if (item.serial && typeof item.serial === 'string' && item.serial.trim() !== '') {
+        const trimmedSerial = item.serial.trim().toUpperCase()
+        if (allSerialNumbers.includes(trimmedSerial)) {
+          if (!duplicateSerials.includes(trimmedSerial)) {
+            duplicateSerials.push(trimmedSerial)
+          }
+        } else {
+          allSerialNumbers.push(trimmedSerial)
+        }
+      }
+    })
+  }
+
+  if (duplicateSerials.length > 0) {
+    showAlert(
+      `Duplicate serial number(s) detected: ${duplicateSerials.join(', ')}. Each product item must have a unique serial number.`,
+      'error',
+      5000
+    )
+    submitting.value = false
+    return
+  }
+
   const invoiceData = JSON.parse(JSON.stringify(invoiceToEdit.value))
   invoiceData.amount = calculateEditTotalAmount()
   invoiceData.serials = extractSerialsFromLineItems(invoiceData.line_items)
@@ -1334,6 +1372,8 @@ async function handleEditInvoiceSubmit() {
         const errors = data.errors
         if (errors.invoice_number) {
           errorMessage = `Invoice number error: ${errors.invoice_number[0]}`
+        } else if (errors.serials) {
+          errorMessage = `Serial number error: ${errors.serials[0]}`
         }
       } else {
         errorMessage = data?.message || `Request failed with status code ${status}`
@@ -1432,6 +1472,34 @@ async function processUploadedInvoices() {
 async function saveReviewedInvoice() {
   if (!extractedInvoiceData.value || clinics.value.length === 0) return
 
+  // Validate that all serial numbers are unique
+  const allSerialNumbers: string[] = []
+  const duplicateSerials: string[] = []
+
+  if (extractedInvoiceData.value.line_items && extractedInvoiceData.value.line_items.length > 0) {
+    extractedInvoiceData.value.line_items.forEach((item: any) => {
+      if (item.serial && typeof item.serial === 'string' && item.serial.trim() !== '') {
+        const trimmedSerial = item.serial.trim().toUpperCase()
+        if (allSerialNumbers.includes(trimmedSerial)) {
+          if (!duplicateSerials.includes(trimmedSerial)) {
+            duplicateSerials.push(trimmedSerial)
+          }
+        } else {
+          allSerialNumbers.push(trimmedSerial)
+        }
+      }
+    })
+  }
+
+  if (duplicateSerials.length > 0) {
+    showAlert(
+      `Duplicate serial number(s) detected: ${duplicateSerials.join(', ')}. Each product item must have a unique serial number.`,
+      'error',
+      5000
+    )
+    return
+  }
+
   submitting.value = true
   try {
     let notes = 'Created from PDF upload'
@@ -1518,6 +1586,8 @@ async function saveReviewedInvoice() {
         const errors = data.errors
         if (errors.invoice_number) {
           errorMessage = `Invoice already exists: ${errors.invoice_number[0]}`
+        } else if (errors.serials) {
+          errorMessage = `Serial number error: ${errors.serials[0]}`
         }
       } else {
         errorMessage = data?.message || `Request failed with status code ${status}`
@@ -1534,6 +1604,37 @@ async function saveReviewedInvoice() {
 async function handleManualInvoiceSubmit() {
   submitting.value = true
   try {
+    // Validate that all serial numbers are unique
+    const allSerialNumbers: string[] = []
+    const duplicateSerials: string[] = []
+
+    if (manualInvoice.value.products && manualInvoice.value.products.length > 0) {
+      manualInvoice.value.products.forEach((product) => {
+        product.serials.forEach((serial) => {
+          if (serial && typeof serial === 'string' && serial.trim() !== '') {
+            const trimmedSerial = serial.trim().toUpperCase()
+            if (allSerialNumbers.includes(trimmedSerial)) {
+              if (!duplicateSerials.includes(trimmedSerial)) {
+                duplicateSerials.push(trimmedSerial)
+              }
+            } else {
+              allSerialNumbers.push(trimmedSerial)
+            }
+          }
+        })
+      })
+    }
+
+    if (duplicateSerials.length > 0) {
+      showAlert(
+        `Duplicate serial number(s) detected: ${duplicateSerials.join(', ')}. Each product item must have a unique serial number.`,
+        'error',
+        5000
+      )
+      submitting.value = false
+      return
+    }
+
     const allSerials: string[] = []
     let lineItemsNotes = ''
     const lineItemsForStorage: Array<{ description: string, size: string, serial: string, quantity: number, amount: number }> = []
@@ -1600,6 +1701,8 @@ async function handleManualInvoiceSubmit() {
         const errors = data.errors
         if (errors.invoice_number) {
           errorMessage = `Invoice already exists: ${errors.invoice_number[0]}`
+        } else if (errors.serials) {
+          errorMessage = `Serial number error: ${errors.serials[0]}`
         }
       } else {
         errorMessage = data?.message || `Request failed with status code ${status}`
@@ -1643,6 +1746,38 @@ function removeProduct(index: number) {
   if (manualInvoice.value.products.length > 1) {
     manualInvoice.value.products.splice(index, 1)
   }
+}
+
+// Check if a serial number already exists in the products list
+function hasSerialInProducts(serial: string, excludeIndex?: number): boolean {
+  if (!serial || serial.trim() === '') return false
+  const trimmedSerial = serial.trim().toUpperCase()
+  return manualInvoice.value.products.some((product, index) => {
+    if (excludeIndex !== undefined && index === excludeIndex) return false
+    return product.serials.some(s => s.trim().toUpperCase() === trimmedSerial)
+  })
+}
+
+// Check if a serial number already exists in extracted line items
+function hasSerialInExtractedItems(serial: string, excludeIndex?: number): boolean {
+  if (!serial || serial.trim() === '') return false
+  if (!extractedInvoiceData.value || !extractedInvoiceData.value.line_items) return false
+  const trimmedSerial = serial.trim().toUpperCase()
+  return extractedInvoiceData.value.line_items.some((item, index) => {
+    if (excludeIndex !== undefined && index === excludeIndex) return false
+    return item.serial && item.serial.trim().toUpperCase() === trimmedSerial
+  })
+}
+
+// Check if a serial number already exists in edit line items
+function hasSerialInEditItems(serial: string, excludeIndex?: number): boolean {
+  if (!serial || serial.trim() === '') return false
+  if (!invoiceToEdit.value || !invoiceToEdit.value.line_items) return false
+  const trimmedSerial = serial.trim().toUpperCase()
+  return invoiceToEdit.value.line_items.some((item, index) => {
+    if (excludeIndex !== undefined && index === excludeIndex) return false
+    return item.serial && item.serial.trim().toUpperCase() === trimmedSerial
+  })
 }
 
 function addProduct() {
@@ -1852,7 +1987,7 @@ function parseLineItems(notes: string) {
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i]
 
-    if (line.startsWith('Line Items:') || line.startsWith('Line Items :')) {
+    if (line.startsWith('Product Items:') || line.startsWith('Product Items :')) {
       inLineItemsSection = true
       continue
     }
@@ -1961,7 +2096,7 @@ watch(selectedInvoice, async (newInvoice) => {
       })
     }
     
-    if (newInvoice.notes && (newInvoice.notes.includes('Line Items:') || newInvoice.notes.includes('Line Items :'))) {
+    if (newInvoice.notes && (newInvoice.notes.includes('Product Items:') || newInvoice.notes.includes('Product Items :'))) {
       const parsedItems = parseLineItems(newInvoice.notes)
       parsedItems.forEach(product => {
         if (product.serials && product.serials.length > 0) {
