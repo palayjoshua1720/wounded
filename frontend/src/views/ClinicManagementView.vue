@@ -811,8 +811,11 @@ function closeForm() {
 
 const filteredUsers = computed(() => {
 	return users.value.filter(user => {
-		const matchesSearch = user.name.toLowerCase().includes(searchTerm.value.toLowerCase()) ||
-			user.email.toLowerCase().includes(searchTerm.value.toLowerCase())
+		const searchLower = searchTerm.value.toLowerCase()
+		const matchesSearch = user.name.toLowerCase().includes(searchLower) ||
+			user.email.toLowerCase().includes(searchLower) ||
+			(user.clinicId?.toLowerCase().includes(searchLower)) ||
+			(user.clinicPubId?.toLowerCase().includes(searchLower))
 		const matchesRole = roleFilter.value === 'all' || user.contactPerson === roleFilter.value
 		const matchesStatus = statusFilter.value === 'all' ||
 			(statusFilter.value === 'active' && !user.isActive) ||

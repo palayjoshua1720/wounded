@@ -27,13 +27,25 @@
           <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             New Password
           </label>
-          <input
-            id="password"
-            v-model="form.password"
-            type="password"
-            placeholder="Enter new password"
-            class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 py-2.5 px-3"
-          />
+          <div class="relative">
+            <input
+              id="password"
+              v-model="form.password"
+              :type="showNewPassword ? 'text' : 'password'"
+              placeholder="Enter new password"
+              class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 py-2.5 pl-3 pr-12"
+            />
+            <button
+              type="button"
+              class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-white"
+              @click="showNewPassword = !showNewPassword"
+              aria-label="Toggle new password visibility"
+              tabindex="-1"
+            >
+              <Eye v-if="showNewPassword" class="w-5 h-5" />
+              <EyeOff v-else class="w-5 h-5" />
+            </button>
+          </div>
           <p v-if="errors.password" class="mt-1 text-sm text-red-600 dark:text-red-400">{{ errors.password }}</p>
         </div>
 
@@ -45,13 +57,25 @@
           >
             Confirm Password
           </label>
-          <input
-            id="password_confirmation"
-            v-model="form.password_confirmation"
-            type="password"
-            placeholder="Confirm new password"
-            class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 py-2.5 px-3"
-          />
+          <div class="relative">
+            <input
+              id="password_confirmation"
+              v-model="form.password_confirmation"
+              :type="showConfirmPassword ? 'text' : 'password'"
+              placeholder="Confirm new password"
+              class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 py-2.5 pl-3 pr-12"
+            />
+            <button
+              type="button"
+              class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-white"
+              @click="showConfirmPassword = !showConfirmPassword"
+              aria-label="Toggle confirm password visibility"
+              tabindex="-1"
+            >
+              <Eye v-if="showConfirmPassword" class="w-5 h-5" />
+              <EyeOff v-else class="w-5 h-5" />
+            </button>
+          </div>
           <p v-if="errors.password_confirmation" class="mt-1 text-sm text-red-600 dark:text-red-400">
             {{ errors.password_confirmation }}
           </p>
@@ -87,6 +111,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { Eye, EyeOff } from 'lucide-vue-next'
 import { authApi } from '@/services/api'
 
 const route = useRoute()
@@ -99,6 +124,8 @@ const form = ref({
   password_confirmation: ''
 })
 
+const showNewPassword = ref(false)
+const showConfirmPassword = ref(false)
 const error = ref('')
 const message = ref('')
 const errors = ref<Record<string, string>>({})

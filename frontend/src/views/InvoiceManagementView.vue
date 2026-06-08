@@ -45,10 +45,10 @@
           <input type="date" v-model="filters.date_to" @change="updateFiltersAndFetch"
             class="px-4 py-3.5 border-0 bg-gray-50 dark:bg-gray-700/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200"
             placeholder="To Date" />
-          <button type="button" @click="resetFilters"
+          <!-- <button type="button" @click="resetFilters"
             class="inline-flex items-center px-4 py-3.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700/50 border-0 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200">
             <X class="w-4 h-4 mr-2" />Reset
-          </button>
+          </button> -->
         </div>
       </div>
     </div>
@@ -361,7 +361,7 @@
                 Remove
               </button>
               <span v-else class="text-gray-500 dark:text-gray-400 text-sm italic">
-                At least 1 product item required
+                At least 1 product item required.
               </span>
             </div>
           </div>
@@ -640,7 +640,7 @@
                 </div>
               </div>
               <div class="flex justify-end">
-                <button v-if="extractedInvoiceData.line_items.length > 1" @click="removeLineItem(index)" class="text-red-600 hover:text-red-800 text-sm flex items-center">
+                <button v-if="extractedInvoiceData.line_items.length > 1" @click="removeLineItem(Number(index))" class="text-red-600 hover:text-red-800 text-sm flex items-center">
                   <Minus class="w-4 h-4 mr-1" />
                   Remove
                 </button>
@@ -1150,16 +1150,16 @@ function updateFiltersAndFetch() {
   fetchInvoices()
 }
 
-function resetFilters() {
-  filters.value = {
-    search: '',
-    clinic_id: 'all',
-    date_from: '',
-    date_to: '',
-    page: 1
-  }
-  fetchInvoices()
-}
+// function resetFilters() {
+//   filters.value = {
+//     search: '',
+//     clinic_id: 'all',
+//     date_from: '',
+//     date_to: '',
+//     page: 1
+//   }
+//   fetchInvoices()
+// }
 
 async function fetchStats() {
   try {
@@ -1763,7 +1763,7 @@ function hasSerialInExtractedItems(serial: string, excludeIndex?: number): boole
   if (!serial || serial.trim() === '') return false
   if (!extractedInvoiceData.value || !extractedInvoiceData.value.line_items) return false
   const trimmedSerial = serial.trim().toUpperCase()
-  return extractedInvoiceData.value.line_items.some((item, index) => {
+  return extractedInvoiceData.value.line_items.some((item, index: number) => {
     if (excludeIndex !== undefined && index === excludeIndex) return false
     return item.serial && item.serial.trim().toUpperCase() === trimmedSerial
   })
