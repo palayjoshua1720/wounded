@@ -64,15 +64,15 @@
 				<div class="space-y-4">
 					<div class="grid grid-cols-2 gap-4">
 						<div class="flex items-center space-x-4">
-							<div v-if="selectedUser.logo" class="w-16 h-16 rounded-full overflow-hidden bg-gray-100">
+							<div v-if="selectedUser.logo" class="w-16 h-16 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-700">
 								<img :src="selectedUser.logo" :alt="`${selectedUser.name} logo`"
 									class="w-full h-full object-cover border" />
 							</div>
-							<div v-else class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
-								<Hospital class="w-8 h-8 text-green-500" />
+							<div v-else class="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
+								<Hospital class="w-8 h-8 text-green-500 dark:text-green-400" />
 							</div>
 							<div>
-								<p class="text-xl font-semibold text-gray-900">{{ selectedUser.name }}</p>
+								<p class="text-xl font-semibold text-gray-900 dark:text-white">{{ selectedUser.name }}</p>
 								<span v-if="userStatus[selectedUser.isActive]"
 									:class="['inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium', userStatus[selectedUser.isActive].classes]">
 									{{ userStatus[selectedUser.isActive].label }}
@@ -82,28 +82,28 @@
 					</div>
 
 					<div>
-						<h4 class="text-lg text-gray-900 mb-4">Clinic Contact Information</h4>
+						<h4 class="text-lg text-gray-900 dark:text-white mb-4">Clinic Contact Information</h4>
 						<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 							<div class="space-y-4">
 								<div class="flex items-center space-x-3">
 									<MapPin class="w-5 h-5 text-blue-500" />
 									<div>
-										<p class="text-sm text-gray-700">Address</p>
-										<p class="text-gray-900">{{ selectedUser.address }}</p>
+										<p class="text-sm text-gray-700 dark:text-gray-400">Address</p>
+										<p class="text-gray-900 dark:text-gray-200">{{ selectedUser.address }}</p>
 									</div>
 								</div>
 								<div class="flex items-center space-x-3">
 									<Phone class="w-5 h-5 text-green-500" />
 									<div>
-										<p class="text-sm text-gray-700">Contact Number</p>
-										<p class="text-gray-900">{{ selectedUser.phone }}</p>
+										<p class="text-sm text-gray-700 dark:text-gray-400">Contact Number</p>
+										<p class="text-gray-900 dark:text-gray-200">{{ selectedUser.phone }}</p>
 									</div>
 								</div>
 								<div class="flex items-center space-x-3">
 									<Mail class="w-5 h-5 text-purple-500" />
 									<div>
-										<p class="text-sm text-gray-700">Email</p>
-										<p class="text-gray-900">{{ selectedUser.email }}</p>
+										<p class="text-sm text-gray-700 dark:text-gray-400">Email</p>
+										<p class="text-gray-900 dark:text-gray-200">{{ selectedUser.email }}</p>
 									</div>
 								</div>
 							</div>
@@ -111,22 +111,22 @@
 								<div class="flex items-center space-x-3">
 									<Contact class="w-5 h-5 text-orange-500" />
 									<div>
-										<p class="text-sm text-gray-700">Contact Person</p>
-										<p class="text-gray-900">{{ selectedUser.contactPerson }}</p>
+										<p class="text-sm text-gray-700 dark:text-gray-400">Contact Person</p>
+										<p class="text-gray-900 dark:text-gray-200">{{ selectedUser.contactPerson }}</p>
 									</div>
 								</div>
 								<div class="flex items-center space-x-3">
 									<FileText class="w-5 h-5 text-indigo-500" />
 									<div>
-										<p class="text-sm text-gray-700">Clinic ID</p>
-										<p class="text-gray-900">{{ selectedUser.clinicId ?? "N/A" }}</p>
+										<p class="text-sm text-gray-700 dark:text-gray-400">Clinic ID</p>
+										<p class="text-gray-900 dark:text-gray-200">{{ selectedUser.clinicId ?? "N/A" }}</p>
 									</div>
 								</div>
 								<div class="flex items-center space-x-3">
 									<FileText class="w-5 h-5 text-red-500" />
 									<div>
-										<p class="text-sm text-gray-700">Clinic Public ID</p>
-										<p class="text-gray-900">{{ selectedUser.clinicPubId ?? "N/A" }}</p>
+										<p class="text-sm text-gray-700 dark:text-gray-400">Clinic Public ID</p>
+										<p class="text-gray-900 dark:text-gray-200">{{ selectedUser.clinicPubId ?? "N/A" }}</p>
 									</div>
 								</div>
 							</div>
@@ -221,7 +221,7 @@
 				<!-- Clinic Information -->
 				<div>
 					<div class="flex items-center gap-2 mb-2">
-						<HousePlus class="w-5 h-5 text-green-500" />
+						<HousePlus class="w-5 h-5 text-green-500 dark:text-green-400" />
 						<h3 class="text-md font-semibold text-gray-900 dark:text-gray-100">Clinic Information</h3>
 					</div>
 					<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -229,7 +229,7 @@
 							<label class="block text-sm font-medium text-gray-600 dark:text-gray-400">Name<span
 									class="text-red-500">*</span></label>
 							<div class="relative">
-								<Building class="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+								<Building class="absolute left-3 top-3 w-4 h-4 text-gray-400 dark:text-gray-500" />
 								<input v-model="formData.name" type="text" required placeholder="Clinic Name"
 									class="mt-1 block w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
 							</div>
@@ -238,7 +238,7 @@
 							<label class="block text-sm font-medium text-gray-600 dark:text-gray-400">Email<span
 									class="text-red-500">*</span></label>
 							<div class="relative">
-								<Mail class="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+								<Mail class="absolute left-3 top-3 w-4 h-4 text-gray-400 dark:text-gray-500" />
 								<input v-model="formData.email" type="email" required placeholder="example@clinic.com"
 									class="mt-1 block w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
 							</div>
@@ -247,7 +247,7 @@
 							<label class="block text-sm font-medium text-gray-600 dark:text-gray-400">Clinic Public
 								Code</label>
 							<div class="relative">
-								<FileKey class="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+								<FileKey class="absolute left-3 top-3 w-4 h-4 text-gray-400 dark:text-gray-500" />
 								<input v-model="formData.publicId" type="text" placeholder="Optional code"
 									class="mt-1 block w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
 							</div>
@@ -256,7 +256,7 @@
 							<label class="block text-sm font-medium text-gray-600 dark:text-gray-400">Status<span
 									class="text-red-500">*</span></label>
 							<div class="relative">
-								<CircleCheck class="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+								<CircleCheck class="absolute left-3 top-3 w-4 h-4 text-gray-400 dark:text-gray-500" />
 								<select v-model="formData.isActive" required
 									class="mt-1 block w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
 									<option :value="false">Active</option>
@@ -268,7 +268,7 @@
 							<label class="block text-sm font-medium text-gray-600 dark:text-gray-400">Clinic
 								Code</label>
 							<div class="relative">
-								<Hash class="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+								<Hash class="absolute left-3 top-3 w-4 h-4 text-gray-400 dark:text-gray-500" />
 								<input v-model="formData.clinicId" type="text" placeholder="Optional code" disabled
 									class="mt-1 block w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
 							</div>
@@ -279,7 +279,7 @@
 				<!-- Contact Information -->
 				<div>
 					<div class="flex items-center gap-2 mb-2">
-						<Contact class="w-5 h-5 text-green-500" />
+						<Contact class="w-5 h-5 text-green-500 dark:text-green-400" />
 						<h3 class="text-md font-semibold text-gray-900 dark:text-gray-100">Contact Information</h3>
 					</div>
 					<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -287,7 +287,7 @@
 							<label class="block text-sm font-medium text-gray-600 dark:text-gray-400">Contact
 								Person<span class="text-red-500">*</span></label>
 							<div class="relative">
-								<UserProfile class="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+								<UserProfile class="absolute left-3 top-3 w-4 h-4 text-gray-400 dark:text-gray-500" />
 								<input v-model="formData.contactPerson" type="text" required
 									placeholder="Contact Person"
 									class="mt-1 block w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
@@ -297,7 +297,7 @@
 							<label class="block text-sm font-medium text-gray-600 dark:text-gray-400">Contact
 								Number<span class="text-red-500">*</span></label>
 							<div class="relative">
-								<Phone class="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+								<Phone class="absolute left-3 top-3 w-4 h-4 text-gray-400 dark:text-gray-500" />
 								<input v-model="formData.phone" type="text" required placeholder="Phone/Tel"
 									class="mt-1 block w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
 							</div>
@@ -352,12 +352,12 @@
 				<!-- Address Input -->
 				<div>
 					<div class="flex items-center gap-2 mb-2">
-						<MapPin class="w-5 h-5 text-green-500" />
+						<MapPin class="w-5 h-5 text-green-500 dark:text-green-400" />
 						<h3 class="text-md font-semibold text-gray-900 dark:text-gray-100">Address</h3>
 					</div>
 
 					<div class="relative">
-						<Map class="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+						<Map class="absolute left-3 top-3 w-4 h-4 text-gray-400 dark:text-gray-500" />
 						<input v-model="formData.address" type="text" required placeholder="Clinic Address"
 							class="mt-1 block w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
 					</div>
@@ -379,7 +379,7 @@
 				</transition>
 				<div>
 					<div class="flex items-center gap-2 mb-2">
-						<Image class="w-5 h-5 text-green-500" />
+						<Image class="w-5 h-5 text-green-500 dark:text-green-400" />
 						<h3 class="text-md font-semibold text-gray-900 dark:text-gray-100">Clinic Logo (Optional)</h3>
 					</div>
 					<div v-if="!selectedLogoFile && !formData.logo" class="mt-1 flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer
@@ -389,7 +389,7 @@
 							@change="handleLogoChange" />
 						<label for="logo-upload"
 							class="flex flex-col items-center justify-center text-center cursor-pointer">
-							<UploadCloud class="w-10 h-10 mb-3 text-gray-400" />
+							<UploadCloud class="w-10 h-10 mb-3 text-gray-400 dark:text-gray-500" />
 							<p class="mb-2 text-sm text-gray-500 dark:text-gray-400">
 								<span class="font-semibold text-purple-600 dark:text-purple-400">Click to upload</span>
 								or drag
@@ -401,7 +401,7 @@
 					<div v-if="selectedLogoFile"
 						class="mt-3 flex items-center justify-between gap-3 text-sm text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 px-3 py-2 rounded-lg">
 						<div class="flex items-center gap-2">
-							<Image class="w-4 h-4 text-gray-400" />
+							<Image class="w-4 h-4 text-gray-400 dark:text-gray-500" />
 							<span>Selected: <span class="font-medium">{{ selectedLogoFile.name }}</span> <img
 									:src="formData.logo" class="w-6 h-6 rounded object-cover inline ml-1" /></span>
 						</div>
@@ -414,11 +414,11 @@
 					<div v-else-if="formData.logo"
 						class="mt-3 flex items-center justify-between gap-3 text-sm text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 px-3 py-2 rounded-lg">
 						<div class="flex items-center gap-2">
-							<Image class="w-4 h-4 text-gray-400" />
+							<Image class="w-4 h-4 text-gray-400 dark:text-gray-500" />
 							<span>Current: {{ formData.logo.split('/').pop() }}</span> <img :src="formData.logo"
 								class="w-6 h-6 rounded object-cover inline ml-1" />
 						</div>
-						<button @click="removeCurrentLogo" class="ml-2 text-red-500 hover:text-red-700 text-xs">
+						<button @click="removeCurrentLogo" class="ml-2 text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 text-xs">
 							<X class="w-5 h-5" />
 						</button>
 					</div>
@@ -811,8 +811,11 @@ function closeForm() {
 
 const filteredUsers = computed(() => {
 	return users.value.filter(user => {
-		const matchesSearch = user.name.toLowerCase().includes(searchTerm.value.toLowerCase()) ||
-			user.email.toLowerCase().includes(searchTerm.value.toLowerCase())
+		const searchLower = searchTerm.value.toLowerCase()
+		const matchesSearch = user.name.toLowerCase().includes(searchLower) ||
+			user.email.toLowerCase().includes(searchLower) ||
+			(user.clinicId?.toLowerCase().includes(searchLower)) ||
+			(user.clinicPubId?.toLowerCase().includes(searchLower))
 		const matchesRole = roleFilter.value === 'all' || user.contactPerson === roleFilter.value
 		const matchesStatus = statusFilter.value === 'all' ||
 			(statusFilter.value === 'active' && !user.isActive) ||

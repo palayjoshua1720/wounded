@@ -10,11 +10,11 @@
 				<div class="flex items-start justify-between mb-4">
 					<div>
 						<div class="flex items-center gap-3">
-							<div v-if="user.logo" class="w-14 h-14 rounded-lg overflow-hidden bg-gray-100">
+							<div v-if="user.logo" class="w-14 h-14 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700">
                                 <img :src="user.logo" :alt="`${user.name} logo`" class="w-full h-full object-cover border" />
                             </div>
-							<div v-else class="p-2 bg-green-100 rounded-lg">
-								<Hospital class="w-5 h-5 text-green-600" />
+							<div v-else class="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
+								<Hospital class="w-5 h-5 text-green-600 dark:text-green-400" />
 							</div>
 
 							<div class="flex flex-col">
@@ -110,7 +110,7 @@
 
 		<div v-else-if="!tableLoader && users && users.length === 0" class="">
 			<div class="flex flex-col items-center justify-center gap-2 text-center">
-				<Hospital class="w-10 h-10 mb-1 text-gray-700" />
+				<Hospital class="w-10 h-10 mb-1 text-gray-700 dark:text-gray-400" />
 				<span class="text-gray-600 dark:text-gray-300">No clinics found.</span>
 			</div>
 		</div>

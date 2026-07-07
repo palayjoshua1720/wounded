@@ -127,9 +127,8 @@
 								role="menu">
 								<!-- User Info -->
 								<div class="px-4 py-2 text-sm text-gray-700 dark:text-gray-200">
-									<p class="font-medium truncate" :title="currentUser?.name">
-										{{ currentUser?.first_name + ' ' + currentUser?.middle_name + ' ' +
-											currentUser?.last_name }}
+									<p class="font-medium truncate" :title="fullUserName">
+										{{ fullUserName }}
 									</p>
 									<span class="text-xs">({{ getUserRoleLabel(currentUser?.user_role) }})</span>
 									<p class="text-gray-500 dark:text-gray-400 truncate" :title="currentUser?.email">{{
@@ -309,6 +308,30 @@ function getUserRoleLabel(role?: number): string {
 const currentUser = computed(() => authStore.currentUser)
 const isLoading = computed(() => authStore.isLoading)
 const isDarkMode = computed(() => themeStore.isDarkMode)
+
+// Full name with conditional middle initial
+const fullUserName = computed(() => {
+	if (!currentUser.value) return ''
+	
+	const firstName = currentUser.value.first_name || ''
+	const middleName = currentUser.value.middle_name
+	const lastName = currentUser.value.last_name || ''
+	
+	// Build name parts
+	const nameParts: string[] = []
+	
+	if (firstName) nameParts.push(firstName.trim())
+	
+	// Only add middle initial if middle name exists and is not empty
+	if (middleName && typeof middleName === 'string' && middleName.trim()) {
+		const middleInitial = middleName.trim().charAt(0).toUpperCase()
+		nameParts.push(middleInitial + '.')
+	}
+	
+	if (lastName) nameParts.push(lastName.trim())
+	
+	return nameParts.join(' ')
+})
 
 // Methods
 const toggleProfile = () => {
