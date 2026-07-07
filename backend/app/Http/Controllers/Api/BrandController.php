@@ -30,7 +30,7 @@ class BrandController extends Controller
 
     public function getAllBrands(Request $request)
     {
-        $perPage = $request->query('per_page', 10);
+        $perPage = $request->query('per_page', 9);
         $page = $request->query('page', 1);
 
         $brands = Brand::with(['manufacturer', 'graftSizes'])

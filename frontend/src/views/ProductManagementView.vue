@@ -53,175 +53,11 @@
         <TransitionGroup enter-active-class="transition ease-out duration-400" enter-from-class="opacity-0 scale-95"
             enter-to-class="opacity-100 scale-100" leave-active-class="transition ease-in duration-300"
             leave-from-class="opacity-100 scale-100" leave-to-class="opacity-0 scale-95">
-            <div v-if="showStats"
-                class="bg-gradient-to-b from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 p-6 md:p-8 rounded-2xl shadow-lg border border-gray-200/60 dark:border-gray-700/60 backdrop-blur-sm">
-                <div class="flex items-center justify-between mb-6">
-                    <h3 class="text-xl md:text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
-                        {{ activeTab === 'grafts' ? 'Graft Size Overview' : 'Other Products Overview' }}
-                    </h3>
-                </div>
-
-                <!-- Main Stats Cards -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 md:gap-6">
-                    <div
-                        class="group relative bg-white dark:bg-gray-800 rounded-xl p-5 shadow-md border border-gray-200 dark:border-gray-700 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden">
-                        <div
-                            class="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent dark:from-blue-600/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-                        <div class="flex items-center gap-4">
-                            <div
-                                class="w-14 h-14 rounded-2xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
-                                <component :is="activeTab === 'grafts' ? PencilRuler : Package"
-                                    class="w-7 h-7 text-blue-600 dark:text-blue-400" />
-                            </div>
-                            <div>
-                                <p
-                                    class="text-3xl md:text-4xl font-extrabold text-gray-900 dark:text-white tracking-tight">
-                                    {{ activeTab === 'grafts' ? stats.total : otherStats.total }}
-                                </p>
-                                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1 font-medium">
-                                    Total {{ activeTab === 'grafts' ? 'Sizes' : 'Products' }}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div
-                        class="group relative bg-white dark:bg-gray-800 rounded-xl p-5 shadow-md border border-gray-200 dark:border-gray-700 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden">
-                        <div
-                            class="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent dark:from-green-600/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-                        <div class="flex items-center gap-4">
-                            <div
-                                class="w-14 h-14 rounded-2xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
-                                <CheckCircle2 class="w-7 h-7 text-green-600 dark:text-green-400" />
-                            </div>
-                            <div>
-                                <p
-                                    class="text-3xl md:text-4xl font-extrabold text-gray-900 dark:text-white tracking-tight">
-                                    {{ activeTab === 'grafts' ? stats.active : otherStats.active }}
-                                </p>
-                                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1 font-medium">Active</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div
-                        class="group relative bg-white dark:bg-gray-800 rounded-xl p-5 shadow-md border border-gray-200 dark:border-gray-700 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden">
-                        <div
-                            class="absolute inset-0 bg-gradient-to-br from-red-500/5 to-transparent dark:from-red-600/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-                        <div class="flex items-center gap-4">
-                            <div
-                                class="w-14 h-14 rounded-2xl bg-red-100 dark:bg-red-900/30 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
-                                <XCircle class="w-7 h-7 text-red-600 dark:text-red-400" />
-                            </div>
-                            <div>
-                                <p
-                                    class="text-3xl md:text-4xl font-extrabold text-gray-900 dark:text-white tracking-tight">
-                                    {{ activeTab === 'grafts' ? stats.inactive : otherStats.inactive }}
-                                </p>
-                                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1 font-medium">Inactive</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div
-                        class="group relative bg-white dark:bg-gray-800 rounded-xl p-5 shadow-md border border-gray-200 dark:border-gray-700 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden">
-                        <div
-                            class="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-transparent dark:from-orange-600/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-                        <div class="flex items-center gap-4">
-                            <div
-                                class="w-14 h-14 rounded-2xl bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
-                                <Archive class="w-7 h-7 text-orange-600 dark:text-orange-400" />
-                            </div>
-                            <div>
-                                <p
-                                    class="text-3xl md:text-4xl font-extrabold text-gray-900 dark:text-white tracking-tight">
-                                    {{ activeTab === 'grafts' ? stats.archived : otherStats.archived }}
-                                </p>
-                                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1 font-medium">Archived</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Breakdown Section -->
-                <div class="mt-8">
-                    <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                        <component :is="breakdownIcon" class="w-5 h-5 text-purple-500" />
-                        {{ activeTab === 'grafts' ? 'Brand Breakdown' : 'Breakdown by Type' }}
-                    </h4>
-
-                    <div v-if="(activeTab === 'grafts' && stats.brands.length > 0) || (activeTab === 'other' && otherStats.types.length > 0)"
-                        class="relative">
-                        <div class="overflow-x-auto pb-4 breakdown-scroll snap-x snap-mandatory">
-                            <div class="inline-flex gap-4 min-w-max px-1">
-                                <template v-if="activeTab === 'grafts'">
-                                    <div v-for="brand in stats.brands.slice(0, 12)" :key="brand.id"
-                                        class="snap-start flex-shrink-0 w-64 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md hover:border-purple-300 dark:hover:border-purple-600 transition-all duration-300 overflow-hidden group">
-                                        <div class="p-4 flex flex-col h-full">
-                                            <div class="flex items-center justify-between mb-3">
-                                                <span
-                                                    class="flex items-center text-sm font-medium text-gray-700 dark:text-gray-300 truncate">
-                                                    <Package class="w-4 h-4 mr-2.5 text-purple-500 shrink-0" />
-                                                    {{ brand.name }}
-                                                </span>
-                                                <span class="text-lg font-bold text-gray-900 dark:text-white">{{
-                                                    brand.count }}</span>
-                                            </div>
-                                            <div class="text-xs text-gray-500 dark:text-gray-400">
-                                                {{ Math.round((brand.count / stats.total) * 100) }}% of total
-                                            </div>
-                                        </div>
-                                    </div>
-                                </template>
-
-                                <template v-if="activeTab === 'other'">
-                                    <div v-for="t in otherStats.types.slice(0, 12)" :key="t.type"
-                                        class="snap-start flex-shrink-0 w-64 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md hover:border-blue-300 dark:hover:border-blue-600 transition-all duration-300 overflow-hidden group">
-                                        <div class="p-4 flex flex-col h-full">
-                                            <div class="flex items-center justify-between mb-3">
-                                                <span
-                                                    class="flex items-center text-sm font-medium text-gray-700 dark:text-gray-300 truncate">
-                                                    <Package class="w-4 h-4 mr-2.5 text-blue-500 shrink-0" />
-                                                    {{ t.label }}
-                                                </span>
-                                                <span class="text-lg font-bold text-gray-900 dark:text-white">{{ t.count
-                                                    }}</span>
-                                            </div>
-                                            <div class="text-xs text-gray-500 dark:text-gray-400">
-                                                {{ Math.round((t.count / otherStats.total) * 100) }}% of total
-                                            </div>
-                                        </div>
-                                    </div>
-                                </template>
-                            </div>
-                        </div>
-
-                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-3 text-center">
-                            Showing
-                            {{
-                                activeTab === 'grafts'
-                                    ? Math.min(stats.brands.length, 12)
-                                    : Math.min(otherStats.types.length, 12)
-                            }}
-                            of
-                            {{ activeTab === 'grafts' ? stats.brands.length : otherStats.types.length }}
-                            {{ activeTab === 'grafts' ? 'brands' : 'types' }}
-                            <span
-                                v-if="(activeTab === 'grafts' && stats.brands.length > 12) || (activeTab === 'other' && otherStats.types.length > 12)"
-                                class="ml-1">(scroll to see more)</span>
-                        </p>
-                    </div>
-
-                    <div v-else
-                        class="text-center py-10 text-gray-500 dark:text-gray-400 italic bg-gray-50 dark:bg-gray-800/40 rounded-xl border border-dashed border-gray-300 dark:border-gray-600">
-                        No breakdown data available yet.
-                    </div>
-                </div>
-            </div>
+            <ProductStatsPanel v-if="showStats" :key="activeTab" :active-tab="activeTab" :stats="stats"
+                :other-stats="otherStats" />
         </TransitionGroup>
 
         <!-- TABLES -->
-
         <!-- Graft Sizes view section -->
         <div v-if="activeTab === 'grafts'" class="space-y-6">
             <!-- Filters Card for grafts -->
@@ -368,7 +204,8 @@
                                             <component :is="graft.graft_status === 2 ? ArchiveRestore : Archive"
                                                 class="w-4 h-4" />
                                         </button>
-                                        <button v-if="graft.graft_status === 2" @click="confirmDelete(graft)"
+                                        <button v-if="graft.graft_status === 2 && !isStaff"
+                                            @click="confirmDelete(graft)"
                                             class="p-2 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all duration-200"
                                             title="Delete Archived Graft">
                                             <Trash2 class="w-4 h-4" />
@@ -393,48 +230,8 @@
                 </div>
 
                 <!-- Pagination -->
-                <div v-if="filteredGraftRequest.length > 0 && !tableLoader"
-                    class="flex items-center justify-between px-6 py-4 border-t border-gray-200 dark:border-gray-700">
-                    <p class="text-sm text-gray-600 dark:text-gray-400">
-                        Showing
-                        <span class="font-semibold text-gray-800 dark:text-white">
-                            {{ (currentPage - 1) * itemsPerPage + 1 }}
-                        </span>
-                        to
-                        <span class="font-semibold text-gray-800 dark:text-white">
-                            {{ Math.min(currentPage * itemsPerPage, totalResults) }}
-                        </span>
-                        of
-                        <span class="font-semibold text-gray-800 dark:text-white">{{ totalResults }}</span>
-                        results
-                    </p>
-                    <nav class="flex items-center space-x-2">
-                        <button @click="previousPage" :disabled="currentPage === 1"
-                            class="px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-                            Previous
-                        </button>
-                        <div class="flex items-center space-x-1">
-                            <template v-for="(page, index) in paginationNumbers" :key="index">
-                                <span v-if="page === '...'"
-                                    class="px-3 py-1.5 text-sm text-gray-500 dark:text-gray-400">
-                                    ...
-                                </span>
-                                <button v-else @click="goToPage(page as number)" :class="[
-                                    'px-3 py-1.5 text-sm font-medium rounded-lg transition-colors',
-                                    currentPage === page
-                                        ? 'bg-green-600 text-white'
-                                        : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700'
-                                ]">
-                                    {{ page }}
-                                </button>
-                            </template>
-                        </div>
-                        <button @click="nextPage" :disabled="currentPage === totalPages"
-                            class="px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-                            Next
-                        </button>
-                    </nav>
-                </div>
+                <Pagination v-if="filteredGraftRequest.length > 0 && !tableLoader" :pagination="graftPagination"
+                    @update:page="handleGraftPageChange" />
             </div>
         </div>
 
@@ -579,7 +376,8 @@
                                             <component :is="product.status === 2 ? ArchiveRestore : Archive"
                                                 class="w-4 h-4" />
                                         </button>
-                                        <button v-if="product.status === 2" @click="confirmDeleteOther(product)"
+                                        <button v-if="product.status === 2 && !isStaff"
+                                            @click="confirmDeleteOther(product)"
                                             class="p-2 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all duration-200"
                                             title="Delete Archived Product">
                                             <Trash2 class="w-4 h-4" />
@@ -604,532 +402,56 @@
                 </div>
 
                 <!-- Pagination -->
-                <div v-if="otherProducts.length > 0 && !otherTableLoader"
-                    class="flex items-center justify-between px-6 py-4 border-t border-gray-200 dark:border-gray-700">
-                    <p class="text-sm text-gray-600 dark:text-gray-400">
-                        Showing
-                        <span class="font-semibold">
-                            {{ (otherCurrentPage - 1) * itemsPerPage + 1 }}
-                        </span>
-                        to
-                        <span class="font-semibold">
-                            {{ Math.min(otherCurrentPage * itemsPerPage, otherTotalResults) }}
-                        </span>
-                        of
-                        <span class="font-semibold">{{ otherTotalResults }}</span>
-                        results
-                    </p>
-                    <nav class="flex items-center space-x-2">
-                        <button @click="otherCurrentPage--" :disabled="otherCurrentPage === 1"
-                            class="px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-                            Previous
-                        </button>
-                        <button @click="otherCurrentPage++"
-                            :disabled="otherCurrentPage * itemsPerPage >= otherTotalResults"
-                            class="px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-                            Next
-                        </button>
-                    </nav>
-                </div>
+                <Pagination v-if="otherProducts.length > 0 && !otherTableLoader" :pagination="otherPagination"
+                    @update:page="handleOtherPageChange" />
             </div>
         </div>
 
-        <!-- VIEW DETAILS MODALS -->
+        <!-- Extracted Modal Components -->
+        <GraftDetailsModal v-model="showDetailsModal" :graft="selectedGraftRequest" />
 
-        <!-- Graft Details Modal -->
-        <BaseModal v-model="showDetailsModal" title="Graft Size Details" size="lg">
-            <template v-if="selectedGraftRequest">
-                <div class="p-6 space-y-8">
-                    <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-6">
-                        <div class="flex items-center gap-5">
-                            <div class="flex-shrink-0">
-                                <div
-                                    class="w-20 h-20 rounded-xl bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/30 dark:to-green-800/30 flex items-center justify-center border border-green-200 dark:border-green-700 shadow-sm">
-                                    <PencilRuler class="w-10 h-10 text-green-600 dark:text-green-400" />
-                                </div>
-                            </div>
-                            <div>
-                                <h2 class="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
-                                    {{ selectedGraftRequest.size || 'Unnamed Size' }}
-                                </h2>
-                                <div class="mt-2">
-                                    <span :class="[
-                                        'inline-flex items-center px-3 py-1 rounded-full text-sm font-medium',
-                                        getStatusClasses(selectedGraftRequest.graft_status)
-                                    ]">
-                                        <span class="w-2 h-2 rounded-full bg-current mr-2"></span>
-                                        {{ getStatusLabel(selectedGraftRequest.graft_status) }}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="flex flex-wrap gap-3">
-                            <div
-                                class="inline-flex items-center px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                                <Factory class="w-5 h-5 text-indigo-500 dark:text-indigo-400 mr-2" />
-                                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                    {{ selectedGraftRequest.manufacturer?.manufacturer_name || 'No Records Found' }}
-                                </span>
-                            </div>
-                            <div
-                                class="inline-flex items-center px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                                <Package class="w-5 h-5 text-purple-500 dark:text-purple-400 mr-2" />
-                                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                    {{ selectedGraftRequest.brand?.brand_name || 'No Records Found' }}
-                                </span>
-                            </div>
-                            <div
-                                class="inline-flex items-center px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                                <Tag class="w-5 h-5 text-teal-500 dark:text-teal-400 mr-2" />
-                                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                    {{ selectedGraftRequest.item_no || 'No Records Found' }}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
+        <OtherProductDetailsModal v-model="showOtherDetailsModal" :product="selectedOtherProduct" />
 
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <div class="bg-gray-100 dark:bg-gray-700/70 rounded-xl p-5 text-center shadow-sm">
-                            <div class="text-2xl font-bold text-gray-900 dark:text-white">
-                                {{ selectedGraftRequest.stock || 0 }}
-                            </div>
-                            <div class="text-sm text-gray-600 dark:text-gray-300 mt-1">Current Stock</div>
-                        </div>
-                        <div class="bg-green-50 dark:bg-green-900/20 rounded-xl p-5 text-center">
-                            <div class="text-2xl font-bold text-green-700 dark:text-green-300">
-                                {{ formatCurrency(selectedGraftRequest.price) }}
-                            </div>
-                            <div class="text-sm text-gray-600 dark:text-gray-400 mt-1">Unit Price</div>
-                        </div>
-                        <div class="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-5 text-center">
-                            <div class="text-2xl font-bold text-blue-700 dark:text-blue-300">
-                                {{ selectedGraftRequest.area ? formatNumber(selectedGraftRequest.area) + ' cm²' : '—' }}
-                            </div>
-                            <div class="text-sm text-gray-600 dark:text-gray-400 mt-1">Area</div>
-                        </div>
-                    </div>
+        <ProductSelectionModal v-model="showAddProductModal" @select-graft="selectGraftProduct"
+            @select-other="selectOtherProduct" @cancel="showAddProductModal = false" />
 
-                    <div v-if="isLowStock(selectedGraftRequest.stock)"
-                        class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl p-4 flex items-center gap-3 text-yellow-800 dark:text-yellow-300">
-                        <AlertCircle class="w-6 h-6 flex-shrink-0" />
-                        <span>Low stock alert: only {{ selectedGraftRequest.stock }} units remaining</span>
-                    </div>
+        <GraftFormModal v-model="showFormModal" :is-edit="showEditForm" :form-data="formData" :brands="brandData"
+            @submit="handleGraftFormSubmit" @back="goBackToProductSelection" />
 
-                    <div v-if="selectedGraftRequest.notes || selectedGraftRequest.description">
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">Notes</h3>
-                        <div
-                            class="bg-gray-50 dark:bg-gray-800/50 p-5 rounded-xl border border-gray-200 dark:border-gray-700">
-                            <p class="text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed">
-                                {{ selectedGraftRequest.notes || selectedGraftRequest.description }}
-                            </p>
-                        </div>
-                    </div>
-
-                    <div
-                        class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-center bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl border border-gray-200 dark:border-gray-700">
-                        <div>
-                            <div class="text-xs text-gray-500 dark:text-gray-400">Created At</div>
-                            <div class="text-sm font-medium text-gray-900 dark:text-white mt-1">
-                                {{ formatDate(selectedGraftRequest.created_at) }}
-                            </div>
-                        </div>
-                        <div>
-                            <div class="text-xs text-gray-500 dark:text-gray-400">Last Updated</div>
-                            <div class="text-sm font-medium text-gray-900 dark:text-white mt-1">
-                                {{ formatDate(selectedGraftRequest.updated_at) }}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </template>
-            <template #actions>
-                <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
-                    <button @click="showDetailsModal = false"
-                        class="px-6 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-medium">
-                        Close
-                    </button>
-                </div>
-            </template>
-        </BaseModal>
-
-        <!-- Other Product Details Modal -->
-        <BaseModal v-model="showOtherDetailsModal" title="Product Details" size="lg">
-            <template v-if="selectedOtherProduct">
-                <div class="p-6 space-y-8">
-                    <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-6">
-                        <div class="flex items-center gap-5">
-                            <div class="flex-shrink-0">
-                                <div
-                                    class="w-20 h-20 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-800/30 flex items-center justify-center border border-blue-200 dark:border-blue-700 shadow-sm">
-                                    <Package class="w-10 h-10 text-blue-600 dark:text-blue-400" />
-                                </div>
-                            </div>
-                            <div>
-                                <h2 class="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
-                                    {{ selectedOtherProduct.product_name }}
-                                </h2>
-                                <div class="mt-2">
-                                    <span :class="[
-                                        'inline-flex items-center px-3 py-1 rounded-full text-sm font-medium',
-                                        getStatusClasses(selectedOtherProduct.status)
-                                    ]">
-                                        <span class="w-2 h-2 rounded-full bg-current mr-2"></span>
-                                        {{ getStatusLabel(selectedOtherProduct.status) }}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="flex flex-wrap gap-3">
-                            <div
-                                class="inline-flex items-center px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                    {{
-                                        selectedOtherProduct.product_type === 0
-                                            ? 'Wound Supplies'
-                                            : selectedOtherProduct.product_type === 1
-                                                ? 'Devices'
-                                                : 'Unknown Type'
-                                    }}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <div class="bg-gray-100 dark:bg-gray-700/70 rounded-xl p-5 text-center shadow-sm">
-                            <div class="text-2xl font-bold text-gray-900 dark:text-white">
-                                {{ selectedOtherProduct.stock || 0 }}
-                            </div>
-                            <div class="text-sm text-gray-600 dark:text-gray-300 mt-1">Current Stock</div>
-                        </div>
-                        <div class="bg-green-50 dark:bg-green-900/20 rounded-xl p-5 text-center">
-                            <div class="text-2xl font-bold text-green-700 dark:text-green-300">
-                                {{ formatCurrency(selectedOtherProduct.price) }}
-                            </div>
-                            <div class="text-sm text-gray-600 dark:text-gray-400 mt-1">Unit Price</div>
-                        </div>
-                        <div class="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-5 text-center">
-                            <div class="text-2xl font-bold text-blue-700 dark:text-blue-300">
-                                {{ selectedOtherProduct.stock > 0 ? 'In Stock' : 'Out of Stock' }}
-                            </div>
-                            <div class="text-sm text-gray-600 dark:text-gray-400 mt-1">Availability</div>
-                        </div>
-                    </div>
-
-                    <div v-if="isLowStock(selectedOtherProduct.stock)"
-                        class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl p-4 flex items-center gap-3 text-yellow-800 dark:text-yellow-300">
-                        <AlertCircle class="w-6 h-6 flex-shrink-0" />
-                        <span>Low stock warning: only {{ selectedOtherProduct.stock }} units left</span>
-                    </div>
-
-                    <div>
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">Description</h3>
-                        <div
-                            class="bg-gray-50 dark:bg-gray-800/50 p-5 rounded-xl border border-gray-200 dark:border-gray-700">
-                            <p v-if="selectedOtherProduct.description"
-                                class="text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed">
-                                {{ selectedOtherProduct.description }}
-                            </p>
-                            <p v-else class="text-gray-500 dark:text-gray-400 italic">
-                                No description provided.
-                            </p>
-                        </div>
-                    </div>
-
-                    <div
-                        class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-center bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl border border-gray-200 dark:border-gray-700">
-                        <div>
-                            <div class="text-xs text-gray-500 dark:text-gray-400">Created At</div>
-                            <div class="text-sm font-medium text-gray-900 dark:text-white mt-1">
-                                {{ formatDate(selectedOtherProduct.created_at) }}
-                            </div>
-                        </div>
-                        <div>
-                            <div class="text-xs text-gray-500 dark:text-gray-400">Last Updated</div>
-                            <div class="text-sm font-medium text-gray-900 dark:text-white mt-1">
-                                {{ formatDate(selectedOtherProduct.updated_at) }}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </template>
-            <template #actions>
-                <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
-                    <button @click="showOtherDetailsModal = false"
-                        class="px-6 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-medium">
-                        Close
-                    </button>
-                </div>
-            </template>
-        </BaseModal>
-
-        <!-- CREATE AND EDIT MODALS -->
-
-        <!-- Product Selection Modal -->
-        <BaseModal v-model="showAddProductModal" title="Add New Product">
-            <div class="space-y-4">
-                <p class="text-gray-600 dark:text-gray-400">Choose the type of product you want to add:</p>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-                    <button @click="selectGraftProduct"
-                        class="flex flex-col items-center justify-center p-8 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl hover:border-green-500 hover:bg-green-50 dark:hover:bg-gray-700 transition-all duration-200 group">
-                        <PencilRuler
-                            class="w-12 h-12 text-green-600 dark:text-green-400 mb-4 group-hover:scale-110 transition-transform" />
-                        <span class="text-lg font-semibold text-gray-900 dark:text-white">Graft Size</span>
-                        <span class="text-sm text-gray-500 dark:text-gray-400 mt-2 text-center max-w-xs">
-                            Add graft products with multiple sizes, area (cm²), individual pricing, and stock per size
-                        </span>
-                    </button>
-
-                    <button @click="selectOtherProduct"
-                        class="flex flex-col items-center justify-center p-8 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-gray-700 transition-all duration-200 group">
-                        <Package
-                            class="w-12 h-12 text-blue-600 dark:text-blue-400 mb-4 group-hover:scale-110 transition-transform" />
-                        <span class="text-lg font-semibold text-gray-900 dark:text-white">Other Product</span>
-                        <span class="text-sm text-gray-500 dark:text-gray-400 mt-2 text-center max-w-xs">
-                            Add consumables, equipment, kits, or any non-graft item with simple name, price, and stock
-                        </span>
-                    </button>
-                </div>
-            </div>
-            <template #actions>
-                <div class="flex justify-end w-full p-5">
-                    <button @click="showAddProductModal = false"
-                        class="px-5 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200">
-                        Cancel
-                    </button>
-                </div>
-            </template>
-        </BaseModal>
-
-        <!-- Create/Edit Graft Form Modal -->
-        <BaseModal v-model="showFormModal" :title="showCreateForm ? 'New Graft Size(s)' : 'Edit Graft Size'" size="2xl">
-            <form @submit.prevent="handleSubmitForm" class="space-y-6">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Brand <span class="text-red-500 ml-1">*</span>
-                    </label>
-                    <select v-model="formData.brand_id" required
-                        class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white appearance-none transition-all duration-200">
-                        <option disabled value="">Select a Brand</option>
-                        <option v-for="brand in brandData" :key="brand.brand_id" :value="brand.brand_id">
-                            {{ brand.manufacturer?.manufacturer_name || 'Unknown Manufacturer' }} -
-                            {{ brand.brand_name }}
-                        </option>
-                    </select>
-                </div>
-
-                <div>
-                    <div class="flex items-center gap-2 mb-4">
-                        <PencilRuler class="w-5 h-5 text-green-500" />
-                        <h3 class="text-md font-semibold text-gray-900 dark:text-gray-100">
-                            Graft Sizes <span class="text-red-500">*</span>
-                        </h3>
-                    </div>
-
-                    <div class="space-y-6">
-                        <div v-for="(graftSize, index) in formData.graftSizes" :key="graftSize.id || index"
-                            class="relative p-5 sm:p-6 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800/50">
-                            <div class="flex items-center justify-between mb-4">
-                                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                    Size Entry {{ index + 1 }}
-                                </span>
-                                <button v-if="formData.graftSizes.length > 1" type="button"
-                                    @click="removeGraftSize(index)"
-                                    class="p-1.5 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
-                                    <Trash2 class="w-5 h-5" />
-                                </button>
-                            </div>
-
-                            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 lg:gap-5">
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">
-                                        Item No <span class="text-red-500">*</span>
-                                    </label>
-                                    <div class="relative">
-                                        <Tag class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                        <input v-model="graftSize.item_no" type="text" required placeholder="GS-001"
-                                            class="w-full pl-9 pr-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm" />
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">
-                                        Size <span class="text-red-500">*</span>
-                                    </label>
-                                    <div class="relative">
-                                        <RulerDimensionLine
-                                            class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                        <input v-model="graftSize.size" type="text" required placeholder="2cm × 2cm"
-                                            class="w-full pl-9 pr-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm" />
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">
-                                        Area (cm²) <span class="text-red-500">*</span>
-                                    </label>
-                                    <div class="relative">
-                                        <Diameter
-                                            class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                        <input v-model.number="graftSize.area" type="number" required min="0"
-                                            step="0.01" placeholder="4.00"
-                                            class="w-full pl-9 pr-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm" />
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">
-                                        Price <span class="text-red-500">*</span>
-                                    </label>
-                                    <div class="relative">
-                                        <DollarSign
-                                            class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                        <input v-model.number="graftSize.price" type="number" required min="0"
-                                            step="0.01" placeholder="0.00"
-                                            class="w-full pl-9 pr-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm" />
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">
-                                        Stock <span class="text-red-500">*</span>
-                                    </label>
-                                    <div class="relative">
-                                        <Package
-                                            class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                        <input v-model.number="graftSize.stock" type="number" required min="0"
-                                            placeholder="0"
-                                            class="w-full pl-9 pr-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm" />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <button v-if="showCreateForm" type="button" @click="addGraftSize"
-                        class="mt-4 flex items-center justify-center w-full px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl transition-colors font-medium">
-                        <Plus class="w-5 h-5 mr-2" />
-                        Add Another Size
-                    </button>
-                </div>
-
-                <!-- Form Actions -->
-                <div class="flex justify-end space-x-3 pt-4">
-                    <button v-if="showCreateForm" type="button" @click="goBackToProductSelection"
-                        class="px-5 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 flex items-center gap-2">
-                        <ArrowLeft class="w-4 h-4" />
-                        Back
-                    </button>
-                    <button type="submit"
-                        class="px-5 py-2.5 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 transition-all duration-200 shadow-md">
-                        {{ showCreateForm ? 'Create Graft Size(s)' : 'Update Graft Size' }}
-                    </button>
-                </div>
-            </form>
-        </BaseModal>
-
-        <!-- Create/Edit Other Product Form Modal -->
-        <BaseModal v-model="showOtherProductModal"
-            :title="isEditingOtherProduct ? 'Edit Other Product' : 'New Other Product'" size="xl">
-            <form @submit.prevent="handleOtherProductSubmit" class="space-y-6">
-                <!-- Product Type Selection -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Product Type <span class="text-red-500">*</span>
-                    </label>
-                    <select v-model="otherProductForm.product_type" required
-                        class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
-                        <option :value="null" disabled>Select a Product Type</option>
-                        <option :value="0">Wound Supplies</option>
-                        <option :value="1">Devices</option>
-                    </select>
-                </div>
-
-                <!-- Product Information -->
-                <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
-                    <div class="md:col-span-5">
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Product Name <span class="text-red-500">*</span>
-                        </label>
-                        <div class="relative">
-                            <PencilLine class="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-                            <input v-model="otherProductForm.product_name" type="text" required
-                                placeholder="e.g., Sterile Gloves, Wound Dressing Kit"
-                                class="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
-                        </div>
-                    </div>
-
-                    <div class="md:col-span-4">
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Price <span class="text-red-500">*</span>
-                        </label>
-                        <div class="relative">
-                            <DollarSign class="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-                            <input v-model.number="otherProductForm.price" type="number" required min="0" step="0.01"
-                                placeholder="0.00"
-                                class="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
-                        </div>
-                    </div>
-
-                    <div class="md:col-span-3">
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Stock <span class="text-red-500">*</span>
-                        </label>
-                        <div class="relative">
-                            <Package class="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-                            <input v-model.number="otherProductForm.stock" type="number" required min="0"
-                                placeholder="0"
-                                class="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Description -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Description (optional)
-                    </label>
-                    <textarea v-model="otherProductForm.description" rows="4"
-                        placeholder="Additional details about the product..."
-                        class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none"></textarea>
-                </div>
-
-                <!-- Action Buttons -->
-                <div class="flex justify-end space-x-3 pt-4">
-                    <button v-if="!isEditingOtherProduct" type="button" @click="goBackToProductSelection"
-                        class="px-5 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 flex items-center gap-2">
-                        <ArrowLeft class="w-4 h-4" />
-                        Back
-                    </button>
-
-                    <button type="submit"
-                        class="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg">
-                        {{ isEditingOtherProduct ? 'Update Product' : 'Create Product' }}
-                    </button>
-                </div>
-            </form>
-        </BaseModal>
+        <OtherProductFormModal v-model="showOtherProductModal" :is-edit="isEditingOtherProduct"
+            :form-data="otherProductForm" @submit="handleOtherProductFormSubmit" @back="goBackToProductSelection" />
     </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch, nextTick, onUnmounted } from 'vue'
 import axios from 'axios'
-import BaseModal from '@/components/common/BaseModal.vue'
 import TableLoader from '@/components/ui/TableLoader.vue'
-import {
-    Search, Eye, SquarePen, Trash2, Package, Archive, ArchiveRestore, PencilRuler, ListPlus,
-    RulerDimensionLine, Diameter, DollarSign, Plus, BarChart2, CheckCircle2, Filter,
-    ChevronDown, Factory, XCircle, AlertCircle, ArrowLeft, PencilLine, Tag, ReceiptText, LayoutGrid, UploadCloud, Info
-} from 'lucide-vue-next'
+import Pagination from '@/components/ui/Pagination.vue'
+import { Search, Eye, SquarePen, Trash2, Package, Archive, ArchiveRestore, PencilRuler, ListPlus, BarChart2, CheckCircle2, Filter, ChevronDown, XCircle } from 'lucide-vue-next'
 import api from '@/services/api'
 import { toast } from 'vue3-toastify'
 import 'vue3-toastify/dist/index.css'
 import Swal from 'sweetalert2'
 import { formatCurrency, formatNumber } from '@/utils/currency'
 import { useProductStatus } from '@/composables/products/useProductStatus'
+import { useAuthStore } from '@/stores/auth'
 
-const activeTab = ref('grafts')
+// Import extracted modal components
+import GraftDetailsModal from '@/components/products/modals/GraftDetailsModal.vue'
+import OtherProductDetailsModal from '@/components/products/modals/OtherProductDetailsModal.vue'
+import ProductSelectionModal from '@/components/products/modals/ProductSelectionModal.vue'
+import GraftFormModal from '@/components/products/modals/GraftFormModal.vue'
+import OtherProductFormModal from '@/components/products/modals/OtherProductFormModal.vue'
+import type { GraftFormData } from '@/components/products/modals/GraftFormModal.vue'
+import type { OtherProductFormData } from '@/components/products/modals/OtherProductFormModal.vue'
+
+// Import extracted table and stats components
+import ProductStatsPanel from '@/components/products/ProductStatsPanel.vue'
+import GraftSizesTable from '@/components/products/GraftSizesTable.vue'
+import OtherProductsTable from '@/components/products/OtherProductsTable.vue'
+
+const activeTab = ref<'grafts' | 'other'>('grafts')
 const breakdownIcon = computed(() => {
     return activeTab.value === 'grafts' ? PencilRuler : Package
 })
@@ -1195,6 +517,12 @@ const otherProductForm = ref({
     stock: 0,
     description: ''
 })
+
+// Track focused price fields for formatting
+const focusedPriceField = ref<string | null>(null)
+
+const authStore = useAuthStore()
+const isStaff = computed(() => authStore.user?.user_role === 1)
 
 const {
     getStatusClasses,
@@ -1618,20 +946,21 @@ async function confirmDeleteOther(product: any) {
     }
 }
 
-async function handleSubmitForm() {
+// Handler for GraftFormModal submit event
+async function handleGraftFormSubmit(data: GraftFormData) {
     try {
         if (showCreateForm.value) {
-            const validSizes = formData.value.graftSizes.filter(gs => gs.size.trim() !== '')
+            const validSizes = data.graftSizes.filter(gs => gs.size.trim() !== '')
             if (validSizes.length === 0) {
                 toast.error('At least one valid size is required.')
                 return
             }
-            if (!formData.value.brand_id) {
+            if (!data.brand_id) {
                 toast.error('Brand is required.')
                 return
             }
             const payload = {
-                brand_id: formData.value.brand_id,
+                brand_id: data.brand_id,
                 graftSizes: validSizes.map(gs => ({
                     item_no: gs.item_no.trim(),
                     size: gs.size,
@@ -1640,30 +969,30 @@ async function handleSubmitForm() {
                     stock: gs.stock ?? 0
                 }))
             }
-            const { data } = await api.post('/management/graft-sizes', payload)
-            toast.success(data.message || 'Graft Size added successfully!')
+            const response = await api.post('/management/graft-sizes', payload)
+            toast.success(response.data.message || 'Graft Size added successfully!')
             await getAllGraftRequests()
             await fetchGraftStats()
         } else if (showEditForm.value) {
-            const graftSize = formData.value.graftSizes[0]
+            const graftSize = data.graftSizes[0]
             if (!graftSize.size.trim()) {
                 toast.error('Size is required.')
                 return
             }
             const originalBrandId = selectedGraftRequest.value?.brand_id || ''
             const payload = {
-                brand_id: formData.value.brand_id || originalBrandId,
+                brand_id: data.brand_id || originalBrandId,
                 item_no: graftSize.item_no.trim(),
                 size: graftSize.size,
                 area: graftSize.area ?? 0,
                 price: graftSize.price ?? 0,
                 stock: graftSize.stock ?? 0,
             }
-            const { data } = await api.put(
+            const response = await api.put(
                 `/management/update/${selectedGraftRequest.value?.graft_size_id}/updategraftsize`,
                 payload
             )
-            toast.success(data.message || 'Graft Size Updated Successfully!')
+            toast.success(response.data.message || 'Graft Size Updated Successfully!')
             await getAllGraftRequests()
             await fetchGraftStats()
         }
@@ -1671,18 +1000,69 @@ async function handleSubmitForm() {
     } catch (err: unknown) {
         if (axios.isAxiosError(err)) {
             const status = err.response?.status
-            const data = err.response?.data
-            if (status === 422 && data?.errors) {
-                const messages = Object.values(data.errors).flat()
+            const errorData = err.response?.data
+            if (status === 422 && errorData?.errors) {
+                const messages = Object.values(errorData.errors).flat()
                 toast.error("Error: " + messages.join("\n"))
             } else {
-                toast.error(data?.message || `Request failed with status code ${status}`)
+                toast.error(errorData?.message || `Request failed with status code ${status}`)
             }
         } else if (err instanceof Error) {
             toast.error("Error: " + err.message)
         } else {
             toast.error("Something went wrong")
         }
+    }
+}
+
+// Handler for OtherProductFormModal submit event
+async function handleOtherProductFormSubmit(data: OtherProductFormData) {
+    if (
+        data.product_type == null ||
+        !data.product_name?.trim() ||
+        data.price <= 0 ||
+        data.stock < 0
+    ) {
+        toast.error('Please fill in all required fields correctly.')
+        return
+    }
+
+    try {
+        const payload = {
+            product_type: data.product_type,
+            product_name: data.product_name.trim(),
+            price: Number(data.price),
+            stock: Number(data.stock),
+            description: data.description?.trim() || null,
+        }
+
+        let response
+        if (isEditingOtherProduct.value) {
+            if (!data.product_id) {
+                throw new Error('Missing product ID for update')
+            }
+            response = await api.put(
+                `/management/other-products/${data.product_id}/updateotherproduct`,
+                payload
+            )
+            toast.success('Product updated successfully!')
+        } else {
+            response = await api.post('/management/other-products', payload)
+            toast.success('Product created successfully!')
+        }
+
+        if (activeTab.value === 'other') {
+            fetchOtherProducts(otherCurrentPage.value)
+        }
+        fetchOtherStats()
+        closeOtherProductForm()
+    } catch (err: any) {
+        console.error(err)
+        const msg =
+            err.response?.data?.message ||
+            err.message ||
+            (isEditingOtherProduct.value ? 'Failed to update product.' : 'Failed to create product.')
+        toast.error(msg)
     }
 }
 
@@ -1723,54 +1103,65 @@ const totalPages = computed(() => {
 })
 
 const paginatedGrafts = computed(() => {
-    const start = (currentPage.value - 1) * itemsPerPage.value
-    const end = start + itemsPerPage.value
-    return filteredGraftRequest.value.slice(start, end)
-})
-
-const paginationNumbers = computed(() => {
-    const pages = []
-    const siblingCount = 1
-    const total = totalPages.value
-    const current = currentPage.value
-    if (total <= 7) {
-        for (let i = 1; i <= total; i++) {
-            pages.push(i)
-        }
-        return pages
-    }
-    pages.push(1)
-    if (current > siblingCount + 2) pages.push('...')
-    const startPage = Math.max(2, current - siblingCount)
-    const endPage = Math.min(total - 1, current + siblingCount)
-    for (let i = startPage; i <= endPage; i++) {
-        pages.push(i)
-    }
-    if (current < total - siblingCount - 1) pages.push('...')
-    pages.push(total)
-    return pages
+    return filteredGraftRequest.value
 })
 
 const paginatedOtherProducts = computed(() => {
     return otherProducts.value
 })
 
-function goToPage(page: number) {
+// ────────────────────────────────────────────────
+// Pagination handlers for shared Pagination component
+// ────────────────────────────────────────────────
+const graftPagination = computed(() => ({
+    current_page: currentPage.value,
+    last_page: totalPages.value,
+    per_page: itemsPerPage.value,
+    total: totalResults.value
+}))
+
+const otherPagination = computed(() => ({
+    current_page: otherCurrentPage.value,
+    last_page: Math.max(1, Math.ceil(otherTotalResults.value / itemsPerPage.value)),
+    per_page: itemsPerPage.value,
+    total: otherTotalResults.value
+}))
+
+function handleGraftPageChange(page: number) {
     currentPage.value = page
+    getAllGraftRequests(page)
 }
 
-function previousPage() {
-    if (currentPage.value > 1) currentPage.value--
+function handleOtherPageChange(page: number) {
+    otherCurrentPage.value = page
+    fetchOtherProducts(page)
 }
 
-function nextPage() {
-    if (currentPage.value < totalPages.value) currentPage.value++
+// Format price to 2 decimal places (rounds to number)
+const formatPrice = (value: number | null | undefined): number => {
+    if (value === null || value === undefined || isNaN(value)) return 0
+    return Math.round(value * 100) / 100
 }
 
-const formatDate = (dateStr: string | null) => {
-    return dateStr && dateStr !== 'N/A'
-        ? new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-        : 'N/A'
+// Parse formatted price input (removes commas) back to numeric value
+const parsePriceInput = (value: string): number => {
+    if (!value || value.trim() === '') return 0
+    const cleaned = value.replace(/,/g, '').trim()
+    const parsed = parseFloat(cleaned)
+    return isNaN(parsed) ? 0 : parsed
+}
+
+// Format price for display in text input
+const formatPriceForDisplay = (value: number | null | undefined): string => {
+    if (value === null || value === undefined || isNaN(value)) return ''
+    return (Math.round(value * 100) / 100).toFixed(2)
+}
+
+const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr)
+    const formattedDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    const formattedTime = date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+    return `${formattedDate} [${formattedTime}]`
 }
 
 const showFormModal = computed({

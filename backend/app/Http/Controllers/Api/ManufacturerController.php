@@ -30,10 +30,46 @@ class ManufacturerController extends Controller
 
     public function getAllManufacturers(Request $request)
     {
-        $perPage = $request->query('per_page', 10);
+        $perPage = $request->query('per_page', 9);
         $manufacturers = Manufacturer::with(['brands'])
             ->orderBy('created_at', 'desc')
             ->paginate($perPage);
+
+        // $formattedManufacturers = $manufacturers->map(function ($m) {
+        //     $logoUrl = $m->logo ? asset('storage/' . $m->logo) : null;
+
+        //     $formattedBrands = $m->brands->map(function ($b) {
+        //         return [
+        //             'id' => (string) $b->brand_id,
+        //             'brandName' => $b->brand_name,
+        //             'brandStatus' => (int) $b->brand_status,
+        //         ];
+        //     });
+
+        //     return [
+        //         'id'                => (string) $m->manufacturer_id,
+        //         'manufacturerName'  => $m->manufacturer_name,
+        //         'primaryEmail'      => $m->primary_email,
+        //         'orderEmail'        => $m->order_email,
+        //         'eligibilityEmail'  => $m->eligibility_email,
+        //         'secondaryEmail'    => $m->secondary_email,
+        //         'website'           => $m->website,
+        //         'address'           => $m->address,
+        //         'contactPerson'     => $m->contact_person,
+        //         'contactNumber'     => $m->contact_number,
+        //         'ivrFilename'       => $m->ivr_file       ? basename($m->ivr_file)       : '',
+        //         'ivrFileExtension'  => $m->ivr_file_extension ?? 'pdf',
+        //         'orderFilename'     => $m->order_file     ? basename($m->order_file)     : '',
+        //         'orderFileExtension' => $m->order_file_extension ?? 'pdf',
+        //         'onboardingFilename' => $m->onboarding_file ? basename($m->onboarding_file) : '',
+        //         'onboardingFileExtension' => $m->onboarding_file_extension ?? 'pdf',
+        //         'manufacturerStatus' => (int) $m->manufacturer_status,
+        //         'logoUrl'           => $logoUrl,
+        //         'brands'            => $formattedBrands,
+        //         'createdAt'         => $m->created_at,
+        //         'updatedAt'         => $m->updated_at,
+        //     ];
+        // });
 
         $formattedManufacturers = $manufacturers->map(function ($m) {
             $logoUrl = $m->logo ? asset('storage/' . $m->logo) : null;
@@ -47,27 +83,27 @@ class ManufacturerController extends Controller
             });
 
             return [
-                'id'                => (string) $m->manufacturer_id,
-                'manufacturerName'  => $m->manufacturer_name,
-                'primaryEmail'      => $m->primary_email,
-                'orderEmail'        => $m->order_email,
-                'eligibilityEmail'  => $m->eligibility_email,
-                'secondaryEmail'    => $m->secondary_email,
-                'website'           => $m->website,
-                'address'           => $m->address,
-                'contactPerson'     => $m->contact_person,
-                'contactNumber'     => $m->contact_number,
-                'ivrFilename'       => $m->ivr_file       ? basename($m->ivr_file)       : '',
-                'ivrFileExtension'  => $m->ivr_file_extension ?? 'pdf',
-                'orderFilename'     => $m->order_file     ? basename($m->order_file)     : '',
-                'orderFileExtension' => $m->order_file_extension ?? 'pdf',
-                'onboardingFilename' => $m->onboarding_file ? basename($m->onboarding_file) : '',
-                'onboardingFileExtension' => $m->onboarding_file_extension ?? 'pdf',
-                'manufacturerStatus' => (int) $m->manufacturer_status,
-                'logoUrl'           => $logoUrl,
-                'brands'            => $formattedBrands,
-                'createdAt'         => $m->created_at,
-                'updatedAt'         => $m->updated_at,
+                'id'                        => (string) $m->manufacturer_id,
+                'manufacturerName'          => $m->manufacturer_name,
+                'primaryEmail'              => $m->primary_email,
+                'orderEmail'                => $m->order_email,
+                'eligibilityEmail'          => $m->eligibility_email,
+                'secondaryEmail'            => $m->secondary_email,
+                'website'                   => $m->website,
+                'address'                   => $m->address,
+                'contactPerson'             => $m->contact_person,
+                'contactNumber'             => $m->contact_number,
+                'ivrFilename'               => $m->ivr_file ? basename($m->ivr_file) : '',
+                'ivrFileExtension'          => $m->ivr_file_extension ?? 'pdf',
+                'orderFilename'             => $m->order_file ? basename($m->order_file) : '',
+                'orderFileExtension'        => $m->order_file_extension ?? 'pdf',
+                'onboardingFilename'        => $m->onboarding_file ? basename($m->onboarding_file) : '',
+                'onboardingFileExtension'   => $m->onboarding_file_extension ?? 'pdf',
+                'manufacturerStatus'        => (int) $m->manufacturer_status,
+                'logoUrl'                   => $logoUrl,          // ← Fixed
+                'brands'                    => $formattedBrands,
+                'createdAt'                 => $m->created_at,
+                'updatedAt'                 => $m->updated_at,
             ];
         });
 
