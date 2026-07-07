@@ -45,7 +45,7 @@
           </div>
           <div class="transform transition-all duration-300 hover:-translate-y-1">
             <dt class="text-sm font-medium text-secondary-text dark:text-secondary-dark-text">Role</dt>
-            <dd class="mt-1 text-sm sm:text-base text-primary-text dark:text-primary-dark-text">{{ currentUser?.role || 'User' }}</dd>
+            <dd class="mt-1 text-sm sm:text-base text-primary-text dark:text-primary-dark-text">{{ currentUser?.user_role || 'User' }}</dd>
           </div>
           <div class="transform transition-all duration-300 hover:-translate-y-1">
             <dt class="text-sm font-medium text-secondary-text dark:text-secondary-dark-text">Account Status</dt>

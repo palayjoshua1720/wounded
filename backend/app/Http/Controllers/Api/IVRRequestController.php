@@ -376,27 +376,6 @@ class IVRRequestController extends Controller
         try {
             $manufacturer = Manufacturer::findOrFail($id);
 
-// <<<<<<< Updated upstream
-//             if (!$manufacturer->ivr_file || !Storage::disk('private')->exists($manufacturer->ivr_file)) {
-//                 return response()->json(['error' => 'File not found'], 404);
-//             }
-
-//             $filename = basename($manufacturer->ivr_file);
-
-//             $this->logAudit($request, 'download_ivr_file', "Downloaded IVR file for manufacturer: {$manufacturer->manufacturer_name}", $manufacturer->manufacturer_id, 0, $request->user()?->id);
-
-//             return Storage::disk('private')->download($manufacturer->ivr_file, $filename);
-//         } catch (\Throwable $e) {
-//             \Log::critical('Downloading IVR file failed: ' . $e->getMessage());
-
-//             $this->logAudit($request, 'download_ivr_file', "Failed to download IVR file for manufacturer: {$manufacturer->manufacturer_name}", $manufacturer->manufacturer_id, 1, $request->user()?->id);
-
-//             return response()->json([
-//                 'success' => false,
-//                 'message' => 'An unexpected error occurred.'
-//             ], 500);
-//         }
-// =======
             if (!$manufacturer->ivr_file || !Storage::disk('private')->exists($manufacturer->ivr_file)) {
                 return response()->json(['error' => 'File not found'], 404);
             }
@@ -435,7 +414,6 @@ class IVRRequestController extends Controller
                 'message' => 'An unexpected error occurred.'
             ], 500);
         }
-// >>>>>>> Stashed changes
     }
 
     // magic links

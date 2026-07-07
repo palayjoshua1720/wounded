@@ -53,12 +53,12 @@ class OrderController extends Controller
                 'order_data' => $orders->items(),
                 'meta' => [
                     'current_page' => $orders->currentPage(),
-                    'last_page'    => $orders->lastPage(),
-                    'per_page'     => $orders->perPage(),
-                    'total'        => $orders->total(),
+                    'last_page' => $orders->lastPage(),
+                    'per_page' => $orders->perPage(),
+                    'total' => $orders->total(),
                 ]
             ]);
-        } catch (\Exception  $e) {
+        } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch orders: ' . $e->getMessage(),
@@ -77,9 +77,9 @@ class OrderController extends Controller
                 'graft',
                 'ivr'
             ])
-            ->where('order_id', $orderId)
-            ->whereNull('deleted_at')
-            ->first();
+                ->where('order_id', $orderId)
+                ->whereNull('deleted_at')
+                ->first();
 
             if (!$order) {
                 return response()->json([
@@ -90,7 +90,7 @@ class OrderController extends Controller
 
             return response()->json([
                 'success' => true,
-                'order'   => $order
+                'order' => $order
             ]);
 
         } catch (\Exception $e) {
@@ -114,7 +114,7 @@ class OrderController extends Controller
                 'success' => true,
                 'clinic_data' => $clinics,
             ]);
-        } catch (\Exception  $e) {
+        } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch clinics: ' . $e->getMessage(),
@@ -134,7 +134,7 @@ class OrderController extends Controller
                 'success' => true,
                 'patient_data' => $clinics,
             ]);
-        } catch (\Exception  $e) {
+        } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch clinics: ' . $e->getMessage(),
@@ -207,7 +207,7 @@ class OrderController extends Controller
             'items' => json_decode($request->items, true),
             'products' => collect(json_decode($request->products, true) ?? [])
                 ->filter(function ($product) {
-                    return isset($product['other_product_id']) 
+                    return isset($product['other_product_id'])
                         && $product['other_product_id'] !== null
                         && $product['other_product_id'] !== '';
                 })
@@ -216,22 +216,22 @@ class OrderController extends Controller
         ]);
 
         $validated = $request->validate([
-            'clinic_id'       => 'required|integer|exists:woundmed_clinics,clinic_id',
-            'clinician_id'    => 'required|integer|exists:woundmed_users,id',
-            'patient_id'      => 'required|integer|exists:woundmed_patient_info,patient_id',
-            'ivr_id'          => 'required|integer|exists:woundmed_ivr,ivr_id',
+            'clinic_id' => 'required|integer|exists:woundmed_clinics,clinic_id',
+            'clinician_id' => 'required|integer|exists:woundmed_users,id',
+            'patient_id' => 'required|integer|exists:woundmed_patient_info,patient_id',
+            'ivr_id' => 'required|integer|exists:woundmed_ivr,ivr_id',
             'manufacturer_id' => 'required|integer|exists:woundmed_manufacturers,manufacturer_id',
-            'notes'           => 'nullable|string|max:1500',
-            'order_file'      => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:10240',
+            'notes' => 'nullable|string|max:1500',
+            'order_file' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:10240',
 
-            'items'           => 'required_without:products|array|min:1',
-            'items.*.brand_id'     => 'required|integer|exists:woundmed_brands,brand_id',
-            'items.*.graft_id'     => 'required|integer|exists:woundmed_graft_sizes,graft_size_id',
-            'items.*.ivr_id'       => 'required|integer|exists:woundmed_ivr,ivr_id',
-            'items.*.quantity'     => 'required|integer|min:1',
-            'items.*.asp'          => 'required|numeric|min:0',
+            'items' => 'required_without:products|array|min:1',
+            'items.*.brand_id' => 'required|integer|exists:woundmed_brands,brand_id',
+            'items.*.graft_id' => 'required|integer|exists:woundmed_graft_sizes,graft_size_id',
+            'items.*.ivr_id' => 'required|integer|exists:woundmed_ivr,ivr_id',
+            'items.*.quantity' => 'required|integer|min:1',
+            'items.*.asp' => 'required|numeric|min:0',
             'items.*.product_type' => 'required|integer|in:0,1',
-            'items.*.device_type'  => 'nullable|string|max:255',
+            'items.*.device_type' => 'nullable|string|max:255',
 
             'products' => 'nullable|array',
             'products.*.other_product_id' => 'integer|exists:woundmed_other_products,other_product_id',
@@ -262,7 +262,8 @@ class OrderController extends Controller
         }
 
         foreach ($validated['products'] ?? [] as $idx => $prod) {
-            if (empty($prod['other_product_id'])) continue;
+            if (empty($prod['other_product_id']))
+                continue;
             $product = $otherProducts->get($prod['other_product_id']);
             if (!$product) {
                 $errors["products.$idx.other_product_id"] = "Selected product not found.";
@@ -278,7 +279,7 @@ class OrderController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Cannot place order – insufficient stock or invalid items',
-                'errors'  => $errors,
+                'errors' => $errors,
             ], 422);
 
         }
@@ -303,7 +304,8 @@ class OrderController extends Controller
                 }
 
                 foreach ($validated['products'] ?? [] as $prod) {
-                    if (empty($prod['other_product_id'])) continue;
+                    if (empty($prod['other_product_id']))
+                        continue;
 
                     $affected = OtherProduct::where('other_product_id', $prod['other_product_id'])
                         ->where('stock', '>=', $prod['quantity'])
@@ -317,7 +319,7 @@ class OrderController extends Controller
                 }
 
                 # 2. All reservations succeeded -> create order
-                $orderCode   = 'ORD-' . strtoupper(uniqid());
+                $orderCode = 'ORD-' . strtoupper(uniqid());
                 $trackingNum = 'TRK-' . strtoupper(Str::random(10));
 
                 $filePath = null;
@@ -327,19 +329,19 @@ class OrderController extends Controller
                 }
 
                 return Orders::create([
-                    'order_code'         => $orderCode,
-                    'clinic_id'          => $validated['clinic_id'],
-                    'user_id'            => $validated['clinician_id'],
-                    'patient_id'         => $validated['patient_id'],
-                    'ivr_id'             => $validated['ivr_id'],
-                    'manufacturer_id'    => $validated['manufacturer_id'],
-                    'tracking_num'       => $trackingNum,
-                    'notes'              => $validated['notes'] ?? null,
-                    'items'              => $validated['items'],
-                    'other_product_items'=> $validated['products'] ?? null,
-                    'order_file'         => $filePath,
-                    'order_status'       => 0,
-                    'ordered_at'         => now(),
+                    'order_code' => $orderCode,
+                    'clinic_id' => $validated['clinic_id'],
+                    'user_id' => $validated['clinician_id'],
+                    'patient_id' => $validated['patient_id'],
+                    'ivr_id' => $validated['ivr_id'],
+                    'manufacturer_id' => $validated['manufacturer_id'],
+                    'tracking_num' => $trackingNum,
+                    'notes' => $validated['notes'] ?? null,
+                    'items' => $validated['items'],
+                    'other_product_items' => $validated['products'] ?? null,
+                    'order_file' => $filePath,
+                    'order_status' => 0,
+                    'ordered_at' => now(),
                 ]);
             });
 
@@ -349,15 +351,15 @@ class OrderController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Order could not be placed – stock was taken by another order. Please try again.',
-                'error'   => $e->getMessage(),
+                'error' => $e->getMessage(),
             ], 409);
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (\Exception $e) {
             throw $e;
         } catch (\Throwable $e) {
             \Log::error('Order creation failed', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
-                'data'  => $request->except('order_file'),
+                'data' => $request->except('order_file'),
             ]);
 
             $this->logAudit($request, 'create_new_order', "Failed to create order", $userId);
@@ -373,22 +375,22 @@ class OrderController extends Controller
 
         DB::table('magic_tokens')->insert([
             'manufacturer_id' => $validated['manufacturer_id'],
-            'order_id'        => $order->order_id,
-            'token'           => hash('sha256', $token),
-            'expires_at'      => now()->addDays(60),
-            'created_at'      => now(),
+            'order_id' => $order->order_id,
+            'token' => hash('sha256', $token),
+            'expires_at' => now()->addDays(60),
+            'created_at' => now(),
         ]);
 
         $email = $request->order_email;
         $orderUrl = config('app.frontend_url') . '/woundmed-order?' . http_build_query([
-            'token'       => $token,
-            'order_id'    => $order->order_id,
+            'token' => $token,
+            'order_id' => $order->order_id,
         ]);
 
         $productOnlyUrl = config('app.frontend_url') . '/woundmed-order?' . http_build_query([
-            'token'        => $token,
-            'order_id'     => $order->order_id,
-            'productonly'  => 'true',
+            'token' => $token,
+            'order_id' => $order->order_id,
+            'productonly' => 'true',
         ]);
 
         $totalAsp = 0;
@@ -400,10 +402,10 @@ class OrderController extends Controller
         foreach ($validated['items'] ?? [] as $item) {
             $graftItems[] = [
                 'brand_name' => OrderHelper::getBrandName($item['brand_id'] ?? null) ?? '—',
-                'size_name'  => OrderHelper::getGraftSizeName($item['graft_id'] ?? null) ?? '—',
-                'quantity'   => (int) ($item['quantity'] ?? 0),
-                'asp'        => (float) ($item['asp'] ?? 0),
-                'subtotal'   => (float) ($item['asp'] ?? 0) * (int) ($item['quantity'] ?? 0),
+                'size_name' => OrderHelper::getGraftSizeName($item['graft_id'] ?? null) ?? '—',
+                'quantity' => (int) ($item['quantity'] ?? 0),
+                'asp' => (float) ($item['asp'] ?? 0),
+                'subtotal' => (float) ($item['asp'] ?? 0) * (int) ($item['quantity'] ?? 0),
             ];
         }
 
@@ -411,15 +413,17 @@ class OrderController extends Controller
         $otherSubtotal = 0;
 
         foreach ($validated['products'] ?? [] as $prod) {
-            if (empty($prod['other_product_id'])) continue;
+            if (empty($prod['other_product_id']))
+                continue;
 
             $product = OtherProduct::find($prod['other_product_id']);
-            if (!$product) continue;
+            if (!$product)
+                continue;
 
-            $price          = (float) ($product->price ?? $product->asp ?? 0);
-            $qty            = (int) ($prod['quantity'] ?? 0);
-            $productType    = (int) ($prod['product_type'] ?? 0);
-            $sub            = $price * $qty;
+            $price = (float) ($product->price ?? $product->asp ?? 0);
+            $qty = (int) ($prod['quantity'] ?? 0);
+            $productType = (int) ($prod['product_type'] ?? 0);
+            $sub = $price * $qty;
 
             $productTypeLabel = match ($productType) {
                 0 => 'Wound Supplies',
@@ -429,10 +433,10 @@ class OrderController extends Controller
 
             $otherProductItems[] = [
                 'product_name' => $product->product_name ?? 'Unknown Product',
-                'quantity'     => $qty,
+                'quantity' => $qty,
                 'product_type' => $productTypeLabel,
-                'price'        => $price,
-                'subtotal'     => $sub,
+                'price' => $price,
+                'subtotal' => $sub,
             ];
 
             $otherSubtotal += $sub;
@@ -443,61 +447,61 @@ class OrderController extends Controller
 
         # Pass prepared data to email template
         $emailBody = OrderNotificationEmail::getTemplate([
-            'order_code'          => $order['order_code'],
-            'tracking_number'     => $order['tracking_num'],
-            'clinic_name'         => OrderHelper::getClinicName($validated['clinic_id']),
-            'clinician_name'      => OrderHelper::getClinicianName($validated['clinician_id']),
-            'manufacturer_name'   => OrderHelper::getManufacturerName($validated['manufacturer_id']),
-            'patient_name'        => OrderHelper::getPatientName($validated['patient_id']),
+            'order_code' => $order['order_code'],
+            'tracking_number' => $order['tracking_num'],
+            'clinic_name' => OrderHelper::getClinicName($validated['clinic_id']),
+            'clinician_name' => OrderHelper::getClinicianName($validated['clinician_id']),
+            'manufacturer_name' => OrderHelper::getManufacturerName($validated['manufacturer_id']),
+            'patient_name' => OrderHelper::getPatientName($validated['patient_id']),
 
-            'items'               => $graftItems,
-            'graft_subtotal'      => $graftSubtotal,
+            'items' => $graftItems,
+            'graft_subtotal' => $graftSubtotal,
 
             'other_product_items' => $otherProductItems,
-            'other_subtotal'      => $otherSubtotal,
+            'other_subtotal' => $otherSubtotal,
 
-            'total_asp'           => $totalAsp,
-            'order_link'          => $orderUrl,
+            'total_asp' => $totalAsp,
+            'order_link' => $orderUrl,
         ]);
 
         # prepare other product data to email template
         $otherProductEmailBody = OtherProductOrderNotificationEmail::getTemplate([
-            'order_code'          => $order['order_code'],
-            'tracking_number'     => $order['tracking_num'],
-            'clinic_name'         => OrderHelper::getClinicName($validated['clinic_id']),
-            'clinician_name'      => OrderHelper::getClinicianName($validated['clinician_id']),
-            'manufacturer_name'   => OrderHelper::getManufacturerName($validated['manufacturer_id']),
-            'patient_name'        => OrderHelper::getPatientName($validated['patient_id']),
+            'order_code' => $order['order_code'],
+            'tracking_number' => $order['tracking_num'],
+            'clinic_name' => OrderHelper::getClinicName($validated['clinic_id']),
+            'clinician_name' => OrderHelper::getClinicianName($validated['clinician_id']),
+            'manufacturer_name' => OrderHelper::getManufacturerName($validated['manufacturer_id']),
+            'patient_name' => OrderHelper::getPatientName($validated['patient_id']),
 
-            'items'               => $graftItems,
-            'graft_subtotal'      => $graftSubtotal,
+            'items' => $graftItems,
+            'graft_subtotal' => $graftSubtotal,
 
             'other_product_items' => $otherProductItems,
-            'other_subtotal'      => $otherSubtotal,
+            'other_subtotal' => $otherSubtotal,
 
-            'total_asp'           => $totalAsp,
-            'order_link'          => $productOnlyUrl,
+            'total_asp' => $totalAsp,
+            'order_link' => $productOnlyUrl,
         ]);
 
         $emailService = new EmailService();
 
         $params = [
-            'to'        => $email,
-            'from'      => 'noreply@woundmed.com',
+            'to' => $email,
+            'from' => 'noreply@woundmed.com',
             'from_name' => 'WOUNDMED INC. Order Notification',
-            'subject'   => "New Order Created ({$order['order_code']})",
-            'body'      => $emailBody,
+            'subject' => "New Order Created ({$order['order_code']})",
+            'body' => $emailBody,
         ];
 
         $OtherProductParams = [
-            'to'        => $email,
+            'to' => $email,
             // 'to'        => 'office@woundmedinc.com', // live
             // 'cc'        => ['woundmedinc@gmail.com', 'info@woundmedinc.com'], // live
-            'cc'        => ['prospteam@gmail.com', 'joshuapalay.web2@gmail.com'], // test
-            'from'      => 'noreply@woundmed.com',
+            'cc' => ['prospteam@gmail.com', 'joshuapalay.web2@gmail.com'], // test
+            'from' => 'noreply@woundmed.com',
             'from_name' => 'WOUNDMED INC. Other Product Order Notification',
-            'subject'   => "Other Product Order Details ({$order['order_code']})",
-            'body'      => $otherProductEmailBody,
+            'subject' => "Other Product Order Details ({$order['order_code']})",
+            'body' => $otherProductEmailBody,
         ];
 
         $emailResults = [];
@@ -520,17 +524,17 @@ class OrderController extends Controller
         foreach ($emailResults as $type => $result) {
             if (!$result) {
                 \Log::error('Email failed', [
-                    'type'      => $type,
-                    'order_id'  => $order->order_id,
+                    'type' => $type,
+                    'order_id' => $order->order_id,
                     'orderCode' => $order->orderCode,
-                    'to'        => $email,
+                    'to' => $email,
                 ]);
             }
         }
 
         return response()->json([
-            'success'  => true,
-            'message'  => 'Order created successfully!',
+            'success' => true,
+            'message' => 'Order created successfully!',
             'order_id' => $order->order_id,
         ], 201);
     }
@@ -542,7 +546,7 @@ class OrderController extends Controller
             'items' => json_decode($request->items, true),
             'products' => collect(json_decode($request->products, true) ?? [])
                 ->filter(function ($product) {
-                    return isset($product['other_product_id']) 
+                    return isset($product['other_product_id'])
                         && $product['other_product_id'] !== null
                         && $product['other_product_id'] !== '';
                 })
@@ -555,8 +559,8 @@ class OrderController extends Controller
             'clinician_id' => 'required|int|max:255',
             'patient_id' => 'required|int|max:255',
             'notes' => 'nullable|string',
-            'order_file'      => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:10240',
-            
+            'order_file' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:10240',
+
             'items' => 'required|array|min:1',
             'items.*.brand_id' => 'required|integer|exists:woundmed_brands,brand_id',
             'items.*.graft_id' => 'required|integer|exists:woundmed_graft_sizes,graft_size_id',
@@ -576,10 +580,10 @@ class OrderController extends Controller
         $order = Orders::findOrFail($orderId);
 
         # Prevent update if order is already processed
-        if ($order->order_status >= 1) {
+        if ($order->order_status >= 2) {
             return response()->json([
                 'success' => false,
-                'message' => 'Cannot update order that has been acknowledged, shipped or delivered.',
+                'message' => 'Cannot update order that has been shipped or delivered.',
             ], 422);
         }
 
@@ -608,22 +612,23 @@ class OrderController extends Controller
             $oldQty = 0;
             foreach ($oldItems as $old) {
                 if (($old['graft_id'] ?? null) == $item['graft_id']) {
-                    $oldQty = (int)($old['quantity'] ?? 0);
+                    $oldQty = (int) ($old['quantity'] ?? 0);
                     break;
                 }
             }
 
-            $netRequired = (int)$item['quantity'] - $oldQty;
+            $netRequired = (int) $item['quantity'] - $oldQty;
 
             if ($netRequired > 0 && $graft->stock < $netRequired) {
-                $errors["items.$idx.quantity"] = 
+                $errors["items.$idx.quantity"] =
                     "Insufficient stock for {$graft->size} (available: {$graft->stock}, need additional: {$netRequired})";
             }
         }
 
         # requested quantities checker (other product)
         foreach ($validated['products'] ?? [] as $idx => $prod) {
-            if (empty($prod['other_product_id'])) continue;
+            if (empty($prod['other_product_id']))
+                continue;
 
             $product = $otherProducts->get($prod['other_product_id']);
             if (!$product) {
@@ -634,15 +639,15 @@ class OrderController extends Controller
             $oldQty = 0;
             foreach ($oldProducts as $oldP) {
                 if (($oldP['other_product_id'] ?? null) == $prod['other_product_id']) {
-                    $oldQty = (int)($oldP['quantity'] ?? 0);
+                    $oldQty = (int) ($oldP['quantity'] ?? 0);
                     break;
                 }
             }
 
-            $netRequired = (int)$prod['quantity'] - $oldQty;
+            $netRequired = (int) $prod['quantity'] - $oldQty;
 
             if ($netRequired > 0 && $product->stock < $netRequired) {
-                $errors["products.$idx.quantity"] = 
+                $errors["products.$idx.quantity"] =
                     "Insufficient stock for '{$product->product_name}' (available: {$product->stock}, need additional: {$netRequired})";
             }
         }
@@ -651,7 +656,7 @@ class OrderController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Cannot update order – insufficient stock or invalid items',
-                'errors'  => $errors,
+                'errors' => $errors,
             ], 422);
         }
 
@@ -665,7 +670,8 @@ class OrderController extends Controller
                 }
 
                 foreach ($oldProducts as $oldProd) {
-                    if (empty($oldProd['other_product_id'])) continue;
+                    if (empty($oldProd['other_product_id']))
+                        continue;
                     OtherProduct::where('other_product_id', $oldProd['other_product_id'])
                         ->increment('stock', $oldProd['quantity'] ?? 0);
                 }
@@ -682,7 +688,8 @@ class OrderController extends Controller
                 }
 
                 foreach ($validated['products'] ?? [] as $prod) {
-                    if (empty($prod['other_product_id'])) continue;
+                    if (empty($prod['other_product_id']))
+                        continue;
 
                     $affected = OtherProduct::where('other_product_id', $prod['other_product_id'])
                         ->where('stock', '>=', $prod['quantity'])
@@ -699,25 +706,26 @@ class OrderController extends Controller
 
                 $filePath = $order->order_file;
                 if ($request->hasFile('order_file')) {
-                    
-                    if ($filePath) Storage::disk('private')->delete($filePath);
+
+                    if ($filePath)
+                        Storage::disk('private')->delete($filePath);
 
                     $filename = time() . '_' . $request->file('order_file')->getClientOriginalName();
                     $filePath = $request->file('order_file')->storeAs('order', $filename, 'private');
                 }
 
                 $order->update([
-                    'order_code'         => $orderCode,
-                    'clinic_id'          => $validated['clinic_id'],
-                    'user_id'            => $validated['clinician_id'],
-                    'patient_id'         => $validated['patient_id'],
-                    'tracking_num'       => $trackingNum,
-                    'notes'              => $validated['notes'] ?? $order->notes,
-                    'items'              => $validated['items'],
-                    'other_product_items'=> $validated['products'] ?? [],
-                    'order_file'         => $filePath,
-                    'order_status'       => 0,
-                    'ordered_at'         => now(),
+                    'order_code' => $orderCode,
+                    'clinic_id' => $validated['clinic_id'],
+                    'user_id' => $validated['clinician_id'],
+                    'patient_id' => $validated['patient_id'],
+                    'tracking_num' => $trackingNum,
+                    'notes' => $validated['notes'] ?? $order->notes,
+                    'items' => $validated['items'],
+                    'other_product_items' => $validated['products'] ?? [],
+                    'order_file' => $filePath,
+                    'order_status' => 0,
+                    'ordered_at' => now(),
                 ]);
             });
 
@@ -727,13 +735,13 @@ class OrderController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Update failed – stock was taken by another order during processing. Please try again.',
-                'error'   => $e->getMessage(),
+                'error' => $e->getMessage(),
             ], 409);
         } catch (\Throwable $e) {
             \Log::error('Order update failed', [
                 'order_id' => $orderId,
-                'error'    => $e->getMessage(),
-                'trace'    => $e->getTraceAsString(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ]);
 
             $this->logAudit($request, 'update_order_details', "Failed to update order details", $userId);
@@ -798,12 +806,12 @@ class OrderController extends Controller
             return response()->json([
                 'message' => 'Order details deleted successfully.'
             ]);
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ValidationException $e) {
             $this->logAudit($request, 'delete_order', "Operation failed: {$order->order_code}", $order->order_id);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Operation failed', 
+                'message' => 'Operation failed',
                 'errors' => $e->errors(),
             ], 422);
         } catch (\Throwable $th) {
@@ -822,7 +830,7 @@ class OrderController extends Controller
             return DB::transaction(function () use ($request) {
 
                 $tokenPlain = $request->input('token');
-                $orderId    = $request->input('order_id');
+                $orderId = $request->input('order_id');
 
                 $token = DB::table('magic_tokens')
                     ->where('order_id', $orderId)
@@ -862,7 +870,7 @@ class OrderController extends Controller
 
                 return response()->json([
                     'success' => true,
-                    'order'   => $order
+                    'order' => $order
                 ]);
             });
 
@@ -882,11 +890,11 @@ class OrderController extends Controller
     public function updateMagicOrderStatus(Request $request, $orderId)
     {
         $validated = $request->validate([
-            'order_status'  => 'required|integer|min:0|max:4',
-            'order_number'  => 'required_if:order_status,1|string|max:255',
+            'order_status' => 'required|integer|min:0|max:4',
+            'order_number' => 'required_if:order_status,1|string|max:255',
             'tracking_code' => 'required_if:order_status,2|string|max:255',
             'tracking_link' => 'required_if:order_status,2|string|max:255',
-            'token'         => 'required|string',
+            'token' => 'required|string',
         ]);
 
         return DB::transaction(function () use ($request, $validated, $orderId) {
@@ -911,7 +919,7 @@ class OrderController extends Controller
                     'message' => 'This access link has already been used.'
                 ], 400);
             }
-        
+
             $dataToUpdate = [
                 'order_status' => $validated['order_status'],
             ];
@@ -967,7 +975,7 @@ class OrderController extends Controller
             }
 
             $order = Orders::with(['clinic', 'clinician', 'patient', 'manufacturer', 'brand.manufacturer', 'graft', 'ivr'])
-            ->findOrFail($orderId);
+                ->findOrFail($orderId);
 
 
             if ((int) $order->order_status !== 0) {
@@ -1009,22 +1017,22 @@ class OrderController extends Controller
 
             DB::table('magic_tokens')->insert([
                 'manufacturer_id' => optional($order->manufacturer)->manufacturer_id,
-                'order_id'        => $order->order_id,
-                'token'           => hash('sha256', $token),
-                'expires_at'      => now()->addDays(60),
-                'created_at'      => now(),
+                'order_id' => $order->order_id,
+                'token' => hash('sha256', $token),
+                'expires_at' => now()->addDays(60),
+                'created_at' => now(),
             ]);
 
             $orderUrl = config('app.frontend_url')
-                    . '/woundmed-order?token=' . $token
-                    . '&order_id=' . $order->order_id;
+                . '/woundmed-order?token=' . $token
+                . '&order_id=' . $order->order_id;
 
             $items = array_map(function ($item) {
                 return [
                     'brand_name' => OrderHelper::getBrandName($item['brand_id']),
-                    'size_name'  => OrderHelper::getGraftSizeName($item['graft_id']),
-                    'quantity'   => $item['quantity'] ?? 1,
-                    'subtotal'   => ($item['asp'] ?? 0) * ($item['quantity'] ?? 1),
+                    'size_name' => OrderHelper::getGraftSizeName($item['graft_id']),
+                    'quantity' => $item['quantity'] ?? 1,
+                    'subtotal' => ($item['asp'] ?? 0) * ($item['quantity'] ?? 1),
                 ];
             }, $order->items);
 
@@ -1033,29 +1041,29 @@ class OrderController extends Controller
             $totalAsp = array_reduce($items, fn($sum, $i) => $sum + $i['subtotal'], 0);
 
             $emailBody = FollowupOrderNotificationEmail::getTemplate([
-                'order_code'        => $order->order_code,
-                'tracking_number'   => $order->tracking_num,
-                'clinic_name'       => optional($order->clinic)->clinic_name,
+                'order_code' => $order->order_code,
+                'tracking_number' => $order->tracking_num,
+                'clinic_name' => optional($order->clinic)->clinic_name,
                 'clinician_name' => trim(
-                    ($order->clinician->first_name ?? '') . ' ' . 
+                    ($order->clinician->first_name ?? '') . ' ' .
                     ($order->clinician->last_name ?? '')
                 ),
                 'manufacturer_name' => optional($order->manufacturer)->manufacturer_name,
-                'patient_name'      => optional($order->patient)->patient_name,
-                'items'             => $items,
-                'total_asp'         => $totalAsp,
-                'order_link'        => $orderUrl
+                'patient_name' => optional($order->patient)->patient_name,
+                'items' => $items,
+                'total_asp' => $totalAsp,
+                'order_link' => $orderUrl
             ]);
 
             $emailService = new EmailService();
 
             foreach ($emails as $to) {
                 $emailService->send_email([
-                    'to'        => $to,
-                    'from'      => 'noreply@woundmed.com',
+                    'to' => $to,
+                    'from' => 'noreply@woundmed.com',
                     'from_name' => 'WOUNDMED INC. Follow up Notification',
-                    'subject'   => "Follow-Up Required ({$order->order_code})",
-                    'body'      => $emailBody,
+                    'subject' => "Follow-Up Required ({$order->order_code})",
+                    'body' => $emailBody,
                 ], 'Follow-up email sent', 'Follow-up email sent');
             }
 
@@ -1107,9 +1115,9 @@ class OrderController extends Controller
                 'order_data' => $orders->items(),
                 'meta' => [
                     'current_page' => $orders->currentPage(),
-                    'last_page'    => $orders->lastPage(),
-                    'per_page'     => $orders->perPage(),
-                    'total'        => $orders->total(),
+                    'last_page' => $orders->lastPage(),
+                    'per_page' => $orders->perPage(),
+                    'total' => $orders->total(),
                 ]
             ]);
         } catch (\Throwable $th) {
@@ -1150,9 +1158,9 @@ class OrderController extends Controller
                 'order_data' => $orders->items(),
                 'meta' => [
                     'current_page' => $orders->currentPage(),
-                    'last_page'    => $orders->lastPage(),
-                    'per_page'     => $orders->perPage(),
-                    'total'        => $orders->total(),
+                    'last_page' => $orders->lastPage(),
+                    'per_page' => $orders->perPage(),
+                    'total' => $orders->total(),
                 ]
             ]);
         } catch (\Throwable $th) {
@@ -1185,7 +1193,7 @@ class OrderController extends Controller
         }
 
         $request->merge([
-            'items'    => json_decode($request->items ?? '[]', true) ?? [],
+            'items' => json_decode($request->items ?? '[]', true) ?? [],
             'products' => collect(json_decode($request->products ?? '[]', true) ?? [])
                 ->filter(fn($p) => !empty($p['other_product_id']) && is_numeric($p['other_product_id']))
                 ->values()
@@ -1193,37 +1201,37 @@ class OrderController extends Controller
         ]);
 
         $validated = $request->validate([
-            'clinic_id'       => 'required|integer|exists:woundmed_clinics,clinic_id',
-            'clinician_id'    => 'required|integer|exists:woundmed_users,id',
-            'patient_id'      => 'required|integer|exists:woundmed_patient_info,patient_id',
-            'ivr_id'          => 'required|integer|exists:woundmed_ivr,ivr_id',
+            'clinic_id' => 'required|integer|exists:woundmed_clinics,clinic_id',
+            'clinician_id' => 'required|integer|exists:woundmed_users,id',
+            'patient_id' => 'required|integer|exists:woundmed_patient_info,patient_id',
+            'ivr_id' => 'required|integer|exists:woundmed_ivr,ivr_id',
             'manufacturer_id' => 'required|integer|exists:woundmed_manufacturers,manufacturer_id',
-            'notes'           => 'nullable|string|max:1500',
-            'order_file'      => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:10240',
+            'notes' => 'nullable|string|max:1500',
+            'order_file' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:10240',
 
             # Graft items
-            'items'           => 'required_without:products|array|min:1',
-            'items.*.brand_id'     => 'required|integer|exists:woundmed_brands,brand_id',
-            'items.*.graft_id'     => 'required|integer|exists:woundmed_graft_sizes,graft_size_id',
-            'items.*.ivr_id'       => 'required|integer|exists:woundmed_ivr,ivr_id',
-            'items.*.quantity'     => 'required|integer|min:1',
-            'items.*.asp'          => 'required|numeric|min:0',
+            'items' => 'required_without:products|array|min:1',
+            'items.*.brand_id' => 'required|integer|exists:woundmed_brands,brand_id',
+            'items.*.graft_id' => 'required|integer|exists:woundmed_graft_sizes,graft_size_id',
+            'items.*.ivr_id' => 'required|integer|exists:woundmed_ivr,ivr_id',
+            'items.*.quantity' => 'required|integer|min:1',
+            'items.*.asp' => 'required|numeric|min:0',
             'items.*.product_type' => 'required|integer|in:0,1',
-            'items.*.device_type'  => 'nullable|string|max:255',
+            'items.*.device_type' => 'nullable|string|max:255',
 
             # Other products
-            'products'                    => 'required_without:items|array',
+            'products' => 'required_without:items|array',
             'products.*.other_product_id' => 'required|integer|exists:woundmed_other_products,other_product_id',
-            'products.*.quantity'         => 'required|integer|min:1',
-            'products.*.price'            => 'required|numeric|min:0',
-            'products.*.product_type'     => 'nullable|numeric|min:0',
+            'products.*.quantity' => 'required|integer|min:1',
+            'products.*.price' => 'required|numeric|min:0',
+            'products.*.product_type' => 'nullable|numeric|min:0',
         ]);
 
         # Stock validation
-        $graftIds      = collect($validated['items'] ?? [])->pluck('graft_id')->unique()->all();
-        $grafts        = GraftSize::whereIn('graft_size_id', $graftIds)->get()->keyBy('graft_size_id');
+        $graftIds = collect($validated['items'] ?? [])->pluck('graft_id')->unique()->all();
+        $grafts = GraftSize::whereIn('graft_size_id', $graftIds)->get()->keyBy('graft_size_id');
 
-        $productIds    = collect($validated['products'] ?? [])->pluck('other_product_id')->unique()->all();
+        $productIds = collect($validated['products'] ?? [])->pluck('other_product_id')->unique()->all();
         $otherProducts = OtherProduct::whereIn('other_product_id', $productIds)->get()->keyBy('other_product_id');
 
         $errors = [];
@@ -1256,7 +1264,7 @@ class OrderController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Cannot place order – insufficient stock or invalid items',
-                'errors'  => $errors,
+                'errors' => $errors,
             ], 422);
         }
 
@@ -1294,23 +1302,23 @@ class OrderController extends Controller
                 }
 
                 # Create order
-                $orderCode   = 'ORD-' . strtoupper(uniqid());
+                $orderCode = 'ORD-' . strtoupper(uniqid());
                 $trackingNum = 'TRK-' . strtoupper(Str::random(10));
 
                 return Orders::create([
-                    'order_code'         => $orderCode,
-                    'clinic_id'          => $validated['clinic_id'],
-                    'user_id'            => $validated['clinician_id'],
-                    'patient_id'         => $validated['patient_id'],
-                    'ivr_id'             => $validated['ivr_id'],
-                    'manufacturer_id'    => $validated['manufacturer_id'],
-                    'tracking_num'       => $trackingNum,
-                    'notes'              => $validated['notes'] ?? null,
-                    'items'              => $validated['items'] ?? [],
-                    'other_product_items'=> $validated['products'] ?? [],
-                    'order_file'         => $filePath,
-                    'order_status'       => 0,
-                    'ordered_at'         => now(),
+                    'order_code' => $orderCode,
+                    'clinic_id' => $validated['clinic_id'],
+                    'user_id' => $validated['clinician_id'],
+                    'patient_id' => $validated['patient_id'],
+                    'ivr_id' => $validated['ivr_id'],
+                    'manufacturer_id' => $validated['manufacturer_id'],
+                    'tracking_num' => $trackingNum,
+                    'notes' => $validated['notes'] ?? null,
+                    'items' => $validated['items'] ?? [],
+                    'other_product_items' => $validated['products'] ?? [],
+                    'order_file' => $filePath,
+                    'order_status' => 0,
+                    'ordered_at' => now(),
                     // 'ordering_user_id' => $user->id,
                 ]);
             });
@@ -1328,7 +1336,7 @@ class OrderController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Order failed – stock taken by another request. Please retry.',
-                'error'   => $e->getMessage(),
+                'error' => $e->getMessage(),
             ], 409);
         } catch (\Throwable $e) {
             \Log::error('Clinic order creation failed', [
@@ -1349,44 +1357,45 @@ class OrderController extends Controller
 
         DB::table('magic_tokens')->insert([
             'manufacturer_id' => $validated['manufacturer_id'],
-            'order_id'        => $order->order_id,
-            'token'           => hash('sha256', $token),
-            'expires_at'      => now()->addDays(60),
-            'created_at'      => now(),
+            'order_id' => $order->order_id,
+            'token' => hash('sha256', $token),
+            'expires_at' => now()->addDays(60),
+            'created_at' => now(),
         ]);
 
         $orderUrl = config('app.frontend_url') . '/woundmed-order?' . http_build_query([
-            'token'    => $token,
+            'token' => $token,
             'order_id' => $order->order_id,
         ]);
 
         # Prepare data for email
-        $graftItems    = [];
+        $graftItems = [];
         $graftSubtotal = 0;
         foreach ($validated['items'] ?? [] as $item) {
-            $sub = (float)($item['asp'] ?? 0) * (int)($item['quantity'] ?? 0);
+            $sub = (float) ($item['asp'] ?? 0) * (int) ($item['quantity'] ?? 0);
             $graftSubtotal += $sub;
             $graftItems[] = [
                 'brand_name' => OrderHelper::getBrandName($item['brand_id'] ?? null) ?? '—',
-                'size_name'  => OrderHelper::getGraftSizeName($item['graft_id'] ?? null) ?? '—',
-                'quantity'   => (int)($item['quantity'] ?? 0),
-                'asp'        => (float)($item['asp'] ?? 0),
-                'subtotal'   => $sub,
+                'size_name' => OrderHelper::getGraftSizeName($item['graft_id'] ?? null) ?? '—',
+                'quantity' => (int) ($item['quantity'] ?? 0),
+                'asp' => (float) ($item['asp'] ?? 0),
+                'subtotal' => $sub,
             ];
         }
 
         $otherProductItems = [];
-        $otherSubtotal     = 0;
+        $otherSubtotal = 0;
         foreach ($validated['products'] ?? [] as $prod) {
             $product = OtherProduct::find($prod['other_product_id']);
-            if (!$product) continue;
+            if (!$product)
+                continue;
 
-            $price = (float)($prod['price'] ?? $product->price ?? $product->asp ?? 0);
-            $qty   = (int)($prod['quantity'] ?? 0);
-            $sub   = $price * $qty;
+            $price = (float) ($prod['price'] ?? $product->price ?? $product->asp ?? 0);
+            $qty = (int) ($prod['quantity'] ?? 0);
+            $sub = $price * $qty;
             $otherSubtotal += $sub;
 
-            $typeLabel = match ((int)($prod['product_type'] ?? 0)) {
+            $typeLabel = match ((int) ($prod['product_type'] ?? 0)) {
                 0 => 'Wound Supplies',
                 1 => 'Devices',
                 default => 'Other',
@@ -1394,28 +1403,28 @@ class OrderController extends Controller
 
             $otherProductItems[] = [
                 'product_name' => $product->product_name ?? 'Unknown',
-                'quantity'     => $qty,
+                'quantity' => $qty,
                 'product_type' => $typeLabel,
-                'price'        => $price,
-                'subtotal'     => $sub,
+                'price' => $price,
+                'subtotal' => $sub,
             ];
         }
 
         $totalAsp = $graftSubtotal + $otherSubtotal;
 
         $emailBody = OrderNotificationEmail::getTemplate([
-            'order_code'          => $order->order_code,
-            'tracking_number'     => $order->tracking_num,
-            'clinic_name'         => OrderHelper::getClinicName($validated['clinic_id']),
-            'clinician_name'      => OrderHelper::getClinicianName($validated['clinician_id']),
-            'manufacturer_name'   => OrderHelper::getManufacturerName($validated['manufacturer_id']),
-            'patient_name'        => OrderHelper::getPatientName($validated['patient_id']),
-            'items'               => $graftItems,
-            'graft_subtotal'      => $graftSubtotal,
+            'order_code' => $order->order_code,
+            'tracking_number' => $order->tracking_num,
+            'clinic_name' => OrderHelper::getClinicName($validated['clinic_id']),
+            'clinician_name' => OrderHelper::getClinicianName($validated['clinician_id']),
+            'manufacturer_name' => OrderHelper::getManufacturerName($validated['manufacturer_id']),
+            'patient_name' => OrderHelper::getPatientName($validated['patient_id']),
+            'items' => $graftItems,
+            'graft_subtotal' => $graftSubtotal,
             'other_product_items' => $otherProductItems,
-            'other_subtotal'      => $otherSubtotal,
-            'total_asp'           => $totalAsp,
-            'order_link'          => $orderUrl,
+            'other_subtotal' => $otherSubtotal,
+            'total_asp' => $totalAsp,
+            'order_link' => $orderUrl,
         ]);
 
         echo '<pre>';
@@ -1423,37 +1432,37 @@ class OrderController extends Controller
         echo '<br>';
         echo '</pre>';
         exit;
-        
+
         # prepare other product data to email template
         $otherProductEmailBody = OtherProductOrderNotificationEmail::getTemplate([
-            'order_code'          => $order['order_code'],
-            'tracking_number'     => $order['tracking_num'],
-            'clinic_name'         => OrderHelper::getClinicName($validated['clinic_id']),
-            'clinician_name'      => OrderHelper::getClinicianName($validated['clinician_id']),
-            'manufacturer_name'   => OrderHelper::getManufacturerName($validated['manufacturer_id']),
-            'patient_name'        => OrderHelper::getPatientName($validated['patient_id']),
+            'order_code' => $order['order_code'],
+            'tracking_number' => $order['tracking_num'],
+            'clinic_name' => OrderHelper::getClinicName($validated['clinic_id']),
+            'clinician_name' => OrderHelper::getClinicianName($validated['clinician_id']),
+            'manufacturer_name' => OrderHelper::getManufacturerName($validated['manufacturer_id']),
+            'patient_name' => OrderHelper::getPatientName($validated['patient_id']),
 
-            'items'               => $graftItems,
-            'graft_subtotal'      => $graftSubtotal,
+            'items' => $graftItems,
+            'graft_subtotal' => $graftSubtotal,
 
             'other_product_items' => $otherProductItems,
-            'other_subtotal'      => $otherSubtotal,
+            'other_subtotal' => $otherSubtotal,
 
-            'total_asp'           => $totalAsp,
-            'order_link'          => $productOnlyUrl,
+            'total_asp' => $totalAsp,
+            'order_link' => $productOnlyUrl,
         ]);
 
         # Send email
         $emailService = new EmailService();
-        $toEmail      = $request->order_email ?? $order->manufacturer?->order_email ?? null;
+        $toEmail = $request->order_email ?? $order->manufacturer?->order_email ?? null;
 
         if ($toEmail) {
             $mainParams = [
-                'to'        => $toEmail,
-                'from'      => 'noreply@woundmed.com',
+                'to' => $toEmail,
+                'from' => 'noreply@woundmed.com',
                 'from_name' => 'WOUNDMED INC. Orders',
-                'subject'   => "New Clinic Order: {$order->order_code}",
-                'body'      => $emailBody,
+                'subject' => "New Clinic Order: {$order->order_code}",
+                'body' => $emailBody,
             ];
 
             $emailResults['main'] = $emailService->send_email(
@@ -1465,14 +1474,14 @@ class OrderController extends Controller
             # separate email for other products (with different recipients)
             if (!empty($otherProductItems)) {
                 $otherParams = [
-                    'to'        => $toEmail,
+                    'to' => $toEmail,
                     // 'to'     => 'office@woundmedinc.com',               // ← live
                     // 'cc'     => ['woundmedinc@gmail.com', 'info@woundmedinc.com'], // ← live
-                    'cc'        => ['prospteam@gmail.com', 'joshuapalay.web2@gmail.com'], // ← test / dev
-                    'from'      => 'noreply@woundmed.com',
+                    'cc' => ['prospteam@gmail.com', 'joshuapalay.web2@gmail.com'], // ← test / dev
+                    'from' => 'noreply@woundmed.com',
                     'from_name' => 'WOUNDMED INC. Orders',
-                    'subject'   => "Other Products – Clinic Order: {$order->order_code}",
-                    'body'      => $otherProductEmailBody,
+                    'subject' => "Other Products – Clinic Order: {$order->order_code}",
+                    'body' => $otherProductEmailBody,
                 ];
 
                 $emailResults['other'] = $emailService->send_email(
@@ -1486,18 +1495,18 @@ class OrderController extends Controller
             foreach ($emailResults as $type => $result) {
                 if (!$result) {
                     \Log::error('Email failed', [
-                        'type'      => $type,
-                        'order_id'  => $order->order_id,
+                        'type' => $type,
+                        'order_id' => $order->order_id,
                         'orderCode' => $order->orderCode,
-                        'to'        => $email,
+                        'to' => $email,
                     ]);
                 }
             }
         }
 
         return response()->json([
-            'success'  => true,
-            'message'  => 'Order created successfully!',
+            'success' => true,
+            'message' => 'Order created successfully!',
             'order_id' => $order->order_id,
         ], 201);
     }
@@ -1541,7 +1550,7 @@ class OrderController extends Controller
                 'success' => true,
                 'message' => 'Order details updated successfully!',
             ]);
-            
+
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
                 'success' => false,
@@ -1558,23 +1567,23 @@ class OrderController extends Controller
 
     public function viewOrderFile(string $filename)
     {
-// <<<<<<< Updated upstream
+        // <<<<<<< Updated upstream
 //         $filename = urldecode($filename);
 
-//         # prevent path traversal
+        //         # prevent path traversal
 //         if (str_contains($filename, '..') || str_contains($filename, '/') || str_contains($filename, '\\')) {
 //             abort(403, 'Invalid filename');
 //         }
 
-//         $allowedPrefixes = ['order/', 'ivr/'];
+        //         $allowedPrefixes = ['order/', 'ivr/'];
 
-//         $disk = Storage::disk('private');
+        //         $disk = Storage::disk('private');
 //         $foundPath = null;
 
-//         foreach ($allowedPrefixes as $prefix) {
+        //         foreach ($allowedPrefixes as $prefix) {
 //             $fullPath = $prefix . $filename;
 
-//             if ($disk->exists($fullPath)) {
+        //             if ($disk->exists($fullPath)) {
 //                 $foundPath = $fullPath;
 //                 break;
 // =======
@@ -1584,11 +1593,11 @@ class OrderController extends Controller
         if (str_ends_with($decodedFilename, '.enc')) {
             if (Storage::disk('local')->exists($decodedFilename)) {
                 $fileService = app(\App\Services\FileEncryptionService::class);
-                $fileData    = $fileService->decryptAndRetrieve($decodedFilename, 'local');
+                $fileData = $fileService->decryptAndRetrieve($decodedFilename, 'local');
                 return response($fileData['contents'], 200, [
-                    'Content-Type'        => 'application/pdf',
+                    'Content-Type' => 'application/pdf',
                     'Content-Disposition' => 'inline; filename="order_file.pdf"',
-                    'Content-Length'      => strlen($fileData['contents']),
+                    'Content-Length' => strlen($fileData['contents']),
                 ]);
             }
             return abort(404, 'File not found.');
@@ -1615,7 +1624,7 @@ class OrderController extends Controller
                 if (!Storage::disk('private')->exists($path)) {
                     return abort(404, 'File not found.');
                 }
-// >>>>>>> Stashed changes
+                // >>>>>>> Stashed changes
             }
         }
 
@@ -1663,11 +1672,11 @@ class OrderController extends Controller
                     return response()->json(['error' => 'File not found'], 404);
                 }
                 $fileService = app(\App\Services\FileEncryptionService::class);
-                $fileData    = $fileService->decryptAndRetrieve($path, 'local');
+                $fileData = $fileService->decryptAndRetrieve($path, 'local');
                 return response($fileData['contents'], 200, [
-                    'Content-Type'        => 'application/pdf',
+                    'Content-Type' => 'application/pdf',
                     'Content-Disposition' => 'inline; filename="order_form.pdf"',
-                    'Content-Length'      => strlen($fileData['contents']),
+                    'Content-Length' => strlen($fileData['contents']),
                 ]);
             }
 
