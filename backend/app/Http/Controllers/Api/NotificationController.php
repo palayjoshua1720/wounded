@@ -322,4 +322,119 @@ class NotificationController extends Controller
 
         return response()->json(['success' => true]);
     }
+
+    /**
+     * Get notification statistics - counts across ALL data (not just current page)
+     */
+    public function stats(Request $request)
+    {
+        $clinicId = $request->input('clinic_id');
+        $userId = $request->user()?->id;
+        
+        $readIds = NotificationRead::where('user_id', $userId)
+            ->pluck('notification_id')
+            ->toArray();
+
+        $events = collect();
+        $todayStart = Carbon::today()->startOfDay();
+        $weekStart = Carbon::now()->subDays(7)->startOfDay();
+
+        // ── Usage Logs ─────────────────────────────────────────────
+        if (!$clinicId) {
+            if (class_exists(UsageLog::class)) {
+                $query = UsageLog::with(['clinic', 'patient.clinic']);
+                
+                $query->get()->each(function ($log) use (&$events, $readIds) {
+                    $notifId = 'usage_' . $log->graft_log_id;
+
+                    $events->push([
+                        'id'          => $notifId,
+                        'created_at'  => $log->logged_at?->toIso8601String(),
+                        'is_read'     => in_array($notifId, $readIds),
+                    ]);
+                });
+            }
+        }
+
+        // ── Orders ─────────────────────────────────────────────────
+        $query = Orders::with(['clinic']);
+        if ($clinicId) $query->where('clinic_id', $clinicId);
+        
+        $query->get()->each(function ($o) use (&$events, $readIds) {
+            $notifId = 'order_' . $o->order_id;
+            
+            $events->push([
+                'id'          => $notifId,
+                'created_at'  => $o->ordered_at?->toIso8601String(),
+                'is_read'     => in_array($notifId, $readIds),
+            ]);
+        });
+
+        // ── IVR ────────────────────────────────────────────────────
+        if (class_exists(IVR::class)) {
+            $query = IVR::with(['clinic']);
+            if ($clinicId) $query->where('clinic_id', $clinicId);
+            
+            $query->get()->each(function ($ivr) use (&$events, $readIds) {
+                $notifId = 'ivr_' . $ivr->ivr_id;
+                
+                $events->push([
+                    'id'          => $notifId,
+                    'created_at'  => $ivr->updated_at?->toIso8601String(),
+                    'is_read'     => in_array($notifId, $readIds),
+                ]);
+            });
+        }
+
+        // ── Invoices ───────────────────────────────────────────────
+        if (!$clinicId && class_exists(Invoice::class)) {
+            Invoice::with('clinic')->get()->each(function ($invoice) use (&$events, $readIds) {
+                $notifId = 'invoice_' . $invoice->id;
+                
+                $events->push([
+                    'id'          => $notifId,
+                    'created_at'  => $invoice->created_at?->toIso8601String(),
+                    'is_read'     => in_array($notifId, $readIds),
+                ]);
+            });
+        }
+
+        // ── Returns ────────────────────────────────────────────────
+        if (!$clinicId && class_exists(Returns::class)) {
+            Returns::with(['usageLog.patient.clinic'])->get()->each(function ($return) use (&$events, $readIds) {
+                $notifId = 'return_' . $return->return_id;
+                
+                $events->push([
+                    'id'          => $notifId,
+                    'created_at'  => $return->returned_at?->toIso8601String(),
+                    'is_read'     => in_array($notifId, $readIds),
+                ]);
+            });
+        }
+
+        $total = $events->count();
+        $unread = $events->where('is_read', false)->count();
+        
+        // Count notifications from the last 24 hours
+        $today = $events->filter(function ($e) use ($todayStart) {
+            if (!$e['created_at']) return false;
+            $date = Carbon::parse($e['created_at']);
+            return $date->gte($todayStart);
+        })->count();
+
+        // Count notifications from the last 7 days
+        $week = $events->filter(function ($e) use ($weekStart) {
+            if (!$e['created_at']) return false;
+            $date = Carbon::parse($e['created_at']);
+            return $date->gte($weekStart);
+        })->count();
+
+        return response()->json([
+            'success' => true,
+            'total' => $total,
+            'unread' => $unread,
+            'today' => $today,
+            'week' => $week,
+        ]);
+    }
 }

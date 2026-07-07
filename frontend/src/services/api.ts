@@ -385,6 +385,9 @@ export const notificationService = {
   }) {
     return api.get('/notifications', { params })
   },
+  getNotificationStats(params?: { clinic_id?: number | string }) {
+    return api.get('/notifications/stats', { params })
+  },
   markAsRead(id: string) {
     return api.post(`/notifications/${id}/read`)
   },

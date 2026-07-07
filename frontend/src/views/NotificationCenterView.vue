@@ -2,16 +2,16 @@
   <div class="space-y-5">
 
     <!-- Header -->
-    <div class="flex items-center justify-between">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
       <div>
         <h1 class="text-xl font-semibold text-gray-900 dark:text-white tracking-tight">Notifications</h1>
-        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">System events &amp; clinical alerts</p>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">System events & clinical alerts</p>
       </div>
       <button v-if="unreadCount" @click="markAllAsRead" :disabled="markingRead"
-        class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors">
+        class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors w-fit">
         <CheckCircle v-if="!markingRead" class="w-4 h-4" />
         <Clock v-else class="w-4 h-4 animate-spin" />
-        Mark all read
+        Mark all as read
       </button>
     </div>
 
@@ -24,7 +24,7 @@
         </div>
         <div>
           <p class="text-lg font-semibold text-gray-900 dark:text-white leading-none">{{ totalCount }}</p>
-          <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Total</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Total Notifications</p>
         </div>
       </div>
       <div
@@ -34,7 +34,7 @@
         </div>
         <div>
           <p class="text-lg font-semibold text-gray-900 dark:text-white leading-none">{{ unreadCount }}</p>
-          <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Unread</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Unread Notifications</p>
         </div>
       </div>
       <div
@@ -45,7 +45,7 @@
         </div>
         <div>
           <p class="text-lg font-semibold text-gray-900 dark:text-white leading-none">{{ todayCount }}</p>
-          <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Today</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Notifications Today</p>
         </div>
       </div>
       <div
@@ -56,57 +56,60 @@
         </div>
         <div>
           <p class="text-lg font-semibold text-gray-900 dark:text-white leading-none">{{ weekCount }}</p>
-          <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">This Week</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">This Week's Notifications</p>
         </div>
       </div>
     </div>
 
     <!-- Filters -->
     <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
-      <div class="flex flex-col lg:flex-row gap-3">
+      <div class="flex flex-wrap items-center gap-3">
         <!-- Search -->
-        <div class="relative flex-1 min-w-0">
+        <div class="relative min-w-[200px] flex-[1]">
           <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input v-model="searchTerm" placeholder="Search notifications..."
             class="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-400 transition" />
         </div>
 
-        <!-- Type -->
-        <select v-model="typeFilter"
-          class="px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/40 min-w-[130px]">
-          <option value="all">All Types</option>
-          <option v-for="t in notificationTypes" :key="t.value" :value="t.value">{{ t.label }}</option>
-        </select>
+        <!-- Filters row -->
+        <div class="flex flex-wrap items-center gap-2">
+          <!-- Type -->
+          <select v-model="typeFilter"
+            class="px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/40 min-w-[130px]">
+            <option value="all">All Types</option>
+            <option v-for="t in notificationTypes" :key="t.value" :value="t.value">{{ t.label }}</option>
+          </select>
 
-        <!-- Status -->
-        <select v-model="statusFilter"
-          class="px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/40 min-w-[120px]">
-          <option value="all">All Status</option>
-          <option value="unread">Unread</option>
-          <option value="read">Read</option>
-        </select>
+          <!-- Status -->
+          <select v-model="statusFilter"
+            class="px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/40 min-w-[120px]">
+            <option value="all">All Status</option>
+            <option value="unread">Unread</option>
+            <option value="read">Read</option>
+          </select>
 
-        <!-- Date range -->
-        <div class="flex items-center gap-2">
-          <input type="date" v-model="startDate"
-            class="px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/40 w-[148px]" />
-          <span class="text-xs text-gray-400 flex-shrink-0">to</span>
-          <input type="date" v-model="endDate"
-            class="px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/40 w-[148px]" />
-        </div>
+          <!-- Date range -->
+          <div class="flex items-center gap-2">
+            <input type="date" v-model="startDate"
+              class="px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-400 w-[130px]" />
+            <span class="text-xs text-gray-400 flex-shrink-0">to</span>
+            <input type="date" v-model="endDate"
+              class="px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-400 w-[130px]" />
+          </div>
 
-        <!-- Actions -->
-        <div class="flex gap-2 shrink-0">
-          <button @click="fetchNotifications()"
-            class="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors">
-            <Filter class="w-3.5 h-3.5" />
-            Apply
-          </button>
-          <button @click="clearDateRange"
-            class="inline-flex items-center gap-1.5 px-4 py-2 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 text-sm font-medium rounded-lg transition-colors">
-            <RotateCcw class="w-3.5 h-3.5" />
-            Reset
-          </button>
+          <!-- Actions -->
+          <div class="flex gap-2">
+            <button @click="fetchNotifications()"
+              class="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors">
+              <Filter class="w-3.5 h-3.5" />
+              Apply
+            </button>
+            <button @click="clearDateRange"
+              class="inline-flex items-center gap-1.5 px-4 py-2 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 text-sm font-medium rounded-lg transition-colors">
+              <RotateCcw class="w-3.5 h-3.5" />
+              Reset
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -215,7 +218,7 @@
         </div>
 
         <!-- Right: badge + time -->
-        <div class="flex flex-col items-end justify-start gap-1.5 pr-4 py-3.5 flex-shrink-0">
+        <div class="hidden sm:flex flex-col items-end justify-start gap-1.5 pr-4 py-3.5 flex-shrink-0">
           <span v-if="notification.status"
             class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-medium"
             :class="getStatusBadge(notification.status)">
@@ -262,7 +265,7 @@
       <div v-if="selected" class="space-y-4">
 
         <!-- Type & Read Status -->
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <p class="text-xs font-medium text-gray-400 dark:text-gray-500 mb-1.5">Type</p>
             <div class="flex items-center gap-2">
@@ -298,7 +301,7 @@
         </div>
 
         <!-- Created & Clinic -->
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <p class="text-xs font-medium text-gray-400 dark:text-gray-500 mb-1">Created</p>
             <p class="text-sm text-gray-900 dark:text-white">{{ formatDateTime(selected.createdAt) }}</p>
@@ -310,7 +313,7 @@
         </div>
 
         <!-- Patient & Detail -->
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div v-if="selected.patient">
             <p class="text-xs font-medium text-gray-400 dark:text-gray-500 mb-1">Patient</p>
             <p class="text-sm text-gray-900 dark:text-white">{{ selected.patient }}</p>
@@ -322,7 +325,7 @@
         </div>
 
         <!-- Brand & Manufacturer -->
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div v-if="selected.brands">
             <p class="text-xs font-medium text-gray-400 dark:text-gray-500 mb-1">Brand</p>
             <p class="text-sm text-gray-900 dark:text-white">{{ selected.brands }}</p>
@@ -334,7 +337,7 @@
         </div>
 
         <!-- Amount & Serial -->
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div v-if="selected.amount">
             <p class="text-xs font-medium text-gray-400 dark:text-gray-500 mb-1">Amount</p>
             <p class="text-sm font-medium text-gray-900 dark:text-white">{{ selected.amount }}</p>
@@ -378,6 +381,7 @@ import { notificationService } from '@/services/api'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
+import Swal from 'sweetalert2'
 dayjs.extend(relativeTime)
 
 import {
@@ -428,6 +432,14 @@ const showDetailsModal = ref(false)
 const selected = ref<Notification | null>(null)
 const meta = ref<PaginationMeta>({ current_page: 1, per_page: 10, total: 0, last_page: 1 })
 const markingRead = ref(false)
+
+// ── Stats (fetched from API for accurate counts across all data) ──
+const stats = ref({
+  total: 0,
+  unread: 0,
+  today: 0,
+  week: 0
+})
 
 const notificationTypes = [
   { value: 'order', label: 'Order' },
@@ -511,7 +523,9 @@ function clearDateRange() {
 
 function goToPage(page: number) { fetchNotifications(page) }
 
-onMounted(() => fetchNotifications())
+onMounted(async () => {
+  await Promise.all([fetchNotifications(), fetchStats()])
+})
 watch(typeFilter, () => fetchNotifications())
 
 let searchTimeout: ReturnType<typeof setTimeout> | null = null
@@ -531,10 +545,34 @@ const filteredNotifications = computed(() =>
   })
 )
 
-const totalCount = computed(() => meta.value.total)
-const unreadCount = computed(() => notifications.value.filter(n => !n.isRead).length)
-const todayCount = computed(() => notifications.value.filter(n => dayjs(n.createdAt).isSame(new Date(), 'day')).length)
-const weekCount = computed(() => notifications.value.filter(n => dayjs(n.createdAt).isAfter(dayjs().subtract(7, 'day'))).length)
+// Use API stats for accurate counts across all data
+const totalCount = computed(() => stats.value.total)
+const unreadCount = computed(() => stats.value.unread)
+const todayCount = computed(() => stats.value.today)
+const weekCount = computed(() => stats.value.week)
+
+// ── Fetch Stats ─────────────────────────────────────────────────
+async function fetchStats() {
+  try {
+    const userRole = (authStore.user as any)?.user_role
+    const params: Record<string, any> = {}
+    if ((userRole === 2 || userRole === 3) && (authStore.user as any)?.clinic_id) {
+      params.clinic_id = (authStore.user as any).clinic_id
+    }
+
+    const res = await notificationService.getNotificationStats(params)
+    if (res?.data) {
+      stats.value = {
+        total: res.data.total ?? 0,
+        unread: res.data.unread ?? 0,
+        today: res.data.today ?? 0,
+        week: res.data.week ?? 0
+      }
+    }
+  } catch (err) {
+    console.error('Failed to load notification stats:', err)
+  }
+}
 
 // ── Helpers ─────────────────────────────────────────────────────
 const timeAgo = (str: string | null | undefined) => {
@@ -646,10 +684,33 @@ const markAsRead = async (id: string) => {
 const markAllAsRead = async () => {
   const unreadIds = notifications.value.filter(n => !n.isRead).map(n => n.id)
   if (!unreadIds.length) return
+
+  const result = await Swal.fire({
+    title: 'Mark all as read?',
+    html: `You are about to mark <span class="font-semibold text-info">${unreadIds.length} notification${unreadIds.length > 1 ? 's' : ''}</span> as read.`,
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonColor: '#4f46e5',
+    cancelButtonColor: '#6b7280',
+    confirmButtonText: 'Yes, mark all as read',
+    cancelButtonText: 'Cancel'
+  })
+
+  if (!result.isConfirmed) return
+
   markingRead.value = true
   try {
     notifications.value.forEach(n => { n.isRead = true })
     await notificationService.markAllAsRead(unreadIds)
+    Swal.fire({
+      toast: true,
+      position: 'top-end',
+      icon: 'success',
+      title: 'All notifications marked as read',
+      showConfirmButton: false,
+      timer: 3000,
+      timerProgressBar: true
+    })
   } catch (err) {
     console.error('Failed to mark all as read:', err)
   } finally {

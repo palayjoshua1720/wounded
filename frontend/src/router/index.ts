@@ -691,7 +691,7 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 		'manufacturer-management': [0, 1],
 		'brand-management': [0, 1],
 		'graft-size-management': [0, 1],
-		'product-management': [0, 1],
+		'product-management': [0, 1, 2],
 		// IVR Management
 		'admin-ivr-management': [0],
 		'office-staff-ivr-management': [1],
@@ -795,6 +795,7 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 					'clinic-dashboard',
 					// 'clinic-users',
 					'clinic-patients',
+					'product-management',
 					'clinic-ivr-management',
 					'clinic-order-management',
 					'clinic-invoice-management',
