@@ -1,7 +1,7 @@
 <template>
 	<div class="space-y-6">
 		<!-- Report Type Selection Card -->
-		<div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+		<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
 			<div class="flex items-center justify-between mb-6">
 				<div>
 					<h3 class="text-lg font-semibold text-gray-900 dark:text-white">Select Report Type</h3>
@@ -16,13 +16,13 @@
 					:class="[
 						'p-4 border-2 rounded-xl cursor-pointer transition-all duration-300 group relative overflow-hidden',
 						reportType === type.id
-							? 'border-blue-500 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/20 shadow-md'
-							: 'border-gray-200 dark:border-gray-600 hover:border-blue-300 dark:hover:border-blue-700 hover:shadow-sm'
+							? 'border-red-500 bg-gradient-to-br from-red-50 to-rose-50 dark:from-red-900/30 dark:to-rose-900/20 shadow-md'
+							: 'border-gray-200 dark:border-gray-600 hover:border-red-300 dark:hover:border-red-700 hover:shadow-sm'
 					]"
 				>
 					<!-- Selected Indicator -->
 					<div v-if="reportType === type.id" class="absolute top-3 right-3">
-						<div class="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
+						<div class="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
 							<svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
 							</svg>
@@ -33,27 +33,27 @@
 						<div :class="[
 							'p-2.5 rounded-xl transition-all duration-300 shadow-sm',
 							reportType === type.id 
-								? 'bg-gradient-to-br from-blue-500 to-indigo-600 shadow-blue-200 dark:shadow-blue-900/50' 
-								: 'bg-gray-100 dark:bg-gray-700 group-hover:bg-blue-50 dark:group-hover:bg-blue-900/30'
+								? 'bg-gradient-to-br from-red-500 to-rose-600 shadow-red-200 dark:shadow-red-900/50' 
+								: 'bg-gray-100 dark:bg-gray-700 group-hover:bg-red-50 dark:group-hover:bg-red-900/30'
 						]">
 							<component 
 								:is="type.icon" 
 								:class="[
 									'w-5 h-5 transition-all duration-300',
-									reportType === type.id ? 'text-white' : 'text-gray-500 dark:text-gray-400 group-hover:text-blue-500'
+									reportType === type.id ? 'text-white' : 'text-gray-500 dark:text-gray-400 group-hover:text-red-500'
 								]" 
 							/>
 						</div>
 						<div class="flex-1 pr-6">
 							<h4 :class="[
 								'font-semibold text-sm mb-0.5',
-								reportType === type.id ? 'text-blue-900 dark:text-blue-100' : 'text-gray-900 dark:text-white'
+								reportType === type.id ? 'text-red-900 dark:text-red-100' : 'text-gray-900 dark:text-white'
 							]">
 								{{ type.name }}
 							</h4>
 							<p :class="[
 								'text-xs leading-relaxed',
-								reportType === type.id ? 'text-blue-700 dark:text-blue-300' : 'text-gray-500 dark:text-gray-400'
+								reportType === type.id ? 'text-red-700 dark:text-red-300' : 'text-gray-500 dark:text-gray-400'
 							]">
 								{{ type.description }}
 							</p>
@@ -64,17 +64,17 @@
 		</div>
 
 		<!-- Filters Card -->
-		<div class="bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+		<div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
 			<div class="flex items-center justify-between mb-4">
 				<h3 class="text-base font-semibold text-gray-900 dark:text-white flex items-center">
-					<svg class="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<svg class="w-4 h-4 mr-2 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
 					</svg>
 					Report Filters
 				</h3>
 				<button 
 					@click="clearFilters"
-					class="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium flex items-center transition-colors"
+					class="text-xs text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-medium flex items-center transition-colors"
 				>
 					<svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
@@ -94,7 +94,7 @@
 					</label>
 					<select
 						v-model="dateRange"
-						class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white transition-all duration-200"
+						class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900 dark:text-white transition-all duration-200"
 					>
 						<option v-for="option in dateRangeOptions" :key="option.value" :value="option.value">
 							{{ option.label }}
@@ -109,7 +109,7 @@
 						<input
 							v-model="startDate"
 							type="date"
-							class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white transition-all duration-200"
+							class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900 dark:text-white transition-all duration-200"
 						/>
 					</div>
 					<div class="flex-1 min-w-[140px]">
@@ -117,7 +117,7 @@
 						<input
 							v-model="endDate"
 							type="date"
-							class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white transition-all duration-200"
+							class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900 dark:text-white transition-all duration-200"
 						/>
 					</div>
 				</template>
@@ -132,7 +132,7 @@
 					</label>
 					<select
 						v-model="clinicFilter"
-						class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white transition-all duration-200"
+						class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900 dark:text-white transition-all duration-200"
 					>
 						<option value="all">All Clinics</option>
 						<option v-for="clinic in clinics" :key="clinic.id" :value="clinic.id">
@@ -151,7 +151,7 @@
 					</label>
 					<select
 						v-model="brandFilter"
-						class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white transition-all duration-200"
+						class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900 dark:text-white transition-all duration-200"
 					>
 						<option value="all">All Brands</option>
 						<option v-for="brand in brands" :key="brand.id" :value="brand.id">
@@ -170,7 +170,7 @@
 					</label>
 					<select
 						v-model="manufacturerFilter"
-						class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white transition-all duration-200"
+						class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900 dark:text-white transition-all duration-200"
 					>
 						<option value="all">All Manufacturers</option>
 						<option v-for="manufacturer in manufacturers" :key="manufacturer.id" :value="manufacturer.id">
@@ -193,7 +193,7 @@
 					<button
 						@click="handleGenerateReport"
 						:disabled="isLoadingData || (dateRange === 'custom' && dateRangeError !== '')"
-						class="flex items-center justify-center space-x-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-medium rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-sm hover:shadow-md group disabled:opacity-50 disabled:cursor-not-allowed"
+						class="flex items-center justify-center space-x-2 px-5 py-2.5 bg-gradient-to-r from-red-600 to-rose-600 text-white text-sm font-medium rounded-lg hover:from-red-700 hover:to-rose-700 transition-all duration-200 shadow-sm hover:shadow-md group disabled:opacity-50 disabled:cursor-not-allowed"
 					>
 						<ChartBarIcon v-if="!isLoadingData" class="w-4 h-4 text-white group-hover:scale-110 transition-transform" />
 						<svg v-else class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -263,7 +263,7 @@
 		<!-- Report Preview -->
 		<div v-if="selectedReportType && reportGenerated" class="report-preview-container space-y-6">
 			<!-- Report Header - Simplified -->
-			<div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+			<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
 				<!-- Title Row -->
 				<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
 					<div>
@@ -275,7 +275,7 @@
 						</p>
 					</div>
 					<div class="sm:text-right">
-						<span class="inline-flex items-center px-2.5 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 text-xs font-medium rounded-md">
+						<span class="inline-flex items-center px-2.5 py-1 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 text-xs font-medium rounded-md">
 							Generated {{ currentTimestamp }}
 						</span>
 					</div>
@@ -312,19 +312,19 @@
 			<!-- Orders Report -->
 			<div v-if="reportType === 'orders'" class="space-y-5">
 			<!-- KPI Cards Row -->
-			<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-				<div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-100 dark:border-gray-700 shadow-sm">
+			<div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+				<div class="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm">
 					<div class="flex items-center justify-between">
 						<div>
 							<p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Total Orders</p>
 							<p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">{{ totalOrders }}</p>
 						</div>
-						<div class="p-2.5 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
-							<TrendingUp class="w-5 h-5 text-blue-600 dark:text-blue-400" />
+						<div class="p-2.5 bg-red-50 dark:bg-red-900/30 rounded-lg">
+							<ClipboardDocumentListIcon class="w-5 h-5 text-red-600 dark:text-red-400" />
 						</div>
 					</div>
 				</div>
-				<div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-100 dark:border-gray-700 shadow-sm">
+				<div class="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm">
 					<div class="flex items-center justify-between">
 						<div>
 							<p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Total Items</p>
@@ -335,7 +335,7 @@
 						</div>
 					</div>
 				</div>
-				<div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-100 dark:border-gray-700 shadow-sm">
+				<div class="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm">
 					<div class="flex items-center justify-between">
 						<div>
 							<p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Total Value</p>
@@ -352,7 +352,7 @@
 			<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5">
 				<div class="flex items-center justify-between mb-4">
 					<h3 class="text-base font-semibold text-gray-900 dark:text-white flex items-center">
-						<span class="w-1 h-5 bg-blue-500 rounded-full mr-2"></span>
+						<span class="w-1 h-5 bg-red-500 rounded-full mr-2"></span>
 						Order Status Breakdown
 					</h3>
 				</div>
@@ -383,8 +383,8 @@
 				<!-- Top Clinics OR Top Products -->
 				<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5 flex flex-col">
 					<div class="flex items-center space-x-2 mb-4">
-						<div class="p-1.5 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
-							<component :is="clinicFilter !== 'all' ? CubeIcon : Building2" class="w-4 h-4 text-blue-600 dark:text-blue-400" />
+						<div class="p-1.5 bg-red-50 dark:bg-red-900/30 rounded-lg">
+							<component :is="clinicFilter !== 'all' ? CubeIcon : Building2" class="w-4 h-4 text-red-600 dark:text-red-400" />
 						</div>
 						<h3 class="text-sm font-semibold text-gray-900 dark:text-white">{{ clinicFilter !== 'all' ? 'Top Products' : 'Top Clinics' }}</h3>
 					</div>
@@ -404,7 +404,7 @@
 								<div class="flex items-center space-x-3 flex-shrink-0">
 									<span class="text-xs text-gray-500 dark:text-gray-400">{{ product.count }}</span>
 									<div class="w-16 bg-gray-200 dark:bg-gray-600 rounded-full h-1.5">
-										<div class="bg-blue-500 h-1.5 rounded-full" :style="{ width: `${product.percentage}%` }"></div>
+										<div class="bg-red-500 h-1.5 rounded-full" :style="{ width: `${product.percentage}%` }"></div>
 									</div>
 								</div>
 							</div>
@@ -443,7 +443,7 @@
 						</div>
 						<h3 class="text-sm font-semibold text-gray-900 dark:text-white">{{ brandFilter !== 'all' ? 'Size Distribution' : 'Brand Distribution' }}</h3>
 					</div>
-					<div v-if="reportGenerated && !isLoadingData && (brandFilter !== 'all' ? sizeDistribution : brandDistribution).length === 0" class="flex-1 flex items-center justify-center py-8 text-xs text-gray-500 dark:text-gray-400">
+					<div v-if="reportGenerated && !isLoadingData && (brandFilter !== 'all' ? sizeDistribution : brandDistribution).length === 0" class="flex-1 flex items-center justify-center py-8 text-sm text-gray-500 dark:text-gray-400">
 							No data available
 						</div>
 					<div class="flex items-center justify-center mb-3">
@@ -479,8 +479,8 @@
 			<!-- Inventory Report -->
 			<div v-else-if="reportType === 'inventory'" class="space-y-5">
 				<!-- KPI Cards Row -->
-				<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-					<div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-100 dark:border-gray-700 shadow-sm">
+				<div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+					<div class="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm">
 						<div class="flex items-center justify-between">
 							<div>
 								<p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Total Items</p>
@@ -491,18 +491,18 @@
 							</div>
 						</div>
 					</div>
-					<div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-100 dark:border-gray-700 shadow-sm">
+					<div class="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm">
 						<div class="flex items-center justify-between">
 							<div>
 								<p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Used</p>
 								<p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">{{ usedInventoryCount }}</p>
 							</div>
-							<div class="p-2.5 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
-								<CheckCircleIcon class="w-5 h-5 text-blue-600 dark:text-blue-400" />
+							<div class="p-2.5 bg-red-50 dark:bg-red-900/30 rounded-lg">
+								<CheckCircleIcon class="w-5 h-5 text-red-600 dark:text-red-400" />
 							</div>
 						</div>
 					</div>
-					<div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-100 dark:border-gray-700 shadow-sm">
+					<div class="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm">
 						<div class="flex items-center justify-between">
 							<div>
 								<p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">In Use</p>
@@ -550,8 +550,8 @@
 					<!-- Top Clinics -->
 					<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5 flex flex-col">
 						<div class="flex items-center space-x-2 mb-4">
-							<div class="p-1.5 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
-								<Building2 class="w-4 h-4 text-blue-600 dark:text-blue-400" />
+							<div class="p-1.5 bg-red-50 dark:bg-red-900/30 rounded-lg">
+								<Building2 class="w-4 h-4 text-red-600 dark:text-red-400" />
 							</div>
 							<h3 class="text-sm font-semibold text-gray-900 dark:text-white">Top Clinics</h3>
 						</div>
@@ -570,7 +570,7 @@
 								<div class="flex items-center space-x-3 flex-shrink-0">
 									<span class="text-xs text-gray-500 dark:text-gray-400">{{ clinic.count }}</span>
 									<div class="w-16 bg-gray-200 dark:bg-gray-600 rounded-full h-1.5">
-										<div class="bg-blue-500 h-1.5 rounded-full" :style="{ width: `${clinic.percentage}%` }"></div>
+										<div class="bg-red-500 h-1.5 rounded-full" :style="{ width: `${clinic.percentage}%` }"></div>
 									</div>
 								</div>
 							</div>
@@ -588,7 +588,7 @@
 							</div>
 							<h3 class="text-sm font-semibold text-gray-900 dark:text-white">Brand Distribution</h3>
 						</div>
-						<div v-if="reportGenerated && !isLoadingData && inventoryBrandDistribution.length === 0" class="flex-1 flex items-center justify-center py-8 text-xs text-gray-500 dark:text-gray-400">
+						<div v-if="reportGenerated && !isLoadingData && inventoryBrandDistribution.length === 0" class="flex-1 flex items-center justify-center py-8 text-sm text-gray-500 dark:text-gray-400">
 								No brand data available
 							</div>
 						<div class="flex items-center justify-center mb-3">
@@ -608,19 +608,19 @@
 				</div>
 
 				<!-- E. Utilization Rate Card -->
-				<div class="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-2xl p-6 border border-indigo-100 dark:border-indigo-800">
+				<div class="bg-gradient-to-br from-rose-50 to-purple-50 dark:from-rose-900/20 dark:to-purple-900/20 rounded-xl p-6 border border-rose-100 dark:border-rose-800">
 					<div class="flex items-center justify-between mb-4">
 						<div>
 							<h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-1">Utilization Rate</h3>
 							<p class="text-sm text-gray-600 dark:text-gray-400">Efficiency of inventory usage</p>
 						</div>
 						<div class="text-right">
-							<p class="text-4xl font-bold text-indigo-600 dark:text-indigo-400">{{ utilizationRate }}%</p>
+							<p class="text-4xl font-bold text-rose-600 dark:text-rose-400">{{ utilizationRate }}%</p>
 							<p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Used / Delivered</p>
 						</div>
 					</div>
 					<div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4">
-						<div class="bg-gradient-to-r from-indigo-500 to-purple-500 h-4 rounded-full transition-all duration-500" 
+						<div class="bg-gradient-to-r from-rose-500 to-purple-500 h-4 rounded-full transition-all duration-500" 
 							:style="{ width: `${utilizationRate}%` }"></div>
 					</div>
 				</div>
@@ -629,8 +629,8 @@
 			<!-- Usage Report -->
 			<div v-else-if="reportType === 'usage'" class="space-y-5">
 				<!-- KPI Cards Row -->
-				<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-					<div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-100 dark:border-gray-700 shadow-sm">
+				<div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+					<div class="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm">
 						<div class="flex items-center justify-between">
 							<div>
 								<p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Total Grafts Used</p>
@@ -641,22 +641,22 @@
 							</div>
 						</div>
 					</div>
-					<div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-100 dark:border-gray-700 shadow-sm">
+					<div class="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm">
 						<div class="flex items-center justify-between">
 							<div>
 								<p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Top Wound Part</p>
-								<p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">{{ usageByWoundPart[0]?.name || 'N/A' }}</p>
+								<p class="mt-1 text-sm italic font-normal text-gray-400 dark:text-gray-500">{{ usageByWoundPart[0]?.name || 'No data available' }}</p>
 							</div>
 							<div class="p-2.5 bg-orange-50 dark:bg-orange-900/30 rounded-lg">
-								<TrendingUp class="w-5 h-5 text-orange-600 dark:text-orange-400" />
+								<BeakerIcon class="w-5 h-5 text-orange-600 dark:text-orange-400" />
 							</div>
 						</div>
 					</div>
-					<div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-100 dark:border-gray-700 shadow-sm">
+					<div class="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm">
 						<div class="flex items-center justify-between">
 							<div>
 								<p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Top Brand</p>
-								<p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">{{ usageBrandDistribution[0]?.name || 'N/A' }}</p>
+								<p class="mt-1 text-sm italic font-normal text-gray-400 dark:text-gray-500">{{ usageBrandDistribution[0]?.name || 'No data available' }}</p>
 							</div>
 							<div class="p-2.5 bg-purple-50 dark:bg-purple-900/30 rounded-lg">
 								<Package class="w-5 h-5 text-purple-600 dark:text-purple-400" />
@@ -671,11 +671,11 @@
 					<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5 flex flex-col">
 						<div class="flex items-center space-x-2 mb-4">
 							<div class="p-1.5 bg-orange-50 dark:bg-orange-900/30 rounded-lg">
-								<TrendingUp class="w-4 h-4 text-orange-600 dark:text-orange-400" />
+								<BeakerIcon class="w-4 h-4 text-orange-600 dark:text-orange-400" />
 							</div>
 							<h3 class="text-sm font-semibold text-gray-900 dark:text-white">Usage by Wound Part</h3>
 						</div>
-						<div v-if="reportGenerated && !isLoadingData && usageByWoundPart.length === 0" class="flex-1 flex items-center justify-center py-8 text-xs text-gray-500 dark:text-gray-400">
+						<div v-if="reportGenerated && !isLoadingData && usageByWoundPart.length === 0" class="flex-1 flex items-center justify-center py-8 text-sm text-gray-500 dark:text-gray-400">
 								No usage data available
 							</div>
 						<div class="flex items-center justify-center mb-3">
@@ -696,8 +696,8 @@
 					<!-- Top Clinics by Usage -->
 					<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5 flex flex-col">
 						<div class="flex items-center space-x-2 mb-4">
-							<div class="p-1.5 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
-								<Building2 class="w-4 h-4 text-blue-600 dark:text-blue-400" />
+							<div class="p-1.5 bg-red-50 dark:bg-red-900/30 rounded-lg">
+								<Building2 class="w-4 h-4 text-red-600 dark:text-red-400" />
 							</div>
 							<h3 class="text-sm font-semibold text-gray-900 dark:text-white">Top Clinics by Usage</h3>
 						</div>
@@ -716,7 +716,7 @@
 								<div class="flex items-center space-x-3 flex-shrink-0">
 									<span class="text-xs text-gray-500 dark:text-gray-400">{{ clinic.count }}</span>
 									<div class="w-16 bg-gray-200 dark:bg-gray-600 rounded-full h-1.5">
-										<div class="bg-blue-500 h-1.5 rounded-full" :style="{ width: `${clinic.percentage}%` }"></div>
+										<div class="bg-red-500 h-1.5 rounded-full" :style="{ width: `${clinic.percentage}%` }"></div>
 									</div>
 								</div>
 							</div>
@@ -735,7 +735,10 @@
 						</div>
 						<h3 class="text-sm font-semibold text-gray-900 dark:text-white">Brand Usage Distribution</h3>
 					</div>
-					<div class="grid grid-cols-1 lg:grid-cols-2 gap-5 flex-1">
+					<div class="grid grid-cols-1 lg:grid-cols-2 gap-5 flex-1 relative">
+						<div v-if="reportGenerated && !isLoadingData && usageBrandDistribution.length === 0" class="absolute inset-0 flex items-center justify-center text-sm text-gray-500 dark:text-gray-400 z-10">
+							No brand data available
+						</div>
 						<div class="flex items-center justify-center">
 							<canvas ref="usageBrandChartRef" style="max-width:180px;max-height:180px;"></canvas>
 						</div>
@@ -748,9 +751,6 @@
 								</div>
 								<span class="text-xs font-semibold text-gray-900 dark:text-white">{{ brand.count }}</span>
 							</div>
-							<div v-if="reportGenerated && !isLoadingData && usageBrandDistribution.length === 0" class="flex-1 flex items-center justify-center py-8 text-xs text-gray-500 dark:text-gray-400">
-								No brand data available
-							</div>
 						</div>
 					</div>
 				</div>
@@ -759,19 +759,19 @@
 			<!-- Invoice Report -->
 			<div v-else-if="reportType === 'invoices'" class="space-y-5">
 				<!-- KPI Cards Row -->
-				<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-					<div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-100 dark:border-gray-700 shadow-sm">
+				<div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+					<div class="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm">
 						<div class="flex items-center justify-between">
 							<div>
 								<p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Total Invoices</p>
 								<p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">{{ filteredInvoices.length }}</p>
 							</div>
-							<div class="p-2.5 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
-								<DocumentTextIcon class="w-5 h-5 text-blue-600 dark:text-blue-400" />
+							<div class="p-2.5 bg-red-50 dark:bg-red-900/30 rounded-lg">
+								<DocumentTextIcon class="w-5 h-5 text-red-600 dark:text-red-400" />
 							</div>
 						</div>
 					</div>
-					<div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-100 dark:border-gray-700 shadow-sm">
+					<div class="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm">
 						<div class="flex items-center justify-between">
 							<div>
 								<p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Total Amount</p>
@@ -782,7 +782,7 @@
 							</div>
 						</div>
 					</div>
-					<div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-100 dark:border-gray-700 shadow-sm">
+					<div class="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm">
 						<div class="flex items-center justify-between">
 							<div>
 								<p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Pending</p>
@@ -799,7 +799,7 @@
 				<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5 flex flex-col">
 					<div class="flex items-center justify-between mb-4">
 						<h3 class="text-base font-semibold text-gray-900 dark:text-white flex items-center">
-							<span class="w-1 h-5 bg-blue-500 rounded-full mr-2"></span>
+							<span class="w-1 h-5 bg-red-500 rounded-full mr-2"></span>
 							Invoice Status Breakdown
 						</h3>
 					</div>
@@ -865,19 +865,19 @@
 			<!-- IVR Report -->
 			<div v-else-if="reportType === 'ivr'" class="space-y-5">
 				<!-- KPI Cards Row -->
-				<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-					<div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-100 dark:border-gray-700 shadow-sm">
+				<div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+					<div class="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm">
 						<div class="flex items-center justify-between">
 							<div>
 								<p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Total Requests</p>
 								<p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">{{ filteredIVRRequests.length }}</p>
 							</div>
-							<div class="p-2.5 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg">
-								<PhoneIcon class="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+							<div class="p-2.5 bg-rose-50 dark:bg-rose-900/30 rounded-lg">
+								<ShieldCheckIcon class="w-5 h-5 text-rose-600 dark:text-rose-400" />
 							</div>
 						</div>
 					</div>
-					<div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-100 dark:border-gray-700 shadow-sm">
+					<div class="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm">
 						<div class="flex items-center justify-between">
 							<div>
 								<p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Approval Rate</p>
@@ -888,14 +888,14 @@
 							</div>
 						</div>
 					</div>
-					<div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-100 dark:border-gray-700 shadow-sm">
+					<div class="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm">
 						<div class="flex items-center justify-between">
 							<div>
 								<p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Top Status</p>
-								<p class="text-2xl font-bold text-gray-900 dark:text-white mt-1 capitalize">{{ ivrEligibilityBreakdown[0]?.name || 'N/A' }}</p>
+								<p class="mt-1 text-sm italic font-normal text-gray-400 dark:text-gray-500 capitalize">{{ ivrEligibilityBreakdown[0]?.name || 'No data available' }}</p>
 							</div>
-							<div class="p-2.5 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
-								<ChartBarIcon class="w-5 h-5 text-blue-600 dark:text-blue-400" />
+							<div class="p-2.5 bg-red-50 dark:bg-red-900/30 rounded-lg">
+								<ClipboardDocumentCheckIcon class="w-5 h-5 text-red-600 dark:text-red-400" />
 							</div>
 						</div>
 					</div>
@@ -907,11 +907,11 @@
 					<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5 flex flex-col">
 						<div class="flex items-center space-x-2 mb-4">
 							<div class="p-1.5 bg-green-50 dark:bg-green-900/30 rounded-lg">
-								<PhoneIcon class="w-4 h-4 text-green-600 dark:text-green-400" />
+								<ShieldCheckIcon class="w-4 h-4 text-green-600 dark:text-green-400" />
 							</div>
 							<h3 class="text-sm font-semibold text-gray-900 dark:text-white">Eligibility Status</h3>
 						</div>
-						<div v-if="reportGenerated && !isLoadingData && ivrEligibilityBreakdown.length === 0" class="flex-1 flex items-center justify-center py-8 text-xs text-gray-500 dark:text-gray-400">
+						<div v-if="reportGenerated && !isLoadingData && ivrEligibilityBreakdown.length === 0" class="flex-1 flex items-center justify-center py-8 text-sm text-gray-500 dark:text-gray-400">
 								No IVR data available
 							</div>
 						<div class="flex items-center justify-center mb-3">
@@ -933,7 +933,7 @@
 					<div v-if="manufacturerFilter === 'all'" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5 flex flex-col">
 						<div class="flex items-center space-x-2 mb-4">
 							<div class="p-1.5 bg-orange-50 dark:bg-orange-900/30 rounded-lg">
-								<Package class="w-4 h-4 text-orange-600 dark:text-orange-400" />
+								<BuildingStorefrontIcon class="w-4 h-4 text-orange-600 dark:text-orange-400" />
 							</div>
 							<h3 class="text-sm font-semibold text-gray-900 dark:text-white">Top Manufacturers</h3>
 						</div>
@@ -966,7 +966,7 @@
 					<div v-else class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5">
 						<div class="flex items-center space-x-2 mb-4">
 							<div class="p-1.5 bg-purple-50 dark:bg-purple-900/30 rounded-lg">
-								<Package class="w-4 h-4 text-purple-600 dark:text-purple-400" />
+								<BuildingStorefrontIcon class="w-4 h-4 text-purple-600 dark:text-purple-400" />
 							</div>
 							<div class="flex-1 min-w-0">
 								<h3 class="text-sm font-semibold text-gray-900 dark:text-white">Manufacturer Insights</h3>
@@ -1002,8 +1002,8 @@
 				<!-- Clinic Insights or Top Clinics -->
 				<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5 flex flex-col">
 					<div class="flex items-center space-x-2 mb-4">
-						<div class="p-1.5 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
-							<Building2 class="w-4 h-4 text-blue-600 dark:text-blue-400" />
+						<div class="p-1.5 bg-red-50 dark:bg-red-900/30 rounded-lg">
+							<Building2 class="w-4 h-4 text-red-600 dark:text-red-400" />
 						</div>
 						<div class="flex-1 min-w-0">
 							<h3 class="text-sm font-semibold text-gray-900 dark:text-white">{{ clinicFilter !== 'all' ? 'Clinic Insights' : 'Top Clinics by IVR Requests' }}</h3>
@@ -1013,8 +1013,8 @@
 
 					<!-- Clinic Insights - Show when clinic is filtered -->
 					<div v-if="clinicFilter !== 'all'" class="grid grid-cols-2 gap-3 flex-1">
-						<div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 border border-blue-100 dark:border-blue-800">
-							<p class="text-xs text-blue-600 dark:text-blue-400 mb-1">Total Requests</p>
+						<div class="bg-red-50 dark:bg-red-900/20 rounded-lg p-3 border border-red-100 dark:border-red-800">
+							<p class="text-xs text-red-600 dark:text-red-400 mb-1">Total Requests</p>
 							<p class="text-xl font-bold text-gray-900 dark:text-white">{{ filteredIVRRequests.length }}</p>
 						</div>
 						<div class="bg-green-50 dark:bg-green-900/20 rounded-lg p-3 border border-green-100 dark:border-green-800">
@@ -1039,7 +1039,7 @@
 							<div class="flex items-center space-x-3 flex-shrink-0">
 								<span class="text-xs text-gray-500 dark:text-gray-400">{{ clinic.count }}</span>
 								<div class="w-16 bg-gray-200 dark:bg-gray-600 rounded-full h-1.5">
-									<div class="bg-blue-500 h-1.5 rounded-full" :style="{ width: `${clinic.percentage}%` }"></div>
+									<div class="bg-red-500 h-1.5 rounded-full" :style="{ width: `${clinic.percentage}%` }"></div>
 								</div>
 							</div>
 						</div>
@@ -1065,15 +1065,20 @@ import {
 	ChartBarSquareIcon,
 	ClipboardDocumentListIcon,
 	DocumentTextIcon,
-	PhoneIcon,
 	CheckCircleIcon,
 	ArrowPathIcon,
-	ClockIcon
+	ClockIcon,
+	ShieldCheckIcon,
+	BuildingStorefrontIcon,
+	ClipboardDocumentCheckIcon,
+	BeakerIcon
 } from '@heroicons/vue/24/outline'
 import { Chart, registerables, type ChartType } from 'chart.js'
 import type { Ref } from 'vue'
 import { orderService, userService, brandService, inventoryService, invoiceService, ivrService, returnsService, api } from '@/services/api'
-import { TrendingUp, Package, Building2 } from 'lucide-vue-next'
+import { Package, Building2 } from 'lucide-vue-next'
+import { toast } from 'vue3-toastify'
+import 'vue3-toastify/dist/index.css'
 import html2canvas from 'html2canvas'
 import * as XLSX from 'xlsx'
 
@@ -1304,7 +1309,7 @@ const reportTypes: ReportType[] = [
 	{ 
 		id: 'ivr', 
 		name: 'IVR Report', 
-		icon: PhoneIcon, 
+		icon: ShieldCheckIcon, 
 		description: 'Insurance verification status' 
 	}
 ]
@@ -1394,7 +1399,7 @@ onMounted(() => {
 // Export as PDF via backend
 const exportAsPdf = async () => {
 	if (!reportGenerated.value) {
-		alert('Please generate a report first before exporting.')
+		toast.warning('Please generate a report first before exporting.')
 		return
 	}
 	
@@ -1429,10 +1434,10 @@ const exportAsPdf = async () => {
 		link.click()
 		URL.revokeObjectURL(link.href)
 		
-		console.log('✅ PDF exported successfully')
+		toast.success('PDF exported successfully')
 	} catch (error) {
 		console.error('❌ Error exporting PDF:', error)
-		alert('Failed to export PDF. Please try again.')
+		toast.error('Failed to export PDF. Please try again.')
 	} finally {
 		isExporting.value = false
 	}
@@ -1441,7 +1446,7 @@ const exportAsPdf = async () => {
 // Export as Excel
 const exportAsExcel = async () => {
 	if (!reportGenerated.value) {
-		alert('Please generate a report first before exporting.')
+		toast.warning('Please generate a report first before exporting.')
 		return
 	}
 	
@@ -1476,10 +1481,10 @@ const exportAsExcel = async () => {
 		link.click()
 		URL.revokeObjectURL(link.href)
 		
-		console.log('✅ Excel exported successfully')
+		toast.success('Excel exported successfully')
 	} catch (error) {
-		console.error('❌ Error exporting Excel:', error)
-		alert('Failed to export Excel. Please try again.')
+		console.error('Error exporting Excel:', error)
+		toast.error('Failed to export Excel. Please try again.')
 	} finally {
 		isExporting.value = false
 	}
@@ -1733,7 +1738,7 @@ const dateRangeLabel = computed(() => {
 
 const orderStatusBreakdown = computed(() => {
 	const statuses: Record<string, { count: number; color: string }> = {
-		submitted: { count: 0, color: 'bg-blue-500' },
+		submitted: { count: 0, color: 'bg-red-500' },
 		acknowledged: { count: 0, color: 'bg-purple-500' },
 		shipped: { count: 0, color: 'bg-yellow-500' },
 		delivered: { count: 0, color: 'bg-green-500' },
@@ -1788,7 +1793,7 @@ const topClinics = computed(() => {
 
 const brandDistribution = computed(() => {
 	const brandCounts: Record<string, { name: string; count: number; brand_id: string }> = {}
-	const colors = ['bg-purple-500', 'bg-blue-500', 'bg-green-500', 'bg-yellow-500', 'bg-red-500', 'bg-indigo-500', 'bg-pink-500']
+	const colors = ['bg-purple-500', 'bg-red-500', 'bg-green-500', 'bg-yellow-500', 'bg-red-500', 'bg-rose-500', 'bg-pink-500']
 	
 	filteredOrders.value.forEach((order: any) => {
 		if (order.items && Array.isArray(order.items)) {
@@ -1862,7 +1867,7 @@ const topProducts = computed(() => {
 // Size Distribution (shown when brand is filtered)
 const sizeDistribution = computed(() => {
 	const sizeCounts: Record<string, { name: string; count: number; size_id: string }> = {}
-	const colors = ['bg-orange-500', 'bg-blue-500', 'bg-green-500', 'bg-yellow-500', 'bg-red-500', 'bg-indigo-500', 'bg-pink-500']
+	const colors = ['bg-orange-500', 'bg-red-500', 'bg-green-500', 'bg-yellow-500', 'bg-red-500', 'bg-rose-500', 'bg-pink-500']
 	
 	filteredOrders.value.forEach((order: any) => {
 		if (order.items && Array.isArray(order.items)) {
@@ -1987,7 +1992,7 @@ const inventoryStatusBreakdown = computed(() => {
 	// Status mapping: 0=expected, 1=delivered, 2=used, 3=partially_used, 4=reassigned, 5=unused, 6=expired
 	const statusMap: Record<number, { name: string; color: string }> = {
 		0: { name: 'expected', color: 'bg-gray-500' },
-		1: { name: 'delivered', color: 'bg-blue-500' },
+		1: { name: 'delivered', color: 'bg-red-500' },
 		2: { name: 'used', color: 'bg-green-500' },
 		3: { name: 'partially used', color: 'bg-yellow-500' },
 		4: { name: 'reassigned', color: 'bg-orange-500' },
@@ -2058,7 +2063,7 @@ const topInventoryClinics = computed(() => {
 
 const inventoryBrandDistribution = computed(() => {
 	const brandCounts: Record<string, { name: string; count: number; brand_id: string }> = {}
-	const colors = ['bg-purple-500', 'bg-blue-500', 'bg-green-500', 'bg-yellow-500', 'bg-red-500', 'bg-indigo-500', 'bg-pink-500']
+	const colors = ['bg-purple-500', 'bg-red-500', 'bg-green-500', 'bg-yellow-500', 'bg-red-500', 'bg-rose-500', 'bg-pink-500']
 	
 	filteredInventory.value.forEach((item: any) => {
 		// API returns: brandId, brandName (camelCase)
@@ -2167,7 +2172,7 @@ const filteredUsageLogs = computed(() => {
 
 const usageByWoundPart = computed(() => {
 	const woundPartCounts: Record<string, number> = {}
-	const colors = ['bg-orange-500', 'bg-blue-500', 'bg-green-500', 'bg-yellow-500', 'bg-red-500', 'bg-indigo-500', 'bg-pink-500']
+	const colors = ['bg-orange-500', 'bg-red-500', 'bg-green-500', 'bg-yellow-500', 'bg-red-500', 'bg-rose-500', 'bg-pink-500']
 	
 	filteredUsageLogs.value.forEach((item: any) => {
 		const woundPart = item.woundPart || item.wound_part || 'Unknown'
@@ -2221,7 +2226,7 @@ const topUsageClinics = computed(() => {
 
 const usageBrandDistribution = computed(() => {
 	const brandCounts: Record<string, { name: string; count: number; brand_id: string }> = {}
-	const colors = ['bg-purple-500', 'bg-blue-500', 'bg-green-500', 'bg-yellow-500', 'bg-red-500', 'bg-indigo-500', 'bg-pink-500']
+	const colors = ['bg-purple-500', 'bg-red-500', 'bg-green-500', 'bg-yellow-500', 'bg-red-500', 'bg-rose-500', 'bg-pink-500']
 	
 	filteredUsageLogs.value.forEach((item: any) => {
 		const brandId = item.brandId || item.brand_id

@@ -20,6 +20,7 @@ class Returns extends Model
 
     protected $fillable = [
         'graft_log_id',
+        'clinic_id',
         'entry_type',
         'brand_id',
         'graft_size_id',
@@ -44,6 +45,14 @@ class Returns extends Model
     public function usageLog()
     {
         return $this->belongsTo(UsageLog::class, 'graft_log_id', 'graft_log_id');
+    }
+
+    /**
+     * Get the clinic that owns this return
+     */
+    public function clinic()
+    {
+        return $this->belongsTo(Clinic::class, 'clinic_id', 'clinic_id');
     }
 
     /**

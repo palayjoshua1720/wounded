@@ -321,6 +321,13 @@ export const patientService = {
   },
 
   /**
+   * Get assignable clinicians (role 3) for the logged-in clinic user's clinic
+   */
+  getPatientAssignableClinicians() {
+    return api.get('/patients/clinicians/list');
+  },
+
+  /**
    * Get all patients (legacy endpoint)
    */
   getAllPatients() {
@@ -409,6 +416,14 @@ export const inventoryLedgerService = {
     return api.get('/inventory-ledger/init')
   },
 
+  import(data: FormData) {
+    return api.post('/inventory-ledger/import', data, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
+  },
+
   getAll(params?: {
     page?: number
     per_page?: number
@@ -457,9 +472,56 @@ export const inventoryLedgerService = {
   searchOrders(search: string, limit = 10) {
     return api.get('/inventory-ledger/orders/search', { params: { search, limit } })
   },
+
+  downloadTemplate() {
+    return api.get('/inventory-ledger/import/template', {
+      responseType: 'blob',
+    })
+  },
 }
 // ============================================================================
 // END INVENTORY LEDGER MANAGEMENT MODULE
+// ============================================================================
+
+// ============================================================================
+// PATIENT GRAFT LOG MODULE - SERVICE
+// ----------------------------------------------------------------------------
+// Standalone API client for the Patient Graft Log feature. To remove this
+// module, delete this entire block and the related view.
+// ============================================================================
+export const patientGraftLogService = {
+  getInitData() {
+    return api.get('/patient-graft-log/init')
+  },
+  getPatients(search = '') {
+    return api.get('/patient-graft-log/patients', { params: { search } })
+  },
+  getPatientHistory(id: number | string) {
+    return api.get(`/patient-graft-log/patient/${id}`)
+  },
+  searchSerials(search = '', includeUsed = false) {
+    return api.get('/patient-graft-log/serials/search', {
+      params: { search, include_used: includeUsed ? 1 : 0 },
+    })
+  },
+  getClinicians() {
+    return api.get('/patient-graft-log/clinicians')
+  },
+  create(data: any) {
+    return api.post('/patient-graft-log', data)
+  },
+  update(id: number | string, data: any) {
+    return api.put(`/patient-graft-log/${id}`, data)
+  },
+  delete(id: number | string) {
+    return api.delete(`/patient-graft-log/${id}`)
+  },
+  deleteByPatient(patientId: number | string) {
+    return api.delete(`/patient-graft-log/patient/${patientId}`)
+  },
+}
+// ============================================================================
+// END PATIENT GRAFT LOG MODULE
 // ============================================================================
 
 export { api }

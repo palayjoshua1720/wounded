@@ -8,6 +8,7 @@ interface User {
 	email: string
 	name: string
 	user_role?: number
+	clinic_id?: number
 	first_name: string
 	middle_name: string
 	last_name: string

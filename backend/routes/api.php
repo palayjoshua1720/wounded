@@ -24,6 +24,7 @@ use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ClinicDashboardController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\InventoryLedgerController;
+use App\Http\Controllers\Api\PatientGraftLogController;
 
 // System Info
 Route::get('/version', function (Request $request) {
@@ -209,6 +210,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/inventory/{id}/status', [InventoryController::class, 'updateInventoryStatus']);
     Route::delete('/inventory/usage-logs/{id}', [InventoryController::class, 'deleteUsageLog']);
     Route::post('/inventory/usage-logs/{id}/restore', [InventoryController::class, 'restoreUsageLog']);
+    Route::post('/inventory-ledger/import', [InventoryLedgerController::class, 'import']);
+    Route::get('/inventory-ledger/import/template', [InventoryLedgerController::class, 'downloadTemplate']);
 
     // Dashboard
     Route::get('/dashboard/stats', [AdminDashboardController::class, 'getStats']);
@@ -235,6 +238,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/patients/{id}', [PatientController::class, 'destroy']);
     Route::patch('/patients/{id}/restore', [PatientController::class, 'restore']);
     Route::get('/patients/clinics/list', [PatientController::class, 'getClinics']);
+    Route::get('/patients/clinicians/list', [PatientController::class, 'getAssignableClinicians']);
 
     // Report Exports
     Route::post('/reports/export/pdf', [ReportExportController::class, 'exportPdf']);
@@ -261,6 +265,26 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/inventory-ledger/{id}/restore', [InventoryLedgerController::class, 'restore']);
     // ============================================================================
     // END INVENTORY LEDGER MANAGEMENT MODULE
+    // ============================================================================
+
+    // ============================================================================
+    // PATIENT GRAFT LOG MODULE - ROUTES
+    // ----------------------------------------------------------------------------
+    // Standalone patient-first graft usage log feature. Static routes are
+    // declared BEFORE the parameterized {id} route to avoid conflicts.
+    // To remove this module, delete this entire block.
+    // ============================================================================
+    Route::get('/patient-graft-log/init',            [PatientGraftLogController::class, 'init']);
+    Route::get('/patient-graft-log/patients',        [PatientGraftLogController::class, 'getPatients']);
+    Route::get('/patient-graft-log/patient/{id}',    [PatientGraftLogController::class, 'getPatientHistory']);
+    Route::get('/patient-graft-log/serials/search',  [PatientGraftLogController::class, 'searchSerials']);
+    Route::get('/patient-graft-log/clinicians',      [PatientGraftLogController::class, 'getClinicians']);
+    Route::post('/patient-graft-log',                [PatientGraftLogController::class, 'store']);
+    Route::put('/patient-graft-log/{id}',            [PatientGraftLogController::class, 'update']);
+    Route::delete('/patient-graft-log/{id}',         [PatientGraftLogController::class, 'destroy']);
+    Route::delete('/patient-graft-log/patient/{id}', [PatientGraftLogController::class, 'destroyByPatient']);
+    // ============================================================================
+    // END PATIENT GRAFT LOG MODULE
     // ============================================================================
 
     // Notifications

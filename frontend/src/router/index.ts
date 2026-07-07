@@ -35,6 +35,12 @@ import IVRMagicLinkView from '@/views/IVRMagicLinkView.vue'
 import InvalidMagicLinkView from '@/views/InvalidMagicLinkView.vue'
 import BillerTrackingForm from '@/views/BillerTrackingForm.vue'
 import InventoryLedgerManagementView from '@/views/InventoryLedgerManagementView.vue'
+// ============================================================================
+// PATIENT GRAFT LOG MODULE - VIEW IMPORT
+// To remove this module, delete this import line.
+// ============================================================================
+import PatientGraftLogView from '@/views/PatientGraftLogView.vue'
+import PatientGraftLogDetailView from '@/views/PatientGraftLogDetailView.vue'
 import { pageLoader } from '@/composables/ui/usePageLoader'
 
 // Icons
@@ -124,17 +130,17 @@ const routes: RouteRecordRaw[] = [
 					role: 1
 				}
 			},
-			// {
-			// 	path: 'clinic/users',
-			// 	name: 'clinic-users',
-			// 	component: UserManagementView,
-			// 	meta: {
-			// 		requiresAuth: true,
-			// 		title: 'Clinicians',
-			// 		icon: UsersRound,
-			// 		role: 2
-			// 	}
-			// },
+			{
+				path: 'clinic/users',
+				name: 'clinic-users',
+				component: UserManagementView,
+				meta: {
+					requiresAuth: true,
+					title: 'Clinicians',
+					icon: UsersRound,
+					role: 2
+				}
+			},
 			{
 				path: 'user-clinicians',
 				name: 'user-clinicians',
@@ -157,6 +163,29 @@ const routes: RouteRecordRaw[] = [
 					role: 2
 				}
 			},
+			// Patient Management - Clinician role (user_role = 3)
+			{
+				path: 'clinician/patients',
+				name: 'clinician-patients',
+				component: PatientManagement,
+				meta: {
+					requiresAuth: true,
+					title: 'Patients',
+					icon: UserCircle,
+					role: 3
+				}
+			},
+			{
+				path: 'office-staff/patients',
+				name: 'office-staff-patients',
+				component: PatientManagement,
+				meta: {
+					requiresAuth: true,
+					title: 'Patients',
+					icon: UserCircle,
+					role: 1
+				}
+			},
 			{
 				path: 'admin/patients',
 				name: 'admin-patients',
@@ -165,7 +194,7 @@ const routes: RouteRecordRaw[] = [
 					requiresAuth: true,
 					title: 'Patients',
 					icon: UserCircle,
-					role: 0
+					role: 1
 				}
 			},
 			// *****
@@ -431,28 +460,28 @@ const routes: RouteRecordRaw[] = [
 				}
 			},
 			// Inventory Management
-			{
-				path: 'admin/inventory',
-				name: 'admin-inventory',
-				component: InventoryManagementView,
-				meta: {
-					requiresAuth: true,
-					title: 'Inventory',
-					icon: ScanBarcode,
-					role: 0
-				}
-			},
-			{
-				path: 'office-staff/inventory',
-				name: 'office-staff-inventory',
-				component: InventoryManagementView,
-				meta: {
-					requiresAuth: true,
-					title: 'Inventory',
-					icon: ScanBarcode,
-					role: 1
-				}
-			},
+			// {
+			// 	path: 'admin/inventory',
+			// 	name: 'admin-inventory',
+			// 	component: InventoryManagementView,
+			// 	meta: {
+			// 		requiresAuth: true,
+			// 		title: 'Inventory',
+			// 		icon: ScanBarcode,
+			// 		role: 0
+			// 	}
+			// },
+			// {
+			// 	path: 'office-staff/inventory',
+			// 	name: 'office-staff-inventory',
+			// 	component: InventoryManagementView,
+			// 	meta: {
+			// 		requiresAuth: true,
+			// 		title: 'Inventory',
+			// 		icon: ScanBarcode,
+			// 		role: 1
+			// 	}
+			// },
 			// ============================================================================
 			// INVENTORY LEDGER MANAGEMENT MODULE - ROUTES
 			// ----------------------------------------------------------------------------
@@ -465,7 +494,7 @@ const routes: RouteRecordRaw[] = [
 				component: InventoryLedgerManagementView,
 				meta: {
 					requiresAuth: true,
-					title: 'Inventory Ledger',
+					title: 'Inventory',
 					icon: BookOpen,
 					role: 0
 				}
@@ -476,13 +505,88 @@ const routes: RouteRecordRaw[] = [
 				component: InventoryLedgerManagementView,
 				meta: {
 					requiresAuth: true,
-					title: 'Inventory Ledger',
+					title: 'Inventory',
 					icon: BookOpen,
 					role: 1
 				}
 			},
 			// ============================================================================
 			// END INVENTORY LEDGER MANAGEMENT MODULE
+			// ============================================================================
+			// ============================================================================
+			// PATIENT GRAFT LOG MODULE - ROUTES
+			// ----------------------------------------------------------------------------
+			// Standalone patient-first graft usage log feature.
+			// To remove this module, delete this entire block.
+			// ============================================================================
+			{
+				path: 'admin/patient-graft-log',
+				name: 'admin-patient-graft-log',
+				component: PatientGraftLogView,
+				meta: {
+					requiresAuth: true,
+					title: 'Graft Log',
+					icon: ClipboardList,
+					role: 0
+				}
+			},
+			{
+				path: 'admin/patient-graft-log/:id',
+				name: 'admin-patient-graft-log-detail',
+				component: PatientGraftLogDetailView,
+				meta: {
+					requiresAuth: true,
+					title: 'Graft Log',
+					icon: ClipboardList,
+					role: 0
+				}
+			},
+			{
+				path: 'office-staff/patient-graft-log',
+				name: 'office-staff-patient-graft-log',
+				component: PatientGraftLogView,
+				meta: {
+					requiresAuth: true,
+					title: 'Graft Log',
+					icon: ClipboardList,
+					role: 1
+				}
+			},
+			{
+				path: 'office-staff/patient-graft-log/:id',
+				name: 'office-staff-patient-graft-log-detail',
+				component: PatientGraftLogDetailView,
+				meta: {
+					requiresAuth: true,
+					title: 'Graft Log',
+					icon: ClipboardList,
+					role: 1
+				}
+			},
+			{
+				path: 'clinic/patient-graft-log',
+				name: 'clinic-patient-graft-log',
+				component: PatientGraftLogView,
+				meta: {
+					requiresAuth: true,
+					title: 'Graft Log',
+					icon: ClipboardList,
+					role: 2
+				}
+			},
+			{
+				path: 'clinic/patient-graft-log/:id',
+				name: 'clinic-patient-graft-log-detail',
+				component: PatientGraftLogDetailView,
+				meta: {
+					requiresAuth: true,
+					title: 'Graft Log',
+					icon: ClipboardList,
+					role: 2
+				}
+			},
+			// ============================================================================
+			// END PATIENT GRAFT LOG MODULE
 			// ============================================================================
 			// {
 			// 	path: 'manufacturer/inventory',
@@ -517,6 +621,39 @@ const routes: RouteRecordRaw[] = [
 					title: 'Returns',
 					icon: RotateCcw,
 					role: 0
+				}
+			},
+			{
+				path: 'office-staff/returns',
+				name: 'office-staff-returns',
+				component: ReturnManagementView,
+				meta: {
+					requiresAuth: true,
+					title: 'Returns',
+					icon: RotateCcw,
+					role: 1
+				}
+			},
+			{
+				path: 'clinic/returns',
+				name: 'clinic-returns',
+				component: ReturnManagementView,
+				meta: {
+					requiresAuth: true,
+					title: 'Returns',
+					icon: RotateCcw,
+					role: 2
+				}
+			},
+			{
+				path: 'clinician/returns',
+				name: 'clinician-returns',
+				component: ReturnManagementView,
+				meta: {
+					requiresAuth: true,
+					title: 'Returns',
+					icon: RotateCcw,
+					role: 3
 				}
 			},
 			// Usage Log Management
@@ -683,9 +820,11 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 		// User Management
 		'admin-users': [0],
 		'office-staff-users': [1],
-		// 'clinic-users': [2],
+		'clinic-users': [2],
 		'clinic-patients': [2],
+		'clinician-patients': [3],
 		'admin-patients': [0],
+		'office-staff-patients': [1],
 		// Clinic/Manufacturers/Brands/Graft Size Management
 		'clinic-management': [0, 1],
 		'manufacturer-management': [0, 1],
@@ -715,7 +854,7 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 		'biller-invoice-management': [5],
 		// Inventory Management
 		'admin-inventory': [0],
-		'office-staff-inventory': [1],
+		// 'office-staff-inventory': [1],
 		// ============================================================================
 		// INVENTORY LEDGER MANAGEMENT MODULE - NAVIGATION ROLES
 		// ----------------------------------------------------------------------------
@@ -726,6 +865,19 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 		// ============================================================================
 		// END INVENTORY LEDGER MANAGEMENT MODULE
 		// ============================================================================
+		// ============================================================================
+		// PATIENT GRAFT LOG MODULE - NAVIGATION ROLES
+		// To remove this module, delete this block.
+		// ============================================================================
+		'admin-patient-graft-log': [0],
+		'admin-patient-graft-log-detail': [0],
+		'office-staff-patient-graft-log': [1],
+		'office-staff-patient-graft-log-detail': [1],
+		'clinic-patient-graft-log': [2],
+		'clinic-patient-graft-log-detail': [2],
+		// ============================================================================
+		// END PATIENT GRAFT LOG MODULE
+		// ============================================================================
 		// 'manufacturer-inventory': [4],
 		'biller-inventory': [5],
 		'invoice-management': [0, 1, 2],
@@ -735,7 +887,10 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 		'manufacturer/ivr-management': [4],
 		'clinic/order-management': [2],
 		// Return Management
-		'returns': [0, 1, 2, 3],
+		'returns': [0],
+		'office-staff-returns': [1],
+		'clinic-returns': [2],
+		'clinician-returns': [3],
 
 		// Other Management
 		'usage': [],
@@ -765,6 +920,7 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 					'admin-invoice-management',
 					'admin-inventory',
 					'admin-inventory-ledger',
+					'admin-patient-graft-log',
 					'returns',
 					'reports',
 				].includes(route.name as string)
@@ -779,13 +935,16 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 					'manufacturer-management',
 					'brand-management',
 					// 'graft-size-management',
+					'office-staff-patients',
 					'product-management',
 					'office-staff-ivr-management',
 					'office-staff-order-management',
 					'office-staff-invoice-management',
-					'office-staff-inventory',
+					// 'office-staff-inventory',
 					'office-staff-inventory-ledger',
+					'office-staff-patient-graft-log',
 					'office-staff-reports',
+					'office-staff-returns',
 				].includes(route.name as string)
 			}
 
@@ -793,12 +952,14 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 			if (role === 2) {
 				return [
 					'clinic-dashboard',
-					// 'clinic-users',
+					'clinic-users',
 					'clinic-patients',
 					'clinic-ivr-management',
 					'clinic-order-management',
 					'clinic-invoice-management',
+					'clinic-patient-graft-log',
 					'clinic-reports',
+					'clinic-returns',
 				].includes(route.name as string)
 			}
 
@@ -806,10 +967,12 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 			if (role === 3) {
 				return [
 					'clinician-dashboard',
+					'clinician-patients',
 					'clinician-ivr-management',
 					'clinician-order-management',
 					'clinician-invoice-management',
-					'clinic-reports'
+					'clinic-reports',
+					'clinician-returns',
 				].includes(route.name as string)
 			}
 

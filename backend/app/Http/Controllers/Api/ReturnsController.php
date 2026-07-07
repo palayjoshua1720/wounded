@@ -7,7 +7,6 @@ use Illuminate\Http\Request;
 use App\Models\Returns;
 use App\Models\Brand;
 use App\Models\GraftSize;
-use App\Models\UsageLog;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use App\Traits\AuditLogger;
@@ -33,9 +32,21 @@ class ReturnsController extends Controller
     {
         $perPage = $request->query('per_page', 10);
         $page = $request->query('page', 1);
+        $currentUser = $request->user();
 
-        $returns = Returns::with(['brand.manufacturer', 'graftSize', 'usageLog'])
-            ->orderBy('returned_at', 'desc')
+        $query = Returns::with(['brand.manufacturer', 'graftSize', 'clinic']);
+
+        // Clinic users (role 2) can only see returns from their own clinic
+        if ($currentUser && $currentUser->user_role === 2) {
+            $query->where('clinic_id', $currentUser->clinic_id);
+        }
+
+        // Clinicians (role 3) can only see returns from their own clinic
+        if ($currentUser && $currentUser->user_role === 3) {
+            $query->where('clinic_id', $currentUser->clinic_id);
+        }
+
+        $returns = $query->orderBy('returned_at', 'desc')
             ->paginate($perPage, ['*'], 'page', $page);
 
         // Minimal data for list view - excludes sensitive details
@@ -49,14 +60,14 @@ class ReturnsController extends Controller
                 'graftSizeId' => (string) $return->graft_size_id,
                 'graftSize' => $return->graftSize->size ?? null,
                 'graftArea' => $return->graftSize ? (float) $return->graftSize->area : null,
+                'itemNo' => $return->graftSize->item_no ?? null,
                 'reason' => $return->reason,
                 'other' => $return->other,
-                'graftLogId' => $return->graft_log_id ? (string) $return->graft_log_id : null,
-                'serialNumber' => $return->usageLog ? $return->usageLog->serial_number : null,
-                'expiryDate' => $return->usageLog && $return->usageLog->expired_at ? $return->usageLog->expired_at->format('Y-m-d') : null,
                 'ocrSerialNumber' => $return->ocr_serial_number,
                 'ocrExpiryDate' => $return->ocr_expiry_date ? $return->ocr_expiry_date->format('Y-m-d') : null,
                 'ocrProductCode' => $return->ocr_product_code,
+                'clinicId' => $return->clinic_id ? (string) $return->clinic_id : null,
+                'clinicName' => $return->clinic->clinic_name ?? null,
                 'returnedAt' => $return->returned_at->format('Y-m-d H:i:s'),
                 'updatedAt' => $return->updated_at->format('Y-m-d H:i:s'),
             ];
@@ -78,8 +89,16 @@ class ReturnsController extends Controller
      */
     public function getReturnById(Request $request, $id)
     {
-        $return = Returns::with(['brand.manufacturer', 'graftSize', 'usageLog'])
-            ->findOrFail($id);
+        $currentUser = $request->user();
+
+        $query = Returns::with(['brand.manufacturer', 'graftSize', 'clinic']);
+
+        // Clinic users (role 2) and clinicians (role 3) can only access their own clinic's returns
+        if ($currentUser && in_array($currentUser->user_role, [2, 3])) {
+            $query->where('clinic_id', $currentUser->clinic_id);
+        }
+
+        $return = $query->findOrFail($id);
 
         // Log audit trail for HIPAA compliance - record who viewed what and when
         $brand = $return->brand;
@@ -101,14 +120,14 @@ class ReturnsController extends Controller
                 'graftSizeId' => (string) $return->graft_size_id,
                 'graftSize' => $return->graftSize->size ?? null,
                 'graftArea' => $return->graftSize ? (float) $return->graftSize->area : null,
+                'itemNo' => $return->graftSize->item_no ?? null,
                 'reason' => $return->reason,
                 'other' => $return->other,
-                'graftLogId' => $return->graft_log_id ? (string) $return->graft_log_id : null,
-                'serialNumber' => $return->usageLog ? $return->usageLog->serial_number : null,
-                'expiryDate' => $return->usageLog && $return->usageLog->expired_at ? $return->usageLog->expired_at->format('Y-m-d') : null,
                 'ocrSerialNumber' => $return->ocr_serial_number,
                 'ocrExpiryDate' => $return->ocr_expiry_date ? $return->ocr_expiry_date->format('Y-m-d') : null,
                 'ocrProductCode' => $return->ocr_product_code,
+                'clinicId' => $return->clinic_id ? (string) $return->clinic_id : null,
+                'clinicName' => $return->clinic->clinic_name ?? null,
                 'returnedAt' => $return->returned_at->format('Y-m-d H:i:s'),
                 'updatedAt' => $return->updated_at->format('Y-m-d H:i:s'),
             ]
@@ -126,18 +145,16 @@ class ReturnsController extends Controller
             'reason' => 'required|string|max:500',
             'other' => 'nullable|string|max:1000',
             'entryType' => 'required|in:manual,upload',
-            // graftLogId required for manual, nullable for upload
-            'graftLogId' => 'nullable|exists:woundmed_usage_log,graft_log_id',
             // OCR fields for upload entries
             'ocrSerialNumber' => 'nullable|string|max:255',
             'ocrExpiryDate' => 'nullable|date',
             'ocrProductCode' => 'nullable|string|max:100',
         ]);
 
-        // Additional validation: graftLogId must be present for manual entries
-        if ($validated['entryType'] === 'manual' && empty($validated['graftLogId'])) {
+        // Additional validation: ocrProductCode must be present for upload entries
+        if ($validated['entryType'] === 'upload' && empty($validated['ocrProductCode'])) {
             throw ValidationException::withMessages([
-                'graftLogId' => 'Usage log ID is required for manual entries.'
+                'ocrProductCode' => 'Product code is required for file upload entries.'
             ]);
         }
 
@@ -153,18 +170,7 @@ class ReturnsController extends Controller
         }
 
         // Check for duplicates based on entry type
-        if ($validated['entryType'] === 'manual') {
-            // For manual entries: Check if graft_log_id is already linked to a return
-            $existingReturn = Returns::where('graft_log_id', $validated['graftLogId'])->first();
-            if ($existingReturn) {
-                // Get the usage log serial number for the error message
-                $usageLog = UsageLog::where('graft_log_id', $validated['graftLogId'])->first();
-                $serialNumber = $usageLog ? $usageLog->serial_number : 'Unknown';
-                throw ValidationException::withMessages([
-                    'graftLogId' => "A return record already exists for this usage log (Serial Number: {$serialNumber})."
-                ]);
-            }
-        } elseif ($validated['entryType'] === 'upload') {
+        if ($validated['entryType'] === 'upload') {
             // For upload entries: Check if ocr_serial_number or ocr_product_code already exists
             $ocrSerialNumber = $validated['ocrSerialNumber'] ?? null;
             $ocrProductCode = $validated['ocrProductCode'] ?? null;
@@ -190,7 +196,6 @@ class ReturnsController extends Controller
 
         // Create the return
         $return = Returns::create([
-            'graft_log_id' => $validated['graftLogId'],
             'entry_type' => $validated['entryType'],
             'brand_id' => $validated['brandId'],
             'graft_size_id' => $validated['graftSizeId'],
@@ -199,6 +204,7 @@ class ReturnsController extends Controller
             'ocr_serial_number' => $validated['ocrSerialNumber'] ?? null,
             'ocr_expiry_date' => $validated['ocrExpiryDate'] ?? null,
             'ocr_product_code' => $validated['ocrProductCode'] ?? null,
+            'clinic_id' => $request->user() ? $request->user()->clinic_id : null,
         ]);
 
         // Log audit trail
@@ -211,7 +217,7 @@ class ReturnsController extends Controller
         );
 
         // Reload with relationships
-        $return->load(['brand.manufacturer', 'graftSize', 'usageLog']);
+        $return->load(['brand.manufacturer', 'graftSize']);
 
         return response()->json([
             'message' => 'Return created successfully',
@@ -226,9 +232,6 @@ class ReturnsController extends Controller
                 'graftArea' => (float) $return->graftSize->area,
                 'reason' => $return->reason,
                 'other' => $return->other,
-                'graftLogId' => $return->graft_log_id ? (string) $return->graft_log_id : null,
-                'serialNumber' => $return->usageLog ? $return->usageLog->serial_number : null,
-                'expiryDate' => $return->usageLog && $return->usageLog->expired_at ? $return->usageLog->expired_at->format('Y-m-d') : null,
                 'ocrSerialNumber' => $return->ocr_serial_number,
                 'ocrExpiryDate' => $return->ocr_expiry_date ? $return->ocr_expiry_date->format('Y-m-d') : null,
                 'ocrProductCode' => $return->ocr_product_code,
@@ -243,14 +246,22 @@ class ReturnsController extends Controller
      */
     public function updateReturn(Request $request, $id)
     {
-        $return = Returns::findOrFail($id);
+        $currentUser = $request->user();
+
+        $query = Returns::query();
+
+        // Clinic users (role 2) and clinicians (role 3) can only update their own clinic's returns
+        if ($currentUser && in_array($currentUser->user_role, [2, 3])) {
+            $query->where('clinic_id', $currentUser->clinic_id);
+        }
+
+        $return = $query->findOrFail($id);
 
         $validated = $request->validate([
             'brandId' => 'required|exists:woundmed_brands,brand_id',
             'graftSizeId' => 'nullable|exists:woundmed_graft_sizes,graft_size_id',
             'reason' => 'required|string|max:500',
             'other' => 'nullable|string|max:1000',
-            'graftLogId' => 'nullable|exists:woundmed_usage_log,graft_log_id',
             // OCR fields for upload entries
             'ocrSerialNumber' => 'nullable|string|max:255',
             'ocrExpiryDate' => 'nullable|date',
@@ -279,19 +290,7 @@ class ReturnsController extends Controller
         }
 
         // Check for duplicates based on entry type (exclude current record)
-        if ($return->entry_type === 'manual' && !empty($validated['graftLogId'])) {
-            // For manual entries: Check if graft_log_id is already linked to another return
-            $existingReturn = Returns::where('graft_log_id', $validated['graftLogId'])
-                ->where('return_id', '!=', $id)
-                ->first();
-            if ($existingReturn) {
-                $usageLog = UsageLog::where('graft_log_id', $validated['graftLogId'])->first();
-                $serialNumber = $usageLog ? $usageLog->serial_number : 'Unknown';
-                throw ValidationException::withMessages([
-                    'graftLogId' => "A return record already exists for this usage log (Serial Number: {$serialNumber})."
-                ]);
-            }
-        } elseif ($return->entry_type === 'upload') {
+        if ($return->entry_type === 'upload') {
             // For upload entries: Check if ocr_serial_number or ocr_product_code already exists
             $ocrSerialNumber = $validated['ocrSerialNumber'] ?? null;
             $ocrProductCode = $validated['ocrProductCode'] ?? null;
@@ -320,7 +319,7 @@ class ReturnsController extends Controller
         }
 
         $oldReason = $return->reason;
-        
+
         // Prepare update data
         $updateData = [
             'brand_id' => $validated['brandId'],
@@ -328,10 +327,9 @@ class ReturnsController extends Controller
             'other' => $validated['other'] ?? null,
         ];
 
-        // For manual entries, update graftSizeId and graftLogId
+        // For manual entries, update graftSizeId
         if ($return->entry_type === 'manual') {
             $updateData['graft_size_id'] = $validated['graftSizeId'];
-            $updateData['graft_log_id'] = $validated['graftLogId'] ?? null;
         }
 
         // For upload entries, update OCR fields
@@ -355,7 +353,7 @@ class ReturnsController extends Controller
         );
 
         // Reload with relationships
-        $return->load(['brand.manufacturer', 'graftSize', 'usageLog']);
+        $return->load(['brand.manufacturer', 'graftSize']);
 
         return response()->json([
             'message' => 'Return updated successfully',
@@ -370,9 +368,6 @@ class ReturnsController extends Controller
                 'graftArea' => $return->graftSize ? (float) $return->graftSize->area : null,
                 'reason' => $return->reason,
                 'other' => $return->other,
-                'graftLogId' => $return->graft_log_id ? (string) $return->graft_log_id : null,
-                'serialNumber' => $return->usageLog ? $return->usageLog->serial_number : null,
-                'expiryDate' => $return->usageLog && $return->usageLog->expired_at ? $return->usageLog->expired_at->format('Y-m-d') : null,
                 'ocrSerialNumber' => $return->ocr_serial_number,
                 'ocrExpiryDate' => $return->ocr_expiry_date ? $return->ocr_expiry_date->format('Y-m-d') : null,
                 'ocrProductCode' => $return->ocr_product_code,
@@ -387,8 +382,17 @@ class ReturnsController extends Controller
      */
     public function deleteReturn(Request $request, $id)
     {
-        $return = Returns::findOrFail($id);
-        
+        $currentUser = $request->user();
+
+        $query = Returns::query();
+
+        // Clinic users (role 2) and clinicians (role 3) can only delete their own clinic's returns
+        if ($currentUser && in_array($currentUser->user_role, [2, 3])) {
+            $query->where('clinic_id', $currentUser->clinic_id);
+        }
+
+        $return = $query->findOrFail($id);
+
         $brand = $return->brand;
         $graftSize = $return->graftSize;
         $reason = $return->reason;
@@ -414,7 +418,16 @@ class ReturnsController extends Controller
      */
     public function restoreReturn(Request $request, $id)
     {
-        $return = Returns::withTrashed()->findOrFail($id);
+        $currentUser = $request->user();
+
+        $query = Returns::withTrashed();
+
+        // Clinic users (role 2) and clinicians (role 3) can only restore their own clinic's returns
+        if ($currentUser && in_array($currentUser->user_role, [2, 3])) {
+            $query->where('clinic_id', $currentUser->clinic_id);
+        }
+
+        $return = $query->findOrFail($id);
 
         if (!$return->trashed()) {
             return response()->json([
@@ -446,16 +459,30 @@ class ReturnsController extends Controller
      */
     public function getReturnStats(Request $request)
     {
-        $totalReturns = Returns::count();
-        
+        $currentUser = $request->user();
+
+        $query = Returns::query();
+
+        // Clinic users (role 2) can only see stats from their own clinic
+        if ($currentUser && $currentUser->user_role === 2) {
+            $query->where('clinic_id', $currentUser->clinic_id);
+        }
+
+        // Clinicians (role 3) can only see stats from their own clinic
+        if ($currentUser && $currentUser->user_role === 3) {
+            $query->where('clinic_id', $currentUser->clinic_id);
+        }
+
+        $totalReturns = (clone $query)->count();
+
         // Returns by reason
-        $byReason = Returns::select('reason', DB::raw('count(*) as count'))
+        $byReason = (clone $query)->select('reason', DB::raw('count(*) as count'))
             ->groupBy('reason')
             ->orderBy('count', 'desc')
             ->get();
 
         // Returns by brand
-        $byBrand = Returns::with('brand')
+        $byBrand = (clone $query)->with('brand')
             ->select('brand_id', DB::raw('count(*) as count'))
             ->groupBy('brand_id')
             ->orderBy('count', 'desc')
@@ -469,7 +496,7 @@ class ReturnsController extends Controller
             });
 
         // Returns this month
-        $thisMonth = Returns::whereMonth('returned_at', date('m'))
+        $thisMonth = (clone $query)->whereMonth('returned_at', date('m'))
             ->whereYear('returned_at', date('Y'))
             ->count();
 
