@@ -96,7 +96,7 @@ class InventoryLedger extends Model
     public function getProductNameAttribute(): string
     {
         if ($this->product_type === 'graft') {
-            return $this->graftSizeProduct?->size ?? 'Unknown Graft';
+            return 'Graft';
         }
 
         return $this->otherProduct?->product_name ?? 'Unknown Product';

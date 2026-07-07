@@ -137,8 +137,8 @@
                     </svg>
                   </div>
                   <div class="ml-4">
-                    <div class="text-sm font-semibold text-gray-900 dark:text-white">{{ item.serialNumber || '-' }}</div>
-                    <div class="text-sm text-gray-500 dark:text-gray-400">{{ item.productCode || 'No Code' }}</div>
+                    <div class="text-sm font-semibold text-gray-900 dark:text-white">{{ item.serialNumber || 'No Record Found' }}</div>
+                    <div v-if="item.productCode" class="text-sm text-gray-500 dark:text-gray-400">{{ item.productCode }}</div>
                   </div>
                 </div>
               </td>
@@ -163,7 +163,7 @@
                 <div class="text-sm font-medium text-gray-900 dark:text-white">{{ getBrandName(item.brandId) }}</div>
               </td>
               <td class="px-6 py-5 whitespace-nowrap">
-                <div class="text-sm text-gray-900 dark:text-white">{{ item.size || '-' }}</div>
+                <div class="text-sm text-gray-900 dark:text-white">{{ item.size || 'No Record Found' }}</div>
               </td>
               <td class="px-6 py-5 whitespace-nowrap">
                 <div class="text-sm text-gray-900 dark:text-white">{{ item.returnReason }}</div>
@@ -250,7 +250,7 @@
                   </svg>
                 </div>
                 <div>
-                  <p class="text-white font-bold font-mono text-sm">{{ item.serialNumber || '-' }}</p>
+                  <p class="text-white font-bold font-mono text-sm">{{ item.serialNumber || 'No Record Found' }}</p>
                   <p class="text-blue-100 text-xs">{{ item.productCode || 'No Code' }}</p>
                 </div>
               </div>
@@ -282,7 +282,7 @@
               </div>
               <div class="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-3">
                 <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Size</p>
-                <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ item.size || '-' }}</p>
+                <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ item.size || 'No Record Found' }}</p>
               </div>
             </div>
 
@@ -350,8 +350,8 @@
               <p class="text-blue-100 dark:text-blue-200 text-xs font-medium mb-1">Serial Number</p>
               <p class="text-white text-xl font-bold font-mono break-all">{{ 
                 selectedReturn.entryType === 'upload' 
-                  ? (selectedReturn.ocrSerialNumber || selectedReturn.serialNumber || '-') 
-                  : (selectedReturn.serialNumber || '-') 
+                  ? (selectedReturn.ocrSerialNumber || selectedReturn.serialNumber || 'No Record Found') 
+                  : (selectedReturn.serialNumber || 'No Record Found') 
               }}</p>
             </div>
             
@@ -405,7 +405,7 @@
               </div>
               <div>
                 <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Size</p>
-                <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ selectedReturn.size || '-' }}</p>
+                <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ selectedReturn.size || 'No Record Found' }}</p>
               </div>
             </div>
           </div>
@@ -440,6 +440,21 @@
               <div>
                 <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Entry Type</p>
                 <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ selectedReturn.entryType === 'upload' ? 'File Upload' : 'Manual Entry' }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Clinic (only shown when clinic info exists) -->
+          <div v-if="selectedReturn.clinicName" class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
+            <div class="flex items-center space-x-3">
+              <div class="h-10 w-10 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg flex items-center justify-center">
+                <svg class="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+              </div>
+              <div>
+                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Clinic</p>
+                <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ selectedReturn.clinicName }}</p>
               </div>
             </div>
           </div>
@@ -519,7 +534,7 @@
           <div class="flex items-center justify-between">
             <div class="flex-1">
               <p class="text-sm text-blue-100 mb-1">Serial Number {{ editedReturn.entryType === 'manual' ? '(Read-only)' : '' }}</p>
-              <p v-if="editedReturn.entryType === 'manual'" class="text-2xl font-bold font-mono tracking-wide">{{ editedReturn.serialNumber || '-' }}</p>
+              <p v-if="editedReturn.entryType === 'manual'" class="text-2xl font-bold font-mono tracking-wide">{{ editedReturn.serialNumber || 'No Record Found' }}</p>
               <input v-else v-model="editSerialNumber" type="text"
                 class="text-xl font-bold font-mono tracking-wide bg-white/20 border-2 border-white/30 rounded-lg px-3 py-2 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50 w-full"
                 placeholder="Enter serial number" />
@@ -553,17 +568,25 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Product Code</label>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Product Code *</label>
                 <input v-model="editProductCode" type="text"
-                  class="w-full px-3 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  :class="[
+                    'w-full px-3 py-2.5 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white',
+                    !editProductCode.trim() ? 'border-red-500 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'
+                  ]"
                   placeholder="Enter product code" />
+                <p v-if="!editProductCode.trim()" class="text-xs text-red-500 dark:text-red-400 mt-1">Product code is required</p>
               </div>
 
               <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Size</label>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Size *</label>
                 <input v-model="editSize" type="text"
-                  class="w-full px-3 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  :class="[
+                    'w-full px-3 py-2.5 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white',
+                    !editSize.trim() ? 'border-red-500 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'
+                  ]"
                   placeholder="e.g., 2cm x 2cm" />
+                <p v-if="!editSize.trim()" class="text-xs text-red-500 dark:text-red-400 mt-1">Size is required</p>
               </div>
 
               <div>
@@ -607,7 +630,7 @@
           <!-- Return Reason (Always Editable) -->
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Return Reason *</label>
-            <select v-model="editReturnReason"
+            <select v-model="editReturnReason" @change="editValidationError = ''"
               class="w-full px-3 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
               <option value="">Select Reason</option>
               <option value="Expired Product">Expired Product</option>
@@ -623,9 +646,21 @@
           <!-- Other Reason (if selected) -->
           <div v-if="editReturnReason === 'Other'">
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Please specify the reason *</label>
-            <textarea v-model="editOtherReason" rows="3"
-              class="w-full px-3 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-              placeholder="Please provide details about the return reason..." required></textarea>
+            <textarea v-model="editOtherReason" @input="editValidationError = ''" rows="3"
+              :class="[
+                'w-full px-3 py-2.5 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white',
+                editValidationError && editReturnReason === 'Other' ? 'border-red-500 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'
+              ]"
+              placeholder="Please provide details about the return reason..."></textarea>
+            <p v-if="editValidationError && editReturnReason === 'Other'" class="text-xs text-red-500 dark:text-red-400 mt-1">{{ editValidationError }}</p>
+          </div>
+
+          <!-- Validation Error Summary -->
+          <div v-if="editValidationError" class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 flex items-center gap-2">
+            <svg class="w-4 h-4 text-red-500 dark:text-red-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p class="text-sm text-red-700 dark:text-red-400">{{ editValidationError }}</p>
           </div>
 
           <!-- Read-only Info for Manual Entry -->
@@ -634,15 +669,15 @@
             <div class="grid grid-cols-2 gap-3 text-sm">
               <div>
                 <p class="text-xs text-gray-500 dark:text-gray-400">Size</p>
-                <p class="text-sm font-medium text-gray-900 dark:text-white">{{ editedReturn.size || '-' }}</p>
+                <p class="text-sm font-medium text-gray-900 dark:text-white">{{ editedReturn.size || 'No Record Found' }}</p>
               </div>
               <div>
                 <p class="text-xs text-gray-500 dark:text-gray-400">Expiry Date</p>
-                <p class="text-sm font-medium text-gray-900 dark:text-white">{{ editedReturn.expiryDate ? formatDate(editedReturn.expiryDate) : '-' }}</p>
+                <p class="text-sm font-medium text-gray-900 dark:text-white">{{ editedReturn.expiryDate ? formatDate(editedReturn.expiryDate) : 'No Record Found' }}</p>
               </div>
               <div>
                 <p class="text-xs text-gray-500 dark:text-gray-400">Product Code</p>
-                <p class="text-sm font-medium text-gray-900 dark:text-white">{{ editedReturn.productCode || '-' }}</p>
+                <p class="text-sm font-medium text-gray-900 dark:text-white">{{ editedReturn.productCode || 'No Record Found' }}</p>
               </div>
               <div>
                 <p class="text-xs text-gray-500 dark:text-gray-400">Return Date</p>
@@ -659,7 +694,13 @@
             Cancel
           </button>
           <button @click="saveEdit" 
-            class="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg font-medium">
+            :disabled="!editBrandId || !editReturnReason || (editReturnReason === 'Other' && !editOtherReason.trim()) || (editedReturn.entryType === 'upload' && (!editProductCode.trim() || !editSize.trim()))"
+            :class="[
+              'px-5 py-2.5 rounded-xl transition-all duration-200 shadow-md hover:shadow-lg font-medium',
+              (!editBrandId || !editReturnReason || (editReturnReason === 'Other' && !editOtherReason.trim()) || (editedReturn.entryType === 'upload' && (!editProductCode.trim() || !editSize.trim())))
+                ? 'bg-gray-400 dark:bg-gray-600 text-gray-200 dark:text-gray-400 cursor-not-allowed'
+                : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700'
+            ]">
             Save Changes
           </button>
         </div>
@@ -795,6 +836,7 @@ interface ReturnItem {
   uploadedFileType?: string // File MIME type
   productCode?: string // Added for new field
   manufacturer?: string // Added for new field
+  clinicName?: string // Clinic that created this return
   // OCR fields for upload entries
   ocrSerialNumber?: string
   ocrProductCode?: string
@@ -919,8 +961,17 @@ function getStatusIcon(status: string) {
 }
 
 function formatDate(dateString: string) {
+  if (!dateString) return '-'
   const date = new Date(dateString)
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+  if (isNaN(date.getTime())) return dateString
+  const month = date.toLocaleString('en-US', { month: 'short' })
+  const day = date.getDate()
+  const year = date.getFullYear()
+  let hours = date.getHours()
+  const minutes = date.getMinutes().toString().padStart(2, '0')
+  const ampm = hours >= 12 ? 'PM' : 'AM'
+  hours = hours % 12 || 12
+  return `${month} ${day}, ${year} [${hours}:${minutes} ${ampm}]`
 }
 
 function isExpired(dateString: string) {
@@ -944,6 +995,7 @@ const isLoadingDetails = ref(false)
 const editBrandId = ref('')
 const editReturnReason = ref('')
 const editOtherReason = ref('')
+const editValidationError = ref('')
 const editSerialNumber = ref('')
 const editProductCode = ref('')
 const editExpiryDate = ref('')
@@ -982,6 +1034,7 @@ async function editReturn(item: ReturnItem) {
   editBrandId.value = item.brandId
   editReturnReason.value = item.returnReason
   editOtherReason.value = item.otherReason || ''
+  editValidationError.value = ''
   
   // For upload entries, allow editing all OCR fields (with initial data)
   if (item.entryType === 'upload') {
@@ -1046,6 +1099,22 @@ function handleDelete() {
 
 function saveEdit() {
   if (editedReturn.value) {
+    // Validate required fields
+    if (!editBrandId.value) {
+      editValidationError.value = 'Please select a brand.'
+      return
+    }
+    if (!editReturnReason.value) {
+      editValidationError.value = 'Please select a return reason.'
+      return
+    }
+    if (editReturnReason.value === 'Other' && !editOtherReason.value.trim()) {
+      editValidationError.value = 'Please specify the reason when selecting "Other".'
+      return
+    }
+
+    editValidationError.value = ''
+
     // Update the edited return with new values
     const updatedReturn: any = {
       ...editedReturn.value,
@@ -1082,6 +1151,7 @@ function cancelEdit() {
   editBrandId.value = ''
   editReturnReason.value = ''
   editOtherReason.value = ''
+  editValidationError.value = ''
   editSerialNumber.value = ''
   editProductCode.value = ''
   editExpiryDate.value = ''

@@ -361,19 +361,19 @@
                                 User
                             </th>
                             <th
-                                class="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                class="px-6 py-4 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                 Role
                             </th>
                             <th
-                                class="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                class="px-6 py-4 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                 Status
                             </th>
                             <th
-                                class="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                class="px-6 py-4 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                 Created
                             </th>
                             <th
-                                class="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                class="px-6 py-4 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                 Actions
                             </th>
                         </tr>
@@ -396,13 +396,13 @@
                                         </div>
                                     </div>
                                 </td>
-                                <td class="px-6 py-5 whitespace-nowrap">
+                                <td class="px-6 py-5 whitespace-nowrap text-center">
                                     <span
                                         :class="['inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200', getRoleColor(user.role)]">
                                         {{ formatRoleName(user.role) }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-5 whitespace-nowrap">
+                                <td class="px-6 py-5 whitespace-nowrap text-center">
                                     <span :class="['inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200',
                                         user.isArchived ? 'bg-orange-50 text-orange-700 dark:bg-orange-900/20 dark:text-orange-400' :
                                             user.isActive ? 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400' :
@@ -413,11 +413,11 @@
                                         {{ user.isArchived ? 'Archived' : (user.isActive ? 'Active' : 'Inactive') }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-5 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                <td class="px-6 py-5 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 text-center">
                                     {{ formatDate(user.createdAt) }}
                                 </td>
-                                <td class="px-6 py-5 whitespace-nowrap text-sm font-medium">
-                                    <div class="flex items-center space-x-2">
+                                <td class="px-6 py-5 whitespace-nowrap text-sm font-medium text-center">
+                                    <div class="flex items-center justify-center space-x-2">
                                         <button @click="selectedUser = user"
                                             class="inline-flex items-center justify-center w-9 h-9 text-gray-400 dark:text-gray-500 hover:bg-blue-100 dark:hover:bg-blue-900/30 hover:text-blue-700 dark:hover:text-blue-400 rounded-lg transition-all duration-200"
                                             title="View Details">
@@ -1909,6 +1909,14 @@ watch([searchTerm, roleFilter, statusFilter], () => {
 
 watch(currentPage, () => {
     fetchUsers().catch((err) => { console.error('Failed to fetch users on page change', err) })
+})
+
+// Auto-select 'clinic' role when office staff opens the create form
+// (office staff cannot create accounts with the same role)
+watch(showCreateForm, (isOpen) => {
+    if (isOpen && isOfficeStaff.value) {
+        formData.value.role = 'clinic'
+    }
 })
 
 const showFormModal = computed({
