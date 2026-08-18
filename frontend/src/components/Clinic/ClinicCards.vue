@@ -10,8 +10,8 @@
 				<div class="flex items-start justify-between mb-4">
 					<div>
 						<div class="flex items-center gap-3">
-							<div v-if="user.logo" class="w-14 h-14 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700">
-                                <img :src="user.logo" :alt="`${user.name} logo`" class="w-full h-full object-cover border" />
+							<div v-if="showLogo(user)" class="w-14 h-14 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700">
+                                <img :src="user.logo" :alt="`${user.name} logo`" class="w-full h-full object-cover border" @error="onLogoError(user.id)" />
                             </div>
 							<div v-else class="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
 								<Hospital class="w-5 h-5 text-green-600 dark:text-green-400" />
@@ -36,39 +36,46 @@
 							</div>
 						</div>
 					</div>
-					<div class="flex items-center space-x-2">
-						<button @click="$emit('view-clinic', user)" class="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300">
-							<Eye class="w-5 h-4" />
+					<div class="flex items-center space-x-1">
+						<button @click="$emit('view-clinic', user)"
+							class="inline-flex items-center justify-center w-9 h-9 text-gray-400 dark:text-gray-500 hover:bg-blue-100 dark:hover:bg-blue-900/30 hover:text-blue-700 dark:hover:text-blue-400 rounded-lg transition-all duration-200"
+							title="View Details">
+							<Eye class="w-5 h-5" />
 						</button>
-						<button @click="$emit('edit-clinic', user)" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
-							<SquarePen class="w-4 h-4" />
+						<button @click="$emit('edit-clinic', user)"
+							class="inline-flex items-center justify-center w-9 h-9 text-gray-400 dark:text-gray-500 hover:bg-amber-100 dark:hover:bg-amber-900/30 hover:text-amber-700 dark:hover:text-amber-400 rounded-lg transition-all duration-200"
+							title="Edit Clinic">
+							<SquarePen class="w-5 h-5" />
 						</button>
 						<template v-if="user.isActive === 0 || user.isActive === 1">
 							<button
-								@click="$emit('toggle-status', user.id)" 
-								:class="user.isActive === 0 
-									? 'text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300' 
-									: 'text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300'"
+								@click="$emit('toggle-status', user.id)"
+								class="inline-flex items-center justify-center w-9 h-9 text-gray-400 dark:text-gray-500 rounded-lg transition-all duration-200"
+								:class="user.isActive === 0
+									? 'hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-700 dark:hover:text-red-400'
+									: 'hover:bg-green-100 dark:hover:bg-green-900/30 hover:text-green-700 dark:hover:text-green-400'"
 								:title="user.isActive == 0 ? 'Deactivate' : 'Activate'"
 							>
-								<component 
-									:is="user.isActive == 0 ? CircleX : CircleCheck" 
-									class="w-4 h-4" 
+								<component
+									:is="user.isActive == 0 ? CircleX : CircleCheck"
+									class="w-5 h-5"
 								/>
 							</button>
 						</template>
-						<button @click="$emit('delete-clinic', user.id)" class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300" title="Delete User">
-							<Trash2 class="w-4 h-4" />
+						<button @click="$emit('delete-clinic', user.id)"
+							class="inline-flex items-center justify-center w-9 h-9 text-gray-400 dark:text-gray-500 hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-700 dark:hover:text-red-400 rounded-lg transition-all duration-200"
+							title="Delete Clinic">
+							<Trash2 class="w-5 h-5" />
 						</button>
 						<template v-if="user.isActive === 1 || user.isActive === 2">
 							<button
 								@click="user.isActive === 2 ? $emit('unarchive-clinic', user.id) : $emit('archive-clinic', user.id)"
-								class="text-yellow-600 hover:text-yellow-900 dark:text-yellow-400 dark:hover:text-yellow-300"
+								class="inline-flex items-center justify-center w-9 h-9 text-gray-400 dark:text-gray-500 hover:bg-orange-100 dark:hover:bg-orange-900/30 hover:text-orange-700 dark:hover:text-orange-400 rounded-lg transition-all duration-200"
 								:title="user.isActive === 2 ? 'Unarchive Clinic' : 'Archive Clinic'"
 							>
 								<component
 									:is="user.isActive === 1 ? Archive : ArchiveRestore"
-									class="w-4 h-4"
+									class="w-5 h-5"
 								/>
 							</button>
 						</template>
@@ -124,6 +131,7 @@
 </template>
 
 <script setup lang="ts">
+import { reactive } from 'vue'
 import ContentLoader from '@/components/ui/ContentLoader.vue'
 import Pagination from '@/components/ui/Pagination.vue'
 import {
@@ -156,7 +164,7 @@ interface User {
 	assigned_clinician_ids: Clinician[]
 }
 
-defineProps<{
+const props = defineProps<{
 	users: User[]
 	userStatus: Record<number, { label: string; classes: string }>
 	tableLoader: boolean
@@ -168,7 +176,7 @@ defineProps<{
 	}
 }>()
 
-defineEmits<{
+const emit = defineEmits<{
 	'view-clinic': [user: User]
 	'edit-clinic': [user: User]
 	'toggle-status': [userId: string]
@@ -177,6 +185,16 @@ defineEmits<{
 	'unarchive-clinic': [userId: string]
 	'update:page': [page: number]
 }>()
+
+const logoErrors = reactive<Set<string>>(new Set())
+
+function showLogo(user: User) {
+	return !!user.logo && !logoErrors.has(user.id)
+}
+
+function onLogoError(userId: string) {
+	logoErrors.add(userId)
+}
 
 function formatDate(dateStr: string) {
 	const date = new Date(dateStr)

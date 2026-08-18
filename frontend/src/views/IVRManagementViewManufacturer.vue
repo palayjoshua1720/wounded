@@ -128,12 +128,13 @@
 								<!-- <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
 									{{ ivr.submitted_at ? formatDateTime(ivr.submitted_at) : 'N/A' }}
 								</td> -->
-								<td class="px-6 py-3 whitespace-nowrap text-sm font-medium space-x-2">
-									<button @click="selectedIvrRequest = ivr; showUserDetailsModal = true"
-										class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
-										title="View Details">
-										<Eye class="w-5 h-4" />
-									</button>
+								<td class="px-6 py-3 whitespace-nowrap text-sm font-medium">
+									<div class="flex items-center space-x-2">
+										<button @click="selectedIvrRequest = ivr; showUserDetailsModal = true"
+											class="inline-flex items-center justify-center w-9 h-9 text-gray-400 dark:text-gray-500 hover:bg-blue-100 dark:hover:bg-blue-900/30 hover:text-blue-700 dark:hover:text-blue-400 rounded-lg transition-all duration-200"
+											title="View Details">
+											<Eye class="w-5 h-5" />
+										</button>
 									<!-- <button
 									@click="editIVR(ivr)"
 									class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"
@@ -160,6 +161,7 @@
 											class="w-4 h-4"
 										/>
 									</button> -->
+									</div>
 								</td>
 							</tr>
 						</template>
@@ -167,15 +169,9 @@
 				</table>
 			</div>
 
-			<div v-if="filteredIVRRequest.length === 0 && !tableLoader" class="text-center py-12">
-				<div
-					class="mx-auto h-16 w-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mb-4">
-					<FileXIcon class="h-8 w-8 text-gray-400 dark:text-gray-500" />
-				</div>
-				<h3 class="text-lg font-medium text-gray-900 dark:text-white mb-1">No IVR Request found.</h3>
-				<p class="text-gray-500 dark:text-gray-400 max-w-md mx-auto">Try adjusting your search or filter to find
-					what you're looking for.</p>
-			</div>
+			<BaseEmptyState v-if="filteredIVRRequest.length === 0 && !tableLoader" :icon="FileXIcon"
+				title="No IVR Request found."
+				description="Try adjusting your search or filter to find what you're looking for." />
 
 			<template v-if="!tableLoader">
 				<Pagination :pagination="pagination" @update:page="getAllIVRRequests" />
@@ -566,6 +562,7 @@ import axios from 'axios'
 import BaseModal from '../components/common/BaseModal.vue'
 import Pagination from '../components/ui/Pagination.vue'
 import TableLoader from '../components/ui/TableLoader.vue'
+import BaseEmptyState from '@/components/common/BaseEmptyState.vue'
 import {
 	Funnel, Search, Eye, SquarePen,
 	Trash2, User as userProfile,
@@ -1162,7 +1159,7 @@ const downloadIVRForm = async (id: string) => {
 		link.click();
 		URL.revokeObjectURL(link.href);
 	} catch (error) {
-		console.error('Download failed:', error);
+		toast.error('Failed to download IVR form.');
 	}
 };
 

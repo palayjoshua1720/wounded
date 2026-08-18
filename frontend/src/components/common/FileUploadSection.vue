@@ -26,52 +26,78 @@
 
         <!-- SELECTED FILE -->
         <div v-if="selectedFile"
-            class="flex items-center justify-between p-3 rounded-xl border bg-green-50 dark:bg-gray-800 border-green-200 dark:border-gray-700">
-            <div class="flex items-center gap-3">
-                <div class="p-2 rounded-lg bg-green-100 dark:bg-gray-700">
-                    <FileText class="w-4 h-4 text-green-600" />
+            class="p-3 rounded-xl border bg-green-50 dark:bg-gray-800 border-green-200 dark:border-gray-700">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="p-2 rounded-lg bg-green-100 dark:bg-gray-700">
+                        <FileText class="w-4 h-4 text-green-600" />
+                    </div>
+
+                    <div class="text-sm">
+                        <p class="text-gray-700 dark:text-gray-200">
+                            <span class="font-medium">{{ selectedFile.name }}</span>
+                        </p>
+                        <p class="text-xs text-green-600">Ready to upload</p>
+                    </div>
                 </div>
 
-                <div class="text-sm">
-                    <p class="text-gray-700 dark:text-gray-200">
-                        <span class="font-medium">{{ selectedFile.name }}</span>
-                    </p>
-                    <p class="text-xs text-green-600">Ready to upload</p>
-                </div>
+                <button @click="removeSelected"
+                    class="p-2 rounded-lg hover:bg-red-100 dark:hover:bg-gray-700 text-red-500 transition">
+                    <X class="w-4 h-4" />
+                </button>
             </div>
 
-            <button @click="removeSelected"
-                class="p-2 rounded-lg hover:bg-red-100 dark:hover:bg-gray-700 text-red-500 transition">
-                <X class="w-4 h-4" />
-            </button>
+            <div v-if="previewUrl" class="mt-3 border rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-900">
+                <img v-if="isImageFile(selectedFile.name)" :src="previewUrl" :alt="selectedFile.name"
+                    class="max-h-64 w-full object-contain p-2" />
+                <iframe v-else-if="isPDFFile(selectedFile.name)" :src="previewUrl"
+                    class="w-full h-64 rounded-lg" frameborder="0"></iframe>
+                <div v-else class="flex items-center justify-center h-32 text-gray-400 dark:text-gray-500">
+                    <FileText class="w-8 h-8" />
+                    <span class="ml-2 text-sm">Preview not available</span>
+                </div>
+            </div>
         </div>
 
         <!-- EXISTING FILE -->
         <div v-else-if="existingFilename"
-            class="flex items-center justify-between p-3 rounded-xl border bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-            <div class="flex items-center gap-3">
-                <div class="p-2 rounded-lg bg-gray-200 dark:bg-gray-700">
-                    <FileText class="w-4 h-4 text-gray-500" />
+            class="p-3 rounded-xl border bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="p-2 rounded-lg bg-gray-200 dark:bg-gray-700">
+                        <FileText class="w-4 h-4 text-gray-500" />
+                    </div>
+
+                    <div class="text-sm">
+                        <p class="text-gray-700 dark:text-gray-200">
+                            <span class="font-medium">{{ displayFilename }}</span>
+                        </p>
+                        <p class="text-xs text-gray-400">Current file</p>
+                    </div>
                 </div>
 
-                <div class="text-sm">
-                    <p class="text-gray-700 dark:text-gray-200">
-                        <span class="font-medium">{{ displayFilename }}</span>
-                    </p>
-                    <p class="text-xs text-gray-400">Current file</p>
+                <div class="flex items-center gap-2">
+                    <button @click="emit('preview')"
+                        class="px-2 py-1 text-xs rounded-md text-blue-600 hover:bg-blue-50 dark:hover:bg-gray-700">
+                        Preview
+                    </button>
+
+                    <button @click="removeExisting"
+                        class="p-2 rounded-lg hover:bg-red-100 dark:hover:bg-gray-700 text-red-500 transition">
+                        <X class="w-4 h-4" />
+                    </button>
                 </div>
             </div>
 
-            <div class="flex items-center gap-2">
-                <button @click="emit('preview')"
-                    class="px-2 py-1 text-xs rounded-md text-blue-600 hover:bg-blue-50 dark:hover:bg-gray-700">
-                    Preview
-                </button>
-
-                <button @click="removeExisting"
-                    class="p-2 rounded-lg hover:bg-red-100 dark:hover:bg-gray-700 text-red-500 transition">
-                    <X class="w-4 h-4" />
-                </button>
+            <div v-if="existingFileUrl" class="mt-3 border rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-900">
+                <img v-if="isImageFile(existingFilename)" :src="existingFileUrl" :alt="displayFilename"
+                    class="max-h-64 w-full object-contain p-2" />
+                <iframe v-else-if="isPDFFile(existingFilename)" :src="existingFileUrl"
+                    class="w-full h-64 rounded-lg" frameborder="0"></iframe>
+                <div v-else class="flex items-center justify-center h-32 text-gray-400 dark:text-gray-500">
+                    <FileText class="w-8 h-8" />
+                    <span class="ml-2 text-sm">Preview not available</span>
+                </div>
             </div>
         </div>
 
@@ -89,9 +115,21 @@ const props = defineProps<{
     removeFlag?: boolean
     existingFilename?: string
     existingFileExtension?: string
+    existingFileUrl?: string | null
     label: string
     accept: string
 }>()
+
+function isImageFile(filename: string) {
+    if (!filename) return false
+    const ext = filename.split('.').pop()?.toLowerCase() || ''
+    return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'].includes(ext)
+}
+
+function isPDFFile(filename: string) {
+    if (!filename) return false
+    return filename.toLowerCase().endsWith('.pdf')
+}
 
 // Compute display filename - replace .enc with actual extension
 const displayFilename = computed(() => {

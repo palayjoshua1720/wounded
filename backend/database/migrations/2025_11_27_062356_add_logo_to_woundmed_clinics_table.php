@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::table('woundmed_clinics', function (Blueprint $table) {
             $table->string('logo')->nullable()->after('address');
+            $table->string('logo_extension')->nullable()->after('logo');
         });
     }
 
@@ -23,6 +24,7 @@ return new class extends Migration
     {
         Schema::table('woundmed_clinics', function (Blueprint $table) {
             $table->dropColumn('logo');
+            $table->dropColumn('logo_extension');
         });
     }
 };

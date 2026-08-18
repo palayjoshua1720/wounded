@@ -945,7 +945,6 @@ class OrderController extends Controller
                     ->update(['used_at' => now()]);
             }
 
-            # Update order status
             $order = Orders::findOrFail($orderId);
             $order->update([
                 'order_status' => $validated['order_status']

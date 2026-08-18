@@ -446,10 +446,7 @@ onMounted(() => {
 	document.addEventListener('click', handleProfileClickOutside)
 	document.addEventListener('click', handleNotificationsClickOutside)
 
-	// Fetch initial notification count
 	fetchHeaderNotifications()
-
-	// Poll every 60 seconds for new notifications
 	notifPollInterval = setInterval(fetchHeaderNotifications, 60000)
 })
 

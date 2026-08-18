@@ -31,6 +31,7 @@ class Clinic extends Model
         'phone',
         'address',
         'logo',
+        'logo_extension',
     ];
 
     protected $casts = [

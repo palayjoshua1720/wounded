@@ -141,15 +141,7 @@
 								</td>
 								<td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
 									<div class="flex items-center space-x-2">
-										<button @click="showOrderDetails(order)" class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">
-											<Eye class="w-4 h-4" />
-										</button>
-										<button @click="editOrder(order)" class="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300">
-											<SquarePen class="w-4 h-4" />
-										</button>
-										<button @click="confirmDelete(order)" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300">
-											<Trash2 class="w-4 h-4" />
-										</button>
+										<ActionGroup :actions="getOrderActions(order)" />
 										<div class="inline-flex space-x-1">
 											<button v-if="order.order_status === 'submitted'" @click="updateOrderStatusNew(order, 'acknowledged')" class="px-2 py-1 text-xs bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400 rounded hover:bg-purple-200 dark:hover:bg-purple-900/30">Acknowledge?</button>
 											<button v-if="order.order_status === 'acknowledged'" @click="updateOrderStatusNew(order, 'shipped')" class="px-2 py-1 text-xs bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400 rounded hover:bg-blue-200 dark:hover:bg-blue-900/30">Ready to Ship?</button>
@@ -736,7 +728,7 @@
 				</div>
 
 				<!-- Product Items -->
-				<div v-if="formData.products.length > 0" :class="{ 'opacity-40 pointer-events-none': !isSelectedIVREligible }">
+				<div :class="{ 'opacity-40 pointer-events-none': !isSelectedIVREligible }">
 					<div class="flex items-center justify-between mb-4">
 						 <div class="flex items-center gap-2 mb-2">
 							<Layers class="w-5 h-5 text-green-500" />
@@ -748,6 +740,7 @@
 						</button>
 					</div>
 
+					<template v-if="formData.products.length > 0">
 					<div v-for="(product, idx) in formData.products" :key="product.id" class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 mb-4">
 						<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-[2fr_1fr_1fr_auto] gap-4 items-end">
 							<!-- Product Selection -->
@@ -808,6 +801,7 @@
 							</p>
 						</div>
 					</div>
+					</template>
 				</div>
 
 				<transition name="fade-slide">
@@ -976,6 +970,7 @@ import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import BaseModal from '@/components/common/BaseModal.vue'
 import Pagination from '../components/ui/Pagination.vue'
 import TableLoader from '../components/ui/TableLoader.vue'
+import ActionGroup, { type ActionConfig } from '@/components/ui/ActionGroup.vue'
 import {
     Search, Funnel, Eye, CircleCheck,
 	Truck, Box, TriangleAlert, CircleUser,
@@ -1123,6 +1118,18 @@ type OrderItem = {
 	graftStock?: number
 }
 
+type ProductItem = {
+	id: string;
+	otherProductId: string;
+	brandId: string;
+	manufacturerId: string;
+	otherProductType: number;
+	otherProductName: string;
+	quantity: number;
+	otherProductStock: number;
+	price: number;
+}
+
 const API_URL = process.env.VUE_APP_API_URL;
 
 // 0-submitted | 1-acknowledged | 2-shipped | 3-delivered | 4-cancelled
@@ -1213,19 +1220,7 @@ const formData = ref({
 			graftStock: 0
 		}
 	],
-	products: [
-		{
-			id: Date.now().toString(),
-			otherProductId: '',
-			brandId: '',
-			manufacturerId: '',
-			otherProductType: 0,
-			otherProductName: '',
-			quantity: 1,
-			otherProductStock: 0,
-			price: 0
-		}
-	],
+	products: [] as ProductItem[],
 	manufacturerId: '',
 	trackingNumber: '',
 	order_file: ''
@@ -1272,13 +1267,6 @@ const isUpdateButtonDisabled = computed(() => {
     return selectedOrderForEdit.value?.order_status ==='acknowledged';
 });
 
-if(isUpdateButtonDisabled){
-	console.log('acknowledged');
-} else {
-	console.log('not acknowledged');
-	
-}
-
 function getEligibilityLabel(status?: number) {
 	switch (status) {
 		case 1:
@@ -1295,17 +1283,17 @@ const isPatientEligible = computed(() => {
 	const patient = selectedPatient.value	
 	
 	if (!patient) {
-		console.log('No patient selected')
+		toast.error('No patient selected')
 		return false
 	}
 	
 	if (!Array.isArray(patient.ivrs)) {
-		console.log('Patient IVR is not an array:', patient.ivrs)
+		toast.error('Patient IVR is not an array:', patient.ivrs)
 		return false
 	}
 	
 	if (patient.ivrs.length === 0) {
-		console.log('Patient has no IVR records')
+		toast.error('Patient has no IVR records')
 		return false
 	}
 	
@@ -1440,7 +1428,7 @@ function addProductItem() {
 }
 
 function removeProductItem(idx: number) {
-	if (formData.value.products.length > 1) formData.value.products.splice(idx, 1)
+	formData.value.products.splice(idx, 1)
 }
 
 function getProductPrice(idx: number) {
@@ -1510,7 +1498,7 @@ function resetCreateForm() {
 				otherProductStock: 0,
 				price: 0
 			}
-		],
+		] as ProductItem[],
 		manufacturerId: '',
 		trackingNumber: '',
 		order_file: ''
@@ -1783,7 +1771,7 @@ async function editOrder(order: Order) {
 		status: 'submitted',
 		notes: fullOrder.notes || '',
 		items: [],
-		products: [],
+		products: [] as ProductItem[],
 		manufacturerId: fullOrder.manufacturer_id?.toString() || '',
 		trackingNumber: fullOrder.tracking_num || '',
 		order_file: fullOrder.order_file || '',
@@ -1833,6 +1821,32 @@ function showOrderDetails(order: Order) {
 	selectedOrder.value = order
 	showOrderModal.value = true
 	overrideStatus.value = order.order_status;
+}
+
+function getOrderActions(order: Order): ActionConfig[] {
+	return [
+		{
+			id: 'view',
+			icon: Eye,
+			title: 'View Details',
+			hoverColor: 'blue',
+			onClick: () => showOrderDetails(order)
+		},
+		{
+			id: 'edit',
+			icon: SquarePen,
+			title: 'Edit Order',
+			hoverColor: 'green',
+			onClick: () => editOrder(order)
+		},
+		{
+			id: 'delete',
+			icon: Trash2,
+			title: 'Delete Order',
+			hoverColor: 'red',
+			onClick: () => confirmDelete(order)
+		},
+	]
 }
 
 const filteredOrders = computed(() => {
@@ -2106,10 +2120,7 @@ const loadDocxContent = async (fileUrl: string) => {
       return;
     }
 
-    console.log('[DOCX] Starting fetch for:', fileUrl);
-
     const fullUrl = `${API_URL}/private-file/${encodeURIComponent(fileUrl)}`;
-    console.log('[DOCX] Full URL:', fullUrl);
 
     const response = await fetch(fullUrl, {
       method: 'GET',
@@ -2120,19 +2131,13 @@ const loadDocxContent = async (fileUrl: string) => {
       },
     });
 
-    console.log('[DOCX] Response status:', response.status);
-    console.log('[DOCX] Content-Type:', response.headers.get('content-type'));
-    console.log('[DOCX] Content-Length:', response.headers.get('content-length'));
-
     if (!response.ok) {
       const text = await response.text();
-      console.error('[DOCX] Server error body:', text);
       throw new Error(`Server returned ${response.status} - ${response.statusText}`);
     }
 
     // Force array buffer
     const arrayBuffer = await response.arrayBuffer();
-    console.log('[DOCX] ArrayBuffer received, byte length:', arrayBuffer.byteLength);
 
     if (arrayBuffer.byteLength === 0) {
       throw new Error('Received empty file');
@@ -2141,12 +2146,9 @@ const loadDocxContent = async (fileUrl: string) => {
     // Try Mammoth
     const result = await mammoth.convertToHtml({ arrayBuffer });
 
-    console.log('[DOCX] Mammoth success - messages:', result.messages);
-
     docContent.value = result.value || '<p class="text-yellow-600">Document is empty.</p>';
 
   } catch (err: any) {
-    console.error('[DOCX] Full error:', err);
     let userMsg = 'Error loading document. Please try downloading it instead.';
 
     if (err.message.includes('404')) {
@@ -2294,7 +2296,7 @@ async function getAllGraftSizes()
 		})
 		brands.value = Array.from(brandMap.values())
 	} catch (error) {
-		console.error('Error loading graft sizes:', error)
+		toast.error('Error loading graft sizes')
 		graftSizes.value = []
 	} finally {
 		tableLoader.value = false
@@ -2311,7 +2313,7 @@ async function getAllOtherProducts()
 		})
 		otherProducts.value = data.other_product_data || []
 	} catch (error) {
-		console.error('Error loading other products:', error)
+		toast.error('Error loading other products')
 	} finally {
 		tableLoader.value = false
 	}
@@ -2327,7 +2329,7 @@ async function getAllOtherProductsById(otherProductId: string)
 		})
 		otherProducts.value = data.other_product_data || []
 	} catch (error) {
-		console.error('Error loading other products:', error)
+		toast.error('Error loading other products')
 	} finally {
 		tableLoader.value = false
 	}
@@ -2376,7 +2378,8 @@ async function addNewOrder(){
 		payload.append('order_file', selectedFile.value)
 	}
 
-	if (selectedOrderForEdit.value?.order_status === 2) {
+	// if (selectedOrderForEdit.value?.order_status === 2) {
+	if (selectedOrderForEdit.value?.order_status === 'shipped' || selectedOrderForEdit.value?.order_status === 'delivered') {
 		Swal.fire({
 			title: 'Update Failed',
 			text: 'Cannot update order that has been shipped or delivered.',
@@ -2513,7 +2516,6 @@ async function updateOrderStatusNew(orderOrId: Order | number, newStatus: OrderS
 		await getAllOrders(1)
 		closeForm()
 	} catch (error) {
-		console.error(error);
 		toast.error('Failed to update order status.')
 	}
 }
@@ -2553,14 +2555,11 @@ async function applyOverride() {
 		closeForm();
 
 	} catch (error) {
-		console.error(error);
 		toast.error("Failed to override status.");
 	}
 }
 
-async function sendFollowUp(order: Order){
-	console.log('order: ', order);
-	
+async function sendFollowUp(order: Order){	
 	try {
 		const result = await Swal.fire({
 			title: "Send Follow-Up Email?",
@@ -2620,7 +2619,7 @@ const downloadOrderFile = async (id: string) => {
 		link.click();
 		URL.revokeObjectURL(link.href);
 	} catch (error) {
-		// 
+		toast.error('Failed to download order file.');
 	}
 };
 

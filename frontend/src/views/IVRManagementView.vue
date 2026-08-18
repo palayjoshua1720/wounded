@@ -135,29 +135,31 @@
 								<!-- <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
 									{{ ivr.submitted_at ? formatDateTime(ivr.submitted_at) : 'N/A' }}
 								</td> -->
-								<td class="px-6 py-3 whitespace-nowrap text-sm font-medium space-x-2">
-									<button @click="
-										selectedIvrRequest = ivr;
-									showIvrDetails(ivr)
-										" class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300" title="View Details">
-										<Eye class="w-5 h-4" />
-									</button>
-									<button @click="editIVR(ivr)"
-										class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"
-										title="Edit IVR">
-										<SquarePen class="w-4 h-4" />
-									</button>
-									<button @click="confirmDelete(ivr)"
-										class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
-										title="Delete IVR">
-										<Trash2 class="w-4 h-4" />
-									</button>
-									<button @click="confirmArchive(ivr)" :class="[
-										'text-yellow-600 hover:text-yellow-900 dark:text-yellow-400 dark:hover:text-yellow-300',
-									]" :title="ivr.ivr_status === 1 ? 'Unarchive IVR' : 'Archive IVR'">
-										<component :is="ivr.ivr_status === 1 ? ArchiveRestore : Archive"
-											class="w-4 h-4" />
-									</button>
+								<td class="px-6 py-3 whitespace-nowrap text-sm font-medium">
+									<div class="flex items-center space-x-2">
+										<button @click="
+											selectedIvrRequest = ivr;
+										showIvrDetails(ivr)
+											" class="inline-flex items-center justify-center w-9 h-9 text-gray-400 dark:text-gray-500 hover:bg-blue-100 dark:hover:bg-blue-900/30 hover:text-blue-700 dark:hover:text-blue-400 rounded-lg transition-all duration-200" title="View Details">
+											<Eye class="w-5 h-5" />
+										</button>
+										<button @click="editIVR(ivr)"
+											class="inline-flex items-center justify-center w-9 h-9 text-gray-400 dark:text-gray-500 hover:bg-amber-100 dark:hover:bg-amber-900/30 hover:text-amber-700 dark:hover:text-amber-400 rounded-lg transition-all duration-200"
+											title="Edit IVR">
+											<FilePenLine class="w-5 h-5" />
+										</button>
+										<button @click="confirmDelete(ivr)"
+											class="inline-flex items-center justify-center w-9 h-9 text-gray-400 dark:text-gray-500 hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-700 dark:hover:text-red-400 rounded-lg transition-all duration-200"
+											title="Delete IVR">
+											<Trash2 class="w-5 h-5" />
+										</button>
+										<button @click="confirmArchive(ivr)"
+											class="inline-flex items-center justify-center w-9 h-9 text-gray-400 dark:text-gray-500 hover:bg-orange-100 dark:hover:bg-orange-900/30 hover:text-orange-700 dark:hover:text-orange-400 rounded-lg transition-all duration-200"
+											:title="ivr.ivr_status === 1 ? 'Unarchive IVR' : 'Archive IVR'">
+											<component :is="ivr.ivr_status === 1 ? ArchiveRestore : Archive"
+												class="w-5 h-5" />
+										</button>
+									</div>
 								</td>
 							</tr>
 						</template>
@@ -165,15 +167,9 @@
 				</table>
 			</div>
 
-			<div v-if="filteredIVRRequest.length === 0 && !tableLoader" class="text-center py-12">
-				<div
-					class="mx-auto h-16 w-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mb-4">
-					<FileXIcon class="h-8 w-8 text-gray-400 dark:text-gray-500" />
-				</div>
-				<h3 class="text-lg font-medium text-gray-900 dark:text-white mb-1">No IVR Request found.</h3>
-				<p class="text-gray-500 dark:text-gray-400 max-w-md mx-auto">Try adjusting your search or filter to find
-					what you're looking for.</p>
-			</div>
+			<BaseEmptyState v-if="filteredIVRRequest.length === 0 && !tableLoader" :icon="FileXIcon"
+				title="No IVR Request found."
+				description="Try adjusting your search or filter to find what you're looking for." />
 
 			<template v-if="!tableLoader">
 				<Pagination :pagination="pagination" @update:page="getAllIVRRequests" />
@@ -638,8 +634,9 @@ import axios from 'axios'
 import BaseModal from '../components/common/BaseModal.vue'
 import Pagination from '../components/ui/Pagination.vue'
 import TableLoader from '../components/ui/TableLoader.vue'
+import BaseEmptyState from '@/components/common/BaseEmptyState.vue'
 import {
-	Funnel, Search, Eye, SquarePen,
+	Funnel, Search, Eye,
 	Trash2, User as userProfile,
 	Download, ShieldUser, ShieldPlus,
 	Package, NotebookPen, FilePlus2,
@@ -1302,7 +1299,7 @@ const downloadIVRForm = async (id: string) => {
 		link.click();
 		URL.revokeObjectURL(link.href);
 	} catch (error) {
-		// 
+		toast.error('Failed to download IVR form.');
 	}
 };
 

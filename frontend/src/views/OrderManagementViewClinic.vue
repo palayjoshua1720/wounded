@@ -127,12 +127,14 @@
 								<td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
 									<div class="flex items-center space-x-2">
 										<button @click="showOrderDetails(order)"
-											class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">
-											<Eye class="w-4 h-4" />
+											class="inline-flex items-center justify-center w-9 h-9 text-gray-400 dark:text-gray-500 hover:bg-blue-100 dark:hover:bg-blue-900/30 hover:text-blue-700 dark:hover:text-blue-400 rounded-lg transition-all duration-200"
+											title="View Details">
+											<Eye class="w-5 h-5" />
 										</button>
 										<button @click="editOrder(order)"
-											class="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300">
-											<SquarePen class="w-4 h-4" />
+											class="inline-flex items-center justify-center w-9 h-9 text-gray-400 dark:text-gray-500 hover:bg-amber-100 dark:hover:bg-amber-900/30 hover:text-amber-700 dark:hover:text-amber-400 rounded-lg transition-all duration-200"
+											title="Edit Order">
+											<FilePenLine class="w-5 h-5" />
 										</button>
 										<div class="inline-flex space-x-1">
 											<button v-if="order.order_status === 'submitted'"
@@ -155,15 +157,9 @@
 				</table>
 			</div>
 
-			<div v-if="filteredOrders.length === 0 && !tableLoader" class="text-center py-12">
-				<div
-					class="mx-auto h-16 w-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mb-4">
-					<ShoppingCart class="h-8 w-8 text-gray-400 dark:text-gray-500" />
-				</div>
-				<h3 class="text-lg font-medium text-gray-900 dark:text-white mb-1">No orders found</h3>
-				<p class="text-gray-500 dark:text-gray-400 max-w-md mx-auto">Try adjusting your search or filter to find
-					what you're looking for.</p>
-			</div>
+			<BaseEmptyState v-if="filteredOrders.length === 0 && !tableLoader" :icon="ShoppingCart"
+				title="No orders found"
+				description="Try adjusting your search or filter to find what you're looking for." />
 
 			<template v-if="!tableLoader">
 				<Pagination :pagination="pagination" @update:page="getAllOrders" />
@@ -594,12 +590,13 @@ import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import BaseModal from '@/components/common/BaseModal.vue'
 import Pagination from '../components/ui/Pagination.vue'
 import TableLoader from '../components/ui/TableLoader.vue'
+import BaseEmptyState from '@/components/common/BaseEmptyState.vue'
 import {
 	Search, Funnel, Eye, CircleCheck,
 	Truck, Box, CircleUser, Calendar1,
 	FileTextIcon, ShoppingCart, ChevronDown,
 	Package, PackagePlus, TriangleAlert,
-	SquarePen, BaggageClaim
+	FilePenLine, BaggageClaim
 } from 'lucide-vue-next';
 import api from '@/services/api'
 import { toast } from 'vue3-toastify'
@@ -896,7 +893,9 @@ const formatDate = (dateStr: string) => {
 	return date.toLocaleDateString('en-US', {
 		year: 'numeric',
 		month: 'long',
-		day: 'numeric'
+		day: 'numeric',
+		hour: 'numeric',
+		minute: '2-digit'
 	})
 }
 
@@ -1468,7 +1467,7 @@ async function applyOverride() {
 }
 
 onMounted(async () => {
-	getAllOrders(1)
+	await getAllOrders(1)
 	getAllClinics()
 	getAllPatients()
 	await getAllGraftSizes()

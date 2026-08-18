@@ -615,7 +615,7 @@ async function accessMagicLink() {
 
         order.value = transformOrderResponse(data.order);
         isAuthorized.value = true;
-        
+
         await getAllOtherProducts()
     } catch (error) {
         router.replace({ name: "not-found-link" });
