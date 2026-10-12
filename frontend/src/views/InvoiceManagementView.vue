@@ -7,7 +7,7 @@
         <!-- <p class="text-gray-600 dark:text-gray-400">Manage invoices, OCR extraction, and payment synchronization</p> -->
       </div>
       <div class="flex gap-2">
-        <button
+        <button v-if="canModifyInvoices"
           class="flex items-center px-5 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg group"
           @click="showAddInvoiceModal = true" :disabled="loading">
           <FileUp class="w-4 h-4 mr-2" />
@@ -98,7 +98,7 @@
                     class="text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400">
                     <Eye class="w-4 h-4" />
                   </button>
-                  <button @click="editInvoice(invoice)"
+                  <button v-if="canModifyInvoices" @click="editInvoice(invoice)"
                     class="text-gray-600 hover:text-green-600 dark:text-gray-400 dark:hover:text-green-400">
                     <Edit class="w-4 h-4" />
                   </button>
@@ -438,7 +438,7 @@
                   </div>
                   <div class="text-gray-600 dark:text-gray-400 text-xs">{{ formatCurrency(item.amount) }} x {{ item.quantity || 1 }} = {{ formatCurrency(item.amount * (item.quantity || 1)) }}</div>
                 </div>
-                <button v-if="item.serial" @click="markIndividualSerialAsPaid(item.serial)" :disabled="paidSerials[item.serial as string]"
+                <button v-if="canModifyInvoices && item.serial" @click="markIndividualSerialAsPaid(item.serial)" :disabled="paidSerials[item.serial as string]"
                   :class="getSerialPaymentButtonClass(item.serial)">
                   {{ paidSerials[item.serial as string] ? 'Paid' : 'Mark as Paid' }}
                 </button>
@@ -455,7 +455,7 @@
                 <div class="text-gray-600 dark:text-gray-400 text-xs">
                   S/N: {{ serial }}
                 </div>
-                <button @click="markIndividualSerialAsPaid(serial)" :disabled="paidSerials[serial]"
+                <button v-if="canModifyInvoices" @click="markIndividualSerialAsPaid(serial)" :disabled="paidSerials[serial]"
                   :class="getSerialPaymentButtonClass(serial)">
                   {{ paidSerials[serial] ? 'Paid' : 'Mark as Paid' }}
                 </button>
@@ -473,7 +473,7 @@
                   <div class="text-gray-600 dark:text-gray-400 text-xs">S/N: {{ serial }}</div>
                   <div class="text-gray-600 dark:text-gray-400 text-xs">{{ formatCurrency(0) }} x 1 = {{ formatCurrency(0) }}</div>
                 </div>
-                <button @click="markIndividualSerialAsPaid(serial)" :disabled="paidSerials[serial]"
+                <button v-if="canModifyInvoices" @click="markIndividualSerialAsPaid(serial)" :disabled="paidSerials[serial]"
                   :class="getSerialPaymentButtonClass(serial)">
                   {{ paidSerials[serial] ? 'Paid' : 'Mark as Paid' }}
                 </button>
@@ -485,6 +485,11 @@
     </div>
     <template #actions>
       <div class="flex justify-end w-full p-5">
+        <button v-if="canModifyInvoices && selectedInvoice && selectedInvoice.status !== 'paid' && selectedInvoice.status !== 'cancelled'"
+          @click="markAsPaid(selectedInvoice); showInvoiceModal = false"
+          class="px-4 py-2 mr-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+          Mark as Paid
+        </button>
         <button @click="showInvoiceModal = false"
           class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
           Close
@@ -1099,6 +1104,10 @@ const isAdmin = computed(() => {
 })
 const toast = useAppToast()
 
+const canModifyInvoices = computed(() => {
+  return [0, 1, 5].includes(Number(authStore.currentUser?.user_role))
+})
+
 const clinicDisplayName = (clinic: Clinic) => {
   return `${clinic.clinic_name} (${clinic.clinic_code})`
 }
@@ -1560,6 +1569,7 @@ async function saveReviewedInvoice() {
       line_items: lineItemsForStorage,
       has_line_items: lineItemsForStorage.length > 0,
       notes: notes,
+      pdf_path: extractedInvoiceData.value.pdf_path,
       bill_to: extractedInvoiceData.value.bill_to
     }
 
@@ -1758,7 +1768,7 @@ function hasSerialInExtractedItems(serial: string, excludeIndex?: number): boole
   if (!serial || serial.trim() === '') return false
   if (!extractedInvoiceData.value || !extractedInvoiceData.value.line_items) return false
   const trimmedSerial = serial.trim().toUpperCase()
-  return extractedInvoiceData.value.line_items.some((item, index: number) => {
+  return extractedInvoiceData.value.line_items.some((item: any, index: number) => {
     if (excludeIndex !== undefined && index === excludeIndex) return false
     return item.serial && item.serial.trim().toUpperCase() === trimmedSerial
   })
