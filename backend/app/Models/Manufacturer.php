@@ -15,7 +15,7 @@ class Manufacturer extends Model
     /**
      * File fields that should be encrypted
      */
-    protected array $encryptableFiles = ['ivr_file', 'order_file', 'onboarding_file', 'logo'];
+    protected array $encryptableFiles = ['ivr_file', 'order_file', 'onboarding_file'];
 
     protected $table = 'woundmed_manufacturers';
     protected $primaryKey = 'manufacturer_id';

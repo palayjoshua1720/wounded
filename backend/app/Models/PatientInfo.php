@@ -26,6 +26,7 @@ class PatientInfo extends Model
         'email',
         'email_hash',
         'clinic_id',
+        'assigned_clinician_id',
         'updated_by',
     ];
 
@@ -49,6 +50,12 @@ class PatientInfo extends Model
     public function clinic()
     {
         return $this->belongsTo(Clinic::class, 'clinic_id', 'clinic_id');
+    }
+
+    // Patient is assigned to a specific clinician (user_role = 3)
+    public function assignedClinician()
+    {
+        return $this->belongsTo(User::class, 'assigned_clinician_id', 'id');
     }
 
     // Patient may have multiple IVR records

@@ -366,7 +366,7 @@
                 </div>
 
                 <div v-if="filePreviewUrl" class="mt-2 border rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800 p-3">
-                    <div v-if="isImageFile(filePreviewUrl)" class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4 bg-gray-50 dark:bg-gray-700/50">
+                    <div v-if="getFileTypeDisplay(displayOrder.orderFileExtension || '') == 'image'" class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4 bg-gray-50 dark:bg-gray-700/50">
                         <img 
                             :src="`${API_URL}/private-file/${displayOrder.orderFile}`"
                             :alt="displayOrder.orderFile"
@@ -374,9 +374,9 @@
                             
                         />
                     </div>
-                    <div v-else-if="isPDFFile(filePreviewUrl)" class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4 bg-gray-50 dark:bg-gray-700/50">
+                    <div v-else-if="getFileTypeDisplay(displayOrder.orderFileExtension || 'pdf') == 'pdf'" class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4 bg-gray-50 dark:bg-gray-700/50">
                         <iframe 
-                            :src="`${API_URL}/private-file/${displayOrder.orderFile}`"
+                            :src="`${api.defaults.baseURL}/private-order-file/${displayOrder.orderFile}`"
                             class="w-full h-[40rem] rounded-lg"
                             frameborder="0"
                         ></iframe>
@@ -893,24 +893,21 @@ const filePreviewUrl = computed(() => {
     return `/storage/${displayOrder.value.orderFile}`;
 });
 
-function isImageFile(filename: string) {
-    if (!filename) return false
-    const ext = filename.split('.').pop()?.toLowerCase() || ''
-    return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext)
-}
-
-function isPDFFile(filename: string) {
-    if (!filename) return false
-    return filename.toLowerCase().endsWith('.pdf')
-}
-
 const getFileTypeDisplay = (extension: string): string => {
-    const typeMap: Record<string, string> = {
-        'pdf': 'PDF Document',
-        'doc': 'Word Document',
-        'docx': 'Word Document'
+    if (!extension) return 'document';
+    const ext = extension.toLowerCase();
+
+    const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'];
+    if (imageExtensions.includes(ext)) {
+        return 'image';
     }
-    return typeMap[extension] || 'Document'
+
+    const typeMap: Record<string, string> = {
+        'pdf': 'pdf',
+        'doc': 'word',
+        'docx': 'word'
+    };
+    return typeMap[ext] || 'document';
 }
 
 const getFileTypeIcon = (extension: string): string => {

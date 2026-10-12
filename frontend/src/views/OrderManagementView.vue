@@ -3,7 +3,8 @@
 		<!-- Header and Create Order -->
 		<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
 			<div class="space-y-2">
-				<h1 class="text-3xl font-bold text-gray-900 dark:text-white">Order Management</h1> 
+				<h1 class="text-3xl font-bold text-gray-900 dark:text-white">Order Management</h1>
+				<!-- <p class="text-gray-600 dark:text-gray-400 max-w-2xl">View, organize, and track every order in one place.</p> -->
 			</div>
 			<button
 				@click="
@@ -297,14 +298,14 @@
 										<td class="px-4 py-3 text-sm text-gray-900 dark:text-white">{{ getBrandName(item.brandId) }}</td>
 										<td class="px-4 py-3 text-sm text-gray-900 dark:text-white">{{ getSizeName(item.graft_id) }}</td>
 										<td class="px-4 py-3 text-sm text-gray-900 dark:text-white">{{ item.quantity }}</td>
-										<td class="px-4 py-3 text-sm text-gray-900 dark:text-white">{{ formatCurrency(item.asp) }}</td>
-										<td class="px-4 py-3 text-right text-sm font-medium text-gray-900 dark:text-white">{{ formatCurrency(item.asp * item.quantity) }}</td>
+										<td class="px-4 py-3 text-sm text-gray-900 dark:text-white">${{ item.asp.toFixed(2) }}</td>
+										<td class="px-4 py-3 text-right text-sm font-medium text-gray-900 dark:text-white">${{ (item.asp * item.quantity).toFixed(2) }}</td>
 									</tr>
 								</tbody>
 								<tfoot class="bg-gray-50 dark:bg-gray-700">
 									<tr>
 										<td colspan="4" class="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white text-right">Total Amount:</td>
-										<td class="px-4 py-3 text-right text-sm font-bold text-gray-900 dark:text-white">{{ formatCurrency(selectedOrder.items.reduce((sum, item) => sum + (item.asp * item.quantity), 0)) }}</td>
+										<td class="px-4 py-3 text-right text-sm font-bold text-gray-900 dark:text-white">${{ selectedOrder.items.reduce((sum, item) => sum + (item.asp * item.quantity), 0).toFixed(2) }}</td>
 									</tr>
 								</tfoot>
 							</table>
@@ -334,10 +335,10 @@
 											{{ product.quantity }}
 										</td>
 										<td class="px-4 py-3 text-sm text-gray-900 dark:text-white text-right">
-											{{ formatCurrency(product.price || 0) }}
+											${{ (product.price || 0).toFixed(2) }}
 										</td>
 										<td class="px-4 py-3 text-right text-sm font-medium text-gray-900 dark:text-white">
-											{{ formatCurrency((product.price || 0) * (product.quantity || 0)) }}
+											${{ ((product.price || 0) * (product.quantity || 0)).toFixed(2) }}
 										</td>
 									</tr>
 								</tbody>
@@ -347,7 +348,7 @@
 											Additional Subtotal:
 										</td>
 										<td class="px-4 py-3 text-right text-sm font-bold text-gray-900 dark:text-white">
-											{{ formatCurrency(selectedOrder.other_product_items.reduce((sum, p) => sum + ((p.price || 0) * (p.quantity || 0)), 0)) }}
+											${{ selectedOrder.other_product_items.reduce((sum, p) => sum + ((p.price || 0) * (p.quantity || 0)), 0).toFixed(2) }}
 										</td>
 									</tr>
 								</tfoot>
@@ -587,6 +588,45 @@
 						</div>
 					</div>
 				</div>
+
+				<transition name="fade-slide">
+					<div v-if="selectedIVR" class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+						<div>
+							<h4 class="font-medium text-blue-900 mb-2">Order File Information</h4>
+							<div class="space-y-2">
+								<p class="text-sm text-blue-700">
+									<strong>Manufacturer: </strong>
+									<span>{{ selectedIVR.manufacturer.manufacturer_name || 'NA' }}</span>
+								</p>
+								<p class="text-sm text-blue-700">
+									<strong>Form Type: </strong>
+									<span>File</span>
+								</p>
+								<p class="text-sm text-blue-700">
+									<strong>Order Email: </strong>
+									<span>{{ selectedIVR.manufacturer.order_email || 'NA' }}</span>
+								</p>
+							</div>
+							<div class="flex items-center gap-2 mt-2">
+								<button
+									type="button"
+									v-if="selectedIVR.manufacturer.order_file"
+									@click="downloadOrderFile(selectedIVR.manufacturer.manufacturer_id)"
+									class="flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-md shadow hover:bg-blue-700 active:bg-blue-800 transition"
+								>
+									<Download class="w-4 h-4" />
+									Download Order File
+								</button>
+								<span v-else class="text-gray-500">No file available</span>
+							</div>
+							<p class="shadow-md text-sm mt-4 leading-relaxed bg-gray-100 dark:bg-gray-800 p-3 rounded-lg border-l-4 border-yellow-400 text-gray-600 dark:text-gray-300">
+								<strong class="text-red-700 dark:text-red-400">Note:</strong>
+								After downloading the form, please complete all required fields. Once finished, save your changes and re-upload the updated file using the upload section below.
+							</p>
+							<p> </p>
+						</div>
+					</div>
+				</transition>
 				
 				<!-- Order Items -->
 				<div :class="{ 'opacity-40 pointer-events-none': !isSelectedIVREligible }">
@@ -664,7 +704,7 @@
 								</label>
 								<input
 									type="text"
-									:value="item.asp && item.quantity ? formatCurrency(item.asp * item.quantity) : ''"
+									:value="item.asp && item.quantity ? `$${(item.asp * item.quantity).toFixed(2)}` : ''"
 									class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-900/10"
 									placeholder="-----"
 									readonly
@@ -769,45 +809,6 @@
 						</div>
 					</div>
 				</div>
-
-				<transition name="fade-slide">
-					<div v-if="selectedIVR" class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-						<div>
-							<h4 class="font-medium text-blue-900 mb-2">Order File Information</h4>
-							<div class="space-y-2">
-								<p class="text-sm text-blue-700">
-									<strong>Manufacturer: </strong>
-									<span>{{ selectedIVR.manufacturer.manufacturer_name || 'NA' }}</span>
-								</p>
-								<p class="text-sm text-blue-700">
-									<strong>Form Type: </strong>
-									<span>File</span>
-								</p>
-								<p class="text-sm text-blue-700">
-									<strong>Order Email: </strong>
-									<span>{{ selectedIVR.manufacturer.order_email || 'NA' }}</span>
-								</p>
-							</div>
-							<div class="flex items-center gap-2 mt-2">
-								<button
-									type="button"
-									v-if="selectedIVR.manufacturer.order_file"
-									@click="downloadOrderFile(selectedIVR.manufacturer.manufacturer_id)"
-									class="flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-md shadow hover:bg-blue-700 active:bg-blue-800 transition"
-								>
-									<Download class="w-4 h-4" />
-									Download Order File
-								</button>
-								<span v-else class="text-gray-500">No file available</span>
-							</div>
-							<p class="shadow-md text-sm mt-4 leading-relaxed bg-gray-100 dark:bg-gray-800 p-3 rounded-lg border-l-4 border-yellow-400 text-gray-600 dark:text-gray-300">
-								<strong class="text-red-700 dark:text-red-400">Note:</strong>
-								After downloading the form, please complete all required fields. Once finished, save your changes and re-upload the updated file using the upload section below.
-							</p>
-							<p> </p>
-						</div>
-					</div>
-				</transition>
 
 				<transition name="fade-slide">
 					<div v-if="selectedIVR" class="relative">
@@ -991,7 +992,6 @@ import { toast } from 'vue3-toastify'
 import 'vue3-toastify/dist/index.css'
 import Swal from 'sweetalert2'
 import mammoth from 'mammoth'
-import { formatCurrency } from '@/utils/currency'
 
 interface Order {
 	order_id: number;
@@ -1453,7 +1453,8 @@ function getProductPrice(idx: number) {
 	const qty = Number(product.quantity ?? 1) || 1
 	const unit = Number(otherProduct.price ?? 0) || 0
 
-	return formatCurrency(unit * qty)
+	const totalPrice = (unit * qty).toFixed(2)
+	return `$${totalPrice}`
 }
 
 function resetOrderItems() {
@@ -2342,7 +2343,7 @@ async function addNewOrder(){
 	payload.append('notes', formData.value.notes)
 	payload.append('ivr_id', formData.value.ivrId)
 	payload.append('manufacturer_id', formData.value.manufacturerId)
-
+	
 	payload.append(
 		'items',
 		JSON.stringify(
@@ -2375,16 +2376,27 @@ async function addNewOrder(){
 		payload.append('order_file', selectedFile.value)
 	}
 
-	Swal.fire({
-		title: 'Processing Order',
-		text: 'Please wait while we submit your order…',
-		allowOutsideClick: false,
-		allowEscapeKey: false,
-		showConfirmButton: false,
-		didOpen: () => {
-			Swal.showLoading()
-		}
-	})
+	if (selectedOrderForEdit.value?.order_status === 2) {
+		Swal.fire({
+			title: 'Update Failed',
+			text: 'Cannot update order that has been shipped or delivered.',
+			icon: 'error',
+			confirmButtonText: 'OK',
+			confirmButtonColor: '#2563eb'
+		});
+		return
+	} else {
+		Swal.fire({
+			title: 'Processing Order',
+			text: 'Please wait while we submit your order…',
+			allowOutsideClick: false,
+			allowEscapeKey: false,
+			showConfirmButton: false,
+			didOpen: () => {
+				Swal.showLoading()
+			}
+		})
+	}
 
 	try {
 		if (showCreateForm.value) {

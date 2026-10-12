@@ -1,0 +1,2244 @@
+<template>
+    <div class="space-y-8">
+        <!-- Header -->
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div class="space-y-2">
+                <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Patient Management</h1>
+            </div>
+            <div class="flex items-center gap-4">
+                <button @click="showStats = !showStats"
+                    class="flex items-center px-5 py-3 bg-gray-100 dark:bg-gray-700/50 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-200">
+                    <BarChart2 class="w-5 h-5 mr-2" />
+                    {{ showStats ? 'Hide' : 'Show' }} Stats
+                </button>
+                <button @click="showCreateForm = true"
+                    class="flex items-center px-5 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg group">
+                    <Plus class="w-5 h-5 mr-2 group-hover:scale-110 transition-transform" />
+                    Add Patient
+                </button>
+            </div>
+        </div>
+
+        <!-- Stats Panel -->
+        <transition enter-active-class="transition ease-out duration-300"
+            enter-from-class="transform opacity-0 -translate-y-4" enter-to-class="transform opacity-100 translate-y-0"
+            leave-active-class="transition ease-in duration-200" leave-from-class="transform opacity-100 translate-y-0"
+            leave-to-class="transform opacity-0 -translate-y-4">
+            <div v-if="showStats"
+                class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Patient Statistics</h3>
+
+                <!-- Main Stats -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+                        <div
+                            class="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
+                            <Users class="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                        </div>
+                        <div>
+                            <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ stats.total }}</p>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">Total Patients</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+                        <div
+                            class="w-10 h-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center flex-shrink-0">
+                            <Calendar class="w-5 h-5 text-green-600 dark:text-green-400" />
+                        </div>
+                        <div>
+                            <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ stats.newThisMonth }}</p>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">New This Month</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+                        <div
+                            class="w-10 h-10 rounded-lg bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center flex-shrink-0">
+                            <Clock class="w-5 h-5 text-orange-600 dark:text-orange-400" />
+                        </div>
+                        <div>
+                            <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ stats.recentlyAdded }}</p>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">Added This Week</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+                        <div
+                            class="w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center flex-shrink-0">
+                            <ClipboardList class="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                        </div>
+                        <div>
+                            <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ stats.withIvrRecords }}</p>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">With IVR Records</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </transition>
+
+        <!-- Filters Card -->
+        <div class="bg-white dark:bg-gray-800 p-4 lg:p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+            <!-- Mobile: Stacked Layout -->
+            <div class="lg:hidden space-y-3">
+                <!-- Search Input -->
+                <div class="relative">
+                    <Search class="absolute left-3.5 top-3 h-5 w-5 text-gray-400 dark:text-gray-500" />
+                    <input v-model="searchTerm" type="text" placeholder="Search patients..."
+                        class="w-full pl-11 pr-10 py-2.5 border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white text-sm transition-all duration-200" />
+                    <button v-if="searchTerm" @click="searchTerm = ''" class="absolute right-3 top-2.5 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                        <X class="w-4 h-4" />
+                    </button>
+                </div>
+            </div>
+
+            <!-- Desktop: Original Layout -->
+            <div class="hidden lg:block relative">
+                <Search class="absolute left-4 top-3.5 h-5 w-5 text-gray-400 dark:text-gray-500" />
+                <input v-model="searchTerm" type="text" placeholder="Search by patient name..."
+                    class="w-full pl-12 pr-4 py-3.5 border-0 bg-gray-50 dark:bg-gray-700/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200" />
+            </div>
+        </div>
+
+        <!-- Mobile Card View -->
+        <div class="lg:hidden space-y-4">
+            <div v-if="tableLoader" class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-8">
+                <TableLoader :colspan="1" />
+            </div>
+            <template v-else>
+                <div v-if="filteredPatients.length === 0" class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-8">
+                    <div class="flex flex-col items-center justify-center gap-2">
+                        <Users class="w-10 h-10 mb-1 text-gray-400" />
+                        <span class="text-gray-400">No patients found.</span>
+                    </div>
+                </div>
+                <div v-else class="space-y-3">
+                    <div v-for="patient in paginatedPatients" :key="patient.patient_id"
+                        class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+                        <!-- Card Header -->
+                        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 px-4 py-3">
+                            <div class="flex items-center justify-between">
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-xs text-blue-600 dark:text-blue-400 mb-0.5">Patient Name</p>
+                                    <p class="text-gray-900 dark:text-white font-semibold truncate">{{ patient.patient_name }}</p>
+                                </div>
+                                <div class="flex items-center gap-2 ml-3">
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-white/60 dark:bg-white/10 text-blue-700 dark:text-blue-300">
+                                        {{ patient.ivr_count }} IVR
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card Body -->
+                        <div class="p-4 space-y-3">
+                            <!-- Email & Created By Row -->
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Email</p>
+                                    <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ patient.email || 'N/A' }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Created By</p>
+                                    <p class="text-sm font-medium text-gray-900 dark:text-white">{{ patient.user_name || 'System' }}</p>
+                                </div>
+                            </div>
+
+                            <!-- Assigned Clinician -->
+                            <div v-if="!isClinician">
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mb-0.5 flex items-center gap-1">
+                                    <Stethoscope class="w-3 h-3" />
+                                    Assigned To
+                                </p>
+                                <p class="text-sm font-medium text-gray-900 dark:text-white">
+                                    {{ patient.assigned_clinician_name || 'Unassigned' }}
+                                </p>
+                            </div>
+
+                            <!-- Created Date -->
+                            <div>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Created Date</p>
+                                <p class="text-sm font-medium text-gray-900 dark:text-white">{{ formatDateTime(patient.created_at) }}</p>
+                            </div>
+                        </div>
+
+                        <!-- Card Actions -->
+                        <div class="px-4 pt-2 pb-3 bg-gray-50 dark:bg-gray-700/30 border-t border-gray-100 dark:border-gray-700">
+                            <div class="flex items-center justify-end gap-2">
+                                <button @click="viewPatient(patient)"
+                                    class="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors">
+                                    <Eye class="w-5 h-5" />
+                                    View
+                                </button>
+                                <button @click="editPatient(patient)"
+                                    class="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-medium text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 rounded-lg hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors">
+                                    <FilePenLine class="w-5 h-5" />
+                                    Edit
+                                </button>
+                                <button @click="handleDeletePatient(patient.patient_id)"
+                                    class="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors">
+                                    <Trash2 class="w-5 h-5" />
+                                    Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </template>
+
+            <!-- Mobile Pagination -->
+            <Pagination
+                v-if="pagination.total > 0"
+                :pagination="pagination"
+                @update:page="goToPage"
+            />
+        </div>
+
+        <!-- Patients Table Card (Desktop) -->
+        <div
+            class="hidden lg:block bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                    <thead class="bg-gray-50/80 dark:bg-gray-700/50 backdrop-blur-sm">
+                        <tr>
+                            <th
+                                class="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                Patient
+                            </th>
+                            <th
+                                class="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                Created By
+                            </th>
+                            <th
+                                class="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                IVR Records
+                            </th>
+                            <th v-if="!isClinician"
+                                class="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                Assigned To
+                            </th>
+                            <th v-if="!isClinicScoped"
+                                class="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                Clinic
+                            </th>
+                            <th
+                                class="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                Actions
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                        <TableLoader v-if="tableLoader" :colspan="isClinician ? 4 : (isClinicScoped ? 5 : 6)" />
+                        <template v-else>
+                        <tr v-for="patient in paginatedPatients" :key="patient.patient_id"
+                            class="hover:bg-gray-50/70 dark:hover:bg-gray-700/50 transition-colors duration-150">
+                            <td class="px-6 py-5 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div
+                                        class="flex-shrink-0 h-10 w-10 bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-lg flex items-center justify-center text-blue-600 dark:text-blue-400 font-medium text-sm">
+                                        {{ getPatientInitials(patient.patient_name) }}
+                                    </div>
+                                    <div class="ml-4">
+                                        <div class="text-sm font-semibold text-gray-900 dark:text-white">{{ patient.patient_name }}</div>
+                                        <div class="text-sm text-gray-500 dark:text-gray-400">{{ patient.email }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-5 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div
+                                        class="flex-shrink-0 h-8 w-8 bg-gradient-to-br from-green-100 to-teal-100 dark:from-green-900/30 dark:to-teal-900/30 rounded-full flex items-center justify-center text-green-600 dark:text-green-400 font-medium text-xs">
+                                        {{ getUserInitials(patient.user_name) }}
+                                    </div>
+                                    <div class="ml-3">
+                                        <p class="text-sm font-medium text-gray-900 dark:text-white">{{ patient.user_name || 'System' }}</p>
+                                        <p v-if="patient.user_role !== null" class="text-xs text-gray-500 dark:text-gray-400">
+                                            {{ getRoleLabel(patient.user_role) }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-5 whitespace-nowrap">
+                                <span class="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-purple-50 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400">
+                                    <ClipboardList class="w-3 h-3 mr-1.5" />
+                                    {{ patient.ivr_count }} Records
+                                </span>
+                            </td>
+                            <td v-if="!isClinician" class="px-6 py-5 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div v-if="patient.assigned_clinician_name" class="flex items-center">
+                                        <div class="h-8 w-8 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
+                                            <Stethoscope class="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                                        </div>
+                                        <div class="ml-3">
+                                            <p class="text-sm font-medium text-gray-900 dark:text-white">{{ patient.assigned_clinician_name }}</p>
+                                        </div>
+                                    </div>
+                                    <span v-else class="text-sm text-gray-400 dark:text-gray-500 italic">Unassigned</span>
+                                </div>
+                            </td>
+                            <td v-if="!isClinicScoped" class="px-6 py-5 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div v-if="patient.clinic_name" class="flex items-center">
+                                        <div class="h-8 w-8 bg-teal-100 dark:bg-teal-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
+                                            <Hospital class="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                                        </div>
+                                        <div class="ml-3">
+                                            <p class="text-sm font-medium text-gray-900 dark:text-white">{{ patient.clinic_name }}</p>
+                                        </div>
+                                    </div>
+                                    <span v-else class="text-sm text-gray-400 dark:text-gray-500 italic">Not assigned</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-5 whitespace-nowrap text-sm font-medium">
+                                <div class="flex items-center space-x-2">
+                                    <button @click="viewPatient(patient)"
+                                        class="inline-flex items-center justify-center w-9 h-9 text-gray-400 dark:text-gray-500 hover:bg-blue-100 dark:hover:bg-blue-900/30 hover:text-blue-700 dark:hover:text-blue-400 rounded-lg transition-all duration-200"
+                                        title="View Details">
+                                        <Eye class="w-5 h-5" />
+                                    </button>
+                                    <button @click="editPatient(patient)"
+                                        class="inline-flex items-center justify-center w-9 h-9 text-gray-400 dark:text-gray-500 hover:bg-amber-100 dark:hover:bg-amber-900/30 hover:text-amber-700 dark:hover:text-amber-400 rounded-lg transition-all duration-200"
+                                        title="Edit Patient">
+                                        <FilePenLine class="w-5 h-5" />
+                                    </button>
+                                    <button @click="handleDeletePatient(patient.patient_id)"
+                                        class="inline-flex items-center justify-center w-9 h-9 text-gray-400 dark:text-gray-500 hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-700 dark:hover:text-red-400 rounded-lg transition-all duration-200"
+                                        title="Delete Patient">
+                                        <Trash2 class="w-5 h-5" />
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr v-if="filteredPatients.length === 0 && !tableLoader">
+                            <td :colspan="isClinician ? 4 : (isClinicScoped ? 5 : 6)" class="text-center text-gray-400 py-12">
+                                <div class="flex flex-col items-center justify-center gap-2">
+                                    <Users class="w-10 h-10 mb-1" />
+                                    <span>No patients found.</span>
+                                </div>
+                            </td>
+                        </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <Pagination
+                v-if="pagination.total > 0"
+                :pagination="pagination"
+                @update:page="goToPage"
+            />
+        </div>
+
+        <!-- Patient Details Modal -->
+        <BaseModal v-model="showPatientDetailsModal" title="Patient Information" size="lg">
+            <template v-if="selectedPatient">
+                <!-- Loading Indicator -->
+                <div v-if="isLoadingDetails" class="flex items-center justify-center py-8">
+                    <div class="w-6 h-6 rounded-full border-4 border-blue-200 border-t-blue-600 animate-spin mr-3">
+                    </div>
+                    <span class="text-sm text-gray-600 dark:text-gray-400">Loading patient details...</span>
+                </div>
+                <div class="space-y-4 sm:space-y-6">
+                    <!-- Header Card -->
+                    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl sm:rounded-2xl p-4 sm:p-6">
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:space-x-5">
+                            <div
+                                class="h-16 w-16 sm:h-20 sm:w-20 bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl shadow-sm flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold text-xl sm:text-2xl mx-auto sm:mx-0">
+                                {{ getPatientInitials(selectedPatient.patient_name) }}
+                            </div>
+                            <div class="flex-1 text-center sm:text-left mt-4 sm:mt-0">
+                                <h2 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">{{ selectedPatient.patient_name }}</h2>
+                                <div class="flex items-center justify-center sm:justify-start mt-2">
+                                    <span class="inline-flex items-center text-sm text-gray-600 dark:text-gray-400">
+                                        <Mail class="w-4 h-4 mr-1.5 text-gray-400" />
+                                        {{ selectedPatient.email }}
+                                    </span>
+                                </div>
+                                <div class="mt-3 flex items-center justify-center sm:justify-start space-x-2">
+                                    <span class="px-3 py-1 bg-blue-100 dark:bg-blue-800 text-blue-700 dark:text-blue-300 text-xs font-medium rounded-full">
+                                        PID: {{ generatePatientPID(selectedPatient.patient_id) }}
+                                    </span>
+                                    <span v-if="selectedPatient.ivr_count > 0"
+                                        class="px-3 py-1 bg-purple-100 dark:bg-purple-800 text-purple-700 dark:text-purple-300 text-xs font-medium rounded-full">
+                                        {{ selectedPatient.ivr_count }} IVR Records
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Info Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Created By -->
+                        <div class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
+                            <div class="flex items-center space-x-3">
+                                <div
+                                    class="h-10 w-10 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
+                                    <UserCircle class="w-5 h-5 text-green-600 dark:text-green-400" />
+                                </div>
+                                <div>
+                                    <p
+                                        class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                                        Created By</p>
+                                    <p class="text-sm font-semibold text-gray-900 dark:text-white">{{
+                                        selectedPatient.user_name || 'System' }}</p>
+                                    <p v-if="selectedPatient.user_role !== null"
+                                        class="text-xs text-gray-500 dark:text-gray-400">
+                                        {{ getRoleLabel(selectedPatient.user_role) }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Created Date -->
+                        <div class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
+                            <div class="flex items-center space-x-3 h-full">
+                                <div class="h-10 w-10 bg-orange-100 dark:bg-orange-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
+                                    <Calendar class="w-5 h-5 text-orange-600 dark:text-orange-400" />
+                                </div>
+                                <div class="flex flex-col justify-center">
+                                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Created Date</p>
+                                    <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ formatDateTime(selectedPatient.created_at) }}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Last Updated -->
+                        <div class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
+                            <div class="flex items-center space-x-3">
+                                <div
+                                    class="h-10 w-10 bg-teal-100 dark:bg-teal-900/30 rounded-lg flex items-center justify-center">
+                                    <Clock class="w-5 h-5 text-teal-600 dark:text-teal-400" />
+                                </div>
+                                <div>
+                                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Last Updated</p>
+                                    <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ selectedPatient.updated_at ? formatDate(selectedPatient.updated_at) : 'No Records Found' }}</p>
+                                    <p v-if="selectedPatient.updated_by_user_name" class="text-xs text-gray-500 dark:text-gray-400">
+                                        by {{ selectedPatient.updated_by_user_name }}
+                                        <span v-if="selectedPatient.updated_by_user_role !== null">({{
+                                            getRoleLabel(selectedPatient.updated_by_user_role) }})</span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- IVR Records -->
+                        <div class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
+                            <div class="flex items-center space-x-3">
+                                <div
+                                    class="h-10 w-10 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
+                                    <ClipboardList class="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                                </div>
+                                <div>
+                                    <p
+                                        class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                                        IVR Records</p>
+                                    <p class="text-sm font-semibold text-gray-900 dark:text-white">{{
+                                        selectedPatient.ivr_count }} Total Records</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Assigned Clinician -->
+                        <div v-if="!isClinician" class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
+                            <div class="flex items-center space-x-3">
+                                <div
+                                    class="h-10 w-10 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg flex items-center justify-center">
+                                    <Stethoscope class="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                                </div>
+                                <div>
+                                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                                        Assigned To</p>
+                                    <p class="text-sm font-semibold text-gray-900 dark:text-white">
+                                        {{ selectedPatient.assigned_clinician_name || 'Unassigned' }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Clinic Info (Admin Only) -->
+                    <div v-if="isAdmin && selectedPatient.clinic_name" class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
+                        <div class="flex items-start space-x-3">
+                            <div class="h-10 w-10 bg-teal-100 dark:bg-teal-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <Hospital class="w-5 h-5 text-teal-600 dark:text-teal-400" />
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Associated Clinic</p>
+                                <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ selectedPatient.clinic_name }}</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                    This patient is associated with the above clinic facility.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
+                        <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">Quick Actions</p>
+                        <div class="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:gap-3">
+                            <button @click="editPatient(selectedPatient); selectedPatient = null"
+                                class="inline-flex items-center justify-center px-3 sm:px-4 py-2 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900/30 transition-colors text-sm font-medium">
+                                <FilePenLine class="w-4 h-4 mr-1 sm:mr-2" />
+                                <span>Edit Patient</span>
+                            </button>
+                            <button @click="handleDeletePatient(selectedPatient.patient_id); selectedPatient = null"
+                                class="inline-flex items-center justify-center px-3 sm:px-4 py-2 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors text-sm font-medium">
+                                <Trash2 class="w-4 h-4 mr-1 sm:mr-2" />
+                                <span>Delete Patient</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </BaseModal>
+
+        <!-- Create/Edit Patient Form Modal -->
+        <BaseModal v-model="showFormModal" :title="showCreateForm ? 'Add New Patient' : 'Edit Patient'" size="lg">
+            <form @submit.prevent="handleSubmitForm" class="space-y-4 sm:space-y-6">
+                <!-- Loading Indicator (only shown when editing and loading) -->
+                <div v-if="!showCreateForm && isLoadingDetails"
+                    class="flex items-center justify-center py-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
+                    <div class="w-6 h-6 rounded-full border-4 border-blue-200 border-t-blue-600 animate-spin mr-3">
+                    </div>
+                    <span class="text-sm text-gray-600 dark:text-gray-400">Loading fresh data...</span>
+                </div>
+                <!-- Patient Header (only shown when editing) -->
+                <div v-if="!showCreateForm && selectedPatient" class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-3 sm:p-4">
+                    <div class="flex items-center space-x-3 sm:space-x-4">
+                        <div class="h-10 w-10 sm:h-12 sm:w-12 bg-white dark:bg-gray-800 rounded-lg sm:rounded-xl shadow-sm flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold text-base sm:text-lg">
+                            {{ getPatientInitials(selectedPatient.patient_name) }}
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Editing Patient</p>
+                            <p class="text-base sm:text-lg font-semibold text-gray-900 dark:text-white truncate">{{ selectedPatient.patient_name }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Fields -->
+                <div class="space-y-4 sm:space-y-5">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            <span class="flex items-center">
+                                <UserCircle class="w-4 h-4 mr-2 text-gray-400" />
+                                Patient Name<span class="text-red-500 ml-1">*</span>
+                            </span>
+                        </label>
+                        <input v-model="formData.patient_name" type="text" required
+                            class="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200"
+                            placeholder="Enter patient name" />
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            <span class="flex items-center">
+                                <Mail class="w-4 h-4 mr-2 text-gray-400" />
+                                Email Address<span class="text-red-500 ml-1">*</span>
+                            </span>
+                        </label>
+                        <input v-model="formData.email" type="email" required
+                            class="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200"
+                            placeholder="Enter email address" />
+                    </div>
+
+                    <!-- Clinic Selection (Admin only - both Create and Edit) -->
+                    <div v-if="isAdmin">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            <span class="flex items-center">
+                                <Hospital class="w-4 h-4 mr-2 text-gray-400" />
+                                Clinic<span class="text-red-500 ml-1">*</span>
+                            </span>
+                        </label>
+                        <div class="relative">
+                            <select v-model="formData.clinic_id" required
+                                :disabled="isLoadingClinics"
+                                class="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white appearance-none transition-all duration-200">
+                                <option value="" disabled>Select a clinic</option>
+                                <option v-for="clinic in clinics" :key="clinic.id" :value="clinic.id">
+                                    {{ clinic.name }}
+                                </option>
+                            </select>
+                            <div v-if="isLoadingClinics" class="absolute right-10 top-3.5">
+                                <div
+                                    class="w-5 h-5 rounded-full border-2 border-gray-300 border-t-blue-600 animate-spin">
+                                </div>
+                            </div>
+                            <ChevronDown v-else
+                                class="absolute right-4 top-3.5 h-5 w-5 text-gray-400 pointer-events-none" />
+                        </div>
+                        <p v-if="clinics.length === 0 && !isLoadingClinics" class="text-xs text-amber-600 mt-1">
+                            No clinics available. Please create a clinic first.
+                        </p>
+                    </div>
+
+                    <!-- Assigned Clinician (Clinic users only - both Create and Edit) -->
+                    <div v-if="isClinicUser">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            <span class="flex items-center">
+                                <Stethoscope class="w-4 h-4 mr-2 text-gray-400" />
+                                Assigned To
+                                <span class="ml-2 text-xs text-gray-400 font-normal">(optional)</span>
+                            </span>
+                        </label>
+                        <div class="relative">
+                            <select v-model="formData.assigned_clinician_id"
+                                :disabled="isLoadingAssignableClinicians"
+                                class="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white appearance-none transition-all duration-200">
+                                <option value="">Unassigned</option>
+                                <option v-for="c in assignableClinicians" :key="c.id" :value="String(c.id)">
+                                    {{ c.full_name }}
+                                </option>
+                            </select>
+                            <div v-if="isLoadingAssignableClinicians" class="absolute right-10 top-3.5">
+                                <div
+                                    class="w-5 h-5 rounded-full border-2 border-gray-300 border-t-blue-600 animate-spin">
+                                </div>
+                            </div>
+                            <ChevronDown v-else
+                                class="absolute right-4 top-3.5 h-5 w-5 text-gray-400 pointer-events-none" />
+                        </div>
+                        <p v-if="assignableClinicians.length === 0 && !isLoadingAssignableClinicians" class="text-xs text-amber-600 mt-1">
+                            No clinicians available for your clinic.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 sm:gap-0 sm:space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <button type="button" @click="closeForm"
+                        class="w-full sm:w-auto px-5 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200">
+                        Cancel
+                    </button>
+                    <button type="submit"
+                        class="w-full sm:w-auto inline-flex items-center justify-center px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-md">
+                        <Save class="w-4 h-4 mr-2" />
+                        {{ showCreateForm ? 'Add Patient' : 'Save Changes' }}
+                    </button>
+                </div>
+            </form>
+        </BaseModal>
+    </div>
+</template>
+
+<script setup lang="ts">
+import { ref, computed, watch, onMounted } from 'vue'
+import BaseModal from '@/components/common/BaseModal.vue'
+import TableLoader from '@/components/ui/TableLoader.vue'
+import Pagination from '@/components/ui/Pagination.vue'
+import { patientService } from '@/services/api'
+import { useAuthStore } from '@/stores/auth'
+import Swal from 'sweetalert2'
+import {
+    Plus,
+    Search,
+    Eye,
+    FilePenLine,
+    Trash2,
+    ChevronDown,
+    Users,
+    BarChart2,
+    ClipboardList,
+    Mail,
+    UserCircle,
+    Calendar,
+    Clock,
+    Save,
+    Hospital,
+    Stethoscope,
+    X
+} from 'lucide-vue-next'
+
+interface Patient {
+    patient_id: number
+    patient_name: string
+    email: string
+    clinic_id: number | null
+    clinic_name: string | null
+    user_id: number | null
+    user_name: string | null
+    user_role: number | null
+    updated_by_user_id: number | null
+    updated_by_user_name: string | null
+    updated_by_user_role: number | null
+    assigned_clinician_id: number | null
+    assigned_clinician_name: string | null
+    created_at: string
+    updated_at: string
+    deleted_at: string | null
+    ivr_count: number
+}
+
+const patients = ref<Patient[]>([])
+const authStore = useAuthStore()
+
+const searchTerm = ref('')
+const tableLoader = ref(false)
+const selectedPatient = ref<Patient | null>(null)
+const showCreateForm = ref(false)
+const showEditForm = ref(false)
+const currentPage = ref(1)
+const itemsPerPage = ref(10)
+const totalResults = ref(0)
+const showStats = ref(false)
+const isLoadingDetails = ref(false)
+
+const defaultFormData = {
+    patient_name: '',
+    email: '',
+    clinic_id: '',
+    assigned_clinician_id: '',
+}
+
+const formData = ref({ ...defaultFormData })
+
+// Clinics list for admin dropdown
+const clinics = ref<{ id: number; name: string }[]>([])
+const isLoadingClinics = ref(false)
+
+// Assignable clinicians list (for clinic users only) — users under the
+// logged-in clinic user's clinic with user_role = 3.
+const assignableClinicians = ref<{ id: number; full_name: string }[]>([])
+const isLoadingAssignableClinicians = ref(false)
+
+// Check if current user is admin (role 0)
+const isAdmin = computed(() => authStore.user?.user_role === 0)
+// Check if current user is a clinic user (role 2)
+const isClinicUser = computed(() => authStore.user?.user_role === 2)
+// Check if current user is a clinician (role 3)
+const isClinician = computed(() => authStore.user?.user_role === 3)
+// Check if current user is scoped to a single clinic (role 2 or 3)
+const isClinicScoped = computed(() => authStore.user?.user_role === 2 || authStore.user?.user_role === 3)
+
+// Stats
+const stats = ref({
+    total: 0,
+    newThisMonth: 0,
+    recentlyAdded: 0,
+    withIvrRecords: 0,
+})
+
+// Use server results directly
+const filteredPatients = computed(() => patients.value)
+const totalPages = computed(() => {
+    return Math.max(1, Math.ceil(filteredPatients.value.length / itemsPerPage.value))
+})
+
+// Pagination object for the Pagination component
+const pagination = computed(() => ({
+    current_page: currentPage.value,
+    last_page: totalPages.value,
+    per_page: itemsPerPage.value,
+    total: filteredPatients.value.length
+}))
+
+const paginatedPatients = computed(() => {
+    // Since pagination is handled by the backend, we just return all patients
+    return filteredPatients.value
+})
+
+const paginationNumbers = computed(() => {
+    const pages = []
+    const siblingCount = 1
+    const total = totalPages.value
+    const current = currentPage.value
+
+    if (total <= 7) {
+        for (let i = 1; i <= total; i++) {
+            pages.push(i)
+        }
+        return pages
+    }
+
+    // Always show first page
+    pages.push(1)
+
+    // Show ellipsis after first page if needed
+    if (current > siblingCount + 2) {
+        pages.push('...')
+    }
+
+    // Show pages around current page
+    const startPage = Math.max(2, current - siblingCount)
+    const endPage = Math.min(total - 1, current + siblingCount)
+
+    for (let i = startPage; i <= endPage; i++) {
+        pages.push(i)
+    }
+
+    // Show ellipsis before last page if needed
+    if (current < total - siblingCount - 1) {
+        pages.push('...')
+    }
+
+    // Always show last page
+    pages.push(total)
+
+    return pages
+})
+
+function goToPage(page: number) {
+    currentPage.value = page
+}
+
+function previousPage() {
+    if (currentPage.value > 1) {
+        currentPage.value--
+    }
+}
+
+function nextPage() {
+    if (currentPage.value < totalPages.value) {
+        currentPage.value++
+    }
+}
+
+const formatDate = (dateStr: string | null) => {
+    if (!dateStr) return '-'
+    return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+}
+
+// Format date with time in 12-hour format with square brackets
+// Example: Nov 16, 2025 [1:00PM]
+const formatDateTime = (dateStr: string | null) => {
+    if (!dateStr) return '-'
+    const date = new Date(dateStr)
+    const datePart = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    const timePart = date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }).replace(' ', '')
+    return `${datePart} [${timePart}]`
+}
+
+const getPatientInitials = (name: string) => {
+    if (!name) return ''
+    const parts = name.split(' ')
+    if (parts.length === 1) return parts[0].charAt(0).toUpperCase()
+    return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase()
+}
+
+// Generate a front-facing Patient ID (PID) from the database ID
+// Uses a simple hash to create a consistent, user-friendly identifier
+const generatePatientPID = (dbId: number | null): string => {
+    if (!dbId) return 'PID-000000'
+
+    // Convert number to string for hashing
+    const idString = String(dbId)
+
+    // Create a numeric hash from the string ID
+    let hash = 0
+    for (let i = 0; i < idString.length; i++) {
+        const char = idString.charCodeAt(i)
+        hash = ((hash << 5) - hash) + char
+        hash = hash & hash // Convert to 32bit integer
+    }
+
+    // Convert to positive number and take absolute value
+    const positiveHash = Math.abs(hash)
+
+    // Format as 6-digit number with leading zeros
+    const randomNumber = String(positiveHash % 1000000).padStart(6, '0')
+
+    return `PID-${randomNumber}`
+}
+
+const getUserInitials = (name: string | null) => {
+    if (!name) return 'S'
+    const parts = name.split(' ')
+    if (parts.length === 1) return parts[0].charAt(0).toUpperCase()
+    return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase()
+}
+
+const getRoleLabel = (role: number | null): string => {
+    if (role === null || role === undefined) return ''
+    switch (role) {
+        case 0: return 'Admin'
+        case 1: return 'Office Staff'
+        case 2: return 'Clinic'
+        case 3: return 'Clinician'
+        case 4: return 'Manufacturer'
+        case 5: return 'Biller'
+        default: return 'Unknown'
+    }
+}
+
+async function handleDeletePatient(patientId: number) {
+    const patient = patients.value.find(p => p.patient_id === patientId)
+    if (!patient) return
+
+    const result = await Swal.fire({
+        title: 'Delete Patient',
+        html: `Are you sure you want to delete <strong>${patient.patient_name}</strong>?<br><span style="color: #dc2626;">This action cannot be undone!</span>`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Yes, delete it!',
+        cancelButtonText: 'Cancel'
+    })
+
+    if (!result.isConfirmed) return
+
+    try {
+        await patientService.deletePatient(patientId)
+        patients.value = patients.value.filter(p => p.patient_id !== patientId)
+        await fetchPatientStats()
+
+        await Swal.fire({
+            title: 'Deleted!',
+            text: 'Patient has been deleted successfully.',
+            icon: 'success',
+            confirmButtonColor: '#2563eb',
+            timer: 2000,
+            showConfirmButton: false
+        })
+    } catch (err) {
+        console.error('Failed to delete patient', err)
+        await Swal.fire({
+            title: 'Error!',
+            text: 'Failed to delete patient. Please try again.',
+            icon: 'error',
+            confirmButtonColor: '#2563eb'
+        })
+    }
+}
+
+async function viewPatient(patient: Patient) {
+    // Open modal immediately with basic data for better UX
+    selectedPatient.value = patient
+    isLoadingDetails.value = true
+
+    try {
+        // Fetch full details from server (HIPAA compliant with audit logging)
+        const { data } = await patientService.getPatientById(patient.patient_id)
+
+        // Update with full details
+        if (data.patient) {
+            selectedPatient.value = {
+                ...patient,
+                ...data.patient
+            }
+        }
+    } catch (error) {
+        console.error('Error fetching patient details:', error)
+        // Keep the basic data visible even if detail fetch fails
+    } finally {
+        isLoadingDetails.value = false
+    }
+}
+
+async function editPatient(patient: Patient) {
+    // Open modal immediately with basic data for better UX
+    selectedPatient.value = patient
+    formData.value = {
+        patient_name: patient.patient_name,
+        email: patient.email,
+        clinic_id: patient.clinic_id ? String(patient.clinic_id) : '',
+        assigned_clinician_id: patient.assigned_clinician_id ? String(patient.assigned_clinician_id) : '',
+    }
+    showEditForm.value = true
+    isLoadingDetails.value = true
+
+    try {
+        // Fetch full details from server (HIPAA compliant with audit logging)
+        const { data } = await patientService.getPatientById(patient.patient_id)
+
+        // Update with fresh data from server
+        if (data.patient) {
+            const freshData = data.patient
+            selectedPatient.value = { ...patient, ...freshData }
+            // Update form fields with fresh data
+            formData.value = {
+                patient_name: freshData.patient_name || patient.patient_name,
+                email: freshData.email || patient.email,
+                clinic_id: freshData.clinic_id
+                    ? String(freshData.clinic_id)
+                    : (patient.clinic_id ? String(patient.clinic_id) : ''),
+                assigned_clinician_id: freshData.assigned_clinician_id
+                    ? String(freshData.assigned_clinician_id)
+                    : (patient.assigned_clinician_id ? String(patient.assigned_clinician_id) : ''),
+            }
+        }
+    } catch (error) {
+        console.error('Error fetching patient details for edit:', error)
+        // Keep the basic data in the form even if detail fetch fails
+    } finally {
+        isLoadingDetails.value = false
+    }
+}
+
+async function handleSubmitForm() {
+    if (showCreateForm.value) {
+        try {
+            // Build payload - admin can select clinic, others use backend auto-populate
+            const payload: { patient_name: string; email: string; clinic_id?: string; assigned_clinician_id?: string | null } = {
+                patient_name: formData.value.patient_name,
+                email: formData.value.email,
+            }
+            // Admin users can specify clinic_id
+            if (isAdmin.value && formData.value.clinic_id) {
+                payload.clinic_id = formData.value.clinic_id
+            }
+            // Clinic users can assign a clinician from their clinic
+            if (isClinicUser.value) {
+                payload.assigned_clinician_id = formData.value.assigned_clinician_id || null
+            }
+            const { data } = await patientService.createPatient(payload)
+            const p = data.patient
+            const newPatient: Patient = {
+                patient_id: p.patient_id,
+                patient_name: p.patient_name,
+                email: p.email,
+                clinic_id: p.clinic_id,
+                clinic_name: p.clinic_name,
+                user_id: p.user_id,
+                user_name: p.user_name,
+                user_role: p.user_role,
+                updated_by_user_id: p.updated_by_user_id,
+                updated_by_user_name: p.updated_by_user_name,
+                updated_by_user_role: p.updated_by_user_role,
+                assigned_clinician_id: p.assigned_clinician_id ?? null,
+                assigned_clinician_name: p.assigned_clinician_name ?? null,
+                created_at: p.created_at,
+                updated_at: p.updated_at,
+                deleted_at: p.deleted_at,
+                ivr_count: p.ivr_count || 0,
+            }
+            patients.value.unshift(newPatient)
+            await fetchPatientStats()
+
+            await Swal.fire({
+                title: 'Patient Added Successfully!',
+                text: `${newPatient.patient_name} has been added to the system.`,
+                icon: 'success',
+                confirmButtonColor: '#2563eb',
+                timer: 2000,
+                showConfirmButton: false
+            })
+
+            closeForm()
+        } catch (err: any) {
+            console.error('Failed to create patient', err)
+            const errorMessage = err.response?.data?.message || 'Failed to add patient. Please try again.'
+            await Swal.fire({
+                title: 'Error!',
+                text: errorMessage,
+                icon: 'error',
+                confirmButtonColor: '#2563eb'
+            })
+        }
+    } else if (showEditForm.value && selectedPatient.value) {
+        try {
+            // When editing: admin can change clinic_id; clinic users / clinicians cannot
+            const payload: { patient_name: string; email: string; clinic_id?: string; assigned_clinician_id?: string | null } = {
+                patient_name: formData.value.patient_name,
+                email: formData.value.email,
+            }
+            // Admin users can update the patient's clinic
+            if (isAdmin.value && formData.value.clinic_id) {
+                payload.clinic_id = formData.value.clinic_id
+            }
+            // Clinic users can update the assigned clinician
+            if (isClinicUser.value) {
+                payload.assigned_clinician_id = formData.value.assigned_clinician_id || null
+            }
+            const { data } = await patientService.updatePatient(selectedPatient.value.patient_id, payload)
+            const p = data.patient
+            const updated: Patient = {
+                patient_id: p.patient_id,
+                patient_name: p.patient_name,
+                email: p.email,
+                clinic_id: p.clinic_id,
+                clinic_name: p.clinic_name,
+                user_id: p.user_id,
+                user_name: p.user_name,
+                user_role: p.user_role,
+                updated_by_user_id: p.updated_by_user_id,
+                updated_by_user_name: p.updated_by_user_name,
+                updated_by_user_role: p.updated_by_user_role,
+                assigned_clinician_id: p.assigned_clinician_id ?? null,
+                assigned_clinician_name: p.assigned_clinician_name ?? null,
+                created_at: p.created_at,
+                updated_at: p.updated_at,
+                deleted_at: p.deleted_at,
+                ivr_count: p.ivr_count || 0,
+            }
+            const idx = patients.value.findIndex(x => x.patient_id === updated.patient_id)
+            if (idx !== -1) patients.value[idx] = updated
+            await fetchPatientStats()
+
+            await Swal.fire({
+                title: 'Success!',
+                text: 'Patient has been updated successfully.',
+                icon: 'success',
+                confirmButtonColor: '#2563eb',
+                timer: 2000,
+                showConfirmButton: false
+            })
+
+            closeForm()
+        } catch (err: any) {
+            console.error('Failed to update patient', err)
+            const errorMessage = err.response?.data?.message || 'Failed to update patient. Please try again.'
+            await Swal.fire({
+                title: 'Error!',
+                text: errorMessage,
+                icon: 'error',
+                confirmButtonColor: '#2563eb'
+            })
+        }
+    }
+}
+
+function closeForm() {
+    showCreateForm.value = false
+    showEditForm.value = false
+    selectedPatient.value = null
+    formData.value = { ...defaultFormData }
+}
+
+const fetchClinics = async () => {
+    if (!isAdmin.value) return
+    isLoadingClinics.value = true
+    try {
+        const { data } = await patientService.getPatientClinics()
+        clinics.value = data.clinics || []
+    } catch (err) {
+        console.error('Failed to fetch clinics', err)
+        clinics.value = []
+    } finally {
+        isLoadingClinics.value = false
+    }
+}
+
+const fetchAssignableClinicians = async () => {
+    if (!isClinicUser.value) return
+    isLoadingAssignableClinicians.value = true
+    try {
+        const { data } = await patientService.getPatientAssignableClinicians()
+        assignableClinicians.value = data.clinicians || []
+    } catch (err) {
+        console.error('Failed to fetch assignable clinicians', err)
+        assignableClinicians.value = []
+    } finally {
+        isLoadingAssignableClinicians.value = false
+    }
+}
+
+// Watch for create form opening to fetch clinics
+watch(showCreateForm, (isOpen) => {
+    if (isOpen && isAdmin.value) {
+        fetchClinics()
+    }
+    if (isOpen && isClinicUser.value) {
+        fetchAssignableClinicians()
+    }
+})
+
+// Watch for edit form opening to fetch assignable clinicians (clinic users only)
+watch(showEditForm, (isOpen) => {
+    if (isOpen && isAdmin.value) {
+        fetchClinics()
+    }
+    if (isOpen && isClinicUser.value) {
+        fetchAssignableClinicians()
+    }
+})
+
+const fetchPatients = async () => {
+    tableLoader.value = true
+    try {
+        const params = {
+            search: searchTerm.value || undefined,
+            page: currentPage.value,
+        }
+        const { data } = await patientService.getPatients(params)
+        const incoming: any[] = Array.isArray(data.patients) ? data.patients : []
+        patients.value = incoming.map((p) => ({
+            patient_id: p.patient_id,
+            patient_name: p.patient_name,
+            email: p.email,
+            clinic_id: p.clinic_id,
+            clinic_name: p.clinic_name,
+            user_id: p.user_id,
+            user_name: p.user_name,
+            user_role: p.user_role,
+            updated_by_user_id: p.updated_by_user_id,
+            updated_by_user_name: p.updated_by_user_name,
+            updated_by_user_role: p.updated_by_user_role,
+            assigned_clinician_id: p.assigned_clinician_id ?? null,
+            assigned_clinician_name: p.assigned_clinician_name ?? null,
+            created_at: p.created_at,
+            updated_at: p.updated_at,
+            deleted_at: p.deleted_at,
+            ivr_count: p.ivr_count || 0,
+        }))
+        totalResults.value = data.total
+        if (data.per_page) itemsPerPage.value = Number(data.per_page)
+    } catch (err) {
+        console.error('Failed to fetch patients', err)
+    } finally {
+        tableLoader.value = false
+    }
+}
+
+const fetchPatientStats = async () => {
+    try {
+        const { data } = await patientService.getPatientStats()
+        stats.value = {
+            total: Number(data.total ?? 0),
+            newThisMonth: Number(data.new_this_month ?? 0),
+            recentlyAdded: Number(data.recently_added ?? 0),
+            withIvrRecords: Number(data.with_ivr_records ?? 0),
+        }
+    } catch (err) {
+        console.error('Failed to fetch stats', err)
+    }
+}
+
+
+
+onMounted(() => {
+    Promise.all([
+        fetchPatients(),
+        fetchPatientStats(),
+    ]).catch((err) => { console.error('Failed initial load', err) })
+})
+
+watch(searchTerm, () => {
+    currentPage.value = 1
+    fetchPatients().catch((err) => { console.error('Failed to fetch patients on filters change', err) })
+})
+
+watch(currentPage, () => {
+    fetchPatients().catch((err) => { console.error('Failed to fetch patients on page change', err) })
+})
+
+const showFormModal = computed({
+    get: () => showCreateForm.value || showEditForm.value,
+    set: (value: boolean) => {
+        if (!value) {
+            closeForm()
+        }
+    }
+})
+
+const showPatientDetailsModal = computed({
+    get: () => selectedPatient.value !== null && !showEditForm.value,
+    set: (value: boolean) => {
+        if (!value) {
+            selectedPatient.value = null
+        }
+    }
+})
+
+// HIPAA Compliance: Clear sensitive data from memory when view modal closes
+watch(showPatientDetailsModal, (isOpen) => {
+    if (!isOpen) {
+        // Clear selected patient data after a short delay to allow modal close animation
+        setTimeout(() => {
+            selectedPatient.value = null
+        }, 300)
+    }
+})
+
+// HIPAA Compliance: Clear sensitive data from memory when edit modal closes
+watch(showFormModal, (isOpen) => {
+    if (!isOpen) {
+        // Clear form data after a short delay to allow modal close animation
+        setTimeout(() => {
+            selectedPatient.value = null
+            formData.value = { ...defaultFormData }
+        }, 300)
+    }
+})
+</script>
+<style scoped>
+/* ════════════════════════════════════════════════════
+   SKELETON STYLES
+   ════════════════════════════════════════════════════ */
+.pm-skeleton-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.pm-skeleton-line {
+    height: 16px;
+    border-radius: 4px;
+    background: linear-gradient(90deg, #f0f0f0 0%, #e0e0e0 50%, #f0f0f0 100%);
+    background-size: 200% 100%;
+    animation: pm-pulse 1.5s infinite;
+}
+
+.pm-skeleton-line--w60 { width: 60%; }
+.pm-skeleton-line--w40 { width: 40%; }
+.pm-skeleton-line--w80 { width: 80%; }
+
+@keyframes pm-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* ════════════════════════════════════════════════════
+   EMPTY STATE
+   ════════════════════════════════════════════════════ */
+.pm-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 64px 24px;
+    text-align: center;
+    border-radius: var(--pm-radius);
+    background: #fff;
+    border: 2px dashed #e5e7eb;
+}
+
+:is(.dark) .pm-empty {
+    background: #111827;
+    border-color: #374151;
+}
+
+.pm-empty__icon-wrap {
+    width: 64px;
+    height: 64px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f3f4f6;
+    margin-bottom: 16px;
+}
+
+:is(.dark) .pm-empty__icon-wrap {
+    background: #1f2937;
+}
+
+.pm-empty__title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #6b7280;
+    margin-bottom: 4px;
+}
+
+:is(.dark) .pm-empty__title {
+    color: #9ca3af;
+}
+
+.pm-empty__text {
+    font-size: 0.82rem;
+    color: #9ca3af;
+}
+
+/* ════════════════════════════════════════════════════
+   PATIENT CARD GRID
+   ════════════════════════════════════════════════════ */
+.pm-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 16px;
+}
+
+@media (max-width: 420px) {
+    .pm-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.pm-card {
+    position: relative;
+    border-radius: var(--pm-radius);
+    background: #fff;
+    border: 1px solid #f0f0f0;
+    overflow: hidden;
+    transition: all var(--pm-transition);
+    animation: pm-cardIn 0.35s ease-out both;
+}
+
+.pm-card:hover {
+    border-color: rgb(var(--color-primary-light-DEFAULT) / 0.2);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06), 0 0 0 1px rgb(var(--color-primary-light-DEFAULT) / 0.06);
+    transform: translateY(-2px);
+}
+
+:is(.dark) .pm-card {
+    background: #1f2937;
+    border-color: #2d3748;
+}
+
+:is(.dark) .pm-card:hover {
+    border-color: rgb(var(--color-primary-dark-DEFAULT) / 0.25);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2), 0 0 0 1px rgb(var(--color-primary-dark-DEFAULT) / 0.08);
+}
+
+@keyframes pm-cardIn {
+    from { opacity: 0; transform: translateY(16px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Card header */
+.pm-card__header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 18px 18px 14px;
+}
+
+.pm-card__avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+    letter-spacing: 0.02em;
+    background: rgb(var(--color-primary-light-DEFAULT) / 0.08);
+    color: rgb(var(--color-primary-light-DEFAULT));
+    transition: all var(--pm-transition);
+}
+
+.pm-card:hover .pm-card__avatar {
+    background: rgb(var(--color-primary-light-DEFAULT) / 0.14);
+    transform: scale(1.05);
+}
+
+:is(.dark) .pm-card__avatar {
+    background: rgb(var(--color-primary-dark-DEFAULT) / 0.12);
+    color: rgb(var(--color-primary-dark-DEFAULT));
+}
+
+:is(.dark) .pm-card:hover .pm-card__avatar {
+    background: rgb(var(--color-primary-dark-DEFAULT) / 0.2);
+}
+
+.pm-card__identity {
+    flex: 1;
+    min-width: 0;
+}
+
+.pm-card__name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #111827;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin: 0;
+}
+
+:is(.dark) .pm-card__name {
+    color: #f9fafb;
+}
+
+.pm-card__email {
+    font-size: 0.75rem;
+    color: #9ca3af;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: 2px;
+}
+
+.pm-card__ivr-badge {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.8rem;
+    flex-shrink: 0;
+    background: rgb(var(--color-info-light-DEFAULT) / 0.08);
+    color: rgb(var(--color-info-light-DEFAULT));
+}
+
+:is(.dark) .pm-card__ivr-badge {
+    background: rgb(var(--color-info-dark-DEFAULT) / 0.12);
+    color: rgb(var(--color-info-dark-DEFAULT));
+}
+
+/* Card body */
+.pm-card__body {
+    padding: 0 18px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.pm-card__row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.pm-card__label {
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.pm-card__value {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: #374151;
+    text-align: right;
+}
+
+:is(.dark) .pm-card__value {
+    color: #d1d5db;
+}
+
+.pm-card__value--muted {
+    color: #d1d5db;
+    font-style: italic;
+}
+
+:is(.dark) .pm-card__value--muted {
+    color: #4b5563;
+}
+
+.pm-card__value--small {
+    font-size: 0.72rem;
+}
+
+/* Card actions */
+.pm-card__actions {
+    display: flex;
+    border-top: 1px solid #f3f4f6;
+    opacity: 1;
+    transition: all var(--pm-transition);
+}
+
+:is(.dark) .pm-card__actions {
+    border-color: #2d3748;
+}
+
+/* Desktop: hide actions until hover */
+@media (min-width: 768px) {
+    .pm-card__actions {
+        opacity: 0;
+        transform: translateY(4px);
+    }
+    .pm-card:hover .pm-card__actions {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.pm-card__action {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 0;
+    font-size: 0.72rem;
+    font-weight: 600;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    transition: all var(--pm-transition);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.pm-card__action + .pm-card__action {
+    border-left: 1px solid #f3f4f6;
+}
+
+:is(.dark) .pm-card__action + .pm-card__action {
+    border-color: #2d3748;
+}
+
+.pm-card__action--view {
+    color: rgb(var(--color-info-light-DEFAULT));
+}
+.pm-card__action--view:hover {
+    background: rgb(var(--color-info-light-DEFAULT) / 0.06);
+}
+:is(.dark) .pm-card__action--view {
+    color: rgb(var(--color-info-dark-DEFAULT));
+}
+:is(.dark) .pm-card__action--view:hover {
+    background: rgb(var(--color-info-dark-DEFAULT) / 0.1);
+}
+
+.pm-card__action--edit {
+    color: rgb(var(--color-warning-light-DEFAULT));
+}
+.pm-card__action--edit:hover {
+    background: rgb(var(--color-warning-light-DEFAULT) / 0.06);
+}
+:is(.dark) .pm-card__action--edit {
+    color: rgb(var(--color-warning-dark-DEFAULT));
+}
+:is(.dark) .pm-card__action--edit:hover {
+    background: rgb(var(--color-warning-dark-DEFAULT) / 0.1);
+}
+
+.pm-card__action--delete {
+    color: rgb(var(--color-danger-light-DEFAULT));
+}
+.pm-card__action--delete:hover {
+    background: rgb(var(--color-danger-light-DEFAULT) / 0.06);
+}
+:is(.dark) .pm-card__action--delete {
+    color: rgb(var(--color-danger-dark-DEFAULT));
+}
+:is(.dark) .pm-card__action--delete:hover {
+    background: rgb(var(--color-danger-dark-DEFAULT) / 0.1);
+}
+
+/* ════════════════════════════════════════════════════
+   VIEW MODAL — PROFILE CARD STYLE
+   ════════════════════════════════════════════════════ */
+.pm-modal-loader {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 20px;
+    font-size: 0.82rem;
+    color: #9ca3af;
+}
+
+.pm-profile {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.pm-profile__header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 28px 20px 24px;
+    border-radius: var(--pm-radius);
+    background: linear-gradient(
+        135deg,
+        rgb(var(--color-primary-light-DEFAULT) / 0.04),
+        rgb(var(--color-primary-light-DEFAULT) / 0.1)
+    );
+    border: 1px solid rgb(var(--color-primary-light-DEFAULT) / 0.08);
+}
+
+:is(.dark) .pm-profile__header {
+    background: linear-gradient(
+        135deg,
+        rgb(var(--color-primary-dark-DEFAULT) / 0.05),
+        rgb(var(--color-primary-dark-DEFAULT) / 0.12)
+    );
+    border-color: rgb(var(--color-primary-dark-DEFAULT) / 0.1);
+}
+
+.pm-profile__avatar {
+    width: 72px;
+    height: 72px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.5rem;
+    margin-bottom: 14px;
+    background: #fff;
+    color: rgb(var(--color-primary-light-DEFAULT));
+    border: 2px solid rgb(var(--color-primary-light-DEFAULT) / 0.15);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+:is(.dark) .pm-profile__avatar {
+    background: #1f2937;
+    color: rgb(var(--color-primary-dark-DEFAULT));
+    border-color: rgb(var(--color-primary-dark-DEFAULT) / 0.2);
+}
+
+.pm-profile__name {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #111827;
+    margin: 0;
+}
+
+:is(.dark) .pm-profile__name {
+    color: #f9fafb;
+}
+
+.pm-profile__email {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.82rem;
+    color: #6b7280;
+    margin-top: 6px;
+}
+
+:is(.dark) .pm-profile__email {
+    color: #9ca3af;
+}
+
+.pm-profile__tags {
+    display: flex;
+    gap: 8px;
+    margin-top: 14px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.pm-tag {
+    padding: 5px 12px;
+    border-radius: 8px;
+    font-size: 0.72rem;
+    font-weight: 600;
+}
+
+.pm-tag--primary {
+    background: rgb(var(--color-primary-light-DEFAULT) / 0.1);
+    color: rgb(var(--color-primary-light-DEFAULT));
+}
+:is(.dark) .pm-tag--primary {
+    background: rgb(var(--color-primary-dark-DEFAULT) / 0.12);
+    color: rgb(var(--color-primary-dark-DEFAULT));
+}
+
+.pm-tag--info {
+    background: rgb(var(--color-info-light-DEFAULT) / 0.1);
+    color: rgb(var(--color-info-light-DEFAULT));
+}
+:is(.dark) .pm-tag--info {
+    background: rgb(var(--color-info-dark-DEFAULT) / 0.12);
+    color: rgb(var(--color-info-dark-DEFAULT));
+}
+
+/* Profile info grid */
+.pm-profile__grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+@media (max-width: 500px) {
+    .pm-profile__grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.pm-profile__field {
+    display: flex;
+    gap: 12px;
+    padding: 14px;
+    border-radius: var(--pm-radius-sm);
+    background: #f9fafb;
+    border: 1px solid #f3f4f6;
+    transition: all var(--pm-transition);
+}
+
+.pm-profile__field:hover {
+    border-color: #e5e7eb;
+    background: #fff;
+}
+
+:is(.dark) .pm-profile__field {
+    background: #111827;
+    border-color: #1f2937;
+}
+
+:is(.dark) .pm-profile__field:hover {
+    border-color: #374151;
+    background: #1a2332;
+}
+
+.pm-profile__field-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.pm-profile__field-icon--primary {
+    background: rgb(var(--color-primary-light-DEFAULT) / 0.08);
+    color: rgb(var(--color-primary-light-DEFAULT));
+}
+:is(.dark) .pm-profile__field-icon--primary {
+    background: rgb(var(--color-primary-dark-DEFAULT) / 0.12);
+    color: rgb(var(--color-primary-dark-DEFAULT));
+}
+
+.pm-profile__field-icon--success {
+    background: rgb(var(--color-success-light-DEFAULT) / 0.08);
+    color: rgb(var(--color-success-light-DEFAULT));
+}
+:is(.dark) .pm-profile__field-icon--success {
+    background: rgb(var(--color-success-dark-DEFAULT) / 0.12);
+    color: rgb(var(--color-success-dark-DEFAULT));
+}
+
+.pm-profile__field-icon--warning {
+    background: rgb(var(--color-warning-light-DEFAULT) / 0.08);
+    color: rgb(var(--color-warning-light-DEFAULT));
+}
+:is(.dark) .pm-profile__field-icon--warning {
+    background: rgb(var(--color-warning-dark-DEFAULT) / 0.12);
+    color: rgb(var(--color-warning-dark-DEFAULT));
+}
+
+.pm-profile__field-icon--info {
+    background: rgb(var(--color-info-light-DEFAULT) / 0.08);
+    color: rgb(var(--color-info-light-DEFAULT));
+}
+:is(.dark) .pm-profile__field-icon--info {
+    background: rgb(var(--color-info-dark-DEFAULT) / 0.12);
+    color: rgb(var(--color-info-dark-DEFAULT));
+}
+
+.pm-profile__field-icon--secondary {
+    background: rgb(var(--color-secondary-light-DEFAULT) / 0.08);
+    color: rgb(var(--color-secondary-light-DEFAULT));
+}
+:is(.dark) .pm-profile__field-icon--secondary {
+    background: rgb(var(--color-secondary-dark-DEFAULT) / 0.12);
+    color: rgb(var(--color-secondary-dark-DEFAULT));
+}
+
+.pm-profile__field-label {
+    display: block;
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #9ca3af;
+}
+
+.pm-profile__field-value {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #111827;
+    margin-top: 2px;
+}
+
+:is(.dark) .pm-profile__field-value {
+    color: #f9fafb;
+}
+
+.pm-profile__field-sub {
+    display: block;
+    font-size: 0.72rem;
+    color: #9ca3af;
+    margin-top: 1px;
+}
+
+/* Profile actions */
+.pm-profile__actions {
+    display: flex;
+    gap: 10px;
+    padding-top: 16px;
+    border-top: 1px solid #f3f4f6;
+}
+
+:is(.dark) .pm-profile__actions {
+    border-color: #1f2937;
+}
+
+.pm-profile__action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    border-radius: var(--pm-radius-sm);
+    border: none;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--pm-transition);
+}
+
+.pm-profile__action-btn--edit {
+    flex: 1;
+    justify-content: center;
+    background: rgb(var(--color-primary-light-DEFAULT) / 0.08);
+    color: rgb(var(--color-primary-light-DEFAULT));
+}
+
+.pm-profile__action-btn--edit:hover {
+    background: rgb(var(--color-primary-light-DEFAULT) / 0.14);
+}
+
+:is(.dark) .pm-profile__action-btn--edit {
+    background: rgb(var(--color-primary-dark-DEFAULT) / 0.1);
+    color: rgb(var(--color-primary-dark-DEFAULT));
+}
+
+:is(.dark) .pm-profile__action-btn--edit:hover {
+    background: rgb(var(--color-primary-dark-DEFAULT) / 0.18);
+}
+
+.pm-profile__action-btn--delete {
+    background: rgb(var(--color-danger-light-DEFAULT) / 0.06);
+    color: rgb(var(--color-danger-light-DEFAULT));
+}
+
+.pm-profile__action-btn--delete:hover {
+    background: rgb(var(--color-danger-light-DEFAULT) / 0.12);
+}
+
+:is(.dark) .pm-profile__action-btn--delete {
+    background: rgb(var(--color-danger-dark-DEFAULT) / 0.08);
+    color: rgb(var(--color-danger-dark-DEFAULT));
+}
+
+:is(.dark) .pm-profile__action-btn--delete:hover {
+    background: rgb(var(--color-danger-dark-DEFAULT) / 0.15);
+}
+
+/* ════════════════════════════════════════════════════
+   FORM MODAL
+   ════════════════════════════════════════════════════ */
+.pm-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.pm-form__loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 14px;
+    border-radius: var(--pm-radius-sm);
+    font-size: 0.82rem;
+    color: #6b7280;
+    background: rgb(var(--color-primary-light-DEFAULT) / 0.04);
+    border: 1px solid rgb(var(--color-primary-light-DEFAULT) / 0.08);
+}
+
+:is(.dark) .pm-form__loading {
+    background: rgb(var(--color-primary-dark-DEFAULT) / 0.06);
+    border-color: rgb(var(--color-primary-dark-DEFAULT) / 0.1);
+    color: #9ca3af;
+}
+
+.pm-form__edit-banner {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 18px;
+    border-radius: var(--pm-radius-sm);
+    background: linear-gradient(
+        135deg,
+        rgb(var(--color-primary-light-DEFAULT) / 0.04),
+        rgb(var(--color-primary-light-DEFAULT) / 0.08)
+    );
+    border: 1px solid rgb(var(--color-primary-light-DEFAULT) / 0.08);
+}
+
+:is(.dark) .pm-form__edit-banner {
+    background: linear-gradient(
+        135deg,
+        rgb(var(--color-primary-dark-DEFAULT) / 0.05),
+        rgb(var(--color-primary-dark-DEFAULT) / 0.1)
+    );
+    border-color: rgb(var(--color-primary-dark-DEFAULT) / 0.1);
+}
+
+.pm-form__edit-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.85rem;
+    background: #fff;
+    color: rgb(var(--color-primary-light-DEFAULT));
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+    flex-shrink: 0;
+}
+
+:is(.dark) .pm-form__edit-avatar {
+    background: #1f2937;
+    color: rgb(var(--color-primary-dark-DEFAULT));
+}
+
+.pm-form__edit-label {
+    font-size: 0.72rem;
+    color: #9ca3af;
+    margin: 0;
+}
+
+.pm-form__edit-name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #111827;
+    margin: 0;
+}
+
+:is(.dark) .pm-form__edit-name {
+    color: #f9fafb;
+}
+
+.pm-form__fields {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.pm-form__group {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.pm-form__label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #374151;
+}
+
+:is(.dark) .pm-form__label {
+    color: #d1d5db;
+}
+
+.pm-form__label svg {
+    color: #9ca3af;
+}
+
+.pm-form__required {
+    color: rgb(var(--color-primary-light-DEFAULT));
+    font-weight: 700;
+}
+
+:is(.dark) .pm-form__required {
+    color: rgb(var(--color-primary-dark-DEFAULT));
+}
+
+.pm-form__optional {
+    font-size: 0.72rem;
+    font-weight: 400;
+    color: #9ca3af;
+}
+
+.pm-form__input,
+.pm-form__select {
+    width: 100%;
+    padding: 11px 14px;
+    font-size: 0.85rem;
+    border-radius: var(--pm-radius-sm);
+    border: 1.5px solid #e5e7eb;
+    background: #fff;
+    color: #111827;
+    outline: none;
+    transition: all var(--pm-transition);
+}
+
+.pm-form__input::placeholder {
+    color: #9ca3af;
+}
+
+.pm-form__input:focus,
+.pm-form__select:focus {
+    border-color: rgb(var(--color-primary-light-DEFAULT) / 0.5);
+    box-shadow: 0 0 0 3px rgb(var(--color-primary-light-DEFAULT) / 0.06);
+}
+
+:is(.dark) .pm-form__input,
+:is(.dark) .pm-form__select {
+    border-color: #374151;
+    background: #1f2937;
+    color: #f9fafb;
+}
+
+:is(.dark) .pm-form__input:focus,
+:is(.dark) .pm-form__select:focus {
+    border-color: rgb(var(--color-primary-dark-DEFAULT) / 0.5);
+    box-shadow: 0 0 0 3px rgb(var(--color-primary-dark-DEFAULT) / 0.08);
+}
+
+.pm-form__select {
+    appearance: none;
+    padding-right: 40px;
+}
+
+.pm-form__select-wrap {
+    position: relative;
+}
+
+.pm-form__select-arrow {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+    color: #9ca3af;
+    pointer-events: none;
+}
+
+.pm-form__select-spinner {
+    position: absolute;
+    right: 38px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.pm-form__hint {
+    font-size: 0.72rem;
+}
+
+.pm-form__hint--warn {
+    color: rgb(var(--color-warning-light-DEFAULT));
+}
+
+:is(.dark) .pm-form__hint--warn {
+    color: rgb(var(--color-warning-dark-DEFAULT));
+}
+
+/* Form actions */
+.pm-form__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding-top: 16px;
+    border-top: 1px solid #f3f4f6;
+    flex-wrap: wrap;
+}
+
+:is(.dark) .pm-form__actions {
+    border-color: #1f2937;
+}
+
+.pm-form__cancel {
+    padding: 10px 20px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    border-radius: var(--pm-radius-sm);
+    border: 1.5px solid #e5e7eb;
+    background: transparent;
+    color: #6b7280;
+    cursor: pointer;
+    transition: all var(--pm-transition);
+}
+
+.pm-form__cancel:hover {
+    background: #f9fafb;
+    border-color: #d1d5db;
+}
+
+:is(.dark) .pm-form__cancel {
+    border-color: #374151;
+    color: #9ca3af;
+}
+
+:is(.dark) .pm-form__cancel:hover {
+    background: #111827;
+    border-color: #4b5563;
+}
+
+.pm-form__submit {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 22px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    border-radius: var(--pm-radius-sm);
+    border: none;
+    cursor: pointer;
+    transition: all var(--pm-transition);
+    background: rgb(var(--color-primary-light-DEFAULT));
+    color: #fff;
+    box-shadow: 0 2px 8px rgb(var(--color-primary-light-DEFAULT) / 0.2);
+}
+
+.pm-form__submit:hover {
+    background: rgb(var(--color-primary-light-hover));
+    box-shadow: 0 4px 14px rgb(var(--color-primary-light-DEFAULT) / 0.3);
+    transform: translateY(-1px);
+}
+
+:is(.dark) .pm-form__submit {
+    background: rgb(var(--color-primary-dark-DEFAULT));
+    box-shadow: 0 2px 8px rgb(var(--color-primary-dark-DEFAULT) / 0.25);
+}
+
+:is(.dark) .pm-form__submit:hover {
+    background: rgb(var(--color-primary-dark-hover));
+}
+
+/* ════════════════════════════════════════════════════
+   SPINNER
+   ════════════════════════════════════════════════════ */
+.pm-spinner {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 3px solid rgb(var(--color-primary-light-DEFAULT) / 0.15);
+    border-top-color: rgb(var(--color-primary-light-DEFAULT));
+    animation: pm-spin 0.7s linear infinite;
+}
+
+:is(.dark) .pm-spinner {
+    border-color: rgb(var(--color-primary-dark-DEFAULT) / 0.2);
+    border-top-color: rgb(var(--color-primary-dark-DEFAULT));
+}
+
+.pm-spinner--sm {
+    width: 16px;
+    height: 16px;
+    border-width: 2px;
+}
+
+.pm-spinner--xs {
+    width: 14px;
+    height: 14px;
+    border-width: 2px;
+}
+
+@keyframes pm-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ════════════════════════════════════════════════════
+   TRANSITION HELPERS
+   ════════════════════════════════════════════════════ */
+.pm-fade-enter-active,
+.pm-fade-leave-active {
+    transition: opacity 0.15s ease;
+}
+
+.pm-fade-enter-from,
+.pm-fade-leave-to {
+    opacity: 0;
+}
+
+@media (max-width: 640px) {
+    .pm-form__actions {
+        flex-direction: column-reverse;
+    }
+    .pm-form__cancel,
+    .pm-form__submit {
+        width: 100%;
+        justify-content: center;
+    }
+    .pm-profile__actions {
+        flex-direction: column;
+    }
+    .pm-profile__action-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+</style>

@@ -121,18 +121,16 @@
 									{{ ivr.submitted_at ? formatDateTime(ivr.submitted_at) : 'No records found' }}
 								</td>
 								<td class="px-6 py-3 whitespace-nowrap">
-									<button @click="handleToggleStatus(ivr.ivr_id)" :class="[
-										'flex items-center gap-2 px-2.5 py-0.5 rounded-full text-xs font-medium transition-colors',
+									<span :class="[
+										'inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full text-xs font-medium',
 										ivr.ivr_status === 1
 											? ivrStatus[1].classes
 											: ivrEligibilityStatus[ivr.eligibility_status]?.classes
-									]" :title="ivr.ivr_status === 1 ? 'Archived' : 'Toggle Status'">
-										<span>
-											{{ ivr.ivr_status === 1
-												? ivrStatus[1].label
-												: ivrEligibilityStatus[ivr.eligibility_status]?.label }}
-										</span>
-									</button>
+									]">
+										{{ ivr.ivr_status === 1
+											? ivrStatus[1].label
+											: ivrEligibilityStatus[ivr.eligibility_status]?.label }}
+									</span>
 								</td>
 								<!-- <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
 									{{ ivr.submitted_at ? formatDateTime(ivr.submitted_at) : 'N/A' }}
@@ -347,13 +345,13 @@
 									<option disabled value="">-- Select Eligibility Status --</option>
 
 									<option value="0" :disabled="selectedIvrRequest.eligibility_status === 0">
-										Pending
+										Pending {{ selectedIvrRequest.eligibility_status === 0 ? ' (Current)' : '' }}
 									</option>
 									<option value="1" :disabled="selectedIvrRequest.eligibility_status === 1">
-										Eligible
+										Eligible {{ selectedIvrRequest.eligibility_status === 1 ? ' (Current)' : '' }}
 									</option>
 									<option value="2" :disabled="selectedIvrRequest.eligibility_status === 2">
-										Not Eligible
+										Not Eligible {{ selectedIvrRequest.eligibility_status === 2 ? ' (Current)' : '' }}
 									</option>
 								</select>
 							</div>
@@ -792,13 +790,6 @@ const formData = ref({
 	ivr_file_extension: '',
 	ivr_status: 0
 })
-
-function handleToggleStatus(id: string) {
-	const userIndex = ivrRequest.value.findIndex(user => user.ivr_id === id)
-	if (userIndex !== -1) {
-		ivrRequest.value[userIndex].ivr_status = ivrRequest.value[userIndex].ivr_status === 1 ? 0 : 1
-	}
-}
 
 function showIvrDetails(ivr: IVRRequest) {
 	showUserDetailsModal.value = true

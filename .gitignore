@@ -142,3 +142,7 @@ frontend/.cache/
 # Backend
 
 backend/.env
+
+# 
+.vscode/
+.qoder/

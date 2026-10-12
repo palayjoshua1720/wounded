@@ -107,7 +107,7 @@
 
     <!-- New Return Modal -->
     <NewReturnModal v-model="showNewReturnForm" :brands="brands" :manufacturers="manufacturers"
-      :graft-sizes="graftSizes" :usage-logs="usageLogs" @submit-return="handleSubmitReturn" />
+      :graft-sizes="graftSizes" :server-errors="newReturnServerErrors" @submit-return="handleSubmitReturn" />
     <BaseModal v-model="showDetailsModal" title="" width="max-w-5xl">
       <div v-if="selectedReturn" class="space-y-6">
         <!-- Minimalist Header -->
@@ -134,7 +134,7 @@
                     ID</span>
                 </div>
                 <div class="text-3xl font-bold text-gray-900 dark:text-white font-mono tracking-tight mb-3">
-                  {{ selectedReturn.serialNumber }}
+                  {{ selectedReturn.serialNumber || 'No Record Found' }}
                 </div>
                 <div class="flex items-center gap-2">
                   <!-- Entry Type -->
@@ -164,7 +164,7 @@
               <div class="text-right">
                 <div class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Returned
                 </div>
-                <div class="text-xl font-bold text-gray-900 dark:text-white">{{ selectedReturn.returnDate }}</div>
+                <div class="text-xl font-bold text-gray-900 dark:text-white">{{ formatDate(selectedReturn.returnDate) || 'No Record Found' }}</div>
               </div>
             </div>
           </div>
@@ -194,7 +194,7 @@
                     <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Brand</span>
                   </div>
                   <span class="text-base font-semibold text-gray-900 dark:text-white">{{
-                    getBrandName(selectedReturn.brandId) }}</span>
+                    getBrandName(selectedReturn.brandId) || 'No Record Found' }}</span>
                 </div>
 
                 <!-- Product Code Row (conditional) -->
@@ -212,7 +212,7 @@
                     <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Product Code</span>
                   </div>
                   <span class="text-base font-semibold text-gray-900 dark:text-white font-mono">{{
-                    selectedReturn.productCode }}</span>
+                    selectedReturn.productCode || 'No Record Found' }}</span>
                 </div>
 
                 <!-- Manufacturer Row (conditional) -->
@@ -229,7 +229,7 @@
                     <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Manufacturer</span>
                   </div>
                   <span class="text-base font-semibold text-gray-900 dark:text-white">{{ selectedReturn.manufacturer
-                    }}</span>
+                    || 'No Record Found' }}</span>
                 </div>
 
                 <!-- Size Row -->
@@ -245,7 +245,7 @@
                     </div>
                     <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Size</span>
                   </div>
-                  <span class="text-base font-semibold text-gray-900 dark:text-white">{{ selectedReturn.size }}</span>
+                  <span class="text-base font-semibold text-gray-900 dark:text-white">{{ selectedReturn.size || 'No Record Found' }}</span>
                 </div>
 
                 <!-- Expiry Date Row -->
@@ -261,8 +261,23 @@
                     </div>
                     <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Expiry Date</span>
                   </div>
-                  <span class="text-base font-semibold text-gray-900 dark:text-white">{{ selectedReturn.expiryDate
-                    }}</span>
+                  <span class="text-base font-semibold text-gray-900 dark:text-white">{{ formatDate(selectedReturn.expiryDate) || 'No Record Found' }}</span>
+                </div>
+
+                <!-- Clinic Row -->
+                <div v-if="selectedReturn.clinicName"
+                  class="px-6 py-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+                  <div class="flex items-center gap-3">
+                    <div
+                      class="w-8 h-8 rounded-lg bg-gradient-to-br from-teal-500 to-emerald-600 flex items-center justify-center">
+                      <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                          d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                      </svg>
+                    </div>
+                    <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Clinic</span>
+                  </div>
+                  <span class="text-base font-semibold text-gray-900 dark:text-white">{{ selectedReturn.clinicName }}</span>
                 </div>
               </div>
             </div>
@@ -285,7 +300,7 @@
                 <div class="flex-1">
                   <div class="text-xs font-semibold text-red-600 dark:text-red-400 uppercase tracking-wider mb-2">Reason
                     for Return</div>
-                  <div class="text-base font-semibold text-red-900 dark:text-red-100">{{ selectedReturn.returnReason }}
+                  <div class="text-base font-semibold text-red-900 dark:text-red-100">{{ selectedReturn.returnReason || 'No Record Found' }}
                   </div>
                   <div v-if="selectedReturn.otherReason"
                     class="mt-3 pt-3 border-t border-red-200 dark:border-red-900/50">
@@ -312,13 +327,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import ReturnsManagement from '@/components/Returns/ReturnsManagement.vue'
 import NewReturnModal from '@/components/Returns/NewReturnModal.vue'
 import BaseModal from '@/components/common/BaseModal.vue'
 import { RefreshCcw, Upload, CheckCircle2, Eye, Undo2, BarChart3, Plus } from 'lucide-vue-next'
-import api, { inventoryService } from '@/services/api'
+import api from '@/services/api'
 import Swal from 'sweetalert2'
+import { toast } from 'vue3-toastify'
+import 'vue3-toastify/dist/index.css'
 
 interface ReturnItem {
   id: string
@@ -338,6 +355,7 @@ interface ReturnItem {
   uploadedFileType?: string
   productCode?: string
   manufacturer?: string
+  clinicName?: string
   ocrSerialNumber?: string
   ocrExpiryDate?: string
   ocrProductCode?: string
@@ -361,11 +379,6 @@ interface GraftSize {
   brandId: string
 }
 
-interface UsageLog {
-  id: string
-  reference: string
-}
-
 const brands = ref<Brand[]>([])
 
 const manufacturers = ref<Manufacturer[]>([])
@@ -384,13 +397,12 @@ const pagination = ref({
   total: 0,
 })
 
-const usageLogs = ref<UsageLog[]>([])
-
 const showDetailsModal = ref(false)
 const selectedReturn = ref<ReturnItem | null>(null)
 const showStats = ref(false)
 const showNewReturnForm = ref(false)
 const isLoadingReturns = ref(false)
+const newReturnServerErrors = ref<Record<string, string>>({})
 
 // Fetch brands from database
 async function fetchBrands() {
@@ -467,7 +479,7 @@ async function fetchReturns(page = 1) {
       // Use OCR serial for upload, usage log serial for manual
       serialNumber: ret.entryType === 'upload'
         ? (ret.ocrSerialNumber || ret.id)
-        : (ret.serialNumber || ret.id),
+        : (ret.itemNo || ret.id),
       entryType: ret.entryType || 'manual',
       brandId: ret.brandId,
       graftSizeId: ret.graftSizeId, // Include graftSizeId from API
@@ -479,13 +491,14 @@ async function fetchReturns(page = 1) {
       returnReason: ret.reason,
       otherReason: ret.other,
       status: 'pending', // Default status
-      returnDate: ret.returnedAt.split(' ')[0],
+      returnDate: ret.returnedAt,
       extractedFromImage: false, // Default to false
       // Use OCR product code for upload, regular for manual
       productCode: ret.entryType === 'upload'
         ? (ret.ocrProductCode || '')
         : (ret.productCode || ''),
       manufacturer: ret.manufacturerName || '',
+      clinicName: ret.clinicName || '',
       ocrSerialNumber: ret.ocrSerialNumber || '',
       ocrExpiryDate: ret.ocrExpiryDate || '',
       ocrProductCode: ret.ocrProductCode || ''
@@ -508,28 +521,19 @@ async function fetchReturns(page = 1) {
   }
 }
 
-// Fetch usage logs from database
-async function fetchUsageLogs() {
-  try {
-    const { data } = await inventoryService.getUsageLogs()
-
-    // Transform API response to match expected format
-    usageLogs.value = data.data.map((log: any) => ({
-      id: log.id?.toString() || '',
-      reference: `${log.serialNumber || 'Unknown'} - ${log.patientName || 'Unknown Patient'}`
-    }))
-  } catch (error) {
-    console.error('Error fetching usage logs:', error)
-  }
-}
-
 // Load data on component mount
 onMounted(() => {
   fetchBrands()
   fetchManufacturers()
   fetchGraftSizes()
   fetchReturns()
-  fetchUsageLogs()
+})
+
+// Clear server errors when modal is closed
+watch(showNewReturnForm, (newVal) => {
+  if (!newVal) {
+    newReturnServerErrors.value = {}
+  }
 })
 
 // Computed statistics (use pagination total for accurate count)
@@ -558,6 +562,20 @@ const stats = computed(() => {
     topReasons
   }
 })
+
+function formatDate(dateString: string) {
+  if (!dateString) return 'No Record Found'
+  const date = new Date(dateString)
+  if (isNaN(date.getTime())) return dateString
+  const month = date.toLocaleString('en-US', { month: 'short' })
+  const day = date.getDate()
+  const year = date.getFullYear()
+  let hours = date.getHours()
+  const minutes = date.getMinutes().toString().padStart(2, '0')
+  const ampm = hours >= 12 ? 'PM' : 'AM'
+  hours = hours % 12 || 12
+  return `${month} ${day}, ${year} [${hours}:${minutes} ${ampm}]`
+}
 
 function getReasonColor(index: number) {
   const colors = [
@@ -591,6 +609,9 @@ function getStatusIcon(status: string) {
 }
 async function handleSubmitReturn(data: any) {
   try {
+    // Clear any previous server errors
+    newReturnServerErrors.value = {}
+
     // Check if this is an edit (has id) or new entry
     const isEdit = !!data.id
 
@@ -611,22 +632,7 @@ async function handleSubmitReturn(data: any) {
         updatePayload.ocrSize = data.size
       }
 
-      // Extract numeric ID from inv- format for backend validation
-      let numericGraftLogId = null
-      if (data.graftLogId) {
-        const extractedId = String(data.graftLogId).replace(/^inv-/, '')
-        numericGraftLogId = Number(extractedId)
-        if (isNaN(numericGraftLogId) || numericGraftLogId <= 0) {
-          numericGraftLogId = null
-        }
-      }
-
-      const submitUpdatePayload = {
-        ...updatePayload,
-        graftLogId: numericGraftLogId
-      }
-
-      const response = await api.put(`/management/returns/${data.id}`, submitUpdatePayload, {
+      const response = await api.put(`/management/returns/${data.id}`, updatePayload, {
         headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` }
       })
 
@@ -670,35 +676,13 @@ async function handleSubmitReturn(data: any) {
       })
     } else {
       // Create new return
-      // Map field names to match backend expectations
-      // NewReturnModal sends 'reason', backend expects 'reason'
-      // NewReturnModal sends 'other', backend expects 'other'
-
-      // Extract numeric ID from inv- format for backend validation
-      let numericGraftLogId = null
-      if (data.graftLogId) {
-        const extractedId = String(data.graftLogId).replace(/^inv-/, '')
-        numericGraftLogId = Number(extractedId)
-        // Validate that we got a valid number
-        if (isNaN(numericGraftLogId) || numericGraftLogId <= 0) {
-          await Swal.fire({
-            icon: 'error',
-            title: 'Invalid Usage Log ID',
-            text: 'The usage log ID format is invalid. Please select a valid usage log from the dropdown.',
-            confirmButtonColor: '#dc2626'
-          })
-          return
-        }
-      }
-
       // Ensure we're sending the correct field names
       const submitData: any = {
         brandId: data.brandId,
         graftSizeId: data.graftSizeId,
         reason: data.reason || data.returnReason, // Handle both field names
         other: data.other || data.otherReason || null,
-        entryType: data.entryType || 'manual',
-        graftLogId: numericGraftLogId
+        entryType: data.entryType || 'manual'
       }
 
       // For upload entries, include OCR fields
@@ -732,7 +716,7 @@ async function handleSubmitReturn(data: any) {
         returnReason: response.data.data.reason,
         otherReason: response.data.data.other,
         status: 'pending',
-        returnDate: response.data.data.returnedAt.split(' ')[0],
+        returnDate: response.data.data.returnedAt,
         extractedFromImage: false,
         // Use OCR product code for upload, regular for manual
         productCode: response.data.data.entryType === 'upload'
@@ -745,26 +729,17 @@ async function handleSubmitReturn(data: any) {
       }
       returns.value.push(newReturn)
 
-      // Close the modal
+      // Close the modal on success
       showNewReturnForm.value = false
 
-      console.log('Return created successfully:', response.data)
-
-      // Show success message
-      await Swal.fire({
-        icon: 'success',
-        title: 'Return Created!',
-        text: 'The return has been created successfully.',
-        timer: 2000,
-        showConfirmButton: false
-      })
+      // Show toast notification
+      toast.success('Return created successfully!')
     }
   } catch (error: any) {
     console.error('Error submitting return:', error)
 
     // Extract error message from response
     let errorMessage = 'An unexpected error occurred. Please try again.'
-    let errorDetails = ''
 
     if (error.response?.data) {
       const errorData = error.response.data
@@ -774,23 +749,40 @@ async function handleSubmitReturn(data: any) {
         errorMessage = errorData.message
       }
 
-      // Check if there are validation errors
+      // Check if there are validation errors — display them inline in the modal
       if (errorData.errors) {
+        const fieldErrors: Record<string, string> = {}
         const errors = errorData.errors
-        const errorList = Object.keys(errors).map(key => {
+
+        // Map backend field names to modal field names
+        const fieldMap: Record<string, string> = {
+          brandId: 'brand',
+          graftSizeId: 'graftSize',
+          reason: 'reason',
+          ocrSerialNumber: 'serialNumber',
+          ocrProductCode: 'productCode',
+          ocrExpiryDate: 'expiryDate',
+          ocrSize: 'size',
+          other: 'otherReason'
+        }
+
+        Object.keys(errors).forEach(key => {
+          const mappedField = fieldMap[key] || key
           const messages = Array.isArray(errors[key]) ? errors[key] : [errors[key]]
-          return messages.join(', ')
+          fieldErrors[mappedField] = messages.join(', ')
         })
-        errorDetails = errorList.join('\n')
+
+        // Set server errors on the modal (keeps it open with inline errors)
+        newReturnServerErrors.value = fieldErrors
+        return
       }
     }
 
-    // Show error message with SweetAlert
+    // For non-validation errors (e.g. server errors), show SweetAlert
     await Swal.fire({
       icon: 'error',
       title: data.id ? 'Update Failed' : 'Creation Failed',
       text: errorMessage,
-      html: errorDetails ? `<div class="text-left mt-2"><strong>Details:</strong><br/>${errorDetails.split('\n').join('<br/>')}</div>` : errorMessage,
       confirmButtonColor: '#dc2626',
       confirmButtonText: 'OK'
     })
@@ -834,20 +826,6 @@ function handleViewReturn(item: ReturnItem) {
 }
 
 async function handleDeleteReturn(item: ReturnItem) {
-  // Show confirmation dialog
-  const result = await Swal.fire({
-    title: 'Delete Return?',
-    html: `Are you sure you want to delete this return?<br/><br/><strong>Serial Number:</strong> ${item.serialNumber}<br/><strong>Brand:</strong> ${getBrandName(item.brandId)}`,
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonColor: '#dc2626',
-    cancelButtonColor: '#6b7280',
-    confirmButtonText: 'Yes, delete it!',
-    cancelButtonText: 'Cancel'
-  })
-
-  if (!result.isConfirmed) return
-
   try {
     await api.delete(`/management/returns/${item.id}`, {
       headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` }

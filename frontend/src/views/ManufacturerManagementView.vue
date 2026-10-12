@@ -40,7 +40,7 @@
           <label for="per-page" class="text-sm text-gray-700 dark:text-gray-300">Rows:</label>
           <select id="per-page" v-model="itemsPerPage"
             class="pl-4 pr-8 py-3.5 border-0 bg-gray-50 dark:bg-gray-700/50 rounded-xl focus:ring-2 focus:ring-green-500 focus:bg-white dark:focus:bg-gray-700 text-gray-900 dark:text-white appearance-none transition-all duration-200">
-            <option value="10">10</option>
+            <option value="9">9</option>
             <option value="25">25</option>
             <option value="50">50</option>
           </select>
@@ -58,12 +58,11 @@
         <div class="flex items-start justify-between mb-4">
           <div>
             <div class="flex items-center gap-3">
-              <div v-if="manufacturer.logoUrl" class="w-12 h-12 rounded-lg overflow-hidden bg-gray-100">
-                <img :src="manufacturer.logoUrl" :alt="`${manufacturer.manufacturerName} logo`"
-                  class="w-full h-full object-cover" />
-              </div>
-              <div v-else class="p-2 bg-green-100 rounded-lg">
-                <Factory class="w-5 h-5 text-green-600" />
+              <div class="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center">
+                <img v-if="manufacturer.logoUrl" :src="manufacturer.logoUrl"
+                  :alt="`${manufacturer.manufacturerName} logo`" class="w-full h-full object-cover"
+                  @error="(e) => { (e.target as HTMLImageElement).style.display = 'none'; (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden') }" />
+                <Factory class="w-5 h-5 text-green-600" :class="{ 'hidden': manufacturer.logoUrl }" />
               </div>
               <div class="flex flex-col">
                 <h3 class="font-semibold text-gray-900 dark:text-white">
@@ -115,7 +114,8 @@
               title="Archive">
               <Archive class="w-4 h-4" />
             </button>
-            <button v-if="manufacturer.manufacturerStatus === 2" @click="handleDeleteManufacturer(manufacturer.id)"
+            <button v-if="manufacturer.manufacturerStatus === 2 && !isStaff"
+              @click="handleDeleteManufacturer(manufacturer)"
               class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300" title="Delete">
               <Trash2 class="w-4 h-4" />
             </button>
@@ -338,7 +338,7 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label class="block text-sm font-medium text-gray-600 dark:text-gray-400">
-                  Name<span class="text-red-500">*</span>
+                  Name <span class="text-red-500">*</span>
                 </label>
                 <div class="relative">
                   <Factory class="absolute left-3 top-3 w-4 h-4 text-gray-400" />
@@ -384,52 +384,9 @@
 
           <!-- Logo Upload -->
           <div>
-            <div class="flex items-center gap-2 mb-2">
-              <Image class="w-5 h-5 text-green-500" />
-              <h3 class="text-md font-semibold text-gray-900 dark:text-gray-100">Manufacturer Logo (Optional)</h3>
-            </div>
-            <!-- Drag & Drop Area (only shown when no image selected) -->
-            <div v-if="!selectedLogoFile && !formData.logoUrl"
-              class="mt-1 flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer
-                                bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition cursor-pointer" @drop.prevent="handleLogoDrop"
-              @dragover.prevent="allowLogoDrop">
-              <input id="logo-upload" type="file" accept="image/png,image/jpeg,image/jpg" class="hidden"
-                @change="handleLogoChange" />
-              <label for="logo-upload" class="flex flex-col items-center justify-center text-center">
-                <UploadCloud class="w-10 h-10 mb-3 text-gray-400" />
-                <p class="mb-2 text-sm text-gray-500 dark:text-gray-400">
-                  <span class="font-semibold text-purple-600 dark:text-purple-400">Click to upload</span> or drag and
-                  drop
-                </p>
-                <p class="text-xs text-gray-500 dark:text-gray-400">JPEG, JPG, PNG (max. 2MB)</p>
-              </label>
-            </div>
-
-            <!-- Selected (cropped) file preview -->
-            <div v-if="selectedLogoFile"
-              class="mt-3 flex items-center justify-between gap-3 text-sm text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 px-3 py-2 rounded-lg">
-              <div class="flex items-center gap-2">
-                <Image class="w-4 h-4 text-gray-400" />
-                <span>Selected: <span class="font-medium">{{ selectedLogoFile.name }}</span></span>
-                <img :src="formData.logoUrl" class="w-8 h-8 rounded object-cover ml-2 border" />
-              </div>
-              <button @click="removeCurrentLogo" class="text-red-500 hover:text-red-600 transition">
-                <X class="w-5 h-5" />
-              </button>
-            </div>
-
-            <!-- Existing logo preview (when editing) -->
-            <div v-else-if="formData.logoUrl && !selectedLogoFile"
-              class="mt-3 flex items-center justify-between gap-3 text-sm text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 px-3 py-2 rounded-lg">
-              <div class="flex items-center gap-2">
-                <Image class="w-4 h-4 text-gray-400" />
-                <span>Current logo:</span>
-                <img :src="formData.logoUrl" class="w-8 h-8 rounded object-cover border" />
-              </div>
-              <button @click="removeCurrentLogo" class="text-red-500 hover:text-red-600 transition">
-                <X class="w-5 h-5" />
-              </button>
-            </div>
+            <ImageUploadCrop v-model="selectedLogoFile" v-model:model-preview-url="formData.logoUrl"
+              v-model:model-remove-flag="removeLogoFlag" label="Manufacturer Logo" :show-label="true"
+              :is-optional="true" existing-label="Current logo:" />
           </div>
 
           <!-- Contact Information -->
@@ -440,7 +397,7 @@
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label class="block text-sm font-medium text-gray-600 dark:text-gray-400">Contact Person<span
+                <label class="block text-sm font-medium text-gray-600 dark:text-gray-400">Contact Person <span
                     class="text-red-500">*</span></label>
                 <div class="relative">
                   <UserRound class="absolute left-3 top-3 w-4 h-4 text-gray-400" />
@@ -452,7 +409,7 @@
 
               <!-- Contact Number -->
               <div>
-                <label class="block text-sm font-medium text-gray-600 dark:text-gray-400">Contact Number<span
+                <label class="block text-sm font-medium text-gray-600 dark:text-gray-400">Contact Number <span
                     class="text-red-500">*</span></label>
                 <div class="relative">
                   <Phone class="absolute left-3 top-3 w-4 h-4 text-gray-400" />
@@ -465,7 +422,7 @@
 
               <!-- Primary Email -->
               <div>
-                <label class="block text-sm font-medium text-gray-600 dark:text-gray-400">Primary Email<span
+                <label class="block text-sm font-medium text-gray-600 dark:text-gray-400">Primary Email <span
                     class="text-red-500">*</span></label>
                 <div class="relative">
                   <Mail class="absolute left-3 top-3 w-4 h-4 text-gray-400" />
@@ -489,7 +446,7 @@
 
               <!-- Order Email -->
               <div>
-                <label class="block text-sm font-medium text-gray-600 dark:text-gray-400">Email for Orders<span
+                <label class="block text-sm font-medium text-gray-600 dark:text-gray-400">Email for Orders <span
                     class="text-red-500">*</span></label>
                 <div class="relative">
                   <Mail class="absolute left-3 top-3 w-4 h-4 text-gray-400" />
@@ -502,7 +459,7 @@
               <!-- Eligibility Email -->
               <div>
                 <label class="block text-sm font-medium text-gray-600 dark:text-gray-400">Email for Eligibility
-                  Checking<span class="text-red-500">*</span></label>
+                  Checking <span class="text-red-500">*</span></label>
                 <div class="relative">
                   <Mail class="absolute left-3 top-3 w-4 h-4 text-gray-400" />
                   <input v-model="formData.eligibilityEmail" type="email" required
@@ -515,176 +472,63 @@
           </div>
 
           <!-- File Upload Sections -->
-          <div class="space-y-8">
-            <!-- IVR -->
-            <div>
-              <div class="flex items-center gap-2 mb-2">
-                <FilePenLine class="w-5 h-5 text-green-500" />
-                <h3 class="text-md font-semibold text-gray-900 dark:text-gray-100">IVR Information</h3>
-              </div>
-              <FileUploadSection v-model:selectedFile="selectedIvrFile" v-model:previewUrl="ivrPreviewUrl"
-                v-model:removeFlag="removeIvrFlag" :existingFilename="formData.ivrFilename"
-                :existingFileExtension="formData.ivrFileExtension" label="IVR Form" accept=".pdf,.doc,.docx"
-                @remove-existing="removeExistingIvr" @preview="previewExistingFile('ivr')" />
+          <div class="space-y-3">
+            <div class="flex items-center gap-2 pb-2 border-b border-gray-200 dark:border-gray-700">
+              <FilePenLine class="w-3.5 h-3.5 text-green-600" />
+              <span class="text-xs font-medium uppercase tracking-widest text-gray-400 dark:text-gray-500">Document
+                Uploads</span>
             </div>
+            <div class="space-y-4">
 
-            <!-- Order -->
-            <div>
-              <div class="flex items-center gap-2 mb-2">
-                <FilePenLine class="w-5 h-5 text-green-500" />
-                <h3 class="text-md font-semibold text-gray-900 dark:text-gray-100">Order Form</h3>
-              </div>
-              <FileUploadSection v-model:selectedFile="selectedOrderFile" v-model:previewUrl="orderPreviewUrl"
-                v-model:removeFlag="removeOrderFlag" :existingFilename="formData.orderFilename"
-                :existingFileExtension="formData.orderFileExtension" label="Order Form" accept=".pdf,.doc,.docx"
-                @remove-existing="removeExistingOrder" @preview="previewExistingFile('order')" />
-            </div>
-
-            <!-- Onboarding -->
-            <div>
-              <div class="flex items-center gap-2 mb-2">
-                <FilePenLine class="w-5 h-5 text-green-500" />
-                <h3 class="text-md font-semibold text-gray-900 dark:text-gray-100">Onboarding File</h3>
-              </div>
-              <FileUploadSection v-model:selectedFile="selectedOnboardingFile" v-model:previewUrl="onboardingPreviewUrl"
-                v-model:removeFlag="removeOnboardingFlag" :existingFilename="formData.onboardingFilename"
-                :existingFileExtension="formData.onboardingFileExtension" label="Onboarding File"
-                accept=".pdf,.doc,.docx" @remove-existing="removeExistingOnboarding"
-                @preview="previewExistingFile('onboarding')" />
-            </div>
-          </div>
-
-          <!-- Submit Buttons -->
-          <div class="flex justify-end space-x-3 pt-4">
-            <button type="button" @click="closeForm"
-              class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
-              Cancel
-            </button>
-            <button type="button" @click="handleSubmitForm"
-              class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-              {{ showCreateForm ? 'Create Manufacturer' : 'Update Manufacturer' }}
-            </button>
-          </div>
-        </div>
-        </form>
-    </BaseModal>
-
-    <!-- Logo Cropper Modal -->
-    <BaseModal v-model="showLogoCropModal" title="Crop Logo" max-width="520px">
-      <div class="space-y-6">
-        <!-- Instructions -->
-        <div class="text-center">
-          <p class="text-sm text-gray-600 dark:text-gray-400">
-            Adjust your logo to fit perfectly. Drag to reposition and use the zoom controls below.
-          </p>
-        </div>
-
-        <!-- Crop Area Container -->
-        <div
-          class="relative mx-auto w-full max-w-[320px] aspect-square bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded-2xl overflow-hidden shadow-lg border border-gray-200 dark:border-gray-700">
-          <!-- Canvas Container with subtle grid background -->
-          <div class="absolute inset-0 opacity-20">
-            <div class="w-full h-full bg-grid-pattern bg-[length:20px_20px]"></div>
-          </div>
-
-          <canvas ref="logoCanvas" @mousedown="logoStartPan" @mousemove="logoHandlePan" @mouseup="logoEndPan"
-            @mouseleave="logoEndPan" @wheel="logoHandleZoom" @touchstart="logoStartTouchPan"
-            @touchmove="logoHandleTouchPan" @touchend="logoEndTouchPan" @touchcancel="logoEndTouchPan"
-            class="absolute inset-0 w-full h-full touch-none cursor-grab active:cursor-grabbing select-none transition-transform duration-150"
-            :class="{ 'cursor-grabbing': logoIsPanning }"></canvas>
-
-          <!-- Circular Crop Overlay with modern design -->
-          <div class="absolute inset-0 pointer-events-none">
-            <!-- Outer shadow/mask -->
-            <div class="absolute inset-0 bg-black/30 backdrop-blur-[1px]"></div>
-
-            <!-- Circular crop window -->
-            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4/5 h-4/5">
-              <!-- Border with glow effect -->
-              <div
-                class="absolute inset-0 border-2 border-white/80 rounded-full shadow-[0_0_0_1px_rgba(255,255,255,0.3),0_0_20px_rgba(0,0,0,0.2)]">
+              <!-- IVR -->
+              <div class="space-y-1">
+                <label class="text-xs font-medium text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                  IVR Form <span class="text-red-500">*</span>
+                </label>
+                <FileUploadSection v-model:selectedFile="selectedIvrFile" v-model:previewUrl="ivrPreviewUrl"
+                  v-model:removeFlag="removeIvrFlag" :existingFilename="formData.ivrFilename"
+                  :existingFileExtension="formData.ivrFileExtension" label="IVR Form" accept=".pdf,.doc,.docx"
+                  @remove-existing="removeExistingIvr" @preview="previewExistingFile('ivr')" />
               </div>
 
-              <!-- Corner indicators -->
-              <div class="absolute -top-1 -left-1 w-3 h-3 border-t-2 border-l-2 border-white rounded-tl"></div>
-              <div class="absolute -top-1 -right-1 w-3 h-3 border-t-2 border-r-2 border-white rounded-tr"></div>
-              <div class="absolute -bottom-1 -left-1 w-3 h-3 border-b-2 border-l-2 border-white rounded-bl"></div>
-              <div class="absolute -bottom-1 -right-1 w-3 h-3 border-b-2 border-r-2 border-white rounded-br"></div>
-            </div>
-
-            <!-- Help text -->
-            <div class="absolute bottom-4 left-1/2 -translate-x-1/2">
-              <div class="flex items-center gap-2 px-3 py-1.5 bg-black/60 backdrop-blur-sm rounded-full">
-                <svg class="w-3 h-3 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
-                </svg>
-                <span class="text-xs text-white/80 font-medium">Drag to move • Scroll to zoom</span>
+              <!-- Order Form -->
+              <div class="space-y-1">
+                <label class="text-xs font-medium text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                  Order Form <span class="text-red-500">*</span>
+                </label>
+                <FileUploadSection v-model:selectedFile="selectedOrderFile" v-model:previewUrl="orderPreviewUrl"
+                  v-model:removeFlag="removeOrderFlag" :existingFilename="formData.orderFilename"
+                  :existingFileExtension="formData.orderFileExtension" label="Order Form" accept=".pdf,.doc,.docx"
+                  @remove-existing="removeExistingOrder" @preview="previewExistingFile('order')" />
               </div>
+
+              <!-- Onboarding File -->
+              <div class="space-y-1">
+                <label class="text-xs font-medium text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                  Onboarding File <span class="text-red-500">*</span>
+                </label>
+                <FileUploadSection v-model:selectedFile="selectedOnboardingFile"
+                  v-model:previewUrl="onboardingPreviewUrl" v-model:removeFlag="removeOnboardingFlag"
+                  :existingFilename="formData.onboardingFilename"
+                  :existingFileExtension="formData.onboardingFileExtension" label="Onboarding File"
+                  accept=".pdf,.doc,.docx" @remove-existing="removeExistingOnboarding"
+                  @preview="previewExistingFile('onboarding')" />
+              </div>
+
             </div>
           </div>
         </div>
-
-        <!-- Controls Section -->
-        <div class="space-y-6">
-          <!-- Zoom Controls -->
-          <div class="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4">
-            <div class="flex items-center justify-between mb-3">
-              <label class="text-sm font-semibold text-gray-700 dark:text-gray-300">Zoom Level</label>
-              <span
-                class="text-sm font-mono font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded">
-                {{ Math.round(logoScale * 100) }}%
-              </span>
-            </div>
-
-            <div class="flex items-center gap-4">
-              <button @click="logoZoomOut" :disabled="logoScale <= 0.5"
-                class="flex items-center justify-center w-10 h-10 rounded-xl bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200 shadow-sm hover:shadow">
-                <Minus class="w-5 h-5 text-gray-500" />
-              </button>
-
-              <div class="flex-1 relative">
-                <input type="range" min="0.5" max="3" step="0.1" v-model="logoScale" @input="drawLogoCanvas"
-                  class="w-full h-2 bg-gradient-to-r from-blue-500 via-blue-400 to-blue-300 rounded-lg appearance-none cursor-pointer slider-thumb" />
-                <div class="absolute inset-0 flex justify-between items-center pointer-events-none px-1">
-                  <span class="text-xs text-gray-500">50%</span>
-                  <span class="text-xs text-gray-500">300%</span>
-                </div>
-              </div>
-
-              <button @click="logoZoomIn" :disabled="logoScale >= 3"
-                class="flex items-center justify-center w-10 h-10 rounded-xl bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200 shadow-sm hover:shadow">
-                <Plus class="w-5 h-5 text-gray-500" />
-              </button>
-            </div>
-          </div>
-
-          <!-- Action Buttons -->
-          <div class="flex flex-wrap gap-3 justify-center">
-            <button @click="logoResetPosition"
-              class="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-600 transition-all duration-200 shadow-sm hover:shadow">
-              <RefreshCw class="w-5 h-5 text-gray-500" />
-              Reset View
-            </button>
-
-            <button @click="logoSelectNewImage"
-              class="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-all duration-200 shadow-sm hover:shadow">
-              <Image class="w-5 h-5 text-blue-500" />
-              Change Image
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Modal Footer -->
+      </form>
       <template #actions>
-        <div class="p-4 flex items-center gap-2">
-          <button @click="logoCancelCrop"
-            class="px-6 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-600 transition-all duration-200 shadow-sm hover:shadow">
+        <!-- Actions -->
+        <div class="p-4 flex items-center justify-end gap-2">
+          <button type="button" @click="closeForm"
+            class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
             Cancel
           </button>
-          <button @click="logoConfirmCrop"
-            class="flex items-center gap-2 px-6 py-2.5 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl hover:from-blue-700 hover:to-indigo-700 shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-[1.02]">
-            Apply Crop
+          <button type="button" @click="handleSubmitForm"
+            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+            {{ showCreateForm ? 'Create Manufacturer' : 'Update Manufacturer' }}
           </button>
         </div>
       </template>
@@ -697,12 +541,11 @@
           <!-- Header -->
           <div class="flex items-center space-x-4">
             <!-- Logo -->
-            <div v-if="viewManufacturer.logoUrl" class="w-16 h-16 rounded-full overflow-hidden bg-gray-100">
-              <img :src="viewManufacturer.logoUrl" :alt="`${viewManufacturer.manufacturerName} logo`"
-                class="w-full h-full object-cover" />
-            </div>
-            <div v-else class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
-              <Factory class="w-8 h-8 text-green-500" />
+            <div class="w-16 h-16 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center">
+              <img v-if="viewManufacturer.logoUrl" :src="viewManufacturer.logoUrl"
+                :alt="`${viewManufacturer.manufacturerName} logo`" class="w-full h-full object-cover"
+                @error="(e) => { (e.target as HTMLImageElement).style.display = 'none'; (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden') }" />
+              <Factory class="w-8 h-8 text-green-500" :class="{ 'hidden': viewManufacturer.logoUrl }" />
             </div>
 
             <div>
@@ -729,62 +572,64 @@
           </div>
 
           <!-- Contact Information -->
-          <div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5">
-            <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Contact Information</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <!-- Left Column -->
-              <div class="space-y-4">
-                <div class="flex items-center space-x-3">
-                  <UserRound class="w-5 h-5 text-orange-500 flex-shrink-0" />
-                  <div>
-                    <p class="text-sm text-gray-700 dark:text-gray-300">Contact Person</p>
-                    <p class="text-gray-900 dark:text-white">{{ viewManufacturer.contactPerson }}</p>
+          <div class="space-y-4">
+            <h3 class="text-lg font-medium text-gray-900 dark:text-white">Contact Information</h3>
+            <div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Left Column -->
+                <div class="space-y-4">
+                  <div class="flex items-center space-x-3">
+                    <UserRound class="w-5 h-5 text-orange-500 flex-shrink-0" />
+                    <div>
+                      <p class="text-sm text-gray-700 dark:text-gray-300">Contact Person</p>
+                      <p class="text-gray-900 dark:text-white">{{ viewManufacturer.contactPerson }}</p>
+                    </div>
+                  </div>
+
+                  <div class="flex items-center space-x-3">
+                    <Phone class="w-5 h-5 text-green-500 flex-shrink-0" />
+                    <div>
+                      <p class="text-sm text-gray-700 dark:text-gray-300">Contact Number</p>
+                      <p class="text-gray-900 dark:text-white">{{ viewManufacturer.contactNumber }}</p>
+                    </div>
+                  </div>
+
+                  <div v-if="viewManufacturer.address" class="flex items-center space-x-3">
+                    <MapPin class="w-5 h-5 text-red-500 flex-shrink-0" />
+                    <div>
+                      <p class="text-sm text-gray-700 dark:text-gray-300">Address</p>
+                      <p class="text-gray-900 dark:text-white">{{ viewManufacturer.address }}</p>
+                    </div>
                   </div>
                 </div>
 
-                <div class="flex items-center space-x-3">
-                  <Phone class="w-5 h-5 text-green-500 flex-shrink-0" />
-                  <div>
-                    <p class="text-sm text-gray-700 dark:text-gray-300">Contact Number</p>
-                    <p class="text-gray-900 dark:text-white">{{ viewManufacturer.contactNumber }}</p>
+                <!-- Right Column -->
+                <div class="space-y-4">
+                  <div class="flex items-center space-x-3">
+                    <Mail class="w-5 h-5 text-purple-500 flex-shrink-0" />
+                    <div>
+                      <p class="text-sm text-gray-700 dark:text-gray-300">Primary Email</p>
+                      <p class="text-gray-900 dark:text-white">{{ viewManufacturer.primaryEmail }}</p>
+                    </div>
                   </div>
-                </div>
 
-                <div v-if="viewManufacturer.address" class="flex items-center space-x-3">
-                  <MapPin class="w-5 h-5 text-red-500 flex-shrink-0" />
-                  <div>
-                    <p class="text-sm text-gray-700 dark:text-gray-300">Address</p>
-                    <p class="text-gray-900 dark:text-white">{{ viewManufacturer.address }}</p>
+                  <div v-if="viewManufacturer.secondaryEmail" class="flex items-center space-x-3">
+                    <Mail class="w-5 h-5 text-indigo-500 flex-shrink-0" />
+                    <div>
+                      <p class="text-sm text-gray-700 dark:text-gray-300">Secondary Email</p>
+                      <p class="text-gray-900 dark:text-white">{{ viewManufacturer.secondaryEmail }}</p>
+                    </div>
                   </div>
-                </div>
-              </div>
 
-              <!-- Right Column -->
-              <div class="space-y-4">
-                <div class="flex items-center space-x-3">
-                  <Mail class="w-5 h-5 text-purple-500 flex-shrink-0" />
-                  <div>
-                    <p class="text-sm text-gray-700 dark:text-gray-300">Primary Email</p>
-                    <p class="text-gray-900 dark:text-white">{{ viewManufacturer.primaryEmail }}</p>
-                  </div>
-                </div>
-
-                <div v-if="viewManufacturer.secondaryEmail" class="flex items-center space-x-3">
-                  <Mail class="w-5 h-5 text-indigo-500 flex-shrink-0" />
-                  <div>
-                    <p class="text-sm text-gray-700 dark:text-gray-300">Secondary Email</p>
-                    <p class="text-gray-900 dark:text-white">{{ viewManufacturer.secondaryEmail }}</p>
-                  </div>
-                </div>
-
-                <div v-if="viewManufacturer.website" class="flex items-center space-x-3">
-                  <Globe class="w-5 h-5 text-blue-500 flex-shrink-0" />
-                  <div>
-                    <p class="text-sm text-gray-700 dark:text-gray-300">Website</p>
-                    <a :href="viewManufacturer.website" target="_blank"
-                      class="text-blue-600 underline hover:text-blue-800 truncate block max-w-[200px]">
-                      {{ viewManufacturer.website }}
-                    </a>
+                  <div v-if="viewManufacturer.website" class="flex items-center space-x-3">
+                    <Globe class="w-5 h-5 text-blue-500 flex-shrink-0" />
+                    <div>
+                      <p class="text-sm text-gray-700 dark:text-gray-300">Website</p>
+                      <a :href="viewManufacturer.website" target="_blank"
+                        class="text-blue-600 underline hover:text-blue-800 truncate block max-w-[200px]">
+                        {{ viewManufacturer.website }}
+                      </a>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -846,8 +691,7 @@
                 <div class="flex items-center justify-between mb-3">
                   <div class="flex items-center space-x-3">
                     <div class="w-10 h-10 rounded-lg bg-gray-50 dark:bg-gray-700 flex items-center justify-center">
-                      <FileText :class="getFileTypeIcon(viewManufacturer.ivrFileExtension || 'pdf')"
-                        class="w-5 h-5" />
+                      <FileText :class="getFileTypeIcon(viewManufacturer.ivrFileExtension || 'pdf')" class="w-5 h-5" />
                     </div>
                     <div>
                       <h4 class="text-sm font-semibold text-gray-900 dark:text-white">IVR Form</h4>
@@ -966,7 +810,7 @@
             class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5">
             <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Associated Brands</h3>
 
-            <div class="space-y-3 max-h-60 overflow-y-auto pr-2">
+            <div class="space-y-3 max-h-60 overflow-y-auto pr-2 brands-scroll">
               <div v-for="brand in viewManufacturer.brands" :key="brand.id"
                 class="p-3 rounded-lg border border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                 <div class="flex justify-between items-center">
@@ -1001,7 +845,7 @@
       </template>
 
       <template #actions>
-        <div class="p-4 flex items-center gap-2">
+        <div class="p-4 flex items-center justify-end gap-2">
           <button type="button" @click="viewManufacturer = null"
             class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
             Close
@@ -1021,16 +865,20 @@ import Swal from "sweetalert2"
 import {
   Search, Funnel, Eye, SquarePen, CircleCheck, CircleX, Trash2, HousePlus,
   FileText, Factory, Globe, Building2, Mail, Contact, Phone, UserRound,
-  FilePenLine, MapPin, Archive, Download, ChevronDown, Image, UploadCloud, X,
-  RefreshCw, Plus, Minus
+  FilePenLine, MapPin, Archive, ChevronDown
 } from 'lucide-vue-next'
 import BaseModal from '@/components/common/BaseModal.vue'
 import Pagination from '@/components/ui/Pagination.vue'
 import ContentLoader from '@/components/ui/ContentLoader.vue'
 import FileUploadSection from '@/components/common/FileUploadSection.vue'
+import ImageUploadCrop from '@/components/common/ImageUploadCrop.vue'
 import api from '@/services/api'
 import axios from "axios"
 import UploadLoader from '@/components/ui/UploadLoader.vue'
+import { useAuthStore } from '@/stores/auth'
+
+const authStore = useAuthStore()
+const isStaff = computed(() => authStore.user?.user_role === 1)
 
 const toast = useToast()
 
@@ -1072,7 +920,7 @@ interface Manufacturer {
 // ──────────────────────────────────────────────────────────────────────────────
 const submitted = ref(false)
 const pagination = ref({ current_page: 1, last_page: 1, per_page: 10, total: 0 })
-const itemsPerPage = ref(10)
+const itemsPerPage = ref(9)
 const manufacturers = ref<Manufacturer[]>([])
 const tableLoader = ref(false)
 const selectedManufacturer = ref<Manufacturer | null>(null)
@@ -1702,11 +1550,14 @@ async function handleArchiveManufacturer(id: number) {
   }
 }
 
-async function handleDeleteManufacturer(id: number) {
+async function handleDeleteManufacturer(manufacturer: Manufacturer) {
   try {
     const result = await Swal.fire({
       title: 'Delete Manufacturer?',
-      text: "This action cannot be undone.",
+      html: `
+        Are you sure you want to delete <b>${manufacturer.manufacturerName}</b>?<br>
+        <span style="color:#d33;">This action cannot be undone!</span>
+      `,
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#d33',
@@ -1715,8 +1566,8 @@ async function handleDeleteManufacturer(id: number) {
       cancelButtonText: 'Cancel'
     })
     if (result.isConfirmed) {
-      await api.delete(`/management/manufacturers/${id}`)
-      manufacturers.value = manufacturers.value.filter(m => m.id !== id)
+      await api.delete(`/management/manufacturers/${manufacturer.id}`)
+      manufacturers.value = manufacturers.value.filter(m => m.id !== manufacturer.id)
       toast.success('Manufacturer deleted successfully')
     }
   } catch (error) {
@@ -1960,64 +1811,45 @@ onUnmounted(() => {
 })
 </script>
 
+
 <style scoped>
-/* Custom grid pattern for the background */
-.bg-grid-pattern {
-  background-image:
-    linear-gradient(rgba(0, 0, 0, 0.1) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 0, 0, 0.1) 1px, transparent 1px);
+/* ===== Base: hide scrollbar ===== */
+.brands-scroll {
+  scrollbar-width: none;
+  /* Firefox */
+  -ms-overflow-style: none;
+  /* IE/Edge legacy */
 }
 
-/* Enhanced range slider styling */
-input[type="range"].slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  background: linear-gradient(to right, #3b82f6 0%, #3b82f6 calc((var(--value, 50) - 50) * 100 / 250), #e5e7eb calc((var(--value, 50) - 50) * 100 / 250), #e5e7eb 100%);
-  border-radius: 10px;
-  height: 6px;
+.brands-scroll::-webkit-scrollbar {
+  width: 0px;
+  transition: width 0.2s ease;
 }
 
-input[type="range"].slider-thumb::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 20px;
-  height: 20px;
-  background: #3b82f6;
-  border: 2px solid #ffffff;
-  border-radius: 50%;
-  cursor: pointer;
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
-  transition: all 0.2s ease;
+/* ===== On hover: show thin modern scrollbar ===== */
+.brands-scroll:hover {
+  scrollbar-width: thin;
+  /* Firefox */
+  scrollbar-color: rgba(156, 163, 175, 0.6) transparent;
+  /* thumb + track */
 }
 
-input[type="range"].slider-thumb::-webkit-slider-thumb:hover {
-  transform: scale(1.1);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.6);
+.brands-scroll:hover::-webkit-scrollbar {
+  width: 6px;
 }
 
-input[type="range"].slider-thumb::-moz-range-thumb {
-  width: 20px;
-  height: 20px;
-  background: #3b82f6;
-  border: 2px solid #ffffff;
-  border-radius: 50%;
-  cursor: pointer;
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
-  transition: all 0.2s ease;
-  border: none;
+.brands-scroll:hover::-webkit-scrollbar-track {
+  background: transparent;
 }
 
-input[type="range"].slider-thumb::-moz-range-thumb:hover {
-  transform: scale(1.1);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.6);
+.brands-scroll:hover::-webkit-scrollbar-thumb {
+  background-color: rgba(156, 163, 175, 0.6);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
 }
 
-/* Smooth transitions for all interactive elements */
-button {
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-canvas {
-  transition: transform 0.15s ease;
+.brands-scroll:hover::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(107, 114, 128, 0.8);
 }
 </style>

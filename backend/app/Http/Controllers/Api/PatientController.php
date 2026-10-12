@@ -29,7 +29,7 @@ class PatientController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $query = PatientInfo::with(['user', 'clinic', 'updatedBy']);
+        $query = PatientInfo::with(['user', 'clinic', 'updatedBy', 'assignedClinician:id,first_name,middle_name,last_name']);
 
         // Get the current authenticated user
         $currentUser = $request->user();
@@ -37,6 +37,12 @@ class PatientController extends Controller
         // Clinic users (role 2) can only see patients from their own clinic
         if ($currentUser && $currentUser->user_role === 2) {
             $query->where('clinic_id', $currentUser->clinic_id);
+        }
+
+        // Clinicians (role 3) can only see patients specifically assigned to them
+        if ($currentUser && $currentUser->user_role === 3) {
+            $query->where('clinic_id', $currentUser->clinic_id)
+                ->where('assigned_clinician_id', $currentUser->id);
         }
 
         // Apply search filter
@@ -80,6 +86,12 @@ class PatientController extends Controller
             $baseQuery->where('clinic_id', $currentUser->clinic_id);
         }
 
+        // Clinicians (role 3) can only see stats for patients assigned to them
+        if ($currentUser && $currentUser->user_role === 3) {
+            $baseQuery->where('clinic_id', $currentUser->clinic_id)
+                ->where('assigned_clinician_id', $currentUser->id);
+        }
+
         $total = (clone $baseQuery)->count();
 
         // Patients created this month
@@ -116,13 +128,14 @@ class PatientController extends Controller
             'email' => 'required|string|email|max:255|unique:woundmed_patient_info,email',
             'clinic_id' => 'nullable|exists:woundmed_clinics,clinic_id',
             'user_id' => 'nullable|exists:woundmed_users,id',
+            'assigned_clinician_id' => 'nullable|integer|exists:woundmed_users,id',
         ]);
 
         // Get the current authenticated user
         $currentUser = $request->user();
 
-        // If clinic user (role 2), force clinic_id to their clinic
-        if ($currentUser && $currentUser->user_role === 2) {
+        // If clinic user (role 2) or clinician (role 3), force clinic_id to their clinic
+        if ($currentUser && in_array($currentUser->user_role, [2, 3], true)) {
             $validated['clinic_id'] = $currentUser->clinic_id;
         }
 
@@ -131,10 +144,31 @@ class PatientController extends Controller
             $validated['user_id'] = $currentUser->id ?? null;
         }
 
+        // Assigned clinician handling:
+        //  - Clinic users (role 2): may pick a clinician from their clinic.
+        //  - Clinicians (role 3): auto-assign the patient to themselves.
+        //  - All other roles: ignored (null).
+        $assignedClinicianId = null;
+        if ($currentUser && $currentUser->user_role === 2 && !empty($validated['assigned_clinician_id'])) {
+            $clinician = User::where('id', $validated['assigned_clinician_id'])
+                ->where('user_role', 3)
+                ->where('clinic_id', $currentUser->clinic_id)
+                ->first();
+            if (!$clinician) {
+                throw ValidationException::withMessages([
+                    'assigned_clinician_id' => ['Selected clinician does not belong to your clinic.'],
+                ]);
+            }
+            $assignedClinicianId = (int) $clinician->id;
+        } elseif ($currentUser && $currentUser->user_role === 3) {
+            $assignedClinicianId = (int) $currentUser->id;
+        }
+
         $patient = PatientInfo::create([
             'patient_name' => $validated['patient_name'],
             'email' => $validated['email'],
             'clinic_id' => $validated['clinic_id'] ?? null,
+            'assigned_clinician_id' => $assignedClinicianId,
             'user_id' => $validated['user_id'],
         ]);
 
@@ -142,7 +176,7 @@ class PatientController extends Controller
 
         return response()->json([
             'message' => 'Patient created successfully',
-            'patient' => $this->formatPatientResponse($patient->load(['user', 'clinic']))
+            'patient' => $this->formatPatientResponse($patient->load(['user', 'clinic', 'assignedClinician']))
         ], 201);
     }
 
@@ -151,14 +185,22 @@ class PatientController extends Controller
      */
     public function show(Request $request, $id): JsonResponse
     {
-        $patient = PatientInfo::with(['user', 'clinic', 'ivrs', 'updatedBy'])->findOrFail($id);
+        $patient = PatientInfo::with(['user', 'clinic', 'ivrs', 'updatedBy', 'assignedClinician:id,first_name,middle_name,last_name'])->findOrFail($id);
 
-        // Check if clinic user can access this patient
+        // Check if clinic user / clinician can access this patient
         $currentUser = $request->user();
         if ($currentUser && $currentUser->user_role === 2) {
             if ($patient->clinic_id !== $currentUser->clinic_id) {
                 return response()->json([
                     'message' => 'Unauthorized. You can only view patients from your clinic.'
+                ], 403);
+            }
+        }
+        if ($currentUser && $currentUser->user_role === 3) {
+            if ($patient->clinic_id !== $currentUser->clinic_id
+                || (int) $patient->assigned_clinician_id !== (int) $currentUser->id) {
+                return response()->json([
+                    'message' => 'Unauthorized. You can only view patients assigned to you.'
                 ], 403);
             }
         }
@@ -183,12 +225,20 @@ class PatientController extends Controller
     {
         $patient = PatientInfo::findOrFail($id);
 
-        // Check if clinic user can update this patient
+        // Check if clinic user / clinician can update this patient
         $currentUser = $request->user();
         if ($currentUser && $currentUser->user_role === 2) {
             if ($patient->clinic_id !== $currentUser->clinic_id) {
                 return response()->json([
                     'message' => 'Unauthorized. You can only update patients from your clinic.'
+                ], 403);
+            }
+        }
+        if ($currentUser && $currentUser->user_role === 3) {
+            if ($patient->clinic_id !== $currentUser->clinic_id
+                || (int) $patient->assigned_clinician_id !== (int) $currentUser->id) {
+                return response()->json([
+                    'message' => 'Unauthorized. You can only update patients assigned to you.'
                 ], 403);
             }
         }
@@ -198,17 +248,38 @@ class PatientController extends Controller
             'email' => 'sometimes|required|string|email|max:255|unique:woundmed_patient_info,email,' . $patient->patient_id . ',patient_id',
             'clinic_id' => 'nullable|exists:woundmed_clinics,clinic_id',
             'user_id' => 'nullable|exists:woundmed_users,id',
+            'assigned_clinician_id' => 'nullable|integer|exists:woundmed_users,id',
         ]);
 
-        // Clinic users cannot change the clinic_id
-        if ($currentUser && $currentUser->user_role === 2) {
+        // Clinic users and clinicians cannot change the clinic_id
+        if ($currentUser && in_array($currentUser->user_role, [2, 3], true)) {
             unset($validated['clinic_id']);
+        }
+
+        // Assigned clinician: clinic-user-only feature.
+        $assignedClinicianId = $patient->assigned_clinician_id;
+        if ($currentUser && $currentUser->user_role === 2 && array_key_exists('assigned_clinician_id', $validated)) {
+            if (empty($validated['assigned_clinician_id'])) {
+                $assignedClinicianId = null;
+            } else {
+                $clinician = User::where('id', $validated['assigned_clinician_id'])
+                    ->where('user_role', 3)
+                    ->where('clinic_id', $currentUser->clinic_id)
+                    ->first();
+                if (!$clinician) {
+                    throw ValidationException::withMessages([
+                        'assigned_clinician_id' => ['Selected clinician does not belong to your clinic.'],
+                    ]);
+                }
+                $assignedClinicianId = (int) $clinician->id;
+            }
         }
 
         $updateData = [
             'patient_name' => $validated['patient_name'] ?? $patient->patient_name,
             'email' => $validated['email'] ?? $patient->email,
             'clinic_id' => isset($validated['clinic_id']) ? $validated['clinic_id'] : $patient->clinic_id,
+            'assigned_clinician_id' => $assignedClinicianId,
             'user_id' => $validated['user_id'] ?? $patient->user_id,
             'updated_by' => $currentUser->id ?? null,
         ];
@@ -219,7 +290,7 @@ class PatientController extends Controller
 
         return response()->json([
             'message' => 'Patient updated successfully',
-            'patient' => $this->formatPatientResponse($patient->fresh(['user', 'clinic', 'updatedBy']))
+            'patient' => $this->formatPatientResponse($patient->fresh(['user', 'clinic', 'updatedBy', 'assignedClinician']))
         ]);
     }
 
@@ -230,12 +301,20 @@ class PatientController extends Controller
     {
         $patient = PatientInfo::findOrFail($id);
 
-        // Check if clinic user can delete this patient
+        // Check if clinic user / clinician can delete this patient
         $currentUser = $request->user();
         if ($currentUser && $currentUser->user_role === 2) {
             if ($patient->clinic_id !== $currentUser->clinic_id) {
                 return response()->json([
                     'message' => 'Unauthorized. You can only delete patients from your clinic.'
+                ], 403);
+            }
+        }
+        if ($currentUser && $currentUser->user_role === 3) {
+            if ($patient->clinic_id !== $currentUser->clinic_id
+                || (int) $patient->assigned_clinician_id !== (int) $currentUser->id) {
+                return response()->json([
+                    'message' => 'Unauthorized. You can only delete patients assigned to you.'
                 ], 403);
             }
         }
@@ -259,12 +338,20 @@ class PatientController extends Controller
     {
         $patient = PatientInfo::withTrashed()->findOrFail($id);
 
-        // Check if clinic user can restore this patient
+        // Check if clinic user / clinician can restore this patient
         $currentUser = $request->user();
         if ($currentUser && $currentUser->user_role === 2) {
             if ($patient->clinic_id !== $currentUser->clinic_id) {
                 return response()->json([
                     'message' => 'Unauthorized. You can only restore patients from your clinic.'
+                ], 403);
+            }
+        }
+        if ($currentUser && $currentUser->user_role === 3) {
+            if ($patient->clinic_id !== $currentUser->clinic_id
+                || (int) $patient->assigned_clinician_id !== (int) $currentUser->id) {
+                return response()->json([
+                    'message' => 'Unauthorized. You can only restore patients assigned to you.'
                 ], 403);
             }
         }
@@ -286,8 +373,8 @@ class PatientController extends Controller
     {
         $currentUser = $request->user();
 
-        // Clinic users only see their own clinic
-        if ($currentUser && $currentUser->user_role === 2) {
+        // Clinic users and clinicians only see their own clinic
+        if ($currentUser && in_array($currentUser->user_role, [2, 3], true)) {
             $clinic = Clinic::where('clinic_id', $currentUser->clinic_id)
                 ->where('clinic_status', 0)
                 ->first();
@@ -322,10 +409,54 @@ class PatientController extends Controller
     }
 
     /**
+     * Get clinicians (user_role = 3) within the logged-in clinic user's clinic,
+     * used by the "Assigned To" dropdown on the Patient form.
+     */
+    public function getAssignableClinicians(Request $request): JsonResponse
+    {
+        $currentUser = $request->user();
+
+        if (!$currentUser || $currentUser->user_role !== 2) {
+            return response()->json([
+                'message' => 'Unauthorized. This list is only available to clinic users.',
+                'clinicians' => [],
+            ], 403);
+        }
+
+        $clinicians = User::where('user_role', 3)
+            ->where('user_status', 0)
+            ->whereNull('deleted_at')
+            ->where('clinic_id', $currentUser->clinic_id)
+            ->orderBy('first_name')
+            ->get(['id', 'first_name', 'middle_name', 'last_name']);
+
+        return response()->json([
+            'clinicians' => $clinicians->map(function ($u) {
+                $name = trim(($u->first_name ?? '') . ' ' . ($u->middle_name ?? '') . ' ' . ($u->last_name ?? ''));
+                $name = preg_replace('/\s+/', ' ', $name);
+                return [
+                    'id' => (int) $u->id,
+                    'full_name' => $name !== '' ? $name : ('User #' . $u->id),
+                ];
+            })->values(),
+        ]);
+    }
+
+    /**
      * Format patient response for frontend
      */
     private function formatPatientResponse(PatientInfo $patient): array
     {
+        $assignedName = null;
+        if ($patient->assignedClinician) {
+            $ac = $patient->assignedClinician;
+            $assignedName = trim(($ac->first_name ?? '') . ' ' . ($ac->middle_name ?? '') . ' ' . ($ac->last_name ?? ''));
+            $assignedName = preg_replace('/\s+/', ' ', $assignedName);
+            if ($assignedName === '') {
+                $assignedName = null;
+            }
+        }
+
         return [
             'patient_id' => $patient->patient_id,
             'patient_name' => $patient->patient_name,
@@ -338,6 +469,8 @@ class PatientController extends Controller
             'updated_by_user_id' => $patient->updated_by,
             'updated_by_user_name' => $patient->updatedBy ? $patient->updatedBy->full_name : null,
             'updated_by_user_role' => $patient->updatedBy ? $patient->updatedBy->user_role : null,
+            'assigned_clinician_id' => $patient->assigned_clinician_id,
+            'assigned_clinician_name' => $assignedName,
             'created_at' => $patient->created_at ? $patient->created_at->toISOString() : null,
             'updated_at' => $patient->updated_at ? $patient->updated_at->toISOString() : null,
             'deleted_at' => $patient->deleted_at ? $patient->deleted_at->toISOString() : null,

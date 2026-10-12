@@ -189,49 +189,15 @@
         </div>
 
         <!-- Step 4: Return Reason -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Step 4: Return Reason
-              *</label>
-            <select v-model="returnReason"
-              class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-              required>
-              <option value="">Select Reason</option>
-              <option v-for="reason in returnReasons" :key="reason" :value="reason">{{ reason }}</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Link to Usage Log *</label>
-            <div class="relative" ref="graftLogDropdownContainer">
-              <input
-                v-model="graftLogSearch"
-                @input="filterGraftLogs"
-                @focus="showGraftLogDropdown = true"
-                @keydown.enter.prevent="acceptFirstGraftLog"
-                type="text"
-                autocomplete="off"
-                placeholder="Search by usage log ID..."
-                class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                required
-                aria-label="Search usage log"
-              />
-
-              <!-- Dropdown rendered via teleport to avoid modal overflow issues -->
-              <Teleport to="body" v-if="showGraftLogDropdown && filteredGraftLogs.length > 0">
-                <div
-                  ref="graftLogDropdownEl"
-                  class="fixed z-[9999] bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto"
-                  :style="graftLogDropdownStyle"
-                >
-                  <div v-for="log in filteredGraftLogs" :key="log.id" @click="selectGraftLog(log)"
-                    class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer text-gray-900 dark:text-white text-sm">
-                    <div class="font-mono">{{ log.id }}</div>
-                  </div>
-                </div>
-              </Teleport>
-            </div>
-            <input type="hidden" v-model="graftLogId" />
-          </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Step 4: Return Reason
+            *</label>
+          <select v-model="returnReason"
+            class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            required>
+            <option value="">Select Reason</option>
+            <option v-for="reason in returnReasons" :key="reason" :value="reason">{{ reason }}</option>
+          </select>
         </div>
 
         <!-- Other Reason Text Field -->
@@ -251,10 +217,6 @@
             ← Back
           </button>
           <div class="flex gap-3">
-            <button type="button" @click="closeModal"
-              class="px-6 py-2.5 border-2 border-gray-300 dark:border-gray-600 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 font-medium">
-              Cancel
-            </button>
             <button type="button" @click="handleManualSubmit"
               class="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg font-medium">
               Submit Return
@@ -285,42 +247,72 @@
         <!-- Mapped Fields -->
         <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5">
           <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-4">Extracted Fields (Editable)</h3>
+          
+          <!-- Validation Error Summary -->
+          <div v-if="Object.keys(mergedValidationErrors).length > 0" class="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+            <p class="text-sm font-semibold text-red-800 dark:text-red-300 mb-2">Please fix the following errors:</p>
+            <ul class="list-disc list-inside text-sm text-red-700 dark:text-red-400 space-y-1">
+              <li v-for="(error, field) in ocrValidationErrors" :key="field">{{ error }}</li>
+            </ul>
+          </div>
+          
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">Product Brand *</label>
               <select v-model="ocrSelectedBrand"
-                class="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm">
+                :class="[
+                  'w-full px-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm',
+                  ocrValidationErrors.brand || mergedValidationErrors.brand ? 'border-red-500 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'
+                ]">
                 <option value="">Select Brand</option>
                 <option v-for="brand in brands" :key="brand.id" :value="brand.id">{{ brand.name }}</option>
               </select>
+              <p v-if="mergedValidationErrors.brand" class="text-xs text-red-500 dark:text-red-400 mt-1">{{ mergedValidationErrors.brand }}</p>
             </div>
             <div>
               <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">Return Reason *</label>
               <select v-model="ocrReturnReason"
-                class="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm">
+                :class="[
+                  'w-full px-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm',
+                  ocrValidationErrors.reason || mergedValidationErrors.reason ? 'border-red-500 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'
+                ]">
                 <option value="">Select Reason</option>
                 <option v-for="reason in returnReasons" :key="reason" :value="reason">{{ reason }}</option>
               </select>
+              <p v-if="mergedValidationErrors.reason" class="text-xs text-red-500 dark:text-red-400 mt-1">{{ mergedValidationErrors.reason }}</p>
             </div>
             <div>
-              <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">Serial Number</label>
+              <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">Serial Number *</label>
               <input v-model="ocrSerialNumber"
-                class="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm" />
+                :class="[
+                  'w-full px-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm',
+                  ocrValidationErrors.serialNumber || mergedValidationErrors.serialNumber ? 'border-red-500 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'
+                ]" />
+              <p v-if="mergedValidationErrors.serialNumber" class="text-xs text-red-500 dark:text-red-400 mt-1">{{ mergedValidationErrors.serialNumber }}</p>
             </div>
             <div>
-              <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">Product Code</label>
+              <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">Product Code *</label>
               <input v-model="ocrProductCode"
-                class="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm" />
+                :class="[
+                  'w-full px-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm',
+                  ocrValidationErrors.productCode || mergedValidationErrors.productCode ? 'border-red-500 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'
+                ]" />
+              <p v-if="mergedValidationErrors.productCode" class="text-xs text-red-500 dark:text-red-400 mt-1">{{ mergedValidationErrors.productCode }}</p>
             </div>
             <div>
               <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">Expiry Date</label>
               <input v-model="ocrExpiryDate"
+                type="date"
                 class="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm" />
             </div>
             <div>
-              <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">Size</label>
+              <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">Size *</label>
               <input v-model="ocrSize"
-                class="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm" />
+                :class="[
+                  'w-full px-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm',
+                  ocrValidationErrors.size || mergedValidationErrors.size ? 'border-red-500 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'
+                ]" />
+              <p v-if="mergedValidationErrors.size" class="text-xs text-red-500 dark:text-red-400 mt-1">{{ mergedValidationErrors.size }}</p>
             </div>
           </div>
 
@@ -341,11 +333,14 @@
             Close
           </button>
           <button @click="confirmOcrReturn"
-            class="px-5 py-2.5 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 transition-all duration-200 shadow-md hover:shadow-lg font-medium">
+            :disabled="!ocrSelectedBrand || !ocrReturnReason || !ocrProductCode.trim()"
+            :class="[
+              'px-5 py-2.5 rounded-xl transition-all duration-200 shadow-md hover:shadow-lg font-medium flex items-center',
+              (!ocrSelectedBrand || !ocrReturnReason || !ocrProductCode.trim())
+                ? 'bg-gray-400 dark:bg-gray-600 text-gray-200 dark:text-gray-400 cursor-not-allowed'
+                : 'bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:from-green-700 hover:to-emerald-700'
+            ]">
             <span class="flex items-center">
-              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-              </svg>
               Confirm & Add Return
             </span>
           </button>
@@ -366,7 +361,7 @@ interface Props {
   brands: Brand[]
   manufacturers: Manufacturer[]
   graftSizes: GraftSize[]
-  usageLogs?: { id: string; reference: string }[]
+  serverErrors?: Record<string, string>
 }
 
 interface Brand {
@@ -429,25 +424,6 @@ const manufacturerId = ref('')
 const manufacturerSearch = ref('')
 const showManufacturerDropdown = ref(false)
 const filteredManufacturers = ref<Manufacturer[]>([])
-const graftLogId = ref('') // Optional link to usage log
-// Searchable usage log dropdown
-const graftLogSearch = ref('')
-const showGraftLogDropdown = ref(false)
-const filteredGraftLogs = ref<{ id: string; reference: string }[]>([])
-const graftLogDropdownContainer = ref<HTMLElement | null>(null)
-const graftLogDropdownEl = ref<HTMLElement | null>(null)
-
-// Dropdown positioning style
-const graftLogDropdownStyle = computed(() => {
-  if (!graftLogDropdownContainer.value) return {}
-  const rect = graftLogDropdownContainer.value.getBoundingClientRect()
-  return {
-    top: `${rect.bottom + 4}px`,
-    left: `${rect.left}px`,
-    width: `${rect.width}px`,
-    maxHeight: '240px'
-  }
-})
 
 // OCR fields
 const ocrLoading = ref(false)
@@ -470,6 +446,12 @@ const ocrSerialNumber = ref('')
 const ocrProductCode = ref('')
 const ocrExpiryDate = ref('')
 const ocrSize = ref('')
+const ocrValidationErrors = ref<Record<string, string>>({})
+
+// Merge local validation errors with server-side errors
+const mergedValidationErrors = computed(() => {
+  return { ...ocrValidationErrors.value, ...(props.serverErrors || {}) }
+})
 
 const returnReasons = [
   'Expired Product',
@@ -584,50 +566,6 @@ function selectManufacturer(mfr: Manufacturer) {
 }
 
 
-function filterGraftLogs() {
-  const q = graftLogSearch.value.trim().toLowerCase()
-  const source = props.usageLogs || []
-  if (!q) {
-    filteredGraftLogs.value = source.slice(0, 50)
-  } else {
-    filteredGraftLogs.value = source.filter(l =>
-      l.id.toLowerCase().includes(q)
-    ).slice(0, 50)
-  }
-  showGraftLogDropdown.value = true
-  // Removed positioning for now since we're using absolute positioning
-}
-
-function selectGraftLog(log: { id: string; reference: string }) {
-  graftLogId.value = log.id
-  graftLogSearch.value = log.reference
-  showGraftLogDropdown.value = false
-}
-
-// Dropdown positioning function removed - using absolute positioning
-
-function acceptFirstGraftLog() {
-  if (filteredGraftLogs.value.length > 0) {
-    selectGraftLog(filteredGraftLogs.value[0])
-    return
-  }
-
-  const q = graftLogSearch.value.trim()
-  if (!q) return
-
-  const match = (props.usageLogs || []).find(l =>
-    l.id === q || l.reference.toLowerCase() === q.toLowerCase()
-  )
-
-  if (match) {
-    selectGraftLog(match)
-  } else {
-    // fallback: allow entering raw id
-    graftLogId.value = q
-    showGraftLogDropdown.value = false
-  }
-}
-
 async function handleFileUpload(event: Event) {
   const file = (event.target as HTMLInputElement).files?.[0]
   if (!file) return
@@ -719,37 +657,76 @@ function normalizeSerial(raw: string) {
 }
 
 function confirmOcrReturn() {
+  // Clear previous errors
+  ocrValidationErrors.value = {}
+  
+  // Validate required fields
+  const errors: Record<string, string> = {}
+  
+  if (!ocrSelectedBrand.value) {
+    errors.brand = 'Product brand is required'
+  }
+  
+  if (!ocrReturnReason.value) {
+    errors.reason = 'Return reason is required'
+  }
+  
+  if (!ocrProductCode.value.trim()) {
+    errors.productCode = 'Product code is required for file upload entries'
+  }
+  
+  if (!ocrSize.value.trim()) {
+    errors.size = 'Size is required for file upload entries'
+  }
+  
+  if (!ocrSerialNumber.value.trim()) {
+    errors.serialNumber = 'Serial number is required for file upload entries'
+  }
+  
+  // If there are errors, show them and stop
+  if (Object.keys(errors).length > 0) {
+    ocrValidationErrors.value = errors
+    return
+  }
+
   // Find the graft size ID that matches the OCR-extracted size
   const matchingGraftSize = props.graftSizes.find(gs =>
     gs.size === ocrSize.value && gs.brandId === ocrSelectedBrand.value
   )
 
+  if (!matchingGraftSize) {
+    errors.size = `No matching graft size found for "${ocrSize.value}" under the selected brand. Please check the extracted size or select a different brand.`
+    ocrValidationErrors.value = errors
+    return
+  }
+
   const returnData = {
     brandId: ocrSelectedBrand.value,
-    graftSizeId: matchingGraftSize?.id || null,
+    graftSizeId: matchingGraftSize.id,
     reason: ocrReturnReason.value,
     other: ocrReturnReason.value === 'Other' ? ocrOtherReason.value : null,
     graftLogId: null,
     entryType: 'upload',
     ocrSerialNumber: ocrSerialNumber.value || null,
     ocrExpiryDate: ocrExpiryDate.value || null,
-    ocrProductCode: ocrProductCode.value || null
+    ocrProductCode: ocrProductCode.value.trim(),
+    ocrSize: ocrSize.value.trim()
   }
 
   emit('submit-return', returnData)
-  resetForm()
+  // Close the OCR review modal immediately
   showOcrModal.value = false
-  isOpen.value = false
+  // Don't close the outer modal here — let the parent close it on success
+  // or display errors inline on failure
 }
 
 function handleManualSubmit() {
-  if (selectedGraftSize.value && returnReason.value && selectedBrand.value && manufacturerId.value && graftLogId.value) {
+  if (selectedGraftSize.value && returnReason.value && selectedBrand.value && manufacturerId.value) {
     const returnData = {
       brandId: selectedBrand.value,
       graftSizeId: selectedGraftSize.value,
       reason: returnReason.value,
       other: returnReason.value === 'Other' ? otherReturnReason.value : null,
-      graftLogId: graftLogId.value,
       entryType: 'manual'
     }
 
@@ -757,7 +734,7 @@ function handleManualSubmit() {
     resetForm()
     isOpen.value = false
   } else {
-    alert('Please fill in all required fields including the usage log ID.')
+    alert('Please fill in all required fields.')
   }
 }
 
@@ -795,10 +772,6 @@ function resetForm() {
   manufacturerId.value = ''
   manufacturerSearch.value = ''
   showManufacturerDropdown.value = false
-  graftLogId.value = ''
-  graftLogSearch.value = ''
-  showGraftLogDropdown.value = false
-  filteredGraftLogs.value = []
   ocrResult.value = ''
   ocrExtracted.value = null
   ocrOtherReason.value = ''
@@ -806,6 +779,7 @@ function resetForm() {
   ocrProductCode.value = ''
   ocrExpiryDate.value = ''
   ocrSize.value = ''
+  ocrValidationErrors.value = {}
   // Clean up image preview URL
   if (uploadedImagePreview.value) {
     URL.revokeObjectURL(uploadedImagePreview.value)
@@ -825,19 +799,11 @@ watch(isOpen, (newVal) => {
     showManufacturerDropdown.value = false
     showBrandDropdown.value = false
     showGraftSizeDropdown.value = false
-    showGraftLogDropdown.value = false
   } else {
     // Initialize lists when modal opens
     filteredManufacturers.value = props.manufacturers
     filteredBrands.value = props.brands
-    // initialize usage logs suggestions when modal opens
-    filteredGraftLogs.value = (props.usageLogs || []).slice(0, 50)
   }
-})
-
-// Update suggestions if parent provides usage logs after mount
-watch(() => props.usageLogs, (newLogs) => {
-  filteredGraftLogs.value = (newLogs || []).slice(0, 50)
 })
 
 // Watch manufacturer changes to filter brands
@@ -861,7 +827,14 @@ watch(selectedBrand, (newBrandId) => {
     filteredGraftSizes.value = props.graftSizes
   }
 })
-
+// Clear server errors when user edits OCR form fields
+watch([ocrSelectedBrand, ocrReturnReason, ocrProductCode, ocrSerialNumber, ocrExpiryDate, ocrSize, ocrOtherReason], () => {
+  // Clear server errors when user makes changes — they're fixing the issue
+  if (props.serverErrors && Object.keys(props.serverErrors).length > 0) {
+    // Emit is not available for serverErrors (it's a prop), so we just let the parent
+    // handle clearing via the next submit attempt
+  }
+})
 // Close dropdowns when clicking outside
 if (typeof window !== 'undefined') {
   document.addEventListener('click', (e) => {
@@ -871,7 +844,6 @@ if (typeof window !== 'undefined') {
       showManufacturerDropdown.value = false
       showBrandDropdown.value = false
       showGraftSizeDropdown.value = false
-      showGraftLogDropdown.value = false
     }
   })
 }
