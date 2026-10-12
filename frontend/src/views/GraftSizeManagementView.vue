@@ -503,9 +503,8 @@ import {
     ChevronDown, Factory, XCircle, AlertCircle, PackageCheck, CalendarPlus, Clock
 } from 'lucide-vue-next'
 import api from '@/services/api'
-import { toast } from 'vue3-toastify'
-import 'vue3-toastify/dist/index.css'
-import Swal from 'sweetalert2'
+import { confirmAction } from '@/services/alert'
+import { useAppToast } from '@/composables/ui/useAppToast'
 import { formatCurrency } from '@/utils/currency'
 
 interface GraftSize {
@@ -558,6 +557,7 @@ const selectedGraftRequest = ref<GraftRequest | null>(null)
 const showCreateForm = ref(false)
 const showEditForm = ref(false)
 const showStats = ref(false)
+const toast = useAppToast()
 const graftStatus: Record<number, { label: string; classes: string }> = {
     0: { label: 'Active', classes: 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400' },
     1: { label: 'Inactive', classes: 'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400' },
@@ -577,6 +577,19 @@ const serverStats = ref({
 const stats = computed(() => serverStats.value)
 const statsPollingInterval = ref<number | null>(null)
 const isLowStock = (stock: number) => stock < 10 // Threshold: Customize as needed
+
+function getGraftLabel(graft: GraftRequest) {
+    return [graft.brand?.brand_name, graft.size].filter(Boolean).join(' ') || 'Graft size'
+}
+
+function escapeHtml(value: string) {
+    return value
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;')
+}
 
 function addGraftSize() {
     formData.value.graftSizes.push({ size: '', area: null, price: null, stock: 0, id: undefined })
@@ -615,25 +628,20 @@ async function editGraft(graft: GraftRequest) {
 
 async function confirmDelete(graft: GraftRequest) {
     try {
-        const result = await Swal.fire({
-            title: "Deleting Graft Size",
-            text: "You won't be able to revert this!",
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonColor: "#dc2626",
-            cancelButtonColor: "#6b7280",
-            confirmButtonText: "Yes, delete it!"
+        const result = await confirmAction({
+            title: 'Delete Graft Size?',
+            html: `
+                Are you sure you want to delete <b>${escapeHtml(getGraftLabel(graft))}</b>?<br>
+                <span style="color:#d33;">This action cannot be undone!</span>
+            `,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'Cancel'
         })
         if (result.isConfirmed) {
             await api.put(`/management/delete/${graft.graft_size_id}/deletegraftsize`)
-            await Swal.fire({
-                title: "Deleted!",
-                text: "Graft Size has been deleted.",
-                icon: "success",
-                timer: 2000,
-                showConfirmButton: false
-            })
-            toast.success('Graft deleted successfully!')
+            toast.success(`${getGraftLabel(graft)} was permanently deleted.`)
             await getAllGraftRequests()
             await fetchGraftStats()
         }
@@ -645,33 +653,22 @@ async function confirmDelete(graft: GraftRequest) {
 async function confirmToggleStatus(graft: GraftRequest) {
     const isActive = graft.graft_status === 0
     const action = isActive ? 'deactivate' : 'activate'
-    const actionTitle = `${action.charAt(0).toUpperCase() + action.slice(1)} Graft Size`
-    const text = isActive
-        ? 'Are you sure you want to deactivate this graft size? It will no longer be available for orders.'
-        : 'Are you sure you want to activate this graft size? It will be available for orders again.'
+        const text = `Are you sure you want to ${action} this graft size?`
     try {
-        const result = await Swal.fire({
-            title: actionTitle,
+        const result = await confirmAction({
+            title: `${action.charAt(0).toUpperCase() + action.slice(1)} Graft Size?`,
             text: text,
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonColor: isActive ? "#dc2626" : "#16a34a",
-            cancelButtonColor: "#6b7280",
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
             confirmButtonText: `Yes, ${action} it!`,
+            cancelButtonText: 'Cancel'
         })
         if (result.isConfirmed) {
             const endpoint = isActive
                 ? `/management/deactivate/${graft.graft_size_id}/deactivategraftsize`
                 : `/management/activate/${graft.graft_size_id}/activategraftsize`
             await api.put(endpoint)
-            await Swal.fire({
-                title: 'Success!',
-                text: `Graft Size has been ${action}ed.`,
-                icon: 'success',
-                timer: 2000,
-                showConfirmButton: false
-            })
-            toast.success(`Graft ${action}ed successfully!`)
+            toast.success(`${getGraftLabel(graft)} was ${action}d successfully.`)
             await getAllGraftRequests()
             await fetchGraftStats()
         }
@@ -684,32 +681,26 @@ async function confirmArchive(graft: GraftRequest) {
     try {
         const isArchived = graft.graft_status === 2;
         const action = isArchived ? 'unarchive' : 'archive';
-        const actionTitle = `${action.charAt(0).toUpperCase() + action.slice(1)} Graft Size`;
-        const text = isArchived
-            ? 'Are you sure you want to unarchive this graft size? It will be restored to active.'
-            : 'Are you sure you want to archive this graft size? It will no longer appear in active or inactive lists.';
-        const result = await Swal.fire({
-            title: actionTitle,
-            text: text,
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonColor: isArchived ? "#16a34a" : "#ea580c",
-            cancelButtonColor: "#6b7280",
-            confirmButtonText: `Yes, ${action} it!`
+        const result = await confirmAction({
+            title: `${action.charAt(0).toUpperCase() + action.slice(1)} Graft Size?`,
+            text: isArchived
+                ? 'This action will restore the graft size from archived status.'
+                : 'This action will move the graft size to archived status. You can restore it later if needed.',
+            confirmButtonColor: isArchived ? '#3085d6' : '#d33',
+            cancelButtonColor: isArchived ? '#6b7280' : '#3085d6',
+            confirmButtonText: `Yes, ${action} it!`,
+            cancelButtonText: 'Cancel'
         })
         if (result.isConfirmed) {
             const endpoint = isArchived
                 ? `/management/archive/${graft.graft_size_id}/unarchivegraftsize`
                 : `/management/archive/${graft.graft_size_id}/archivegraftsize`
             await api.put(endpoint)
-            await Swal.fire({
-                title: `${action.charAt(0).toUpperCase() + action.slice(1)}ed!`,
-                text: `Graft Size has been ${action}ed.`,
-                icon: 'success',
-                timer: 2000,
-                showConfirmButton: false
-            })
-            toast.success(`Graft ${action}ed successfully!`)
+            if (isArchived) {
+                toast.success(`${getGraftLabel(graft)} was successfully restored from archived status.`)
+            } else {
+                toast.success(`${getGraftLabel(graft)} was archived successfully and can be restored later.`)
+            }
             await getAllGraftRequests()
             await fetchGraftStats()
         }

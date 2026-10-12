@@ -876,7 +876,8 @@ import TableLoader from '@/components/ui/TableLoader.vue'
 import api from '@/services/api'
 import axios from 'axios'
 import { formatCurrency } from '@/utils/currency'
-import Swal from 'sweetalert2'
+import { confirmAction } from '@/services/alert'
+import { useAppToast } from '@/composables/ui/useAppToast'
 import {
   Upload,
   Search,
@@ -1096,23 +1097,18 @@ const hasInvoiceChanges = computed(() => {
 const isAdmin = computed(() => {
   return authStore.currentUser?.user_role === 0
 })
+const toast = useAppToast()
 
 const clinicDisplayName = (clinic: Clinic) => {
   return `${clinic.clinic_name} (${clinic.clinic_code})`
 }
 
 // Methods
-function showAlert(message: string, type: 'success' | 'error' | 'warning' | 'info' = 'info', duration = 2000) {
-  const icon = type === 'success' ? 'success' : type === 'error' ? 'error' : type === 'warning' ? 'warning' : 'info'
-  Swal.fire({
-    text: message,
-    icon: icon,
-    toast: true,
-    position: 'top-end',
-    showConfirmButton: false,
-    timer: duration,
-    timerProgressBar: true
-  })
+function showAlert(message: string, type: 'success' | 'error' | 'warning' | 'info' = 'info', _duration = 2000) {
+  if (type === 'success') return toast.success(message)
+  if (type === 'error') return toast.error(message)
+  if (type === 'warning') return toast.warning(message)
+  return toast.info(message)
 }
 
 async function fetchInvoices() {
@@ -1293,14 +1289,13 @@ function editInvoice(invoice: Invoice) {
 
 async function confirmDeleteInvoice(invoice: Invoice) {
   invoiceToDelete.value = invoice
-  const result = await Swal.fire({
-    title: 'Are you sure?',
-    html: `Are you sure you want to delete invoice <strong>${invoice.invoice_number}</strong>? This action cannot be undone.`,
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonColor: '#3085d6',
-    cancelButtonColor: '#d33',
-    confirmButtonText: 'Yes, delete it!'
+  const result = await confirmAction({
+    title: 'Delete Invoice?',
+    text: `Are you sure you want to delete invoice ${invoice.invoice_number}? This action cannot be undone!`,
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#3085d6',
+    confirmButtonText: 'Yes, delete it!',
+    cancelButtonText: 'Cancel'
   })
 
   if (result.isConfirmed) {

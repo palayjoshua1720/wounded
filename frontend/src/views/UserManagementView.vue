@@ -1050,7 +1050,8 @@ import TableLoader from '@/components/ui/TableLoader.vue'
 import Pagination from '@/components/ui/Pagination.vue'
 import { userService } from '@/services/api'
 import { useAuthStore } from '@/stores/auth'
-import Swal from 'sweetalert2'
+import { confirmAction } from '@/services/alert'
+import { useAppToast } from '@/composables/ui/useAppToast'
 import {
     Plus,
     Search,
@@ -1112,6 +1113,7 @@ const manufacturers = ref<{ id: string; name: string }[]>([])
 
 const users = ref<User[]>([])
 const authStore = useAuthStore()
+const toast = useAppToast()
 
 const searchTerm = ref('')
 const roleFilter = ref('all')
@@ -1149,6 +1151,15 @@ const defaultFormData = {
 }
 
 const formData = ref({ ...defaultFormData });
+
+function escapeHtml(value: string) {
+    return value
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;')
+}
 
 // Global stats from server (not limited by current page)
 const serverStats = ref({
@@ -1242,16 +1253,13 @@ async function handleToggleStatus(userId: string) {
     if (!user) return
 
     const action = user.isActive ? 'deactivate' : 'activate'
-    const actionTitle = user.isActive ? 'Deactivate User' : 'Activate User'
 
-    const result = await Swal.fire({
-        title: actionTitle,
+    const result = await confirmAction({
+        title: `${action.charAt(0).toUpperCase() + action.slice(1)} User?`,
         text: `Are you sure you want to ${action} ${formatFullName(user)}?`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: user.isActive ? '#dc2626' : '#16a34a',
-        cancelButtonColor: '#6b7280',
-        confirmButtonText: `Yes, ${action}!`,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: `Yes, ${action} it!`,
         cancelButtonText: 'Cancel'
     })
 
@@ -1288,23 +1296,10 @@ async function handleToggleStatus(userId: string) {
         // Close modal before showing success
         selectedUser.value = null
 
-        // Success notification
-        await Swal.fire({
-            title: 'Success!',
-            text: `User has been ${action}d successfully.`,
-            icon: 'success',
-            confirmButtonColor: '#2563eb',
-            timer: 2000,
-            showConfirmButton: false
-        })
+        toast.success(`${formatFullName(mapped)} was ${action}d successfully.`)
     } catch (err) {
         console.error('Failed to toggle user status', err)
-        await Swal.fire({
-            title: 'Error!',
-            text: 'Failed to update user status. Please try again.',
-            icon: 'error',
-            confirmButtonColor: '#2563eb'
-        })
+        toast.error(`Error trying to ${action} user`)
     }
 }
 
@@ -1312,13 +1307,11 @@ async function handleArchiveUser(userId: string) {
     const user = users.value.find(u => u.id === userId)
     if (!user) return
 
-    const result = await Swal.fire({
-        title: 'Archive User',
-        text: `Are you sure you want to archive ${formatFullName(user)}? This user will be moved to archived status.`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#ea580c',
-        cancelButtonColor: '#6b7280',
+    const result = await confirmAction({
+        title: 'Archive User?',
+        text: 'This action will move the user to archived status. You can restore it later if needed.',
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
         confirmButtonText: 'Yes, archive it!',
         cancelButtonText: 'Cancel'
     })
@@ -1353,23 +1346,10 @@ async function handleArchiveUser(userId: string) {
         // Close modal before showing success
         selectedUser.value = null
 
-        // Success notification
-        await Swal.fire({
-            title: 'Archived!',
-            text: 'User has been archived successfully.',
-            icon: 'success',
-            confirmButtonColor: '#2563eb',
-            timer: 2000,
-            showConfirmButton: false
-        })
+        toast.success(`${formatFullName(mapped)} was archived successfully and can be restored later.`)
     } catch (err) {
         console.error('Failed to archive user', err)
-        await Swal.fire({
-            title: 'Error!',
-            text: 'Failed to archive user. Please try again.',
-            icon: 'error',
-            confirmButtonColor: '#2563eb'
-        })
+        toast.error('Error trying to archive user')
     }
 }
 
@@ -1377,13 +1357,14 @@ async function handleDeleteUser(userId: string) {
     const user = users.value.find(u => u.id === userId)
     if (!user) return
 
-    const result = await Swal.fire({
-        title: 'Delete User',
-        html: `Are you sure you want to delete <strong>${formatFullName(user)}</strong>?<br><span style="color: #dc2626;">This action cannot be undone!</span>`,
-        icon: 'error',
-        showCancelButton: true,
-        confirmButtonColor: '#dc2626',
-        cancelButtonColor: '#6b7280',
+    const result = await confirmAction({
+        title: 'Delete User?',
+        html: `
+            Are you sure you want to delete <b>${escapeHtml(formatFullName(user))}</b>?<br>
+            <span style="color:#d33;">This action cannot be undone!</span>
+        `,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
         confirmButtonText: 'Yes, delete it!',
         cancelButtonText: 'Cancel'
     })
@@ -1398,23 +1379,10 @@ async function handleDeleteUser(userId: string) {
         // Close modal before showing success
         selectedUser.value = null
 
-        // Success notification
-        await Swal.fire({
-            title: 'Deleted!',
-            text: 'User has been deleted successfully.',
-            icon: 'success',
-            confirmButtonColor: '#2563eb',
-            timer: 2000,
-            showConfirmButton: false
-        })
+        toast.success(`${formatFullName(user)} was permanently deleted.`)
     } catch (err) {
         console.error('Failed to delete user', err)
-        await Swal.fire({
-            title: 'Error!',
-            text: 'Failed to delete user. Please try again.',
-            icon: 'error',
-            confirmButtonColor: '#2563eb'
-        })
+        toast.error('Error trying to delete user')
     }
 }
 
@@ -1439,12 +1407,7 @@ async function handleSubmitForm() {
     if (showCreateForm.value) {
         // Validate password requirements
         if (passwordValidationError.value) {
-            await Swal.fire({
-                title: 'Invalid Password',
-                text: 'Please ensure your password meets all the requirements.',
-                icon: 'error',
-                confirmButtonColor: '#2563eb'
-            });
+            toast.error('Please ensure your password meets all the requirements.', 'Invalid password')
             return;
         }
 
@@ -1488,19 +1451,7 @@ async function handleSubmitForm() {
             // Close modal before showing success
             closeForm()
 
-            // Success notification
-            await Swal.fire({
-                title: 'User Created Successfully!',
-                html: `
-                    <p class="text-gray-700 dark:text-gray-300 mb-2">The user account has been created.</p>
-                    <p class="text-sm text-gray-600 dark:text-gray-400">A welcome email with login credentials has been sent to:</p>
-                    <p class="text-blue-600 dark:text-blue-400 font-semibold mt-1">${data.user.email}</p>
-                `,
-                icon: 'success',
-                confirmButtonColor: '#2563eb',
-                timer: 4000,
-                showConfirmButton: true
-            })
+            toast.success(`${formatFullName(newUser)} was created successfully. Welcome credentials were sent to ${newUser.email}.`)
         } catch (err: any) {
             console.error('Failed to create user', err)
 
@@ -1508,26 +1459,15 @@ async function handleSubmitForm() {
             const errorMessage = err.response?.data?.message || 'Failed to create user. Please try again.'
             const errorCode = err.response?.data?.error
 
-            let title = 'Error!'
-            let icon: 'error' | 'warning' = 'error'
-
             if (errorCode === 'manufacturer_account_exists') {
-                title = 'Manufacturer Account Already Exists'
-                icon = 'warning'
+                toast.warning(errorMessage, 'Manufacturer account already exists')
             } else if (errorCode === 'clinic_admin_exists') {
-                title = 'Clinic Admin Already Exists'
-                icon = 'warning'
+                toast.warning(errorMessage, 'Clinic admin already exists')
             } else if (errorCode === 'unauthorized_role_creation') {
-                title = 'Unauthorized Role Creation'
-                icon = 'error'
+                toast.error(errorMessage, 'Unauthorized role creation')
+            } else {
+                toast.error(errorMessage)
             }
-
-            await Swal.fire({
-                title: title,
-                text: errorMessage,
-                icon: icon,
-                confirmButtonColor: '#2563eb'
-            })
         } finally {
             isSubmitting.value = false
         }
@@ -1571,15 +1511,7 @@ async function handleSubmitForm() {
             // Close modal before showing success
             closeForm()
 
-            // Success notification
-            await Swal.fire({
-                title: 'Success!',
-                text: 'User has been updated successfully.',
-                icon: 'success',
-                confirmButtonColor: '#2563eb',
-                timer: 2000,
-                showConfirmButton: false
-            })
+            toast.success(`${formatFullName(updated)} details were updated successfully.`)
         } catch (err: any) {
             console.error('Failed to update user', err)
 
@@ -1587,23 +1519,13 @@ async function handleSubmitForm() {
             const errorMessage = err.response?.data?.message || 'Failed to update user. Please try again.'
             const errorCode = err.response?.data?.error
 
-            let title = 'Error!'
-            let icon: 'error' | 'warning' = 'error'
-
             if (errorCode === 'manufacturer_account_exists') {
-                title = 'Manufacturer Account Already Exists'
-                icon = 'warning'
+                toast.warning(errorMessage, 'Manufacturer account already exists')
             } else if (errorCode === 'clinic_admin_exists') {
-                title = 'Clinic Admin Already Exists'
-                icon = 'warning'
+                toast.warning(errorMessage, 'Clinic admin already exists')
+            } else {
+                toast.error(errorMessage)
             }
-
-            await Swal.fire({
-                title: title,
-                text: errorMessage,
-                icon: icon,
-                confirmButtonColor: '#2563eb'
-            })
         } finally {
             isSubmitting.value = false
         }

@@ -988,10 +988,12 @@ import {
 	Download, 
 } from 'lucide-vue-next';
 import api from '@/services/api'
-import { toast } from 'vue3-toastify'
-import 'vue3-toastify/dist/index.css'
+import { confirmAction } from '@/services/alert'
+import { useAppToast } from '@/composables/ui/useAppToast'
 import Swal from 'sweetalert2'
 import mammoth from 'mammoth'
+
+const toast = useAppToast()
 
 interface Order {
 	order_id: number;
@@ -1695,14 +1697,7 @@ async function handleCreateOrder() {
 
         message += '</div>'
 
-        await Swal.fire({
-            title: 'Cannot Submit Order',
-            html: message,
-            icon: 'error',
-            confirmButtonText: 'OK',
-            confirmButtonColor: '#dc2626',
-            allowOutsideClick: false
-        })
+		toast.error(stockIssues.map(issue => `${issue.sourceType === 'product' ? 'Product' : 'Item'} #${issue.itemIndex}: ${issue.message || `Requested ${issue.requested}, available ${issue.available}`}`).join('\n'), 'Cannot submit order')
 
         return
     }
@@ -1730,14 +1725,12 @@ async function handleCreateOrder() {
             </p>
         </div>`
 
-        const result = await Swal.fire({
+		const result = await confirmAction({
             title: 'MUE Limit Exceeded',
             html: html,
-            icon: 'warning',
-            showCancelButton: true,
             confirmButtonText: 'Submit Anyway',
             cancelButtonText: 'Review Order',
-            confirmButtonColor: '#f59e0b',
+			confirmButtonColor: '#d33',
             cancelButtonColor: '#6b7280',
             reverseButtons: true
         })
@@ -2377,13 +2370,7 @@ async function addNewOrder(){
 	}
 
 	if (selectedOrderForEdit.value?.order_status === 2) {
-		Swal.fire({
-			title: 'Update Failed',
-			text: 'Cannot update order that has been shipped or delivered.',
-			icon: 'error',
-			confirmButtonText: 'OK',
-			confirmButtonColor: '#2563eb'
-		});
+		toast.error('Cannot update an order that has been shipped or delivered.', 'Update failed')
 		return
 	} else {
 		Swal.fire({
@@ -2445,14 +2432,13 @@ async function addNewOrder(){
 }
 
 async function confirmDelete(order: Order){
-	const result = await Swal.fire({
-		title: "Are you sure?",
-		text: "This action cannot be undone.",
-		icon: "warning",
-		showCancelButton: true,
-		confirmButtonColor: "#3085d6",
-		cancelButtonColor: "#d33",
-		confirmButtonText: "Yes, delete it!"
+	const result = await confirmAction({
+		title: 'Delete Order?',
+		text: `Are you sure you want to delete order ${order.order_code || order.order_number || order.order_id}? This action cannot be undone!`,
+		confirmButtonColor: '#d33',
+		cancelButtonColor: '#3085d6',
+		confirmButtonText: 'Yes, delete it!',
+		cancelButtonText: 'Cancel'
 	});
 	
 	try {
@@ -2480,14 +2466,13 @@ async function confirmDelete(order: Order){
 async function updateOrderStatusNew(orderOrId: Order | number, newStatus: OrderStatus) {
 	const order_id = typeof orderOrId === 'number' ? orderOrId : orderOrId.order_id;
 
-	const result = await Swal.fire({
-		title: "Are you sure?",
-		text: "This action cannot be undone.",
-		icon: "warning",
-		showCancelButton: true,
-		confirmButtonColor: "#3085d6",
-		cancelButtonColor: "#d33",
-		confirmButtonText: "Yes, confirm!"
+	const result = await confirmAction({
+		title: 'Update Order Status?',
+		text: `Are you sure you want to update order ${order_id} to ${newStatus}?`,
+		confirmButtonColor: '#d33',
+		cancelButtonColor: '#3085d6',
+		confirmButtonText: 'Yes, confirm!',
+		cancelButtonText: 'Cancel'
 	});
 
 	if (!result.isConfirmed) return;
@@ -2521,14 +2506,13 @@ async function updateOrderStatusNew(orderOrId: Order | number, newStatus: OrderS
 async function applyOverride() {	
 	if (!overrideStatus.value) return;
 
-	const result = await Swal.fire({
+	const result = await confirmAction({
 		title: "Override Status?",
 		text: `Set status to "${overrideStatus.value}"`,
-		icon: "warning",
-		showCancelButton: true,
 		confirmButtonText: "Yes, override",
 		cancelButtonText: "Cancel",
-		confirmButtonColor: "#d33"
+		confirmButtonColor: "#d33",
+		cancelButtonColor: "#3085d6"
 	});
 
 	if (!result.isConfirmed) return;
@@ -2562,14 +2546,13 @@ async function sendFollowUp(order: Order){
 	console.log('order: ', order);
 	
 	try {
-		const result = await Swal.fire({
+		const result = await confirmAction({
 			title: "Send Follow-Up Email?",
 			text: `This will notify ${order?.ivr?.manufacturer?.order_email || order?.manufacturer_name} again about this order.`,
-			icon: "warning",
-			showCancelButton: true,
 			confirmButtonColor: "#4f46e5",
-			cancelButtonColor: "#d33",
-			confirmButtonText: "Send Follow-Up"
+			cancelButtonColor: "#6b7280",
+			confirmButtonText: "Send Follow-Up",
+			cancelButtonText: "Cancel"
 		})
 
 		if (!result.isConfirmed) return
@@ -2669,13 +2652,11 @@ watch(
 
 		if (newVal === oldVal) return
 
-		const result = await Swal.fire({
+		const result = await confirmAction({
 			title: 'Change IVR?',
 			text: 'Changing the IVR will reset all order items. Do you want to continue?',
-			icon: 'warning',
-			showCancelButton: true,
 			confirmButtonColor: '#3085d6',
-			cancelButtonColor: '#d33',
+			cancelButtonColor: '#6b7280',
 			confirmButtonText: 'Yes, reset items',
 			cancelButtonText: 'Cancel'
 		})
@@ -2689,10 +2670,7 @@ watch(
 				? String(previousIvrId.value)
 				: ''
 				
-			Swal.close()
 		}
-
-		Swal.close()
 
 		previousIvrId.value = formData.value.ivrId
 	}

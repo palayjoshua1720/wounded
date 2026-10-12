@@ -627,7 +627,8 @@ import TableLoader from '@/components/ui/TableLoader.vue'
 import Pagination from '@/components/ui/Pagination.vue'
 import { patientService } from '@/services/api'
 import { useAuthStore } from '@/stores/auth'
-import Swal from 'sweetalert2'
+import { confirmAction } from '@/services/alert'
+import { useAppToast } from '@/composables/ui/useAppToast'
 import {
     Plus,
     Search,
@@ -670,6 +671,7 @@ interface Patient {
 
 const patients = ref<Patient[]>([])
 const authStore = useAuthStore()
+const toast = useAppToast()
 
 const searchTerm = ref('')
 const tableLoader = ref(false)
@@ -690,6 +692,15 @@ const defaultFormData = {
 }
 
 const formData = ref({ ...defaultFormData })
+
+function escapeHtml(value: string) {
+    return value
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;')
+}
 
 // Clinics list for admin dropdown
 const clinics = ref<{ id: number; name: string }[]>([])
@@ -865,13 +876,14 @@ async function handleDeletePatient(patientId: number) {
     const patient = patients.value.find(p => p.patient_id === patientId)
     if (!patient) return
 
-    const result = await Swal.fire({
-        title: 'Delete Patient',
-        html: `Are you sure you want to delete <strong>${patient.patient_name}</strong>?<br><span style="color: #dc2626;">This action cannot be undone!</span>`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#dc2626',
-        cancelButtonColor: '#6b7280',
+    const result = await confirmAction({
+        title: 'Delete Patient?',
+        html: `
+            Are you sure you want to delete <b>${escapeHtml(patient.patient_name)}</b>?<br>
+            <span style="color:#d33;">This action cannot be undone!</span>
+        `,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
         confirmButtonText: 'Yes, delete it!',
         cancelButtonText: 'Cancel'
     })
@@ -883,22 +895,10 @@ async function handleDeletePatient(patientId: number) {
         patients.value = patients.value.filter(p => p.patient_id !== patientId)
         await fetchPatientStats()
 
-        await Swal.fire({
-            title: 'Deleted!',
-            text: 'Patient has been deleted successfully.',
-            icon: 'success',
-            confirmButtonColor: '#2563eb',
-            timer: 2000,
-            showConfirmButton: false
-        })
+        toast.success(`${patient.patient_name} was permanently deleted.`)
     } catch (err) {
         console.error('Failed to delete patient', err)
-        await Swal.fire({
-            title: 'Error!',
-            text: 'Failed to delete patient. Please try again.',
-            icon: 'error',
-            confirmButtonColor: '#2563eb'
-        })
+        toast.error('Error trying to delete patient')
     }
 }
 
@@ -1006,25 +1006,13 @@ async function handleSubmitForm() {
             patients.value.unshift(newPatient)
             await fetchPatientStats()
 
-            await Swal.fire({
-                title: 'Patient Added Successfully!',
-                text: `${newPatient.patient_name} has been added to the system.`,
-                icon: 'success',
-                confirmButtonColor: '#2563eb',
-                timer: 2000,
-                showConfirmButton: false
-            })
+            toast.success(`${newPatient.patient_name} was created successfully.`)
 
             closeForm()
         } catch (err: any) {
             console.error('Failed to create patient', err)
             const errorMessage = err.response?.data?.message || 'Failed to add patient. Please try again.'
-            await Swal.fire({
-                title: 'Error!',
-                text: errorMessage,
-                icon: 'error',
-                confirmButtonColor: '#2563eb'
-            })
+            toast.error(errorMessage)
         }
     } else if (showEditForm.value && selectedPatient.value) {
         try {
@@ -1066,25 +1054,13 @@ async function handleSubmitForm() {
             if (idx !== -1) patients.value[idx] = updated
             await fetchPatientStats()
 
-            await Swal.fire({
-                title: 'Success!',
-                text: 'Patient has been updated successfully.',
-                icon: 'success',
-                confirmButtonColor: '#2563eb',
-                timer: 2000,
-                showConfirmButton: false
-            })
+            toast.success(`${updated.patient_name} details were updated successfully.`)
 
             closeForm()
         } catch (err: any) {
             console.error('Failed to update patient', err)
             const errorMessage = err.response?.data?.message || 'Failed to update patient. Please try again.'
-            await Swal.fire({
-                title: 'Error!',
-                text: errorMessage,
-                icon: 'error',
-                confirmButtonColor: '#2563eb'
-            })
+            toast.error(errorMessage)
         }
     }
 }

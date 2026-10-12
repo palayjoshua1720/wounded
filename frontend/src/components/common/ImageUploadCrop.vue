@@ -53,99 +53,158 @@
                 </button>
             </div>
         </div>
+    </div>
 
-        <!-- Cropper Modal -->
-        <BaseModal v-model="showCropModal" :title="modalTitle || 'Crop Image'" max-width="520px">
-            <div class="p-6 space-y-6">
-                <!-- Instructions -->
-                <div class="text-center">
-                    <p class="text-sm text-gray-600 dark:text-gray-400">{{ modalInstructions || defaultInstructions }}
-                    </p>
-                </div>
+    <!-- Cropper Modal - Using teleport to render outside parent modal hierarchy -->
+    <Teleport to="body">
+        <transition name="fade">
+            <div v-if="showCropModal"
+                class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center overflow-y-auto overflow-x-hidden">
+                <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity" @click="cancelCrop"></div>
+                <div class="relative rounded-t-2xl sm:rounded-xl bg-white dark:bg-gray-800 shadow-xl border border-gray-200 dark:border-gray-700 sm:mx-4 my-0 sm:my-8 overflow-hidden w-full max-w-4xl max-h-[90vh] flex flex-col"
+                    style="contain: layout style;">
+                    <!-- Header -->
+                    <div
+                        class="flex items-center justify-between p-4 border-b flex-shrink-0 bg-white dark:bg-gray-800 sticky top-0 z-10">
+                        <h2 class="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white pr-4 line-clamp-1">
+                            {{ modalTitle || 'Crop Image' }}
+                        </h2>
+                        <button @click="cancelCrop"
+                            class="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 text-2xl leading-none flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                            &times;
+                        </button>
+                    </div>
+                    <!-- Content -->
+                    <div class="p-4 sm:p-6 flex-1 overflow-y-auto overflow-x-hidden">
+                        <div class="space-y-6">
+                            <!-- Instructions -->
+                            <div class="text-center">
+                                <p class="text-sm text-gray-600 dark:text-gray-400">
+                                    {{ modalInstructions || defaultInstructions }}
+                                </p>
+                            </div>
 
-                <!-- Crop Area Container -->
-                <div
-                    class="relative mx-auto w-full max-w-[320px] aspect-square bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded-2xl overflow-hidden shadow-lg border border-gray-200 dark:border-gray-700">
-                    <canvas ref="cropCanvas" @mousedown="startPan" @mousemove="handlePan" @mouseup="endPan"
-                        @mouseleave="endPan" @wheel="handleZoom" @touchstart="startTouchPan" @touchmove="handleTouchPan"
-                        @touchend="endTouchPan" @touchcancel="endTouchPan"
-                        class="absolute inset-0 w-full h-full touch-none cursor-grab active:cursor-grabbing"
-                        :class="{ 'cursor-grabbing': isPanning }" />
+                            <!-- Crop Area Container -->
+                            <div
+                                class="relative mx-auto w-full max-w-[320px] aspect-square bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded-2xl overflow-hidden shadow-lg border border-gray-200 dark:border-gray-700">
+                                <canvas ref="cropCanvas" @mousedown="startPan" @mousemove="handlePan" @mouseup="endPan"
+                                    @mouseleave="endPan" @wheel="handleZoom" @touchstart="startTouchPan"
+                                    @touchmove="handleTouchPan" @touchend="endTouchPan" @touchcancel="endTouchPan"
+                                    class="absolute inset-0 w-full h-full touch-none cursor-grab active:cursor-grabbing select-none transition-transform duration-150"
+                                    :class="{ 'cursor-grabbing': isPanning }"></canvas>
 
-                    <!-- Circular Overlay -->
-                    <div class="absolute inset-0 pointer-events-none" v-if="cropShape !== 'rectangle'">
-                        <div class="absolute inset-0 bg-black/30"></div>
-                        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4/5 h-4/5">
-                            <div class="absolute inset-0 border-2 border-white/80 rounded-full"></div>
+                                <!-- Rounded Square Crop Overlay with Circular Guide -->
+                                <div class="absolute inset-0 pointer-events-none" v-if="cropShape !== 'rectangle'">
+                                    <div class="absolute inset-0 bg-black/30 backdrop-blur-[1px]"></div>
+                                    <div
+                                        class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4/5 h-4/5">
+                                        <div
+                                            class="absolute inset-0 border-2 border-white/80 rounded-2xl shadow-[0_0_0_1px_rgba(255,255,255,0.3),0_0_20px_rgba(0,0,0,0.2)]">
+                                        </div>
+                                        <div
+                                            class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[85%] h-[85%] border border-dashed border-white/40 rounded-full">
+                                        </div>
+                                        <div
+                                            class="absolute -top-1 -left-1 w-3 h-3 border-t-2 border-l-2 border-white rounded-tl-lg">
+                                        </div>
+                                        <div
+                                            class="absolute -top-1 -right-1 w-3 h-3 border-t-2 border-r-2 border-white rounded-tr-lg">
+                                        </div>
+                                        <div
+                                            class="absolute -bottom-1 -left-1 w-3 h-3 border-b-2 border-l-2 border-white rounded-bl-lg">
+                                        </div>
+                                        <div
+                                            class="absolute -bottom-1 -right-1 w-3 h-3 border-b-2 border-r-2 border-white rounded-br-lg">
+                                        </div>
+                                    </div>
+                                    <div class="absolute bottom-4 left-1/2 -translate-x-1/2">
+                                        <div
+                                            class="flex items-center gap-2 px-3 py-1.5 bg-black/60 backdrop-blur-sm rounded-full">
+                                            <FoldVertical class="w-3 h-3 text-white/80"></FoldVertical>
+                                            <span class="text-xs text-white/80 font-medium">Drag to move • Scroll to
+                                                zoom</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Controls Section -->
+                            <div class="space-y-6">
+                                <!-- Zoom Controls -->
+                                <div class="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <label class="text-sm font-semibold text-gray-700 dark:text-gray-300">Zoom
+                                            Level</label>
+                                        <span
+                                            class="text-sm font-mono font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded">
+                                            {{ Math.round(scale * 100) }}%
+                                        </span>
+                                    </div>
+
+                                    <div class="flex items-center gap-4">
+                                        <button @click="zoomOut" :disabled="scale <= (minScale || 0.5)"
+                                            class="flex items-center justify-center w-10 h-10 rounded-xl bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200 shadow-sm hover:shadow">
+                                            <Minus class="w-5 h-5 text-gray-600 dark:text-gray-400"></Minus>
+                                        </button>
+                                        <span class="text-xs text-gray-500">{{ ((minScale || 0.5) * 100).toFixed(0)
+                                            }}%</span>
+                                        <div class="flex-1 relative">
+                                            <input type="range" :min="minScale || 0.5" :max="maxScale || 3" :step="0.1"
+                                                v-model.number="scale" @input="drawCanvas"
+                                                class="w-full h-2 bg-gradient-to-r from-blue-500 via-blue-400 to-blue-300 rounded-lg appearance-none cursor-pointer slider-thumb">
+                                        </div>
+                                        <span class="text-xs text-gray-500">{{ ((maxScale || 3) * 100).toFixed(0)
+                                            }}%</span>
+
+                                        <button @click="zoomIn" :disabled="scale >= (maxScale || 3)"
+                                            class="flex items-center justify-center w-10 h-10 rounded-xl bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200 shadow-sm hover:shadow">
+                                            <Plus class="w-5 h-5 text-gray-600 dark:text-gray-400"></Plus>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Action Buttons -->
+                                <div class="flex flex-wrap gap-3 justify-center">
+                                    <button @click="resetPosition"
+                                        class="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-600 transition-all duration-200 shadow-sm hover:shadow">
+                                        <RefreshCcw class="w-4 h-4"></RefreshCcw>
+                                        Reset View
+                                    </button>
+
+                                    <button @click="selectNewImage"
+                                        class="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-all duration-200 shadow-sm hover:shadow">
+                                        <Image class="w-4 h-4"></Image>
+                                        Change Image
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Actions Footer -->
+                    <div
+                        class="border-t border-gray-100 dark:border-gray-700 flex-shrink-0 bg-white dark:bg-gray-800 p-3">
+                        <div class="flex justify-end gap-3">
+                            <button @click="cancelCrop"
+                                class="px-6 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-600 transition-all duration-200 shadow-sm hover:shadow">
+                                Cancel
+                            </button>
+                            <button @click="confirmCrop"
+                                class="flex items-center gap-2 px-6 py-2.5 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl hover:from-blue-700 hover:to-indigo-700 shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-[1.02]">
+                                <Check class="w-4 h-4"></Check>
+                                Apply Crop
+                            </button>
                         </div>
                     </div>
                 </div>
-
-                <!-- Zoom Controls -->
-                <div class="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4">
-                    <div class="flex items-center justify-between mb-3">
-                        <label class="text-sm font-semibold text-gray-700 dark:text-gray-300">Zoom Level</label>
-                        <span
-                            class="text-sm font-mono font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded">
-                            {{ Math.round(scale * 100) }}%
-                        </span>
-                    </div>
-
-                    <div class="flex items-center gap-4">
-                        <button @click="zoomOut" :disabled="scale <= (minScale || 0.5)"
-                            class="flex items-center justify-center w-10 h-10 rounded-xl bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed">
-                            <Minus class="w-5 h-5 text-gray-600 dark:text-gray-400" />
-                        </button>
-                        <span class="text-xs text-gray-500">{{ ((minScale || 0.5) * 100).toFixed(0) }}%</span>
-                        <input type="range" :min="minScale || 0.5" :max="maxScale || 3" :step="0.1"
-                            v-model.number="scale" @input="drawCanvas"
-                            class="flex-1 h-2 bg-gradient-to-r from-blue-500 via-blue-400 to-blue-300 rounded-lg appearance-none cursor-pointer" />
-                        <span class="text-xs text-gray-500">{{ ((maxScale || 3) * 100).toFixed(0) }}%</span>
-                        <button @click="zoomIn" :disabled="scale >= (maxScale || 3)"
-                            class="flex items-center justify-center w-10 h-10 rounded-xl bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed">
-                            <Plus class="w-5 h-5 text-gray-600 dark:text-gray-400" />
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Action Buttons -->
-                <div class="flex flex-wrap gap-3 justify-center">
-                    <button @click="resetPosition"
-                        class="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-600">
-                        <RefreshCcw class="w-4 h-4" />
-                        Reset View
-                    </button>
-
-                    <button @click="selectNewImage"
-                        class="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl hover:bg-blue-100">
-                        <Image class="w-4 h-4" />
-                        Change Image
-                    </button>
-                </div>
             </div>
-
-            <template #actions>
-                <div class="flex justify-end gap-3 px-6 pb-6 border-t border-gray-200 dark:border-gray-700 pt-6">
-                    <button @click="cancelCrop"
-                        class="px-6 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-600">
-                        Cancel
-                    </button>
-                    <button @click="confirmCrop"
-                        class="flex items-center gap-2 px-6 py-2.5 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl hover:from-blue-700 hover:to-indigo-700">
-                        <Check class="w-4 h-4" />
-                        Apply Crop
-                    </button>
-                </div>
-            </template>
-        </BaseModal>
-    </div>
+        </transition>
+    </Teleport>
 </template>
 
 <script setup lang="ts">
 import { ref, watch, nextTick, onUnmounted } from 'vue'
-import { Image, UploadCloud, X, RefreshCcw, Plus, Minus, Check } from 'lucide-vue-next'
-import { useToast } from 'vue-toastification'
-import BaseModal from './BaseModal.vue'
+import { Image, UploadCloud, X, RefreshCcw, Plus, Minus, Check, FoldVertical } from 'lucide-vue-next'
+import { useAppToast } from '@/composables/ui/useAppToast'
 
 // Props
 const props = defineProps<{
@@ -169,10 +228,12 @@ const emit = defineEmits<{
     (e: 'update:modelValue', file: File | null): void
     (e: 'update:modelPreviewUrl', url: string | null): void
     (e: 'update:modelRemoveFlag', flag: boolean): void
+    (e: 'cropper-opening'): void
+    (e: 'cropper-closing'): void
 }>()
 
 // Toast for error messages
-const toast = useToast()
+const toast = useAppToast()
 
 // Local state
 const uniqueId = Math.random().toString(36).substring(2, 9)
@@ -249,42 +310,49 @@ function drawCanvas() {
     if (!ctx) return
 
     const rect = canvas.getBoundingClientRect()
-    let width = Math.floor(rect.width)
-    let height = Math.floor(rect.height)
+    // Use the smaller dimension to ensure square canvas
+    const size = Math.floor(Math.min(rect.width, rect.height))
 
-    canvas.width = width
-    canvas.height = height
+    canvas.width = size
+    canvas.height = size
 
-    ctx.clearRect(0, 0, width, height)
+    ctx.clearRect(0, 0, size, size)
     ctx.fillStyle = '#ffffff'
-    ctx.fillRect(0, 0, width, height)
+    ctx.fillRect(0, 0, size, size)
 
     const img = selectedImage.value
     const imgAspect = img.naturalWidth / img.naturalHeight
-    const canvasAspect = width / height
+    const canvasAspect = 1 // Always square
 
     let drawWidth: number, drawHeight: number
     if (imgAspect > canvasAspect) {
-        drawWidth = width
-        drawHeight = width / imgAspect
+        drawWidth = size
+        drawHeight = size / imgAspect
     } else {
-        drawHeight = height
-        drawWidth = height * imgAspect
+        drawHeight = size
+        drawWidth = size * imgAspect
     }
 
     drawWidth *= scale.value
     drawHeight *= scale.value
 
-    const x = (width - drawWidth) / 2 + offsetX.value
-    const y = (height - drawHeight) / 2 + offsetY.value
+    const x = (size - drawWidth) / 2 + offsetX.value
+    const y = (size - drawHeight) / 2 + offsetY.value
 
     ctx.save()
     if (props.cropShape !== 'rectangle') {
-        const centerX = width / 2
-        const centerY = height / 2
-        const radius = Math.min(width, height) / 2
+        const r = Math.min(size, size) * 0.05
         ctx.beginPath()
-        ctx.arc(centerX, centerY, radius, 0, Math.PI * 2)
+        ctx.moveTo(r, 0)
+        ctx.lineTo(size - r, 0)
+        ctx.quadraticCurveTo(size, 0, size, r)
+        ctx.lineTo(size, size - r)
+        ctx.quadraticCurveTo(size, size, size - r, size)
+        ctx.lineTo(r, size)
+        ctx.quadraticCurveTo(0, size, 0, size - r)
+        ctx.lineTo(0, r)
+        ctx.quadraticCurveTo(0, 0, r, 0)
+        ctx.closePath()
         ctx.clip()
     }
 
@@ -480,10 +548,15 @@ function revokeObjectUrl() {
     objectUrl.value = null
 }
 
-// Watch for modal open
+// Watch for modal open/close to emit events for parent modal visibility
 watch(showCropModal, (val) => {
     if (val) {
+        // Cropper is opening - emit event to parent modal
+        emit('cropper-opening')
         nextTick(() => drawCanvas())
+    } else {
+        // Cropper is closing - emit event to restore parent modal
+        emit('cropper-closing')
     }
 })
 
@@ -538,5 +611,15 @@ input[type="range"]::-moz-range-track {
     cursor: pointer;
     background: linear-gradient(to right, #3b82f6, #60a5fa, #93c5fd);
     border-radius: 2px;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+    transition: opacity 0.2s;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+    opacity: 0;
 }
 </style>

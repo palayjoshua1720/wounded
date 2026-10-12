@@ -17,22 +17,20 @@
                             {{ brand.brandName }}
                         </h3>
                         <span :class="[
-                            'inline-flex px-2 py-1 text-xs rounded-full w-fit',
-                            brand.brandStatus === 0
-                                ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
-                                : brand.brandStatus === 1
-                                    ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
-                                    : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'
+                            'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium w-fit transition-all duration-200',
+                            getStatusClasses(brand.brandStatus)
                         ]">
-                            {{ brand.brandStatus === 0 ? 'Active' : brand.brandStatus === 1 ? 'Inactive' :
-                                'Archived' }}
+                            <component :is="getStatusIcon(brand.brandStatus)" class="w-2.5 h-2.5 mr-1" />
+                            {{ getStatusLabel(brand.brandStatus) }}
                         </span>
                     </div>
                 </div>
             </div>
 
-            <!-- Quick Actions using ActionGroup component -->
-            <ActionGroup :actions="brandActions" />
+            <!-- Quick Actions using ActionGroup component - visible only on sm+ screens -->
+            <div class="hidden sm:block shrink-0">
+                <ActionGroup :actions="brandActions" />
+            </div>
 
         </div>
 
@@ -65,6 +63,14 @@
             </div>
             <p v-else class="text-xs text-gray-500">No sizes available</p>
         </div>
+
+        <!-- Mobile Card Actions - visible only on small screens -->
+        <div
+            class="sm:hidden pt-3 mt-3 border-t border-gray-200 dark:border-gray-700 -mx-6 -mb-6 px-6 pb-6 rounded-b-lg bg-gray-50 dark:bg-gray-700/30">
+            <div class="flex items-center justify-center gap-1.5 flex-wrap">
+                <ActionGroup :actions="brandActions" />
+            </div>
+        </div>
     </div>
 </template>
 
@@ -73,6 +79,7 @@ import { computed } from 'vue'
 import { Package, Eye, SquarePen, Trash2, Archive, ArchiveRestore, CircleCheck, CircleX, Factory, TriangleAlert } from 'lucide-vue-next'
 import ActionGroup from '@/components/ui/ActionGroup.vue'
 import type { ActionConfig } from '@/components/ui/ActionGroup.vue'
+import { useProductStatus } from '@/composables/products/useProductStatus'
 
 // Types
 export interface GraftSize {
@@ -112,48 +119,71 @@ const emit = defineEmits<{
     'edit': [brand: Brand]
     'toggle': [id: number, status: number]
     'archive': [id: number]
+    'unarchive': [id: number]
     'delete': [brand: Brand]
 }>()
 
+// Use the shared product status composable for consistent styling
+const { getStatusClasses, getStatusIcon, getStatusLabel } = useProductStatus()
+
 // Computed actions array for ActionGroup component
-const brandActions = computed<ActionConfig[]>(() => [
-    {
-        id: 'view',
-        icon: Eye,
-        title: 'View',
-        hoverColor: 'green',
-        onClick: () => emit('view', props.brand)
-    },
-    {
-        id: 'edit',
-        icon: SquarePen,
-        title: 'Edit',
-        hoverColor: 'blue',
-        onClick: () => emit('edit', props.brand)
-    },
-    {
-        id: 'toggle',
-        icon: props.brand.brandStatus === 0 ? CircleX : CircleCheck,
-        title: props.brand.brandStatus === 0 ? 'Deactivate' : 'Activate',
-        hoverColor: props.brand.brandStatus === 0 ? 'red' : 'green',
-        onClick: () => emit('toggle', props.brand.id, props.brand.brandStatus)
-    },
-    {
-        id: 'archive',
-        icon: props.brand.brandStatus === 2 ? ArchiveRestore : Archive,
-        title: props.brand.brandStatus === 2 ? 'Unarchive' : 'Archive',
-        hoverColor: props.brand.brandStatus === 2 ? 'green' : 'orange',
-        onClick: () => emit('archive', props.brand.id)
-    },
-    {
-        id: 'delete',
-        icon: Trash2,
-        title: 'Delete',
-        hoverColor: 'red',
-        visible: props.brand.brandStatus === 2 && !props.isStaff,
-        onClick: () => emit('delete', props.brand)
+const brandActions = computed<ActionConfig[]>(() => {
+    const isArchived = props.brand.brandStatus === 2
+
+    const actions: ActionConfig[] = [
+        {
+            id: 'view',
+            icon: Eye,
+            title: 'View',
+            hoverColor: 'green',
+            onClick: () => emit('view', props.brand)
+        },
+        {
+            id: 'edit',
+            icon: SquarePen,
+            title: 'Edit',
+            hoverColor: 'blue',
+            onClick: () => emit('edit', props.brand)
+        }
+    ]
+
+    // For archived records: show Unarchive, View, Edit, Delete
+    if (isArchived) {
+        actions.push({
+            id: 'unarchive',
+            icon: ArchiveRestore,
+            title: 'Unarchive',
+            hoverColor: 'green',
+            onClick: () => emit('unarchive', props.brand.id)
+        })
+        actions.push({
+            id: 'delete',
+            icon: Trash2,
+            title: 'Delete',
+            hoverColor: 'red',
+            visible: !props.isStaff,
+            onClick: () => emit('delete', props.brand)
+        })
+    } else {
+        // For non-archived records: show Toggle and Archive
+        actions.push({
+            id: 'toggle',
+            icon: props.brand.brandStatus === 0 ? CircleX : CircleCheck,
+            title: props.brand.brandStatus === 0 ? 'Deactivate' : 'Activate',
+            hoverColor: props.brand.brandStatus === 0 ? 'red' : 'green',
+            onClick: () => emit('toggle', props.brand.id, props.brand.brandStatus)
+        })
+        actions.push({
+            id: 'archive',
+            icon: Archive,
+            title: 'Archive',
+            hoverColor: 'orange',
+            onClick: () => emit('archive', props.brand.id)
+        })
     }
-])
+
+    return actions
+})
 
 // Helper functions
 function getActiveSizes(brand: Brand) {

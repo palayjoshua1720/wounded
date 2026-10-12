@@ -290,7 +290,29 @@ class ManufacturerController extends Controller
         }
         return response()->json([
             'message' => 'Manufacturer archived successfully',
-            'data'    => $manufacturer,
+            'data'    => [
+                'manufacturerStatus' => (int) $manufacturer->manufacturer_status,
+            ],
+        ]);
+    }
+
+    public function unarchiveManufacturer(Request $request, $id)
+    {
+        $manufacturer = Manufacturer::findOrFail($id);
+
+        if ($manufacturer->manufacturer_status === 2) {
+            $oldStatus = $manufacturer->manufacturer_status;
+            $manufacturer->manufacturer_status = 0; // Restore to Active
+            $manufacturer->save();
+
+            $this->logAudit($request, 'manufacturer_unarchive', "Manufacturer unarchived: {$manufacturer->manufacturer_name} (from status {$oldStatus})", $id);
+        }
+
+        return response()->json([
+            'message' => 'Manufacturer unarchived successfully',
+            'data'    => [
+                'manufacturerStatus' => (int) $manufacturer->manufacturer_status,
+            ],
         ]);
     }
 

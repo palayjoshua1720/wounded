@@ -406,10 +406,12 @@ import {
     Layers2
 } from 'lucide-vue-next';
 import api from "@/services/api";
-import { toast } from 'vue3-toastify'
-import 'vue3-toastify/dist/index.css'
+import { confirmAction } from '@/services/alert'
+import { useAppToast } from '@/composables/ui/useAppToast'
 import Swal from 'sweetalert2'
 import { formatCurrency } from '@/utils/currency'
+
+const toast = useAppToast()
 
 interface Order {
 	order_id: number;
@@ -996,38 +998,13 @@ async function handleAction(newStatus: OrderStatus) {
 
     if (statusNumber === 1) {        
         if (!formData.value.order_number) {
-            Swal.fire({
-                icon: 'error',
-                title: "Order Number Required",
-                html: `
-                    <p class="text-gray-700">
-                        To proceed with <strong>acknowledging this order</strong>,
-                        you must enter the manufacturer's internal order number.
-                    </p>
-                    <p class="mt-2 text-xs text-red-500">
-                        Example: PO-12345, SO-98765.
-                    </p>
-                `,
-                confirmButtonText: "Okay, I'll enter it",
-                confirmButtonColor: "#d33",
-                allowOutsideClick: false,
-                allowEscapeKey: true,
-                returnFocus: false
-            }).then(() => {
-                const orderDiv = document.querySelector('.order-number');
-
-                if (orderDiv) {
-                    orderDiv.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'center'
-                    });
-
-                    const input = orderDiv.querySelector('input');
-                    if (input) {
-                        setTimeout(() => input.focus(), 300);
-                    }
-                }
-            });
+            toast.error("Enter the manufacturer's internal order number before acknowledging this order. Example: PO-12345, SO-98765.", 'Order number required')
+            const orderDiv = document.querySelector('.order-number');
+            if (orderDiv) {
+                orderDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                const input = orderDiv.querySelector('input');
+                if (input) setTimeout(() => input.focus(), 300);
+            }
             return;
         }
 
@@ -1047,51 +1024,8 @@ async function handleAction(newStatus: OrderStatus) {
             if (missing.length) {
                 const isBothMissing = missing.length === 2
 
-                Swal.fire({
-                    icon: 'error',
-                    title: isBothMissing
-                        ? 'Tracking Information Required'
-                        : `${missing[0]} Required`,
-                    html: `
-                        <p class="text-gray-700">
-                            To proceed with <strong>marking this order as Shipped</strong>,
-                            you must provide ${isBothMissing ? 'the following information' : `a valid ${missing[0].toLowerCase()}`}.
-                        </p>
-
-                        ${
-                            isBothMissing
-                                ? `
-                                    <ul class="mt-4 space-y-2 text-sm">
-                                        <li class="flex items-start gap-2">
-                                            <span class="text-red-500 mt-0.5">•</span>
-                                            <span><strong>Tracking Code</strong> (e.g. FedEx / UPS / USPS)</span>
-                                        </li>
-                                        <li class="flex items-start gap-2">
-                                            <span class="text-red-500 mt-0.5">•</span>
-                                            <span><strong>Tracking Link</strong> (courier tracking URL)</span>
-                                        </li>
-                                    </ul>
-                                `
-                                : `
-                                    <p class="mt-2 text-xs text-red-500">
-                                        ${missing[0]} is required before shipping can proceed.
-                                    </p>
-                                `
-                        }
-                    `,
-                    confirmButtonText: isBothMissing
-                        ? "Okay, I'll enter them"
-                        : "Okay, I'll enter it",
-                    confirmButtonColor: '#d33',
-                    allowOutsideClick: false,
-                    allowEscapeKey: true,
-                    returnFocus: false
-                }).then(() => {
-                    window.scrollTo({
-                        top: 0,
-                        behavior: 'smooth'
-                    });
-                });
+                toast.error(`Provide ${isBothMissing ? 'the tracking code and tracking link' : `a valid ${missing[0].toLowerCase()}`} before marking this order as shipped.`, isBothMissing ? 'Tracking information required' : `${missing[0]} required`)
+                window.scrollTo({ top: 0, behavior: 'smooth' });
                 return
             }
         }
@@ -1107,13 +1041,11 @@ async function handleAction(newStatus: OrderStatus) {
         }
     }
 
-    const result = await Swal.fire({
-        title: "Are you sure?",
-        text: "This action cannot be undone.",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonColor: "#3085d6",
-        cancelButtonColor: "#d33",
+    const result = await confirmAction({
+        title: 'Update Order Status?',
+        text: `Are you sure you want to update this order to ${newStatus}?`,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
         cancelButtonText: "No, I'll review it first",
         confirmButtonText: "Yes, update status",
         returnFocus: false

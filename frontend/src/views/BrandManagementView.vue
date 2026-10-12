@@ -1,21 +1,111 @@
 <template>
-	<div class="space-y-6">
+	<div class="space-y-4 sm:space-y-6">
 		<!-- Header -->
-		<div class="flex items-center justify-between">
-			<div>
-				<h1 class="text-3xl font-bold text-gray-900 dark:text-white">Brand Management</h1>
-			</div>
+		<div class="flex flex-col sm:flex-row items-center sm:items-center justify-between gap-3">
+			<h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Brand Management</h1>
 			<button @click="selectedBrand = null; showCreateForm = true"
-				class="flex items-center px-5 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg group">
-				<PackagePlus class="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" />
+				class="flex items-center justify-center w-full sm:w-auto px-4 sm:px-5 py-2.5 sm:py-3 text-sm sm:text-base bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg group whitespace-nowrap">
+				<PackagePlus class="w-4 h-4 mr-1.5 sm:mr-2 group-hover:scale-110 transition-transform" />
 				New Brand
 			</button>
 		</div>
 
 		<!-- Filters -->
-		<div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
-			<div class="flex flex-col lg:flex-row gap-6">
-				<div class="flex-1">
+		<div
+			class="bg-white dark:bg-gray-800 p-4 lg:p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+			<!-- Mobile: Stacked Layout -->
+			<div class="lg:hidden space-y-3">
+				<!-- Search and Filters Toggle Row -->
+				<div class="flex flex-col sm:flex-row gap-2">
+					<!-- Search Input -->
+					<div class="relative flex-1">
+						<Search
+							class="absolute left-3 sm:left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-400 dark:text-gray-500" />
+						<input v-model="searchTerm" type="text" placeholder="Search Brand...."
+							class="w-full pl-9 sm:pl-10 pr-10 py-2.5 border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900 dark:text-white text-sm transition-all duration-200" />
+					</div>
+
+					<!-- Filters Toggle Button -->
+					<button @click="showFilters = !showFilters"
+						class="flex-shrink-0 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl text-sm font-medium h-[2.7rem] min-h-[2.5rem]">
+						<SlidersHorizontal class="w-4 h-4" />
+						Filters
+						<span v-if="statusFilter !== 'all'" class="w-2 h-2 bg-green-500 rounded-full"></span>
+					</button>
+				</div>
+
+				<!-- Filter Pills Row -->
+				<div class="flex flex-wrap gap-2">
+					<span v-if="statusFilter !== 'all'"
+						class="inline-flex items-center gap-1 px-2.5 py-1.5 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 rounded-lg text-xs">
+						{{ statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1) }}
+						<button @click="statusFilter = 'all'" class="hover:text-green-900 ml-1">
+							<X class="w-3 h-3" />
+						</button>
+					</span>
+					<span v-if="itemsPerPage !== '9'"
+						class="inline-flex items-center gap-1 px-2.5 py-1.5 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-lg text-xs">
+						{{ itemsPerPage }} per page
+						<button @click="itemsPerPage = '9'" class="hover:text-blue-900 ml-1">
+							<X class="w-3 h-3" />
+						</button>
+					</span>
+				</div>
+
+				<!-- Expandable Filters -->
+				<div v-if="showFilters" class="space-y-3 pt-2 border-t border-gray-100 dark:border-gray-700">
+					<div>
+						<label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Status</label>
+						<div class="flex gap-2">
+							<button @click="statusFilter = 'all'"
+								:class="['flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-colors',
+									statusFilter === 'all' ? 'bg-green-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300']">
+								All
+							</button>
+							<button @click="statusFilter = 'active'"
+								:class="['flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-colors',
+									statusFilter === 'active' ? 'bg-green-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300']">
+								Active
+							</button>
+							<button @click="statusFilter = 'inactive'"
+								:class="['flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-colors',
+									statusFilter === 'inactive' ? 'bg-green-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300']">
+								Inactive
+							</button>
+							<button @click="statusFilter = 'archive'"
+								:class="['flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-colors',
+									statusFilter === 'archive' ? 'bg-green-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300']">
+								Archived
+							</button>
+						</div>
+					</div>
+					<div>
+						<label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Items per
+							page</label>
+						<div class="flex gap-2">
+							<button @click="itemsPerPage = '9'"
+								:class="['flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-colors',
+									itemsPerPage === '9' ? 'bg-blue-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300']">
+								9
+							</button>
+							<button @click="itemsPerPage = '25'"
+								:class="['flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-colors',
+									itemsPerPage === '25' ? 'bg-blue-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300']">
+								25
+							</button>
+							<button @click="itemsPerPage = '50'"
+								:class="['flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-colors',
+									itemsPerPage === '50' ? 'bg-blue-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300']">
+								50
+							</button>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Desktop: Original Layout -->
+			<div class="hidden lg:flex flex-col lg:flex-row gap-6">
+				<div class="flex-1 min-w-0">
 					<div class="relative">
 						<Search class="absolute left-4 top-3.5 h-5 w-5 text-gray-400 dark:text-gray-500" />
 						<input v-model="searchTerm" type="text" placeholder="Search Brand...."
@@ -27,7 +117,7 @@
 						<Funnel
 							class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400" />
 						<select v-model="statusFilter"
-							class="pl-10 pr-8 py-3.5 border-0 bg-gray-50 dark:bg-gray-700/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-gray-700 text-gray-900 dark:text-white appearance-none transition-all duration-200">
+							class="pl-10 pr-8 py-3.5 border-0 bg-gray-50 dark:bg-gray-700/50 rounded-xl focus:ring-2 focus:ring-green-500 focus:bg-white dark:focus:bg-gray-700 text-gray-900 dark:text-white appearance-none transition-all duration-200">
 							<option value="all">All Status</option>
 							<option value="active">Active</option>
 							<option value="inactive">Inactive</option>
@@ -56,7 +146,7 @@
 			class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
 			<BrandCard v-for="brand in filteredBrands" :key="brand.id" :brand="brand" :is-staff="isStaff"
 				@view="viewBrand = $event" @edit="editBrand" @toggle="handleToggleStatus" @archive="handleArchiveBrand"
-				@delete="handleDeleteBrand" />
+				@unarchive="handleUnarchiveBrand" @delete="handleDeleteBrand" />
 		</div>
 
 		<div v-else-if="filteredBrands && filteredBrands.length === 0 && !tableLoader">
@@ -82,8 +172,6 @@
 </template>
 
 <script setup lang="ts">
-import { useToast } from "vue-toastification"
-import Swal from "sweetalert2"
 import { ref, computed, onMounted, watch } from 'vue'
 import Pagination from '@/components/ui/Pagination.vue'
 import ContentLoader from '@/components/ui/ContentLoader.vue'
@@ -91,15 +179,18 @@ import BaseEmptyState from '@/components/common/BaseEmptyState.vue'
 import BrandCard from '@/components/brands/BrandCard.vue'
 import BrandFormModal from '@/components/brands/modals/BrandFormModal.vue'
 import BrandDetailsModal from '@/components/brands/modals/BrandDetailsModal.vue'
-import { Package, PackagePlus, ChevronDown, Funnel, Search } from 'lucide-vue-next'
+import { Package, PackagePlus, ChevronDown, Funnel, Search, SlidersHorizontal, X } from 'lucide-vue-next'
 import api from '@/services/api'
+import axios from 'axios'
 import { formatCurrency, formatNumber } from '@/utils/currency'
 import { useAuthStore } from '@/stores/auth'
+import { confirmAction } from '@/services/alert'
+import { useAppToast } from '@/composables/ui/useAppToast'
 
 const authStore = useAuthStore()
 const isStaff = computed(() => authStore.user?.user_role === 1)
 
-const toast = useToast()
+const toast = useAppToast()
 
 const isFiltering = computed(() => searchTerm.value.trim().length > 0 || statusFilter.value !== 'all')
 
@@ -135,7 +226,8 @@ interface Brand {
 }
 
 const pagination = ref({ current_page: 1, last_page: 1, per_page: 9, total: 0 })
-const itemsPerPage = ref(9)
+const itemsPerPage = ref<string>('9')
+const showFilters = ref(false)
 const brands = ref<Brand[]>([])
 const manufacturers = ref<SimpleManufacturer[]>([])
 const tableLoader = ref(false)
@@ -269,6 +361,121 @@ function removeGraftSize(index: number) {
 	}
 }
 
+const brandValidationLabels: Record<string, string> = {
+	brandName: 'Brand name',
+	brandStatus: 'Status',
+	manufacturerId: 'Manufacturer',
+	mue: 'MUE',
+	description: 'Description',
+	graftSizes: 'Graft sizes',
+	logo: 'Brand logo',
+}
+
+const graftSizeValidationLabels: Record<string, string> = {
+	item_no: 'Item number',
+	size: 'Size',
+	area: 'Area',
+	price: 'Price',
+	stock: 'Stock',
+	graftStatus: 'Status',
+}
+
+function getBrandValidationLabel(field: string) {
+	const graftSizeMatch = field.match(/^graftSizes\.(\d+)\.(.+)$/)
+	if (graftSizeMatch) {
+		const rowNumber = Number(graftSizeMatch[1]) + 1
+		const fieldLabel = graftSizeValidationLabels[graftSizeMatch[2]] || graftSizeMatch[2]
+		return `Graft size ${rowNumber} ${fieldLabel}`
+	}
+
+	return brandValidationLabels[field] || field
+		.replace(/([A-Z])/g, ' $1')
+		.replace(/[_-]/g, ' ')
+		.replace(/^./, character => character.toUpperCase())
+}
+
+function getBrandValidationMessage(field: string, message: string) {
+	const normalizedMessage = message.toLowerCase()
+
+	if (normalizedMessage.includes('required')) return 'This field is required.'
+	if (field === 'manufacturerId' && (normalizedMessage.includes('exists') || normalizedMessage.includes('invalid'))) {
+		return 'Select a valid manufacturer.'
+	}
+	if (field === 'brandStatus' && normalizedMessage.includes('invalid')) return 'Select a valid status.'
+	if (field === 'mue' && normalizedMessage.includes('integer')) return 'Enter a whole number.'
+	if (field === 'mue' && normalizedMessage.includes('at least')) return 'Enter a whole number of 1 or more.'
+	if (['area', 'price'].some(part => field.endsWith(`.${part}`)) && normalizedMessage.includes('numeric')) {
+		return 'Enter a valid number.'
+	}
+	if (['area', 'price', 'stock'].some(part => field.endsWith(`.${part}`)) && normalizedMessage.includes('min')) {
+		return 'Enter a value of 0 or more.'
+	}
+	if (field.endsWith('.stock') && normalizedMessage.includes('integer')) return 'Enter a whole number.'
+	if (field === 'logo' && normalizedMessage.includes('image')) return 'Upload a PNG or JPEG/JPG image.'
+	if (field === 'logo' && normalizedMessage.includes('type')) return 'Upload a PNG or JPEG/JPG image.'
+	if (field === 'logo' && (normalizedMessage.includes('greater than') || normalizedMessage.includes('too large'))) {
+		return 'Use an image no larger than 2 MB.'
+	}
+	if (field === 'graftSizes' && normalizedMessage.includes('json')) return 'Enter valid graft size details.'
+
+	const escapedField = field.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+	const fieldPattern = new RegExp(`^The ${escapedField}( field)? `, 'i')
+	return message.replace(fieldPattern, '').replace(/^./, character => character.toUpperCase())
+}
+
+function showBrandRequestError(error: unknown) {
+	if (axios.isAxiosError(error)) {
+		const status = error.response?.status
+		const data = error.response?.data
+
+		if (status === 422 && data?.errors) {
+			const messages = Object.entries(data.errors).flatMap(([field, errors]) => {
+				const fieldMessages = Array.isArray(errors) ? errors : [errors]
+				return fieldMessages.map(message => {
+					const label = getBrandValidationLabel(field)
+					const friendlyMessage = getBrandValidationMessage(field, String(message))
+					return `- ${label}: ${friendlyMessage}`
+				})
+			})
+			const validationMessage = [
+				'Correct the following before saving:',
+				...messages,
+				'',
+				'Please correct these items and try again.',
+			].join('\n')
+			toast.error(validationMessage, 'Please review the form')
+			return
+		}
+
+		toast.error(data?.message || `Request failed with status code ${status}`)
+		return
+	}
+
+	if (error instanceof Error) {
+		toast.error(`Error: ${error.message}`)
+		return
+	}
+	toast.error('Something went wrong')
+}
+
+function getBrandName(id: number) {
+	return brands.value.find(brand => brand.id === id)?.brandName
+}
+
+function getBrandLabel(name?: string) {
+	return name ? `Brand "${name}"` : 'The brand'
+}
+
+function escapeHtml(value: string) {
+	return value.replace(/[&<>'"]/g, character => ({
+		'&': '&amp;',
+		'<': '&lt;',
+		'>': '&gt;',
+		"'": '&#39;',
+		'"': '&quot;',
+	}[character] || character))
+}
+
 // Handle form modal submit from BrandFormModal component
 async function handleFormModalSubmit(data: { formData: any; logoFile: File | null; removeLogoFlag: boolean }) {
 	try {
@@ -297,7 +504,7 @@ async function handleFormModalSubmit(data: { formData: any; logoFile: File | nul
 					'Content-Type': 'multipart/form-data'
 				}
 			})
-			toast.success('Brand created!')
+			toast.success(`${getBrandLabel(data.formData.brandName)} was created successfully.`)
 		} else if (showEditForm.value && selectedBrand.value) {
 			await api.post(`/management/brands/${selectedBrand.value.id}`, form, {
 				headers: {
@@ -305,7 +512,7 @@ async function handleFormModalSubmit(data: { formData: any; logoFile: File | nul
 					'Content-Type': 'multipart/form-data'
 				}
 			})
-			toast.success('Brand updated!')
+			toast.success(`${getBrandLabel(data.formData.brandName)} details were updated successfully.`)
 		}
 
 		closeForm()
@@ -313,7 +520,7 @@ async function handleFormModalSubmit(data: { formData: any; logoFile: File | nul
 
 	} catch (error: any) {
 		console.error(error.response?.data || error)
-		toast.error(error.response?.data?.message || 'Something went wrong!')
+		showBrandRequestError(error)
 	}
 }
 
@@ -350,7 +557,7 @@ async function handleSubmitForm() {
 					'Content-Type': 'multipart/form-data'
 				}
 			})
-			toast.success('Brand created!')
+			toast.success(`${getBrandLabel(formData.value.brandName)} was created successfully.`)
 		} else if (showEditForm.value && selectedBrand.value) {
 			await api.post(`/management/brands/${selectedBrand.value.id}`, form, {
 				headers: {
@@ -358,7 +565,7 @@ async function handleSubmitForm() {
 					'Content-Type': 'multipart/form-data'
 				}
 			})
-			toast.success('Brand updated!')
+			toast.success(`${getBrandLabel(formData.value.brandName)} details were updated successfully.`)
 		}
 
 		closeForm()
@@ -366,39 +573,27 @@ async function handleSubmitForm() {
 
 	} catch (error: any) {
 		console.error(error.response?.data || error)
-		toast.error(error.response?.data?.message || 'Something went wrong!')
+		showBrandRequestError(error)
 	}
 }
 
-// archive/unarchive brand
+// archive brand
 async function handleArchiveBrand(id: number) {
 	const brand = brands.value.find(b => b.id === id)
 	if (!brand) return
 
-	const isArchived = brand.brandStatus === 2
-	const action = isArchived ? 'unarchive' : 'archive'
-	const actionTitle = `${action.charAt(0).toUpperCase() + action.slice(1)} Brand`
-	const text = isArchived
-		? 'Are you sure you want to unarchive this brand? It will be restored to active.'
-		: 'Are you sure you want to archive this brand? It will no longer appear in active or inactive lists.'
-
 	try {
-		const result = await Swal.fire({
-			title: actionTitle,
-			text: text,
-			icon: 'warning',
-			showCancelButton: true,
+		const result = await confirmAction({
+			title: 'Archive Brand?',
+			text: 'This action will move the brand to archived status. You can restore it later if needed.',
 			confirmButtonColor: '#d33',
 			cancelButtonColor: '#3085d6',
-			confirmButtonText: isArchived ? 'Yes, unarchive it!' : 'Yes, archive it!',
+			confirmButtonText: 'Yes, archive it!',
 			cancelButtonText: 'Cancel'
 		})
 
 		if (result.isConfirmed) {
-			const endpoint = isArchived
-				? `/management/brands/${id}/unarchive`
-				: `/management/brands/${id}/archive`
-			const response = await api.get(endpoint)
+			const response = await api.get(`/management/brands/${id}/archive`)
 			const data = response.data
 
 			const idx = brands.value.findIndex(b => b.id === id)
@@ -406,11 +601,43 @@ async function handleArchiveBrand(id: number) {
 				brands.value[idx].brandStatus = data.data.brandStatus
 			}
 
-			toast.success(`Brand ${action}ed successfully`)
+			toast.success(`${getBrandLabel(getBrandName(id))} was archived successfully and can be restored later.`)
 		}
 	} catch (error) {
 		console.error(error)
-		toast.error(`Error ${action}ing brand`)
+		toast.error('Error archiving brand')
+	}
+}
+
+// unarchive brand
+async function handleUnarchiveBrand(id: number) {
+	const brand = brands.value.find(b => b.id === id)
+	if (!brand) return
+
+	try {
+		const result = await confirmAction({
+			title: 'Unarchive Brand?',
+			text: 'This action will restore the brand from archived status.',
+			confirmButtonColor: '#3085d6',
+			cancelButtonColor: '#6b7280',
+			confirmButtonText: 'Yes, unarchive it!',
+			cancelButtonText: 'Cancel'
+		})
+
+		if (result.isConfirmed) {
+			const response = await api.get(`/management/brands/${id}/unarchive`)
+			const data = response.data
+
+			const idx = brands.value.findIndex(b => b.id === id)
+			if (idx !== -1) {
+				brands.value[idx].brandStatus = data.data.brandStatus
+			}
+
+			toast.success(`${getBrandLabel(getBrandName(id))} was successfully restored from archived status.`)
+		}
+	} catch (error) {
+		console.error(error)
+		toast.error('Error unarchiving brand')
 	}
 }
 
@@ -422,11 +649,9 @@ async function handleToggleStatus(id: number, currentStatus: number) {
 	else actionText = 'activate'
 
 	try {
-		const result = await Swal.fire({
+		const result = await confirmAction({
 			title: `${actionText.charAt(0).toUpperCase() + actionText.slice(1)} Brand?`,
 			text: `Are you sure you want to ${actionText} this brand?`,
-			icon: 'warning',
-			showCancelButton: true,
 			confirmButtonColor: '#d33',
 			cancelButtonColor: '#3085d6',
 			confirmButtonText: `Yes, ${actionText} it!`,
@@ -442,7 +667,7 @@ async function handleToggleStatus(id: number, currentStatus: number) {
 				brands.value[idx].brandStatus = data.data.brandStatus
 			}
 
-			toast.success(`Brand ${actionText}d successfully`)
+			toast.success(`${getBrandLabel(getBrandName(id))} was ${actionText}d successfully.`)
 		}
 	} catch (error) {
 		console.error(error)
@@ -453,18 +678,12 @@ async function handleToggleStatus(id: number, currentStatus: number) {
 // delete brand
 async function handleDeleteBrand(brand: any) {
 	try {
-		const result = await Swal.fire({
-			title: `Delete Brand?`,
+		const result = await confirmAction({
+			title: 'Delete Brand?',
 			html: `
-				Are you sure you want to delete 
-				<span class="font-bold text-blue-600">
-					${brand.brandName}
-				</span>?
-				<br />
-				This action cannot be undone.
+				Are you sure you want to delete <b>${escapeHtml(brand.brandName)}</b>?<br>
+				<span style="color:#d33;">This action cannot be undone!</span>
 			`,
-			icon: 'warning',
-			showCancelButton: true,
 			confirmButtonColor: '#d33',
 			cancelButtonColor: '#3085d6',
 			confirmButtonText: 'Yes, delete it!',
@@ -476,11 +695,11 @@ async function handleDeleteBrand(brand: any) {
 
 			brands.value = brands.value.filter(b => b.id !== brand.id)
 
-			toast.success(`${brand.brandName} deleted successfully`)
+			toast.success(`${getBrandLabel(brand.brandName)} was permanently deleted.`)
 		}
 	} catch (error) {
 		console.error(error)
-		toast.error(`Error deleting ${brand.brandName}`)
+		toast.error('Error deleting brand')
 	}
 }
 

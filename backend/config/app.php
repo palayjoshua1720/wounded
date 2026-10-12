@@ -97,10 +97,10 @@ return [
     */
 
     'cipher' => 'AES-256-CBC',
-    
-        'key' => env('APP_KEY'),
-    
-        /*
+
+    'key' => env('APP_KEY'),
+
+    /*
         |--------------------------------------------------------------------------
         | HMAC Blind-Index Key
         |--------------------------------------------------------------------------
@@ -109,8 +109,8 @@ return [
         | APP_KEY. Generate with: php artisan key:generate --show
         |
         */
-        'hmac_hash_key' => env('HMAC_HASH_KEY', env('APP_KEY')),
-    
+    'hmac_hash_key' => env('HMAC_HASH_KEY', env('APP_KEY')),
+
     'previous_keys' => [
         ...array_filter(
             explode(',', env('APP_PREVIOUS_KEYS', ''))

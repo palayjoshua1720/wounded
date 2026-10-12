@@ -579,9 +579,8 @@ import {
 	RefreshCcw, Image, Check, X
 } from 'lucide-vue-next';
 import api from '@/services/api'
-import { toast } from 'vue3-toastify'
-import 'vue3-toastify/dist/index.css'
-import Swal from 'sweetalert2'
+import { confirmAction } from '@/services/alert'
+import { useAppToast } from '@/composables/ui/useAppToast'
 
 interface User {
 	id: string
@@ -657,6 +656,11 @@ const statusFilter = ref('all')
 const selectedUser = ref<User | null>(null)
 const showCreateForm = ref(false)
 const showEditForm = ref(false)
+const toast = useAppToast()
+
+function getClinicName(clinicId: string) {
+	return users.value.find(user => user.id === clinicId)?.name || 'Clinic'
+}
 
 const formData = ref({
 	name: '',
@@ -674,20 +678,36 @@ const formData = ref({
 })
 
 async function handleToggleStatus(clinicId: string) {
+	const clinicName = getClinicName(clinicId)
+	const action = users.value.find(user => user.id === clinicId)?.isActive === 0
+		? 'deactivate'
+		: 'activate'
+
 	try {
-		const response = await api.put(`/management/facilities/clinics/${clinicId}/updatestatus`);
+		const result = await confirmAction({
+			title: `${action.charAt(0).toUpperCase() + action.slice(1)} Clinic?`,
+			text: `Are you sure you want to ${action} this clinic?`,
+			confirmButtonColor: '#d33',
+			cancelButtonColor: '#3085d6',
+			confirmButtonText: `Yes, ${action} it!`,
+			cancelButtonText: 'Cancel'
+		})
 
-		if (response.data.success) {
-			const idx = users.value.findIndex(user => user.id === clinicId);
-			if (idx !== -1) {
-				users.value[idx].isActive = response.data.status;
+		if (result.isConfirmed) {
+			const response = await api.put(`/management/facilities/clinics/${clinicId}/updatestatus`);
+
+			if (response.data.success) {
+				const idx = users.value.findIndex(user => user.id === clinicId);
+				if (idx !== -1) {
+					users.value[idx].isActive = response.data.status;
+				}
 			}
-			getAllClinics();
+			await getAllClinics();
+			toast.success(`${clinicName} was ${action}d successfully.`)
 		}
-
-		toast.success(response.data.message || 'Status updated successfully!')
 	} catch (err) {
 		console.error('Error toggling status:', err);
+		toast.error(`Error trying to ${action} clinic`)
 	}
 }
 
@@ -737,7 +757,7 @@ async function handleSubmitForm() {
 		}
 
 		if (showCreateForm.value) {
-			const { data } = await api.post(
+			await api.post(
 				'/management/facilities/clinics',
 				form,
 				{
@@ -748,11 +768,11 @@ async function handleSubmitForm() {
 				}
 			)
 
-			toast.success(data.message || 'Clinic added successfully!')
+			toast.success(`${formData.value.name || 'Clinic'} was created successfully.`)
 			await getAllClinics()
 
 		} else if (showEditForm.value && selectedUser.value) {
-			const { data } = await api.post(
+			await api.post(
 				`/management/facilities/clinics/${selectedUser.value.id}/update`,
 				form,
 				{
@@ -763,7 +783,7 @@ async function handleSubmitForm() {
 				}
 			)
 
-			toast.success(data.message || 'Clinic Updated Successfully!')
+			toast.success(`${formData.value.name || 'Clinic'} details were updated successfully.`)
 			await getAllClinics()
 		}
 
@@ -774,8 +794,14 @@ async function handleSubmitForm() {
 			const data = error.response?.data
 
 			if (status === 422 && data?.errors) {
-				const messages = Object.values(data.errors).flat()
-				toast.error("Error: " + messages.join("\n"))
+				const messages = Object.values(data.errors).flat().map(String)
+				const validationMessage = [
+					'Correct the following before saving:',
+					...messages.map(message => `- ${message}`),
+					'',
+					'Please correct these items and try again.',
+				].join('\n')
+				toast.error(validationMessage, 'Please review the form')
 			} else {
 				toast.error(data?.message || `Request failed with status code ${status}`)
 			}
@@ -903,71 +929,81 @@ function removeClinician(index: number) {
 }
 
 async function confirmDelete(userId: string) {
-	const result = await Swal.fire({
-		title: "Are you sure?",
-		text: "This action cannot be undone.",
-		icon: "warning",
-		showCancelButton: true,
-		confirmButtonColor: "#3085d6",
-		cancelButtonColor: "#d33",
-		confirmButtonText: "Yes, delete it!"
+	const clinicName = getClinicName(userId)
+	const result = await confirmAction({
+		title: 'Delete Clinic?',
+		html: `
+			Are you sure you want to delete <b>${escapeHtml(clinicName)}</b>?<br>
+			<span style="color:#d33;">This action cannot be undone!</span>
+		`,
+		confirmButtonColor: '#d33',
+		cancelButtonColor: '#3085d6',
+		confirmButtonText: 'Yes, delete it!',
+		cancelButtonText: 'Cancel'
 	});
 
 	if (result.isConfirmed && userId) {
 		try {
 			await api.put(`/management/facilities/clinics/${userId}/deleteclinic`)
-			toast.success('Clinic deleted successfully!')
+			toast.success(`${clinicName} was permanently deleted.`)
 			await getAllClinics()
 		} catch (error) {
-			toast.error('Failed to delete clinic.')
+			toast.error('Error trying to delete clinic')
 		}
 	}
 }
 
 async function confirmArchive(userId: string) {
-	const result = await Swal.fire({
-		title: "Are you sure?",
-		text: "This action cannot be undone.",
-		icon: "warning",
-		showCancelButton: true,
-		confirmButtonColor: "#3085d6",
-		cancelButtonColor: "#d33",
-		confirmButtonText: "Yes, archive it!"
+	const clinicName = getClinicName(userId)
+	const result = await confirmAction({
+		title: 'Archive Clinic?',
+		text: 'This action will move the clinic to archived status. You can restore it later if needed.',
+		confirmButtonColor: '#d33',
+		cancelButtonColor: '#3085d6',
+		confirmButtonText: 'Yes, archive it!',
+		cancelButtonText: 'Cancel'
 	});
 
 	if (result.isConfirmed && userId) {
 		try {
 			await api.put(`/management/facilities/clinics/${userId}/archiveclinic`)
-			toast.success('Clinic archived successfully!')
+			toast.success(`${clinicName} was archived successfully and can be restored later.`)
 			await getAllClinics()
 		} catch (error) {
-			toast.error('Failed to archive clinic.')
+			toast.error('Error trying to archive clinic')
 		}
 	}
 }
 
 async function confirmUnarchive(userId: string) {
-	console.log('unarchvie: ' + userId);
-
-	const result = await Swal.fire({
-		title: "Are you sure?",
-		text: "This will restore the clinic.",
-		icon: "question",
-		showCancelButton: true,
-		confirmButtonColor: "#3085d6",
-		cancelButtonColor: "#d33",
-		confirmButtonText: "Yes, unarchive it!"
+	const clinicName = getClinicName(userId)
+	const result = await confirmAction({
+		title: 'Unarchive Clinic?',
+		text: 'This action will restore the clinic from archived status.',
+		confirmButtonColor: '#3085d6',
+		cancelButtonColor: '#6b7280',
+		confirmButtonText: 'Yes, unarchive it!',
+		cancelButtonText: 'Cancel'
 	});
 
 	if (result.isConfirmed && userId) {
 		try {
 			await api.put(`/management/facilities/clinics/${userId}/unarchiveclinic`);
-			toast.success("Clinic restored successfully!");
+			toast.success(`${clinicName} was successfully restored from archived status.`);
 			await getAllClinics();
 		} catch (error) {
-			toast.error("Failed to unarchive clinic.");
+			toast.error('Error trying to unarchive clinic');
 		}
 	}
+}
+
+function escapeHtml(value: string) {
+	return value
+		.replace(/&/g, '&amp;')
+		.replace(/</g, '&lt;')
+		.replace(/>/g, '&gt;')
+		.replace(/"/g, '&quot;')
+		.replace(/'/g, '&#039;')
 }
 
 const showLogoCropModal = ref(false)
@@ -1049,7 +1085,7 @@ function validateLogoFile(file: File): Promise<boolean> {
 	return new Promise((resolve) => {
 		if (!file) return resolve(false)
 		if (!allowedLogoTypes.includes(file.type)) {
-			toast.error('Unsupported logo format. Use PNG or JPEG/JPG.')
+			toast.error('Use PNG or JPEG/JPG.', 'Unsupported logo format')
 			return resolve(false)
 		}
 		// We allow any dimensions; provide a client-side crop step after selection

@@ -96,7 +96,11 @@ module.exports = {
       fontFamily: {
         sans: ['Poppins', 'sans-serif'],
       },
+      backgroundImage: {
+        'grid-pattern': `linear-gradient(to right, #d1d5db 1px, transparent 1px),
+                         linear-gradient(to bottom, #d1d5db 1px, transparent 1px)`,
+      },
     },
   },
   plugins: [],
-} 
+}
