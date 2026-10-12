@@ -1,6 +1,6 @@
 <template>
-	<PageLoader :visible="pageLoader" />
 	<div class="min-h-screen bg-gray-100 dark:bg-gray-900">
+		<PageLoader :visible="pageLoader" />
 		<!-- Sidebar -->
 		<Sidebar v-if="!$route.meta.hideSidebar" v-model:isOpen="isSidebarOpen" />
 

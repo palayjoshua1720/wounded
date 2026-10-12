@@ -1033,6 +1033,18 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 		})
 }
 
+export function getHomeRouteForRole(role: number): { name: string } {
+	switch (role) {
+		case 0: return { name: 'admin-dashboard' }
+		case 1: return { name: 'office-staff-dashboard' }
+		case 2: return { name: 'clinic-dashboard' }
+		case 3: return { name: 'clinician-dashboard' }
+		case 4: return { name: 'manufacturer-ivr-management' }
+		case 5: return { name: 'biller-ivr-management' }
+		default: return { name: 'admin-dashboard' }
+	}
+}
+
 // Navigation Guards
 router.beforeEach(async (to, from, next) => {
 	pageLoader.value = true
@@ -1049,8 +1061,6 @@ router.beforeEach(async (to, from, next) => {
 	const OfficeStaff = 1;
 	const Clinics = 2;
 	const Clinician = 3;
-	const Manufacturer = 4;
-	const Biller = 5;
 
 	// Check if route requires authentication
 	if (requiresAuth) {
@@ -1063,35 +1073,30 @@ router.beforeEach(async (to, from, next) => {
 		// Ensure role is numeric
 		const role = authStore.user?.user_role ?? parseInt(localStorage.getItem('user_role') || '-1')
 
+		// Direct access to root '/' -> redirect to role home
+		if (to.path === '/' || !to.name) {
+			next(getHomeRouteForRole(role))
+			return
+		}
+
 		// RBAC Route Enforcement via routeRoles mapping
 		const routeName = to.name ? String(to.name) : ''
 		if (routeName && routeRoles[routeName] && routeRoles[routeName].length > 0) {
 			if (!routeRoles[routeName].includes(role)) {
-				// Unauthorized route access attempt: redirect to appropriate dashboard
-				if (role === Clinics || role === Clinician) {
-					next({ name: 'clinic-dashboard' })
+				// Unauthorized route access attempt: redirect to user's assigned home dashboard
+				const fallback = getHomeRouteForRole(role)
+				if (to.name !== fallback.name) {
+					next(fallback)
 				} else {
-					next({ name: 'admin-dashboard' })
+					next({ name: 'login' })
 				}
 				return
 			}
 		}
 
-		// Admin Dashboard access → Admin + OfficeStaff
-		if (to.name === 'admin-dashboard' && role !== Admin && role !== OfficeStaff) {
-			next({ name: 'clinic-dashboard' })
-			return
-		}
-
-		// Clinic Dashboard access → Admin + OfficeStaff + Clinics
-		if (to.name === 'clinic-dashboard' && ![Admin, OfficeStaff, Clinics, Clinician].includes(role)) {
-			next({ name: 'admin-dashboard' })
-			return
-		}
-
 		// Notifications / Orders / Reports → Admin + OfficeStaff + Clinics + Clinician
 		if (['notifications', 'orders', 'reports'].includes(to.name?.toString() || '') && role !== Admin && role !== OfficeStaff && role !== Clinics && role !== Clinician) {
-			next({ name: 'admin-dashboard' })
+			next(getHomeRouteForRole(role))
 			return
 		}
 	}
@@ -1099,11 +1104,7 @@ router.beforeEach(async (to, from, next) => {
 	// If authenticated and going to login page
 	if (to.name === 'login' && authStore.isAuthenticated) {
 		const role = authStore.user?.user_role ?? parseInt(localStorage.getItem('user_role') || '-1')
-		if (role === Clinics || role === Clinician) {
-			next({ name: 'clinic-dashboard' })
-		} else {
-			next({ name: 'admin-dashboard' })
-		}
+		next(getHomeRouteForRole(role))
 		return
 	}
 
