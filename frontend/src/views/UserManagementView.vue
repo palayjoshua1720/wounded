@@ -1059,33 +1059,22 @@ async function handleSubmitForm(submittedData?: any) {
             const errorMessage = err.response?.data?.message || 'Failed to create user. Please try again.'
             const errorCode = err.response?.data?.error
 
-<<<<<<< Updated upstream
-            if (errorCode === 'manufacturer_account_exists') {
-                toast.warning(errorMessage, 'Manufacturer account already exists')
-            } else if (errorCode === 'clinic_admin_exists') {
-                toast.warning(errorMessage, 'Clinic admin already exists')
-            } else if (errorCode === 'unauthorized_role_creation') {
-                toast.error(errorMessage, 'Unauthorized role creation')
-            } else {
-                toast.error(errorMessage)
-=======
             if (errorCode === 'password_confirmation_required') {
                 sudoAdminModalRef.value?.setError('Incorrect password. Please try again.')
                 pendingAdminFormData = dataToUse
                 return
             } else if (errorCode === 'manufacturer_account_exists') {
                 showSudoAdminModal.value = false
-                appToast.warning('Manufacturer Account Already Exists: ' + errorMessage)
+                toast.warning('Manufacturer Account Already Exists: ' + errorMessage)
             } else if (errorCode === 'clinic_admin_exists') {
                 showSudoAdminModal.value = false
-                appToast.warning('Clinic Admin Already Exists: ' + errorMessage)
+                toast.warning('Clinic Admin Already Exists: ' + errorMessage)
             } else if (errorCode === 'unauthorized_role_creation') {
                 showSudoAdminModal.value = false
-                appToast.error(errorMessage)
+                toast.error(errorMessage)
             } else {
                 showSudoAdminModal.value = false
-                appToast.error(errorMessage)
->>>>>>> Stashed changes
+                toast.error(errorMessage)
             }
         } finally {
             isSubmitting.value = false
@@ -1140,44 +1129,28 @@ async function handleSubmitForm(submittedData?: any) {
             // Handle specific validation errors
             const errorMessage = err.response?.data?.message || 'Failed to update user. Please try again.'
             const errorCode = err.response?.data?.error
-
-<<<<<<< Updated upstream
-            if (errorCode === 'manufacturer_account_exists') {
-                toast.warning(errorMessage, 'Manufacturer account already exists')
-            } else if (errorCode === 'clinic_admin_exists') {
-                toast.warning('Clinic Admin Already Exists: ' + errorMessage)
-            } else if (errorCode === 'unauthorized_role_assignment' || errorCode === 'unauthorized_role_creation') {
-                toast.error('Permission Denied: ' + errorMessage)
-            } else if (errorCode === 'unauthorized_clinic_assignment') {
-                toast.error('Facility Error: ' + errorMessage)
-            } else if (errorCode === 'self_role_modification_prohibited' || errorCode === 'self_status_modification_prohibited') {
-                toast.error('Forbidden: ' + errorMessage)
-            } else {
-                toast.error(errorMessage)
-=======
             if (errorCode === 'password_confirmation_required') {
                 sudoAdminModalRef.value?.setError('Incorrect password. Please try again.')
                 pendingAdminFormData = dataToUse
                 return
             } else if (errorCode === 'manufacturer_account_exists') {
                 showSudoAdminModal.value = false
-                appToast.warning('Manufacturer Account Already Exists: ' + errorMessage)
+                toast.warning('Manufacturer Account Already Exists: ' + errorMessage)
             } else if (errorCode === 'clinic_admin_exists') {
                 showSudoAdminModal.value = false
-                appToast.warning('Clinic Admin Already Exists: ' + errorMessage)
+                toast.warning('Clinic Admin Already Exists: ' + errorMessage)
             } else if (errorCode === 'unauthorized_role_assignment' || errorCode === 'unauthorized_role_creation') {
                 showSudoAdminModal.value = false
-                appToast.error('Permission Denied: ' + errorMessage)
+                toast.error('Permission Denied: ' + errorMessage)
             } else if (errorCode === 'unauthorized_clinic_assignment') {
                 showSudoAdminModal.value = false
-                appToast.error('Facility Error: ' + errorMessage)
+                toast.error('Facility Error: ' + errorMessage)
             } else if (errorCode === 'self_role_modification_prohibited' || errorCode === 'self_status_modification_prohibited') {
                 showSudoAdminModal.value = false
-                appToast.error('Forbidden: ' + errorMessage)
+                toast.error('Forbidden: ' + errorMessage)
             } else {
                 showSudoAdminModal.value = false
-                appToast.error(errorMessage)
->>>>>>> Stashed changes
+                toast.error(errorMessage)
             }
         } finally {
             isSubmitting.value = false
