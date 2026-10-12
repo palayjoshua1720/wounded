@@ -101,6 +101,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/management/manufacturers', [ManufacturerController::class, 'getAllManufacturers']);
     Route::post('/management/manufacturers', [ManufacturerController::class, 'addManufacturer']);
     Route::get('/management/manufacturers/{id}/archive', [ManufacturerController::class, 'archiveManufacturer']);
+    Route::get('/management/manufacturers/{id}/unarchive', [ManufacturerController::class, 'unarchiveManufacturer']);
     Route::get('/management/manufacturers/{id}/toggle', [ManufacturerController::class, 'toggleManufacturerStatus']);
     Route::delete('/management/manufacturers/{id}', [ManufacturerController::class, 'deleteManufacturer']);
     Route::post('/management/manufacturers/{id}', [ManufacturerController::class, 'updateManufacturer']);
@@ -144,6 +145,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/management/brands', [BrandController::class, 'addBrand']);
     Route::post('management/brands/{id}', [BrandController::class, 'updateBrand']);
     Route::get('/management/brands/{id}/archive', [BrandController::class, 'archiveBrand']);
+    Route::get('/management/brands/{id}/unarchive', [BrandController::class, 'unarchiveBrand']);
     Route::get('/management/brands/{id}/toggle', [BrandController::class, 'toggleBrandStatus']);
     Route::delete('/management/brands/{id}', [BrandController::class, 'deleteBrand']);
 

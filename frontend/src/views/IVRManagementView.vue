@@ -646,8 +646,8 @@ import {
 	ChevronDown, FileXIcon, CircleCheck,
 } from 'lucide-vue-next'
 import api from '../services/api'
-import { toast } from 'vue3-toastify'
-import 'vue3-toastify/dist/index.css'
+import { confirmAction } from '@/services/alert'
+import { useAppToast } from '@/composables/ui/useAppToast'
 import Swal from 'sweetalert2'
 
 interface IVRRequest {
@@ -768,6 +768,7 @@ const selectedIvrRequest = ref<IVRRequest | null>(null)
 const showCreateForm = ref(false)
 const showEditForm = ref(false)
 const showUserDetailsModal = ref(false)
+const toast = useAppToast()
 
 // file handling
 const isLoadingFile = ref(false)
@@ -819,26 +820,19 @@ async function editIVR(ivr: IVRRequest) {
 
 async function confirmDelete(ivr: IVRRequest) {
 	try {
-		const result = await Swal.fire({
-			title: "Deleting " + ivr.ivr_number,
-			text: "You won't be able to revert this!",
-			icon: "warning",
-			showCancelButton: true,
-			confirmButtonColor: "#3085d6",
-			cancelButtonColor: "#d33",
-			confirmButtonText: "Yes, delete it!"
+		const result = await confirmAction({
+			title: 'Delete IVR Request?',
+			text: `Are you sure you want to delete IVR request ${ivr.ivr_number}? This action cannot be undone!`,
+			confirmButtonColor: '#d33',
+			cancelButtonColor: '#3085d6',
+			confirmButtonText: 'Yes, delete it!',
+			cancelButtonText: 'Cancel'
 		});
 
 		if (result.isConfirmed) {
 			await api.put(`/management/delete/${ivr.ivr_id}/deleteivrrequest`);
 
-			await Swal.fire({
-				title: "Deleted!",
-				text: "IVR Request has been deleted.",
-				icon: "success"
-			});
-
-			toast.success('IVR deleted successfully!');
+			toast.success(`IVR request ${ivr.ivr_number} was permanently deleted.`);
 			await getAllIVRRequests();
 		}
 	} catch (error) {
@@ -850,16 +844,15 @@ async function confirmArchive(ivr: IVRRequest) {
 	try {
 		const isArchived = ivr.ivr_status === 1;
 
-		const result = await Swal.fire({
-			title: `${isArchived ? 'Unarchiving' : 'Archiving'} ${ivr.ivr_number}`,
+		const result = await confirmAction({
+			title: isArchived ? 'Unarchive IVR Request?' : 'Archive IVR Request?',
 			text: isArchived
-				? 'This IVR request will be restored to the list.'
-				: 'This IVR request will be archived',
-			icon: "warning",
-			showCancelButton: true,
-			confirmButtonColor: "#3085d6",
-			cancelButtonColor: "#d33",
-			confirmButtonText: isArchived ? 'Yes, unarchive it!' : 'Yes, archive it!'
+				? 'This action will restore the IVR request from archived status.'
+				: 'This action will move the IVR request to archived status. You can restore it later if needed.',
+			confirmButtonColor: isArchived ? '#3085d6' : '#d33',
+			cancelButtonColor: isArchived ? '#6b7280' : '#3085d6',
+			confirmButtonText: isArchived ? 'Yes, unarchive it!' : 'Yes, archive it!',
+			cancelButtonText: 'Cancel'
 		});
 
 		if (result.isConfirmed) {
@@ -869,13 +862,11 @@ async function confirmArchive(ivr: IVRRequest) {
 
 			await api.put(endpoint);
 
-			await Swal.fire({
-				title: isArchived ? 'Unarchived!' : 'Archived!',
-				text: `IVR Request has been ${isArchived ? 'unarchived' : 'archived'}.`,
-				icon: 'success'
-			});
-
-			toast.success(`IVR ${isArchived ? 'unarchived' : 'archived'} successfully!`);
+			if (isArchived) {
+				toast.success(`IVR request ${ivr.ivr_number} was successfully restored from archived status.`);
+			} else {
+				toast.success(`IVR request ${ivr.ivr_number} was archived successfully and can be restored later.`);
+			}
 			await getAllIVRRequests();
 		}
 	} catch (error) {
@@ -986,14 +977,13 @@ async function applyOverride() {
 		2: 'Not Eligible',
 	}[overrideStatus.value];
 
-	const result = await Swal.fire({
-		title: "Override Eligiblity Status?",
+	const result = await confirmAction({
+		title: 'Override Eligibility Status?',
 		text: `Set status to "${statusNumber}"`,
-		icon: "warning",
-		showCancelButton: true,
-		confirmButtonText: "Yes, override",
-		cancelButtonText: "Cancel",
-		confirmButtonColor: "#d33"
+		confirmButtonText: 'Yes, override',
+		cancelButtonText: 'Cancel',
+		confirmButtonColor: '#d33',
+		cancelButtonColor: '#3085d6'
 	});
 
 	if (!result.isConfirmed) return;
@@ -1005,12 +995,12 @@ async function applyOverride() {
 			{ eligibility_status: overrideStatus.value }
 		);
 
-		toast.success("Order status overridden successfully!");
+		toast.success(`IVR request ${selectedIvrRequest.value?.ivr_number || ''} eligibility status was overridden successfully.`);
 		overrideStatus.value = 0;
 		await getAllIVRRequests(1);
 		closeForm();
 	} catch (error) {
-		toast.error("Failed to override status.");
+		toast.error('Error trying to override eligibility status');
 	}
 }
 

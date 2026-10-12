@@ -1,5 +1,6 @@
 <template>
-    <BaseModal v-model="isOpen" :title="isEdit ? 'Edit Brand' : 'Add New Brand'">
+    <BaseModal v-model="isOpen" :title="isEdit ? 'Edit Brand' : 'Add New Brand'"
+        :class="{ 'pointer-events-none': isCropperOpen, 'opacity-0': isCropperOpen }">
         <form @submit.prevent="handleSubmit" class="space-y-4">
             <!-- Brand Information -->
             <div>
@@ -69,7 +70,8 @@
                     <div class="sm:col-span-2">
                         <ImageUploadCrop v-model="localLogoFile" v-model:model-preview-url="localFormData.logoUrl"
                             v-model:model-remove-flag="localRemoveLogoFlag" label="Brand Logo" :show-label="true"
-                            :is-optional="true" existing-label="Current logo:" />
+                            :is-optional="true" existing-label="Current logo:" @cropper-opening="handleCropperOpening"
+                            @cropper-closing="handleCropperClosing" />
                     </div>
 
                     <div class="sm:col-span-2">
@@ -96,7 +98,7 @@
                         :class="index > 0 ? 'mt-3 pt-3 border-t border-gray-200 dark:border-gray-700' : ''">
                         <div class="flex items-center justify-between mb-2">
                             <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Size {{ index + 1
-                            }}</span>
+                                }}</span>
                             <button v-if="index > 0" type="button" @click="removeGraftSize(index)"
                                 class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300">
                                 <Trash2 class="w-4 h-4" />
@@ -236,6 +238,15 @@ const localFormData = ref<BrandFormData>({
 
 const localLogoFile = ref<File | null>(null)
 const localRemoveLogoFlag = ref(false)
+const isCropperOpen = ref(false)
+
+function handleCropperOpening() {
+    isCropperOpen.value = true
+}
+
+function handleCropperClosing() {
+    isCropperOpen.value = false
+}
 
 // Sync with props
 watch(() => props.modelValue, (newVal) => {

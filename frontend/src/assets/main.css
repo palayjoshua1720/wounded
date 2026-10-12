@@ -149,4 +149,25 @@
   .badge-info {
     @apply bg-info-bg text-info-text dark:bg-info-dark-bg dark:text-info-dark-text;
   }
-} 
+
+  /* Keep SweetAlert's existing layout while matching the application dark theme. */
+  .dark .swal2-popup {
+    @apply bg-gray-800 text-gray-100;
+  }
+
+  .dark .swal2-title {
+    @apply text-white;
+  }
+
+  .dark .swal2-html-container {
+    @apply text-gray-300;
+  }
+
+  .dark .swal2-close {
+    @apply text-gray-400;
+  }
+
+  .dark .swal2-close:hover {
+    @apply text-white;
+  }
+}

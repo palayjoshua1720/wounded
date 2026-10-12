@@ -17,8 +17,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { toast } from 'vue3-toastify'
-import 'vue3-toastify/dist/index.css'
+import { useAppToast } from '@/composables/ui/useAppToast'
 import axios from 'axios'
 import api from '@/services/api'
 import { pageLoader } from '@/composables/ui/usePageLoader'
@@ -26,6 +25,7 @@ import { pageLoader } from '@/composables/ui/usePageLoader'
 export function useLogin() {
 	const router = useRouter()
 	const authStore = useAuthStore()
+	const toast = useAppToast()
 
 	const email = ref('')
 	const password = ref('')

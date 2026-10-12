@@ -447,4 +447,24 @@ class BrandController extends Controller
             ],
         ]);
     }
+
+    public function unarchiveBrand(Request $request, $id)
+    {
+        $brand = Brand::findOrFail($id);
+
+        if ($brand->brand_status === 2) {
+            $oldStatus = $brand->brand_status;
+            $brand->brand_status = 0; // Restore to Active
+            $brand->save();
+
+            $this->logAudit($request, 'brand_unarchive', "Brand unarchived: {$brand->brand_name} (from status {$oldStatus})", $id);
+        }
+
+        return response()->json([
+            'message' => 'Brand unarchived successfully',
+            'data'    => [
+                'brandStatus' => (int) $brand->brand_status,
+            ],
+        ]);
+    }
 }

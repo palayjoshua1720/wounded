@@ -482,10 +482,10 @@ import { useAuthStore } from '@/stores/auth'
 import { useUser } from '@/composables/auth/useUser'
 import { useRouter } from 'vue-router'
 import { useThemeStore } from '@/stores/theme'
-import { toast } from 'vue3-toastify'
+import { useAppToast } from '@/composables/ui/useAppToast'
 import axios from 'axios'
 import api from '@/services/api'
-import 'vue3-toastify/dist/index.css'
+const toast = useAppToast()
 const LightBg = new URL('@/assets/Day.jpg', import.meta.url).href
 const DarkBg = new URL('@/assets/Night.jpg', import.meta.url).href
 import {
@@ -612,7 +612,7 @@ async function updateProfile() {
 		originalProfileData.value = { ...profileForm.value }
 
 		// Show success message
-		toast.success('Profile updated successfully', { autoClose: 2000 })
+		toast.success('Profile updated successfully')
 
 		// Reload the page to ensure changes are reflected
 		window.location.reload()
@@ -623,7 +623,7 @@ async function updateProfile() {
 		displayEmail.value = currentUser.value?.email || '';
 
 		// Show error message
-		toast.error(error.response?.data?.message || 'Failed to update profile. Please try again.', { autoClose: 2000 })
+		toast.error(error.response?.data?.message || 'Failed to update profile. Please try again.')
 	} finally {
 		isUpdating.value = false
 	}
@@ -678,10 +678,10 @@ async function confirmDisable2FA() {
 		localStorage.removeItem('2fa-enabled')
 		localStorage.removeItem('2fa-pin')
 
-		toast.warn('Two-Factor Authentication has been disabled. Your account is now less secure.', { autoClose: 2000 })
+		toast.warning('Two-Factor Authentication has been disabled. Your account is now less secure.')
 	} catch (err: unknown) {
 		console.error('Failed to disable 2FA', err)
-		toast.error('Failed to disable 2FA. Please try again.', { autoClose: 2000 })
+		toast.error('Failed to disable 2FA. Please try again.')
 		// revert checkbox back
 		twoFAEnabled.value = true
 		showDisable2FAModal.value = false
@@ -761,7 +761,7 @@ async function handleSetPin() {
 		pinSet.value = true
 		twoFAEnabled.value = true
 		pinBoxes.value = ['', '', '', '']
-		toast.success(response.data.message, { autoClose: 2000 })
+		toast.success(response.data.message)
 	} catch (err: unknown) {
 		if (axios.isAxiosError(err) && err.response?.data?.message) {
 			pinError.value = err.response.data.message
@@ -789,10 +789,10 @@ async function handleChangePin() {
 		localStorage.setItem('2fa-pin', pin)
 		showChangePin.value = false
 		newPinBoxes.value = ['', '', '', '']
-		toast.success('Your PIN has been successfully changed.', { autoClose: 2000 })
+		toast.success('Your PIN has been successfully changed.')
 	} catch (err: unknown) {
 		console.error('Failed to update 2FA PIN', err)
-		toast.error('Failed to change PIN. Please try again.', { autoClose: 2000 })
+		toast.error('Failed to change PIN. Please try again.')
 	}
 }
 
@@ -811,7 +811,7 @@ async function requestDisableOneTime(val: boolean) {
 			await api.post('/auth/profile/security/enable-one-time-email')
 			oneTimeEmail.value = val
 			localStorage.setItem('one-time-email-enabled', 'true')
-			toast.success('One Time Code Authentication is now enabled.', { autoClose: 2000 })
+			toast.success('One Time Code Authentication is now enabled.')
 
 			// Update user data in auth store
 			if (authStore.currentUser) {
@@ -819,7 +819,7 @@ async function requestDisableOneTime(val: boolean) {
 			}
 		} catch (err: any) {
 			console.error('Failed to enable one-time email verification', err)
-			toast.error(err.response?.data?.message || 'Failed to enable one-time email verification', { autoClose: 2000 })
+			toast.error(err.response?.data?.message || 'Failed to enable one-time email verification')
 			oneTimeEmail.value = false
 		}
 	}
@@ -838,7 +838,7 @@ async function confirmDisableOneTime() {
 		localStorage.removeItem('one-time-email-enabled')
 		showDisableOneTimeModal.value = false
 		pendingOneTimeValue.value = null
-		toast.warn('One Time Code Authentication has been disabled. Your account is now less secure.', { autoClose: 2000 })
+		toast.warning('One Time Code Authentication has been disabled. Your account is now less secure.')
 		oneTimeEmail.value = false
 
 		// Update user data in auth store
@@ -847,7 +847,7 @@ async function confirmDisableOneTime() {
 		}
 	} catch (err: any) {
 		console.error('Failed to disable one-time email verification', err)
-		toast.error(err.response?.data?.message || 'Failed to disable one-time email verification', { autoClose: 2000 })
+		toast.error(err.response?.data?.message || 'Failed to disable one-time email verification')
 
 		// Restore checkbox state
 		oneTimeEmail.value = true
@@ -889,10 +889,10 @@ async function generateBackupCodes() {
 		backupCodesEnabled.value = response.data.backup_codes_enabled
 		showDisableBackupModal.value = false
 		pendingBackupValue.value = null
-		toast.success(response.data.message, { autoClose: 2000 })
+		toast.success(response.data.message)
 	} catch (err: any) {
 		console.error('Failed to generate backup codes', err)
-		toast.error(err.response?.data?.message || 'Failed to generate backup codes', { autoClose: 2000 })
+		toast.error(err.response?.data?.message || 'Failed to generate backup codes')
 		backupCodesEnabled.value = false
 	}
 }
@@ -904,10 +904,10 @@ async function confirmDisableBackup() {
 		backupCodes.value = []
 		showDisableBackupModal.value = false
 		pendingBackupValue.value = null
-		toast.warn('Backup Codes have been disabled. All generated codes have been deleted.', { autoClose: 2000 })
+		toast.warning('Backup Codes have been disabled. All generated codes have been deleted.')
 	} catch (err: any) {
 		console.error('Failed to disable backup codes', err)
-		toast.error(err.response?.data?.message || 'Failed to disable backup codes', { autoClose: 2000 })
+		toast.error(err.response?.data?.message || 'Failed to disable backup codes')
 		showDisableBackupModal.value = false
 		pendingBackupValue.value = null
 	}
@@ -921,13 +921,13 @@ function cancelDisableBackup() {
 
 function copyBackupCode(code: string) {
 	navigator.clipboard.writeText(code)
-	toast.success('Backup code copied to clipboard!', { autoClose: 1500 })
+	toast.success('Backup code copied to clipboard!')
 }
 
 function copyAllBackupCodes() {
 	const allCodes = backupCodes.value.join('\n')
 	navigator.clipboard.writeText(allCodes)
-	toast.success('All backup codes copied to clipboard!', { autoClose: 1500 })
+	toast.success('All backup codes copied to clipboard!')
 }
 
 async function fetchExistingBackupCodes() {
@@ -944,7 +944,7 @@ async function fetchExistingBackupCodes() {
 function confirmGenerateBackupCodes() {
 	generateBackupCodes()
 	showGenerateBUCodes.value = false
-	toast.success('New backup codes have been generated.', { autoClose: 2000 })
+	toast.success('New backup codes have been generated.')
 }
 
 function cancelGenerateBackupCodes() {

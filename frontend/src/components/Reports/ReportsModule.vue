@@ -1077,12 +1077,12 @@ import { Chart, registerables, type ChartType } from 'chart.js'
 import type { Ref } from 'vue'
 import { orderService, userService, brandService, inventoryService, invoiceService, ivrService, returnsService, api } from '@/services/api'
 import { Package, Building2 } from 'lucide-vue-next'
-import { toast } from 'vue3-toastify'
-import 'vue3-toastify/dist/index.css'
+import { useAppToast } from '@/composables/ui/useAppToast'
 import html2canvas from 'html2canvas'
 import * as XLSX from 'xlsx'
 
 Chart.register(...registerables)
+const toast = useAppToast()
 
 // --- REAL DATA FROM API ---
 const orders = ref<any[]>([])

@@ -599,10 +599,12 @@ import {
 	FilePenLine, BaggageClaim
 } from 'lucide-vue-next';
 import api from '@/services/api'
-import { toast } from 'vue3-toastify'
-import 'vue3-toastify/dist/index.css'
+import { confirmAction } from '@/services/alert'
+import { useAppToast } from '@/composables/ui/useAppToast'
 import Swal from 'sweetalert2'
 import { formatCurrency } from '@/utils/currency'
+
+const toast = useAppToast()
 
 interface Order {
 	order_id: number;
@@ -1064,7 +1066,7 @@ async function handleCreateOrder() {
 	// Check MUE limits
 	const exceedsMUE = formData.value.items.some((item, idx) => !isQuantityValid(idx))
 	if (exceedsMUE) {
-		const result = await Swal.fire({
+		const result = await confirmAction({
 			title: '⚠️ MUE Limit Exceeded',
 			html: `
 				<p class="text-sm text-gray-700">
@@ -1072,11 +1074,9 @@ async function handleCreateOrder() {
 					You may still submit this order, but it will be flagged for review.
 				</p>
 			`,
-			icon: 'warning',
-			showCancelButton: true,
 			confirmButtonText: 'Submit Anyway',
 			cancelButtonText: 'Cancel',
-			confirmButtonColor: '#facc15',
+			confirmButtonColor: '#d33',
 			cancelButtonColor: '#6b7280',
 			reverseButtons: true,
 		})
@@ -1385,14 +1385,13 @@ async function editOrder(order: Order) {
 async function updateOrderStatusNew(orderOrId: Order | number, newStatus: OrderStatus) {
 	const order_id = typeof orderOrId === 'number' ? orderOrId : orderOrId.order_id;
 
-	const result = await Swal.fire({
-		title: "Are you sure?",
-		text: "This action cannot be undone.",
-		icon: "warning",
-		showCancelButton: true,
-		confirmButtonColor: "#3085d6",
-		cancelButtonColor: "#d33",
-		confirmButtonText: "Yes, confirm!"
+	const result = await confirmAction({
+		title: 'Update Order Status?',
+		text: `Are you sure you want to update order ${order_id} to ${newStatus}?`,
+		confirmButtonColor: '#d33',
+		cancelButtonColor: '#3085d6',
+		confirmButtonText: 'Yes, confirm!',
+		cancelButtonText: 'Cancel'
 	});
 
 	if (!result.isConfirmed) return;
@@ -1429,14 +1428,13 @@ async function applyOverride() {
 
 	if (!overrideStatus.value) return;
 
-	const result = await Swal.fire({
+	const result = await confirmAction({
 		title: "Override Status?",
 		text: `Set status to "${overrideStatus.value}"`,
-		icon: "warning",
-		showCancelButton: true,
 		confirmButtonText: "Yes, override",
 		cancelButtonText: "Cancel",
-		confirmButtonColor: "#d33"
+		confirmButtonColor: "#d33",
+		cancelButtonColor: "#3085d6"
 	});
 
 	if (!result.isConfirmed) return;

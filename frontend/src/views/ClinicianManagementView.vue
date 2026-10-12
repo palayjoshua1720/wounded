@@ -368,8 +368,8 @@ import {
 	ChevronDown
 } from 'lucide-vue-next'
 import api from '../services/api'
-import { toast } from 'vue3-toastify'
-import 'vue3-toastify/dist/index.css'
+import { confirmAction } from '@/services/alert'
+import { useAppToast } from '@/composables/ui/useAppToast'
 
 interface User {
 	id: string
@@ -408,6 +408,7 @@ const statusFilter = ref('all')
 const selectedUser = ref<User | null>(null)
 const showCreateForm = ref(false)
 const showEditForm = ref(false)
+const toast = useAppToast()
 
 const formData = ref({
 	email: '',
@@ -428,8 +429,21 @@ function handleToggleStatus(userId: string) {
 	}
 }
 
-function handleDeleteUser(userId: string) {
-	if (confirm('Are you sure you want to delete this user?')) {
+
+async function handleDeleteUser(userId: string) {
+	const user = users.value.find(currentUser => currentUser.id === userId)
+	if (!user) return
+
+	const result = await confirmAction({
+		title: 'Delete Clinician?',
+		text: `Are you sure you want to delete ${user.name || user.first_name}?`,
+		confirmButtonColor: '#d33',
+		cancelButtonColor: '#3085d6',
+		confirmButtonText: 'Yes, delete it!',
+		cancelButtonText: 'Cancel'
+	})
+
+	if (result.isConfirmed) {
 		users.value = users.value.filter(user => user.id !== userId)
 	}
 }

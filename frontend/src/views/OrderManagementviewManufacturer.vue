@@ -329,10 +329,11 @@ import {
 	Package, BaggageClaim
 } from 'lucide-vue-next';
 import api from '@/services/api'
-import { toast } from 'vue3-toastify'
-import 'vue3-toastify/dist/index.css'
-import Swal from 'sweetalert2'
+import { confirmAction } from '@/services/alert'
+import { useAppToast } from '@/composables/ui/useAppToast'
 import { formatCurrency } from '@/utils/currency'
+
+const toast = useAppToast()
 
 interface Order {
 	order_id: number;
@@ -699,14 +700,13 @@ async function getAllGraftSizes() {
 async function updateOrderStatusNew(orderOrId: Order | number, newStatus: OrderStatus) {
 	const order_id = typeof orderOrId === 'number' ? orderOrId : orderOrId.order_id;
 
-	const result = await Swal.fire({
-		title: "Are you sure?",
-		text: "This action cannot be undone.",
-		icon: "warning",
-		showCancelButton: true,
-		confirmButtonColor: "#3085d6",
-		cancelButtonColor: "#d33",
-		confirmButtonText: "Yes, confirm!"
+	const result = await confirmAction({
+		title: 'Update Order Status?',
+		text: `Are you sure you want to update order ${order_id} to ${newStatus}?`,
+		confirmButtonColor: '#d33',
+		cancelButtonColor: '#3085d6',
+		confirmButtonText: 'Yes, confirm!',
+		cancelButtonText: 'Cancel'
 	});
 
 	if (!result.isConfirmed) return;

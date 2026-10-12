@@ -1539,7 +1539,7 @@ import {
     SlidersHorizontal,
     ClipboardList
 } from 'lucide-vue-next';
-import Swal from 'sweetalert2'
+import { useAppToast } from '@/composables/ui/useAppToast'
 import { createWorker } from 'tesseract.js'
 
 interface InventoryItem {
@@ -1570,6 +1570,7 @@ interface InventoryItem {
 // Main inventory state now comes from the backend (woundmed_usage_log via /inventory/all)
 const inventory = ref<InventoryItem[]>([])
 const authStore = useAuthStore()
+const toast = useAppToast()
 const graftSizes = ref<Array<{ graft_size_id: string; brand_id: string; size: string; area: number; price: number }>>([])
 
 // Pagination state
@@ -1629,12 +1630,7 @@ const fetchInventory = async () => {
         }
 
         // Show error to user with more details
-        await Swal.fire({
-            title: 'Error Loading Inventory',
-            text: error.response?.data?.message || error.message || 'Failed to load inventory data from the backend. Please check the console for details.',
-            icon: 'error',
-            confirmButtonColor: '#2563eb'
-        })
+        toast.error(error.response?.data?.message || error.message || 'Failed to load inventory data from the backend.', 'Error loading inventory')
     } finally {
         tableLoader.value = false
     }
@@ -2045,14 +2041,7 @@ async function handleStatusUpdate(itemId: string, newStatus: InventoryItem['stat
         // Call the backend API to update status
         await inventoryService.updateInventoryStatus(usageLogId, logStatus)
 
-        await Swal.fire({
-            title: 'Success!',
-            text: 'Inventory status updated successfully.',
-            icon: 'success',
-            confirmButtonColor: '#2563eb',
-            timer: 1500,
-            showConfirmButton: false
-        })
+        toast.success('Inventory status was updated successfully.')
 
         // Close the modal after successful update
         showItemModal.value = false
@@ -2060,12 +2049,7 @@ async function handleStatusUpdate(itemId: string, newStatus: InventoryItem['stat
     } catch (error) {
         console.error('Failed to update inventory status:', error)
 
-        await Swal.fire({
-            title: 'Error!',
-            text: 'Failed to update inventory status. Please try again.',
-            icon: 'error',
-            confirmButtonColor: '#2563eb'
-        })
+        toast.error('Failed to update inventory status. Please try again.')
 
         // Revert the local state on error
         await fetchInventory()
@@ -2269,25 +2253,13 @@ async function handleSaveEdit() {
 
         await fetchInventory()
 
-        await Swal.fire({
-            title: 'Success!',
-            text: 'Inventory information has been updated successfully.',
-            icon: 'success',
-            confirmButtonColor: '#2563eb',
-            timer: 2000,
-            showConfirmButton: false
-        })
+        toast.success('Inventory information was updated successfully.')
 
         console.log('Usage log updated successfully')
     } catch (error) {
         console.error('Failed to update usage log:', error)
 
-        await Swal.fire({
-            title: 'Error!',
-            text: 'Failed to update inventory information. Please try again.',
-            icon: 'error',
-            confirmButtonColor: '#2563eb'
-        })
+        toast.error('Failed to update inventory information. Please try again.')
     } finally {
         showEditModal.value = false
         editingItem.value = null
@@ -2310,12 +2282,7 @@ async function handleUsageLogSubmit(usageLog: {
     const currentUserId = authStore.user?.id
     if (!currentUserId) {
         console.error('Cannot log usage: no authenticated user')
-        await Swal.fire({
-            title: 'Error!',
-            text: 'You must be logged in to create usage logs.',
-            icon: 'error',
-            confirmButtonColor: '#2563eb'
-        })
+        toast.error('You must be logged in to create usage logs.')
         return
     }
 
@@ -2340,14 +2307,7 @@ async function handleUsageLogSubmit(usageLog: {
         await fetchInventory()
 
         // Show success message
-        await Swal.fire({
-            title: 'Success!',
-            text: 'Usage log has been created successfully.',
-            icon: 'success',
-            confirmButtonColor: '#2563eb',
-            timer: 2000,
-            showConfirmButton: false
-        })
+        toast.success('Usage log was created successfully.')
     } catch (error: any) {
         console.error('Failed to save usage log to backend', error)
 
@@ -2365,12 +2325,7 @@ async function handleUsageLogSubmit(usageLog: {
             }
         }
 
-        await Swal.fire({
-            title: 'Error!',
-            text: errorMessage,
-            icon: 'error',
-            confirmButtonColor: '#2563eb'
-        })
+        toast.error(errorMessage)
 
         // Don't close the modal on error so user can fix the issue
         return
@@ -2441,12 +2396,7 @@ async function handleFileUpload(event: Event) {
         await processOCR(file)
     } else if (file.type === 'application/pdf') {
         // For PDFs, we'd need to convert to image first or use PDF.js
-        await Swal.fire({
-            title: 'PDF Support',
-            text: 'PDF processing requires conversion to images. Please upload a JPG or PNG image for now.',
-            icon: 'info',
-            confirmButtonColor: '#2563eb'
-        })
+        toast.info('PDF processing requires conversion to images. Please upload a JPG or PNG image for now.', 'PDF support')
         clearUpload()
     }
 }
@@ -2474,12 +2424,7 @@ async function processOCR(file: File) {
         await worker.terminate()
     } catch (error) {
         console.error('OCR processing failed:', error)
-        await Swal.fire({
-            title: 'OCR Error',
-            text: 'Failed to extract text from image. Please enter the information manually.',
-            icon: 'error',
-            confirmButtonColor: '#2563eb'
-        })
+        toast.error('Failed to extract text from image. Please enter the information manually.', 'OCR error')
     } finally {
         isProcessingOCR.value = false
     }
@@ -2577,65 +2522,35 @@ function closeUploadModal() {
 async function submitExtractedData() {
     // Validate required fields
     if (!extractedData.value.serialNumber) {
-        await Swal.fire({
-            title: 'Missing Information',
-            text: 'Product Code is required',
-            icon: 'warning',
-            confirmButtonColor: '#2563eb'
-        })
+        toast.warning('Product Code is required', 'Missing information')
         return
     }
 
     if (!extractedData.value.dateOfService) {
-        await Swal.fire({
-            title: 'Missing Information',
-            text: 'Date of Service is required',
-            icon: 'warning',
-            confirmButtonColor: '#2563eb'
-        })
+        toast.warning('Date of Service is required', 'Missing information')
         return
     }
 
     if (!extractedData.value.woundSite) {
-        await Swal.fire({
-            title: 'Missing Information',
-            text: 'Wound Site is required',
-            icon: 'warning',
-            confirmButtonColor: '#2563eb'
-        })
+        toast.warning('Wound Site is required', 'Missing information')
         return
     }
 
     try {
         const currentUserId = authStore.user?.id
         if (!currentUserId) {
-            await Swal.fire({
-                title: 'Error',
-                text: 'No authenticated user found',
-                icon: 'error',
-                confirmButtonColor: '#2563eb'
-            })
+            toast.error('No authenticated user found')
             return
         }
 
         // Validate required fields from extractedData
         if (!extractedData.value.patientId) {
-            await Swal.fire({
-                title: 'Missing Information',
-                text: 'Patient is required',
-                icon: 'warning',
-                confirmButtonColor: '#2563eb'
-            })
+            toast.warning('Patient is required', 'Missing information')
             return
         }
 
         if (!extractedData.value.clinicianId) {
-            await Swal.fire({
-                title: 'Missing Information',
-                text: 'Clinician is required',
-                icon: 'warning',
-                confirmButtonColor: '#2563eb'
-            })
+            toast.warning('Clinician is required', 'Missing information')
             return
         }
 
@@ -2658,24 +2573,12 @@ async function submitExtractedData() {
         await inventoryService.createUsageLog(payload)
         await fetchInventory()
 
-        await Swal.fire({
-            title: 'Success!',
-            text: 'Usage log created successfully from OCR data.',
-            icon: 'success',
-            confirmButtonColor: '#2563eb',
-            timer: 2000,
-            showConfirmButton: false
-        })
+        toast.success('Usage log was created successfully from OCR data.')
 
         closeUploadModal()
     } catch (error) {
         console.error('Failed to create usage log from OCR:', error)
-        await Swal.fire({
-            title: 'Error',
-            text: 'Failed to create usage log. Please try again.',
-            icon: 'error',
-            confirmButtonColor: '#2563eb'
-        })
+        toast.error('Failed to create usage log. Please try again.')
     }
 }
 

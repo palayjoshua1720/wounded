@@ -193,9 +193,6 @@
 				</div>
 			</main>
 		</div>
-		<!-- Notification Modal -->
-		<NotificationModal :isOpen="isNotificationModalOpen" :notification="selectedNotification"
-			@close="closeNotificationModal" />
 	</div>
 </template>
 
@@ -212,7 +209,6 @@ import { pageLoader } from '@/composables/ui/usePageLoader'
 import { notificationService } from '@/services/api'
 import Sidebar from './Sidebar.vue'
 import PageLoader from '@/components/ui/PageLoader.vue'
-import NotificationModal from '@/components/notifications/NotificationModal.vue'
 import {
 	RefreshCcw, Settings, BellRing, LogOut,
 	TriangleAlert, TriangleAlertIcon,
@@ -239,8 +235,6 @@ const isProfileOpen = ref(false)
 const isSidebarOpen = ref(false)
 const isNotificationsOpen = ref(false)
 const notificationCount = ref(0)
-const isNotificationModalOpen = ref(false)
-const selectedNotification = ref<any>(null)
 const headerNotifications = ref<any[]>([])
 const headerNotifLoading = ref(false)
 let notifPollInterval: ReturnType<typeof setInterval> | null = null
@@ -324,24 +318,24 @@ const isDarkMode = computed(() => themeStore.isDarkMode)
 // Full name with conditional middle initial
 const fullUserName = computed(() => {
 	if (!currentUser.value) return ''
-	
+
 	const firstName = currentUser.value.first_name || ''
 	const middleName = currentUser.value.middle_name
 	const lastName = currentUser.value.last_name || ''
-	
+
 	// Build name parts
 	const nameParts: string[] = []
-	
+
 	if (firstName) nameParts.push(firstName.trim())
-	
+
 	// Only add middle initial if middle name exists and is not empty
 	if (middleName && typeof middleName === 'string' && middleName.trim()) {
 		const middleInitial = middleName.trim().charAt(0).toUpperCase()
 		nameParts.push(middleInitial + '.')
 	}
-	
+
 	if (lastName) nameParts.push(lastName.trim())
-	
+
 	return nameParts.join(' ')
 })
 
@@ -427,11 +421,6 @@ const handleProfileClick = () => {
 const handleSettingsClick = () => {
 	isProfileOpen.value = false
 	router.push('/settings')
-}
-
-const closeNotificationModal = () => {
-	isNotificationModalOpen.value = false
-	selectedNotification.value = null
 }
 
 function goToChangeAccount() {

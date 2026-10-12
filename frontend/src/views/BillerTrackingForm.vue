@@ -347,12 +347,12 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed, watch } from 'vue'
-import { toast } from 'vue3-toastify'
+import { confirmAction } from '@/services/alert'
+import { useAppToast } from '@/composables/ui/useAppToast'
 import api from '@/services/api'
 import { formatCurrency } from '@/utils/currency'
 import { FileSpreadsheet, Upload, FileText, X, Download, Plus, RefreshCw, Pencil, Trash2 } from 'lucide-vue-next'
 import * as XLSX from 'xlsx'
-import Swal from 'sweetalert2'
 import BaseModal from '@/components/common/BaseModal.vue'
 import TableLoader from '@/components/ui/TableLoader.vue'
 
@@ -363,6 +363,16 @@ const showUploadModal = ref(false)
 const manualSubmitting = ref(false)
 const uploading = ref(false)
 const processing = ref(false)
+const toast = useAppToast()
+
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;')
+}
 const uploadedFile = ref<File | null>(null)
 const fileInput = ref<HTMLInputElement | null>(null)
 const previewData = ref<any[]>([])
@@ -845,7 +855,7 @@ const submitManualEntry = async () => {
     }
     
     if (errors.length > 0) {
-      toast.error(`Validation errors:\n${errors.join('\n')}`)
+      toast.error(`Correct the following before saving:\n${errors.map(error => `- ${error}`).join('\n')}\n\nPlease correct these items and try again.`, 'Please review the form')
       return
     }
 
@@ -889,7 +899,7 @@ const submitManualEntry = async () => {
           }
         }
 
-        toast.success('Entry updated successfully!')
+        toast.success(`${manualForm.patientName || 'Billing entry'} details were updated successfully.`)
       } catch (error) {
         console.error('Failed to update entry:', error)
         toast.error('Failed to update entry')
@@ -923,7 +933,7 @@ const submitManualEntry = async () => {
           clinician: response.data.clinician,
           notes: response.data.notes
         })
-        toast.success('Entry added successfully!')
+        toast.success(`${manualForm.patientName || 'Billing entry'} was created successfully.`)
       } catch (error) {
         console.error('Failed to add entry:', error)
         toast.error('Failed to add entry')
@@ -1004,14 +1014,15 @@ const editItem = (item: any) => {
 
 // Delete function with SweetAlert
 const deleteItem = async (item: any) => {
-  // Show Swal confirmation dialog directly
-  const result = await Swal.fire({
-    title: 'Are you sure?',
-    html: `Are you sure you want to delete the entry for <strong>${item.patientName || item.patient_name}</strong>?<br>This action cannot be undone.`,
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonColor: '#3085d6',
-    cancelButtonColor: '#d33',
+  const patientName = item.patientName || item.patient_name || 'this patient'
+  const result = await confirmAction({
+    title: 'Delete Billing Entry?',
+    html: `
+      Are you sure you want to delete the entry for <b>${escapeHtml(patientName)}</b>?<br>
+      <span style="color:#d33;">This action cannot be undone!</span>
+    `,
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#3085d6',
     confirmButtonText: 'Yes, delete it!',
     cancelButtonText: 'Cancel'
   })
@@ -1022,19 +1033,13 @@ const deleteItem = async (item: any) => {
       
       // Remove from local data
       tableData.value = tableData.value.filter(existingItem => existingItem.id !== item.id)
-      toast.success('Billing deleted successfully.')
+      toast.success(`${patientName} billing entry was permanently deleted.`)
       
       // Refresh current page
       loadTableData(pagination.value?.current_page || 1)
     } catch (error) {
       console.error('Failed to delete entry:', error)
-      Swal.fire({
-        title: 'Error!',
-        text: 'Failed to delete the entry. Please try again.',
-        icon: 'error',
-        confirmButtonColor: '#3085d6',
-        confirmButtonText: 'OK'
-      })
+      toast.error('Error trying to delete the billing entry')
     }
   }
 }

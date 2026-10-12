@@ -1050,7 +1050,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
-import Swal from 'sweetalert2'
+import { useAppToast } from '@/composables/ui/useAppToast'
 import {
   Search, X, Plus, BarChart3, Package, CheckCircle2, AlertCircle, Activity,
   Loader2, Pencil, Trash2, Save, AlertTriangle, SlidersHorizontal, Eye,
@@ -1100,6 +1100,7 @@ interface ProductOption {
 // Auth
 const authStore = useAuthStore()
 const isOfficeStaff = computed(() => authStore.currentUser?.user_role === 1)
+const toast = useAppToast()
 
 // State
 const ledgerEntries = ref<LedgerEntry[]>([])
@@ -1385,10 +1386,10 @@ async function saveEntry() {
     }
     if (isEditing.value && form.value.ledger_id) {
       await inventoryLedgerService.update(form.value.ledger_id, payload)
-      await Swal.fire({ title: 'Updated', text: 'Ledger entry updated successfully.', icon: 'success', timer: 2000, showConfirmButton: false })
+      toast.success('Ledger entry details were updated successfully.')
     } else {
       await inventoryLedgerService.create(payload)
-      await Swal.fire({ title: 'Created', text: 'Ledger entry created successfully.', icon: 'success', timer: 2000, showConfirmButton: false })
+      toast.success('Ledger entry was created successfully.')
     }
     closeModal(); await fetchLedger(); await fetchStats()
   } catch (error: any) {
@@ -1403,7 +1404,7 @@ async function saveEntry() {
       formErrors.value = { ...formErrors.value, ...mapped }
       // Field-level errors are shown inline; skip the Swal popup.
     } else {
-      await Swal.fire({ title: 'Error', text: error.response?.data?.message || 'Failed to save ledger entry.', icon: 'error', confirmButtonColor: '#2563eb' })
+      toast.error(error.response?.data?.message || 'Failed to save ledger entry.')
     }
   } finally { isSaving.value = false }
 }
@@ -1416,11 +1417,11 @@ async function deleteEntry() {
     showDeleteModal.value = false
     if (selectedEntry.value?.ledger_id === entryToDelete.value.ledger_id) selectedEntry.value = null
     entryToDelete.value = null
-    await Swal.fire({ title: 'Deleted', text: 'Ledger entry deleted successfully.', icon: 'success', timer: 2000, showConfirmButton: false })
+    toast.success('Ledger entry was permanently deleted.')
     await fetchLedger(); await fetchStats()
   } catch (error: any) {
     console.error('Delete error:', error)
-    await Swal.fire({ title: 'Error', text: error.response?.data?.message || 'Failed to delete ledger entry.', icon: 'error', confirmButtonColor: '#2563eb' })
+    toast.error(error.response?.data?.message || 'Failed to delete ledger entry.')
   } finally { isDeleting.value = false }
 }
 
@@ -1445,7 +1446,7 @@ async function fetchLedger() {
     }
   } catch (error: any) {
     console.error('Failed to fetch ledger:', error)
-    await Swal.fire({ title: 'Error', text: error.response?.data?.message || 'Failed to load ledger entries.', icon: 'error', confirmButtonColor: '#2563eb' })
+    toast.error(error.response?.data?.message || 'Failed to load ledger entries.')
   } finally { isLoading.value = false }
 }
 
@@ -1573,12 +1574,7 @@ async function downloadTemplate() {
     window.URL.revokeObjectURL(url)
   } catch (error: any) {
     console.error('Template download error:', error)
-    await Swal.fire({
-      title: 'Download Failed',
-      text: error.response?.data?.message || 'Failed to download template.',
-      icon: 'error',
-      confirmButtonColor: '#2563eb',
-    })
+    toast.error(error.response?.data?.message || 'Failed to download template.', 'Download failed')
   } finally {
     isDownloadingTemplate.value = false
   }

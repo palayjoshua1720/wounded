@@ -333,9 +333,9 @@ import NewReturnModal from '@/components/Returns/NewReturnModal.vue'
 import BaseModal from '@/components/common/BaseModal.vue'
 import { RefreshCcw, Upload, CheckCircle2, Eye, Undo2, BarChart3, Plus } from 'lucide-vue-next'
 import api from '@/services/api'
-import Swal from 'sweetalert2'
-import { toast } from 'vue3-toastify'
-import 'vue3-toastify/dist/index.css'
+import { useAppToast } from '@/composables/ui/useAppToast'
+
+const toast = useAppToast()
 
 interface ReturnItem {
   id: string
@@ -667,13 +667,7 @@ async function handleSubmitReturn(data: any) {
       console.log('Return updated successfully:', response.data)
 
       // Show success message
-      await Swal.fire({
-        icon: 'success',
-        title: 'Return Updated!',
-        text: 'The return has been updated successfully.',
-        timer: 2000,
-        showConfirmButton: false
-      })
+      toast.success('The return was updated successfully.')
     } else {
       // Create new return
       // Ensure we're sending the correct field names
@@ -778,14 +772,7 @@ async function handleSubmitReturn(data: any) {
       }
     }
 
-    // For non-validation errors (e.g. server errors), show SweetAlert
-    await Swal.fire({
-      icon: 'error',
-      title: data.id ? 'Update Failed' : 'Creation Failed',
-      text: errorMessage,
-      confirmButtonColor: '#dc2626',
-      confirmButtonText: 'OK'
-    })
+    toast.error(errorMessage, data.id ? 'Update failed' : 'Creation failed')
   }
 }
 // Handle page change from pagination component
@@ -836,27 +823,14 @@ async function handleDeleteReturn(item: ReturnItem) {
 
     console.log('Return deleted successfully:', item.id)
 
-    // Show success message
-    await Swal.fire({
-      icon: 'success',
-      title: 'Deleted!',
-      text: 'The return has been deleted successfully.',
-      timer: 2000,
-      showConfirmButton: false
-    })
+    toast.success('The return was permanently deleted.')
   } catch (error: any) {
     console.error('Error deleting return:', error)
 
     // Extract error message
     const errorMessage = error.response?.data?.message || 'Failed to delete return. Please try again.'
 
-    await Swal.fire({
-      icon: 'error',
-      title: 'Delete Failed',
-      text: errorMessage,
-      confirmButtonColor: '#dc2626',
-      confirmButtonText: 'OK'
-    })
+    toast.error(errorMessage, 'Delete failed')
   }
 }
 </script>

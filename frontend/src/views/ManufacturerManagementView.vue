@@ -1,21 +1,110 @@
 <template>
-  <div class="space-y-6">
+  <div class="space-y-4 sm:space-y-6">
     <!-- Header -->
-    <div class="flex items-center justify-between">
-      <div>
-        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Manufacturer Management</h1>
-      </div>
+    <div class="flex flex-col sm:flex-row items-center sm:items-center justify-between gap-3">
+      <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Manufacturer Management</h1>
       <button @click="selectedManufacturer = null; showCreateForm = true"
-        class="flex items-center px-5 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg group">
-        <HousePlus class="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" />
+        class="flex items-center justify-center w-full sm:w-auto px-4 sm:px-5 py-2.5 sm:py-3 text-sm sm:text-base bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg group whitespace-nowrap">
+        <HousePlus class="w-4 h-4 mr-1.5 sm:mr-2 group-hover:scale-110 transition-transform" />
         Add Manufacturer
       </button>
     </div>
 
     <!-- Filters -->
-    <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
-      <div class="flex flex-col lg:flex-row gap-6">
-        <div class="flex-1">
+    <div class="bg-white dark:bg-gray-800 p-4 lg:p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+      <!-- Mobile: Stacked Layout -->
+      <div class="lg:hidden space-y-3">
+        <!-- Search and Filters Toggle Row -->
+        <div class="flex flex-col sm:flex-row gap-2">
+          <!-- Search Input -->
+          <div class="relative flex-1">
+            <Search
+              class="absolute left-3 sm:left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-400 dark:text-gray-500" />
+            <input v-model="searchTerm" type="text" placeholder="Search Manufacturer..."
+              class="w-full pl-9 sm:pl-10 pr-10 py-2.5 border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900 dark:text-white text-sm transition-all duration-200" />
+          </div>
+
+          <!-- Filters Toggle Button -->
+          <button @click="showFilters = !showFilters"
+            class="flex-shrink-0 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl text-sm font-medium h-[2.7rem] min-h-[2.5rem]">
+            <SlidersHorizontal class="w-4 h-4" />
+            Filters
+            <span v-if="statusFilter !== 'all'" class="w-2 h-2 bg-green-500 rounded-full"></span>
+          </button>
+        </div>
+
+        <!-- Filter Pills Row -->
+        <div class="flex flex-wrap gap-2">
+          <span v-if="statusFilter !== 'all'"
+            class="inline-flex items-center gap-1 px-2.5 py-1.5 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 rounded-lg text-xs">
+            {{ statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1) }}
+            <button @click="statusFilter = 'all'" class="hover:text-green-900 ml-1">
+              <X class="w-3 h-3" />
+            </button>
+          </span>
+          <span v-if="itemsPerPage !== 9"
+            class="inline-flex items-center gap-1 px-2.5 py-1.5 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-lg text-xs">
+            {{ itemsPerPage }} per page
+            <button @click="itemsPerPage = 9" class="hover:text-blue-900 ml-1">
+              <X class="w-3 h-3" />
+            </button>
+          </span>
+        </div>
+
+        <!-- Expandable Filters -->
+        <div v-if="showFilters" class="space-y-3 pt-2 border-t border-gray-100 dark:border-gray-700">
+          <div>
+            <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Status</label>
+            <div class="flex gap-2">
+              <button @click="statusFilter = 'all'"
+                :class="['flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-colors',
+                  statusFilter === 'all' ? 'bg-green-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300']">
+                All
+              </button>
+              <button @click="statusFilter = 'active'"
+                :class="['flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-colors',
+                  statusFilter === 'active' ? 'bg-green-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300']">
+                Active
+              </button>
+              <button @click="statusFilter = 'inactive'"
+                :class="['flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-colors',
+                  statusFilter === 'inactive' ? 'bg-green-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300']">
+                Inactive
+              </button>
+              <button @click="statusFilter = 'archive'"
+                :class="['flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-colors',
+                  statusFilter === 'archive' ? 'bg-green-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300']">
+                Archived
+              </button>
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Items per
+              page</label>
+            <div class="flex gap-2">
+              <button @click="itemsPerPage = 9"
+                :class="['flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-colors',
+                  itemsPerPage === 9 ? 'bg-blue-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300']">
+                9
+              </button>
+              <button @click="itemsPerPage = 25"
+                :class="['flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-colors',
+                  itemsPerPage === 25 ? 'bg-blue-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300']">
+                25
+              </button>
+              <button @click="itemsPerPage = 50"
+                :class="['flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-colors',
+                  itemsPerPage === 50 ? 'bg-blue-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300']">
+                50
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Desktop: Original Layout -->
+      <div class="hidden lg:flex flex-col lg:flex-row gap-6">
+        <div class="flex-1 min-w-0">
           <div class="relative">
             <Search class="absolute left-4 top-3.5 h-5 w-5 text-gray-400 dark:text-gray-500" />
             <input v-model="searchTerm" type="text" placeholder="Search Manufacturer..."
@@ -24,27 +113,27 @@
         </div>
         <div class="flex flex-col sm:flex-row gap-4">
           <div class="relative">
-            <Funnel class="absolute left-3 top-3.5 h-4 w-4 text-gray-500 dark:text-gray-400" />
+            <Funnel class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400" />
             <select v-model="statusFilter"
-              class="pl-10 pr-8 py-3.5 border-0 bg-gray-50 dark:bg-gray-700/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-gray-700 text-gray-900 dark:text-white appearance-none transition-all duration-200">
+              class="pl-10 pr-8 py-3.5 border-0 bg-gray-50 dark:bg-gray-700/50 rounded-xl focus:ring-2 focus:ring-green-500 focus:bg-white dark:focus:bg-gray-700 text-gray-900 dark:text-white appearance-none transition-all duration-200">
               <option value="all">All Status</option>
               <option value="active">Active</option>
               <option value="inactive">Inactive</option>
               <option value="archive">Archived</option>
             </select>
             <ChevronDown
-              class="absolute right-3 top-3.5 h-4 w-4 text-gray-500 dark:text-gray-400 pointer-events-none" />
+              class="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400 pointer-events-none" />
           </div>
-        </div>
-        <div class="relative">
-          <label for="per-page" class="text-sm text-gray-700 dark:text-gray-300">Rows:</label>
-          <select id="per-page" v-model="itemsPerPage"
-            class="pl-4 pr-8 py-3.5 border-0 bg-gray-50 dark:bg-gray-700/50 rounded-xl focus:ring-2 focus:ring-green-500 focus:bg-white dark:focus:bg-gray-700 text-gray-900 dark:text-white appearance-none transition-all duration-200">
-            <option value="9">9</option>
-            <option value="25">25</option>
-            <option value="50">50</option>
-          </select>
-          <ChevronDown class="absolute right-3 top-3.5 h-4 w-4 text-gray-500 dark:text-gray-400 pointer-events-none" />
+          <div class="relative">
+            <select v-model="itemsPerPage"
+              class="pl-4 pr-8 py-3.5 border-0 bg-gray-50 dark:bg-gray-700/50 rounded-xl focus:ring-2 focus:ring-green-500 focus:bg-white dark:focus:bg-gray-700 text-gray-900 dark:text-white appearance-none transition-all duration-200">
+              <option value="9">9 per page</option>
+              <option value="25">25 per page</option>
+              <option value="50">50 per page</option>
+            </select>
+            <ChevronDown
+              class="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400 pointer-events-none" />
+          </div>
         </div>
       </div>
     </div>
@@ -69,7 +158,7 @@
                   {{ manufacturer.manufacturerName }}
                 </h3>
                 <span :class="[
-                  'inline-flex px-2 py-1 text-xs rounded-full w-fit',
+                  'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium w-fit transition-all duration-200',
                   manufacturer.manufacturerStatus === 0
                     ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
                     : manufacturer.manufacturerStatus === 1
@@ -88,37 +177,9 @@
             </div>
           </div>
 
-          <!-- Quick Actions -->
-          <div class="flex items-center space-x-2">
-            <button @click="viewManufacturer = manufacturer"
-              class="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300">
-              <Eye class="w-5 h-4" />
-            </button>
-            <button @click="editManufacturer(manufacturer)"
-              class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
-              <SquarePen class="w-4 h-4" />
-            </button>
-            <button @click="handleToggleStatus(manufacturer.id, manufacturer.manufacturerStatus)" :class="manufacturer.manufacturerStatus === 0
-              ? 'text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300'
-              : 'text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300'
-              " :title="manufacturer.manufacturerStatus === 0
-                ? 'Deactivate'
-                : manufacturer.manufacturerStatus === 1
-                  ? 'Activate'
-                  : 'Reactivate'
-                ">
-              <component :is="manufacturer.manufacturerStatus === 0 ? CircleX : CircleCheck" class="w-4 h-4" />
-            </button>
-            <button v-if="manufacturer.manufacturerStatus !== 2" @click="handleArchiveManufacturer(manufacturer.id)"
-              class="text-yellow-600 hover:text-yellow-900 dark:text-yellow-400 dark:hover:text-yellow-300"
-              title="Archive">
-              <Archive class="w-4 h-4" />
-            </button>
-            <button v-if="manufacturer.manufacturerStatus === 2 && !isStaff"
-              @click="handleDeleteManufacturer(manufacturer)"
-              class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300" title="Delete">
-              <Trash2 class="w-4 h-4" />
-            </button>
+          <!-- Quick Actions - visible only on sm+ screens -->
+          <div class="hidden sm:block shrink-0">
+            <ActionGroup :actions="getManufacturerActions(manufacturer)" />
           </div>
         </div>
 
@@ -129,7 +190,7 @@
               <div class="flex items-start gap-2">
                 <Mail class="w-4 h-4 text-purple-500 mt-0.5 shrink-0" />
                 <div>
-                  <div class="font-medium text-gray-800 dark:text-gray-200">
+                  <div class="font-medium text-gray-800 dark:text-gray-200 break-all">
                     {{ manufacturer.primaryEmail }}
                   </div>
                   <div v-if="manufacturer.secondaryEmail" class="text-xs text-gray-500 dark:text-gray-400">
@@ -306,10 +367,18 @@
             No brands available
           </p>
         </div>
+
+        <!-- Mobile Card Actions - visible only on small screens -->
+        <div
+          class="sm:hidden pt-3 mt-3 border-t border-gray-200 dark:border-gray-700 -mx-6 -mb-6 px-6 pb-6 rounded-b-lg bg-gray-50 dark:bg-gray-700/30">
+          <div class="flex items-center justify-center gap-1.5 flex-wrap">
+            <ActionGroup :actions="getManufacturerActions(manufacturer)" />
+          </div>
+        </div>
       </div>
     </div>
 
-    <div v-else-if="filteredManufacturers && filteredManufacturers.length === 0 && !tableLoader" class="">
+    <div v-else-if="filteredManufacturers && filteredManufacturers.length === 0 && !tableLoader">
       <div class="flex flex-col items-center justify-center gap-2 text-center">
         <Factory class="w-10 h-10 mb-1 text-gray-700" />
         <span class="text-gray-600 dark:text-gray-300">No manufacturers found.</span>
@@ -860,27 +929,28 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch, onUnmounted, nextTick } from 'vue'
-import { useToast } from "vue-toastification"
-import Swal from "sweetalert2"
 import {
   Search, Funnel, Eye, SquarePen, CircleCheck, CircleX, Trash2, HousePlus,
   FileText, Factory, Globe, Building2, Mail, Contact, Phone, UserRound,
-  FilePenLine, MapPin, Archive, ChevronDown
+  FilePenLine, MapPin, Archive, ArchiveRestore, ChevronDown, SlidersHorizontal, X
 } from 'lucide-vue-next'
 import BaseModal from '@/components/common/BaseModal.vue'
 import Pagination from '@/components/ui/Pagination.vue'
 import ContentLoader from '@/components/ui/ContentLoader.vue'
 import FileUploadSection from '@/components/common/FileUploadSection.vue'
 import ImageUploadCrop from '@/components/common/ImageUploadCrop.vue'
+import ActionGroup, { type ActionConfig } from '@/components/ui/ActionGroup.vue'
 import api from '@/services/api'
 import axios from "axios"
 import UploadLoader from '@/components/ui/UploadLoader.vue'
 import { useAuthStore } from '@/stores/auth'
+import { confirmAction } from '@/services/alert'
+import { useAppToast } from '@/composables/ui/useAppToast'
 
 const authStore = useAuthStore()
 const isStaff = computed(() => authStore.user?.user_role === 1)
 
-const toast = useToast()
+const toast = useAppToast()
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Types
@@ -920,6 +990,7 @@ interface Manufacturer {
 // ──────────────────────────────────────────────────────────────────────────────
 const submitted = ref(false)
 const pagination = ref({ current_page: 1, last_page: 1, per_page: 10, total: 0 })
+const showFilters = ref(false)
 const itemsPerPage = ref(9)
 const manufacturers = ref<Manufacturer[]>([])
 const tableLoader = ref(false)
@@ -1133,6 +1204,7 @@ async function downloadFile(manufacturerId: number, type: 'ivr' | 'order' | 'onb
   }
 
   const endpoint = `/management/manufacturers/${manufacturerId}/download/${type}`
+  const manufacturerName = manufacturers.value.find(m => m.id === manufacturerId)?.manufacturerName
 
   let displayName = ''
   switch (type) {
@@ -1175,7 +1247,8 @@ async function downloadFile(manufacturerId: number, type: 'ivr' | 'order' | 'onb
     document.body.removeChild(link)
     window.URL.revokeObjectURL(url)
 
-    toast.success(`${displayName} downloaded successfully`)
+    const manufacturerLabel = manufacturerName ? ` for "${manufacturerName}"` : ''
+    toast.success(`${displayName}${manufacturerLabel} was downloaded successfully.`)
   } catch (error: any) {
     console.error(`Download failed for ${type}:`, error)
 
@@ -1200,6 +1273,7 @@ async function previewExistingFile(type: 'ivr' | 'order' | 'onboarding') {
   }
 
   const manufacturerId = selectedManufacturer.value.id
+  const manufacturerName = selectedManufacturer.value.manufacturerName
   const endpoint = `/management/manufacturers/${manufacturerId}/download/${type}`
 
   try {
@@ -1242,7 +1316,7 @@ async function previewExistingFile(type: 'ivr' | 'order' | 'onboarding') {
     // Clean up after a delay (let browser handle display)
     setTimeout(() => window.URL.revokeObjectURL(url), 60000)
 
-    toast.success(`Opening ${type.toUpperCase()} file preview`)
+    toast.success(`Opening the ${type.toUpperCase()} file preview for "${manufacturerName}".`)
   } catch (error: any) {
     console.error(`Preview failed for ${type}:`, error)
     if (axios.isAxiosError(error)) {
@@ -1260,6 +1334,53 @@ async function previewExistingFile(type: 'ivr' | 'order' | 'onboarding') {
 // ──────────────────────────────────────────────────────────────────────────────
 // Form Submission
 // ──────────────────────────────────────────────────────────────────────────────
+const manufacturerValidationLabels: Record<string, string> = {
+  manufacturerName: 'Manufacturer name',
+  primaryEmail: 'Primary email',
+  secondaryEmail: 'Secondary email',
+  orderEmail: 'Email for orders',
+  eligibilityEmail: 'Email for eligibility checking',
+  website: 'Website',
+  address: 'Address',
+  contactPerson: 'Contact person',
+  contactNumber: 'Contact number',
+  manufacturerStatus: 'Status',
+  ivrForm: 'IVR form',
+  orderForm: 'Order form',
+  onboardingForm: 'Onboarding file',
+  logo: 'Manufacturer logo',
+}
+
+function getManufacturerValidationLabel(field: string) {
+  return manufacturerValidationLabels[field] || field
+    .replace(/([A-Z])/g, ' $1')
+    .replace(/[_-]/g, ' ')
+    .replace(/^./, character => character.toUpperCase())
+}
+
+function getManufacturerValidationMessage(field: string, message: string) {
+  const normalizedMessage = message.toLowerCase()
+
+  if (normalizedMessage.includes('required')) return 'This field is required.'
+  if (normalizedMessage.includes('valid email')) return 'Enter a valid email address.'
+  if (normalizedMessage.includes('already been taken')) return 'This value is already in use.'
+  if (field === 'website' && normalizedMessage.includes('url')) return 'Enter a valid website URL.'
+  if (field === 'manufacturerStatus' && normalizedMessage.includes('invalid')) return 'Select a valid status.'
+  if (field === 'logo' && normalizedMessage.includes('image')) return 'Upload a PNG or JPEG/JPG image.'
+  if (field === 'logo' && normalizedMessage.includes('type')) return 'Upload a PNG or JPEG/JPG image.'
+  if (['ivrForm', 'orderForm', 'onboardingForm'].includes(field) && normalizedMessage.includes('type')) {
+    return 'Upload a PDF, DOC, or DOCX file.'
+  }
+  if (normalizedMessage.includes('greater than') || normalizedMessage.includes('too large')) {
+    if (field === 'logo') return 'Use an image no larger than 2 MB.'
+    if (['ivrForm', 'orderForm', 'onboardingForm'].includes(field)) return 'Use a file no larger than 10 MB.'
+    return 'Enter a shorter value.'
+  }
+
+  const fieldPattern = new RegExp(`^The ${field}( field)? `, 'i')
+  return message.replace(fieldPattern, '').replace(/^./, character => character.toUpperCase())
+}
+
 async function handleSubmitForm() {
   submitted.value = true
   try {
@@ -1304,10 +1425,10 @@ async function handleSubmitForm() {
 
     if (showCreateForm.value) {
       await api.post('/management/manufacturers', form, config)
-      toast.success('Manufacturer created successfully!')
+      toast.success(`${getManufacturerLabel(formData.value.manufacturerName)} was created successfully.`)
     } else if (selectedManufacturer.value?.id) {
       await api.post(`/management/manufacturers/${selectedManufacturer.value.id}`, form, config)
-      toast.success('Manufacturer updated successfully!')
+      toast.success(`${getManufacturerLabel(formData.value.manufacturerName)} details were updated successfully.`)
     }
 
     closeForm()
@@ -1317,8 +1438,21 @@ async function handleSubmitForm() {
       const status = error.response?.status
       const data = error.response?.data
       if (status === 422 && data?.errors) {
-        const messages = Object.values(data.errors).flat()
-        toast.error("Validation Error:\n" + messages.join("\n"))
+        const messages = Object.entries(data.errors).flatMap(([field, errors]) => {
+          const fieldMessages = Array.isArray(errors) ? errors : [errors]
+          return fieldMessages.map(message => {
+            const label = getManufacturerValidationLabel(field)
+            const friendlyMessage = getManufacturerValidationMessage(field, String(message))
+            return `- ${label}: ${friendlyMessage}`
+          })
+        })
+        const validationMessage = [
+          'Correct the following before saving:',
+          ...messages,
+          '',
+          'Please correct these items and try again.',
+        ].join('\n')
+        toast.error(validationMessage, 'Please review the form')
       } else {
         toast.error(data?.message || `Request failed with status code ${status}`)
       }
@@ -1496,11 +1630,9 @@ async function handleToggleStatus(id: number, currentStatus: number) {
   else if (currentStatus === 2) actionText = 'reactivate'
 
   try {
-    const result = await Swal.fire({
+    const result = await confirmAction({
       title: `${actionText.charAt(0).toUpperCase() + actionText.slice(1)} Manufacturer?`,
       text: `Are you sure you want to ${actionText} this manufacturer?`,
-      icon: 'warning',
-      showCancelButton: true,
       confirmButtonColor: '#d33',
       cancelButtonColor: '#3085d6',
       confirmButtonText: `Yes, ${actionText} it!`,
@@ -1514,7 +1646,7 @@ async function handleToggleStatus(id: number, currentStatus: number) {
         const newStatus = data?.data?.manufacturerStatus ?? data?.data?.manufacturer_status
         manufacturers.value[idx].manufacturerStatus = typeof newStatus !== 'undefined' ? Number(newStatus) : manufacturers.value[idx].manufacturerStatus
       }
-      toast.success(`Manufacturer ${actionText}d successfully`)
+      toast.success(`${getManufacturerLabel(getManufacturerName(id))} was ${actionText}d successfully.`)
     }
   } catch (error) {
     console.error(error)
@@ -1524,11 +1656,9 @@ async function handleToggleStatus(id: number, currentStatus: number) {
 
 async function handleArchiveManufacturer(id: number) {
   try {
-    const result = await Swal.fire({
+    const result = await confirmAction({
       title: 'Archive Manufacturer?',
       text: "This action will move the manufacturer to archived status. You can restore it later if needed.",
-      icon: 'warning',
-      showCancelButton: true,
       confirmButtonColor: '#d33',
       cancelButtonColor: '#3085d6',
       confirmButtonText: 'Yes, archive it!',
@@ -1542,7 +1672,7 @@ async function handleArchiveManufacturer(id: number) {
         const newStatus = data?.data?.manufacturerStatus ?? data?.data?.manufacturer_status
         manufacturers.value[idx].manufacturerStatus = typeof newStatus !== 'undefined' ? Number(newStatus) : manufacturers.value[idx].manufacturerStatus
       }
-      toast.success('Manufacturer archived successfully')
+      toast.success(`${getManufacturerLabel(getManufacturerName(id))} was archived successfully and can be restored later.`)
     }
   } catch (error) {
     console.error(error)
@@ -1550,16 +1680,40 @@ async function handleArchiveManufacturer(id: number) {
   }
 }
 
+async function handleUnarchiveManufacturer(id: number) {
+  try {
+    const result = await confirmAction({
+      title: 'Unarchive Manufacturer?',
+      text: "This action will restore the manufacturer from archived status.",
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Yes, unarchive it!',
+      cancelButtonText: 'Cancel'
+    })
+    if (result.isConfirmed) {
+      const response = await api.get(`/management/manufacturers/${id}/unarchive`)
+      const data = response.data
+      const idx = manufacturers.value.findIndex(m => m.id === id)
+      if (idx !== -1) {
+        const newStatus = data?.data?.manufacturerStatus ?? data?.data?.manufacturer_status
+        manufacturers.value[idx].manufacturerStatus = typeof newStatus !== 'undefined' ? Number(newStatus) : manufacturers.value[idx].manufacturerStatus
+      }
+      toast.success(`${getManufacturerLabel(getManufacturerName(id))} was successfully restored from archived status.`)
+    }
+  } catch (error) {
+    console.error(error)
+    toast.error('Error unarchiving manufacturer')
+  }
+}
+
 async function handleDeleteManufacturer(manufacturer: Manufacturer) {
   try {
-    const result = await Swal.fire({
+    const result = await confirmAction({
       title: 'Delete Manufacturer?',
       html: `
         Are you sure you want to delete <b>${manufacturer.manufacturerName}</b>?<br>
         <span style="color:#d33;">This action cannot be undone!</span>
       `,
-      icon: 'warning',
-      showCancelButton: true,
       confirmButtonColor: '#d33',
       cancelButtonColor: '#3085d6',
       confirmButtonText: 'Yes, delete it!',
@@ -1568,7 +1722,7 @@ async function handleDeleteManufacturer(manufacturer: Manufacturer) {
     if (result.isConfirmed) {
       await api.delete(`/management/manufacturers/${manufacturer.id}`)
       manufacturers.value = manufacturers.value.filter(m => m.id !== manufacturer.id)
-      toast.success('Manufacturer deleted successfully')
+      toast.success(`${getManufacturerLabel(manufacturer.manufacturerName)} was permanently deleted.`)
     }
   } catch (error) {
     console.error(error)
@@ -1579,8 +1733,80 @@ async function handleDeleteManufacturer(manufacturer: Manufacturer) {
 // ──────────────────────────────────────────────────────────────────────────────
 // Helpers
 // ──────────────────────────────────────────────────────────────────────────────
+function getManufacturerName(id: number) {
+  return manufacturers.value.find(m => m.id === id)?.manufacturerName
+}
+
+function getManufacturerLabel(name?: string) {
+  return name ? `Manufacturer "${name}"` : 'The manufacturer'
+}
+
 const getActiveBrands = (manufacturer: Manufacturer) => (manufacturer.brands || []).filter(b => b.brandStatus === 0)
 const getInactiveBrandCount = (manufacturer: Manufacturer) => ((manufacturer.brands || []).filter(b => b.brandStatus !== 0)).length
+
+function getManufacturerActions(manufacturer: Manufacturer): ActionConfig[] {
+  const isActive = manufacturer.manufacturerStatus === 0
+  const isInactive = manufacturer.manufacturerStatus === 1
+  const isArchived = manufacturer.manufacturerStatus === 2
+  const canDelete = isArchived && !isStaff.value
+
+  const actions: ActionConfig[] = [
+    {
+      id: 'view',
+      icon: Eye,
+      title: 'View',
+      onClick: () => { viewManufacturer.value = manufacturer },
+      hoverColor: 'green'
+    },
+    {
+      id: 'edit',
+      icon: SquarePen,
+      title: 'Edit',
+      onClick: () => editManufacturer(manufacturer),
+      hoverColor: 'blue'
+    },
+    {
+      id: 'toggle-status',
+      icon: isActive ? CircleX : CircleCheck,
+      title: isActive ? 'Deactivate' : 'Activate',
+      onClick: () => handleToggleStatus(manufacturer.id, manufacturer.manufacturerStatus),
+      hoverColor: isActive ? 'red' : 'green',
+      variant: isActive ? 'danger' : 'success',
+      visible: !isArchived
+    },
+    {
+      id: 'archive',
+      icon: Archive,
+      title: 'Archive',
+      onClick: () => handleArchiveManufacturer(manufacturer.id),
+      visible: !isArchived,
+      hoverColor: 'orange'
+    }
+  ]
+
+  // Add Unarchive action when manufacturer is archived
+  if (isArchived) {
+    actions.push({
+      id: 'unarchive',
+      icon: ArchiveRestore,
+      title: 'Unarchive',
+      onClick: () => handleUnarchiveManufacturer(manufacturer.id),
+      hoverColor: 'green'
+    })
+  }
+
+  if (canDelete) {
+    actions.push({
+      id: 'delete',
+      icon: Trash2,
+      title: 'Delete',
+      onClick: () => handleDeleteManufacturer(manufacturer),
+      hoverColor: 'red'
+    })
+  }
+
+  return actions
+}
 
 function fixWebsite() {
   const url = formData.value.website

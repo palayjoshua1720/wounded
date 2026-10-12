@@ -172,9 +172,11 @@ import {
     FileText, User, ClipboardCheck, FileDown, ReceiptText
 } from 'lucide-vue-next';
 import api from "@/services/api";
-import { toast } from 'vue3-toastify'
-import 'vue3-toastify/dist/index.css'
+import { confirmAction } from '@/services/alert'
+import { useAppToast } from '@/composables/ui/useAppToast'
 import Swal from 'sweetalert2'
+
+const toast = useAppToast()
 
 interface IVR {
     ivr_id: number;
@@ -320,16 +322,16 @@ async function submitEligibility() {
         let result: any = { isConfirmed: true };
 
         if (newStatus === 1) {
-            const stepOne = await Swal.fire({
+            const stepOne = await confirmAction({
                 title: "Mark as Eligible?",
                 html: `
                     Updating IVR: <strong>${ivr.value.ivr_number}</strong><br/><br/>
                     Are you sure you want to set the eligibility status to <strong>Eligible</strong>?
                 `,
-                icon: "warning",
-                showCancelButton: true,
                 confirmButtonText: "Continue",
                 cancelButtonText: "Cancel",
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
             });
 
             if (!stepOne.isConfirmed) {
@@ -338,7 +340,7 @@ async function submitEligibility() {
             }
 
             // Step 2: irreversible confirmation
-            result = await Swal.fire({
+            result = await confirmAction({
                 title: "Final Confirmation",
                 html: `
                     <p>
@@ -346,9 +348,8 @@ async function submitEligibility() {
                     </p>
                     <p class="text-red-600 mt-2">This cannot be undone.</p>
                 `,
-                icon: "warning",
-                showCancelButton: true,
                 confirmButtonColor: "#d33",
+                cancelButtonColor: "#6b7280",
                 confirmButtonText: "Yes, update now (3)",
                 cancelButtonText: "Cancel",
                 allowOutsideClick: false,
