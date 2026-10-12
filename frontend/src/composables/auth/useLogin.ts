@@ -91,6 +91,22 @@ export function useLogin() {
 				// Normal login flow
 				const { user, token } = responseData
 
+				if (responseData.force_password_change) {
+					// Save auth token so user is authenticated for the password change
+					saveData(user, token)
+					// Redirect to reset password page with the reset token
+					router.push({
+						name: 'reset-password',
+						query: {
+							token: responseData.reset_token,
+							email: user.email,
+							force: '1'
+						}
+					})
+					toast.info('Please set your password to continue.')
+					return
+				}
+
 				if (user?.tfa_enabled) {
 					tempUser.value = user
 					tempToken.value = token
@@ -158,6 +174,19 @@ export function useLogin() {
 			saveData(user, token);
 			tempUser.value = null;
 			tempToken.value = '';
+
+			if (response.data.force_password_change) {
+				router.push({
+					name: 'reset-password',
+					query: {
+						token: response.data.reset_token,
+						email: user.email,
+						force: '1'
+					}
+				})
+				toast.info('Please set your password to continue.')
+				return
+			}
 
 			// Set flags to show main content again
 			continue2FA.value = false;
@@ -227,6 +256,20 @@ export function useLogin() {
 			const { user, token } = response.data
 			saveData(user, token)
 			closeVerificationModal()
+
+			if (response.data.force_password_change) {
+				router.push({
+					name: 'reset-password',
+					query: {
+						token: response.data.reset_token,
+						email: user.email,
+						force: '1'
+					}
+				})
+				toast.info('Please set your password to continue.')
+				return
+			}
+
 			continue2FA.value = false
 			proceedLogin.value = true
 			redirectBasedOnRole(user.user_role)
@@ -275,6 +318,20 @@ export function useLogin() {
 			const { user, token } = response.data
 			saveData(user, token)
 			closeBackupCodeModal()
+
+			if (response.data.force_password_change) {
+				router.push({
+					name: 'reset-password',
+					query: {
+						token: response.data.reset_token,
+						email: user.email,
+						force: '1'
+					}
+				})
+				toast.info('Please set your password to continue.')
+				return
+			}
+
 			continue2FA.value = false
 			proceedLogin.value = true
 			redirectBasedOnRole(user.user_role)

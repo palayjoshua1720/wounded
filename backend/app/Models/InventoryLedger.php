@@ -9,13 +9,14 @@
 
 namespace App\Models;
 
+use App\Traits\EncryptsData;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class InventoryLedger extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, EncryptsData;
 
     protected $table = 'woundmed_inventory_ledger';
     protected $primaryKey = 'ledger_id';

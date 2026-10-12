@@ -43,12 +43,31 @@ class InventoryLedgerController extends Controller
     {
         return 'inventory_ledger';
     }
+
+    /**
+     * Authorize that the current request is performed by Admin (0) or Office Staff (1).
+     */
+    protected function authorizeAdminOrOfficeStaff(Request $request): ?JsonResponse
+    {
+        $user = $request->user();
+        if (!$user || !in_array((int) $user->user_role, [0, 1], true)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized. Only Admin and Office Staff can access Inventory Ledger Management.',
+            ], 403);
+        }
+        return null;
+    }
+
     /**
      * Combined init endpoint: returns brands, clinics, products, invoices, and stats
      * in a single request to minimize HTTP calls on page load.
      */
-    public function init(): JsonResponse
+    public function init(Request $request): JsonResponse
     {
+        if ($authError = $this->authorizeAdminOrOfficeStaff($request)) {
+            return $authError;
+        }
         // Brands (id + name only)
         $brands = Brand::select('brand_id', 'brand_name')
             ->whereNull('deleted_at')
@@ -123,6 +142,10 @@ class InventoryLedgerController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
+        if ($authError = $this->authorizeAdminOrOfficeStaff($request)) {
+            return $authError;
+        }
+
         $perPage = $request->query('per_page', 10);
         $page = $request->query('page', 1);
 
@@ -197,6 +220,8 @@ class InventoryLedgerController extends Controller
             return $this->transformLedger($ledger);
         });
 
+        $this->logAudit($request, 'inventory_ledger_list', 'Inventory ledger listing viewed');
+
         return response()->json([
             'success' => true,
             'data' => $data,
@@ -210,10 +235,16 @@ class InventoryLedgerController extends Controller
     /**
      * Get a single inventory ledger entry by ID.
      */
-    public function show(int $id): JsonResponse
+    public function show(Request $request, int $id): JsonResponse
     {
+        if ($authError = $this->authorizeAdminOrOfficeStaff($request)) {
+            return $authError;
+        }
+
         $ledger = InventoryLedger::with(['brand', 'clinic', 'order', 'invoice', 'graftSizeProduct', 'otherProduct'])
             ->findOrFail($id);
+
+        $this->logAudit($request, 'inventory_ledger_view', "Inventory ledger entry viewed (ledger_id={$id})", $id);
 
         return response()->json([
             'success' => true,
@@ -226,6 +257,10 @@ class InventoryLedgerController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
+        if ($authError = $this->authorizeAdminOrOfficeStaff($request)) {
+            return $authError;
+        }
+
         $validated = $request->validate([
             'serial_number' => 'required|string|unique:woundmed_inventory_ledger,serial_number',
             'product_type' => 'required|in:graft,other_product',
@@ -293,8 +328,12 @@ class InventoryLedgerController extends Controller
     /**
      * Update an inventory ledger entry.
      */
-    public function update(int $id, Request $request): JsonResponse
+    public function update(Request $request, int $id): JsonResponse
     {
+        if ($authError = $this->authorizeAdminOrOfficeStaff($request)) {
+            return $authError;
+        }
+
         $ledger = InventoryLedger::findOrFail($id);
 
         $validated = $request->validate([
@@ -387,6 +426,10 @@ class InventoryLedgerController extends Controller
      */
     public function getOrders(Request $request): JsonResponse
     {
+        if ($authError = $this->authorizeAdminOrOfficeStaff($request)) {
+            return $authError;
+        }
+
         $search = $request->query('search', '');
         $limit = $request->query('limit', 10);
 
@@ -417,17 +460,29 @@ class InventoryLedgerController extends Controller
     }
 
     /**
-     * Soft delete an inventory ledger entry.
+     * Soft delete an inventory ledger entry (Admin only).
      */
-    public function destroy(int $id): JsonResponse
+    public function destroy(Request $request, int $id): JsonResponse
     {
+        if ($authError = $this->authorizeAdminOrOfficeStaff($request)) {
+            return $authError;
+        }
+
+        $currentUser = $request->user();
+        if ((int) $currentUser->user_role === 1) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized. Office Staff members are not permitted to delete inventory ledger entries.',
+            ], 403);
+        }
+
         $ledger = InventoryLedger::findOrFail($id);
         $serial = $ledger->serial_number;
         $ledger->delete();
 
         // HIPAA audit trail — record inventory ledger deletion
         $this->logAudit(
-            request(),
+            $request,
             'inventory_ledger_delete',
             "Inventory ledger entry deleted (ledger_id={$id}, serial={$serial})",
             $id
@@ -442,8 +497,12 @@ class InventoryLedgerController extends Controller
     /**
      * Restore a soft-deleted inventory ledger entry.
      */
-    public function restore(int $id): JsonResponse
+    public function restore(Request $request, int $id): JsonResponse
     {
+        if ($authError = $this->authorizeAdminOrOfficeStaff($request)) {
+            return $authError;
+        }
+
         $ledger = InventoryLedger::withTrashed()->findOrFail($id);
 
         if (!$ledger->trashed()) {
@@ -457,7 +516,7 @@ class InventoryLedgerController extends Controller
 
         // HIPAA audit trail — record inventory ledger restoration
         $this->logAudit(
-            request(),
+            $request,
             'inventory_ledger_restore',
             "Inventory ledger entry restored (ledger_id={$ledger->ledger_id}, serial={$ledger->serial_number})",
             $ledger->ledger_id
@@ -473,8 +532,12 @@ class InventoryLedgerController extends Controller
     /**
      * Download import template with reference data.
      */
-    public function downloadTemplate()
+    public function downloadTemplate(Request $request)
     {
+        if ($authError = $this->authorizeAdminOrOfficeStaff($request)) {
+            return $authError;
+        }
+
         // Fetch reference data - use get() to trigger model decryption
         $brands = Brand::whereNull('deleted_at')->orderBy('brand_name')->get()->pluck('brand_name')->toArray();
         $clinics = Clinic::whereNull('deleted_at')->orderBy('clinic_name')->get()->pluck('clinic_name')->toArray();
@@ -604,6 +667,10 @@ class InventoryLedgerController extends Controller
      */
     public function import(Request $request): JsonResponse
     {
+        if ($authError = $this->authorizeAdminOrOfficeStaff($request)) {
+            return $authError;
+        }
+
         $request->validate([
             'file' => 'required|file|mimes:xlsx,xls,csv|max:10240',
         ]);
@@ -849,8 +916,12 @@ class InventoryLedgerController extends Controller
     /**
      * Get inventory ledger statistics.
      */
-    public function stats(): JsonResponse
+    public function stats(Request $request): JsonResponse
     {
+        if ($authError = $this->authorizeAdminOrOfficeStaff($request)) {
+            return $authError;
+        }
+
         return response()->json([
             'success' => true,
             'data' => $this->getOptimizedStats(),
@@ -909,8 +980,12 @@ class InventoryLedgerController extends Controller
     /**
      * Get available products for dropdown (graft sizes + other products).
      */
-    public function getProducts(): JsonResponse
+    public function getProducts(Request $request): JsonResponse
     {
+        if ($authError = $this->authorizeAdminOrOfficeStaff($request)) {
+            return $authError;
+        }
+
         $graftSizes = GraftSize::with('brand')
             ->whereNull('deleted_at')
             ->orderBy('size')
@@ -951,8 +1026,12 @@ class InventoryLedgerController extends Controller
     /**
      * Get available invoices for dropdown.
      */
-    public function getInvoices(): JsonResponse
+    public function getInvoices(Request $request): JsonResponse
     {
+        if ($authError = $this->authorizeAdminOrOfficeStaff($request)) {
+            return $authError;
+        }
+
         $invoices = Invoice::select('id', 'invoice_number', 'status', 'clinic_id')
             ->orderBy('created_at', 'desc')
             ->get()

@@ -50,19 +50,120 @@ class PatientGraftLogController extends Controller
     {
         return 'patient_graft_log';
     }
+
+    /**
+     * Check if the requesting user is a Super Admin or Admin (roles 0, 1).
+     */
+    private function isSuperAdmin(?User $user): bool
+    {
+        return $user && in_array((int) $user->user_role, [0, 1], true);
+    }
+
+    /**
+     * Apply multi-tenant clinic scoping to an Eloquent query for non-admin users.
+     */
+    private function scopeClinicQuery($query, Request $request, string $clinicColumn = 'clinic_id')
+    {
+        $user = $request->user();
+        if ($this->isSuperAdmin($user)) {
+            return $query;
+        }
+
+        $clinicId = $user?->clinic_id;
+        if ($clinicId) {
+            return $query->where($clinicColumn, $clinicId);
+        }
+
+        // If a non-admin user has no clinic_id associated, deny access by forcing empty result
+        return $query->whereRaw('1 = 0');
+    }
+
+    /**
+     * Verify if the requesting user is authorized to access a given patient's records.
+     */
+    private function authorizePatientAccess(PatientInfo $patient, Request $request): bool
+    {
+        $user = $request->user();
+        if ($this->isSuperAdmin($user)) {
+            return true;
+        }
+
+        return $user && $patient->clinic_id && (int) $patient->clinic_id === (int) $user->clinic_id;
+    }
+
+    /**
+     * Get all graft logs with relations (for reports module).
+     */
+    public function getAllLogs(Request $request): JsonResponse
+    {
+        $query = PatientGraftLog::with([
+            'patient:patient_id,patient_name,clinic_id',
+            'brand:brand_id,brand_name',
+            'graftSize:graft_size_id,size',
+            'clinic:clinic_id,clinic_name',
+            'clinician:id,first_name,middle_name,last_name',
+            'invoice:id,invoice_number',
+        ])
+        ->whereNull('deleted_at');
+
+        $query = $this->scopeClinicQuery($query, $request);
+
+        $logs = $query->orderBy('date_of_service', 'desc')->get();
+        $count = $logs->count();
+
+        // Audit trail — log bulk access to patient graft logs with count and scope
+        $scopeLabel = $this->isSuperAdmin($request->user()) ? 'all_clinics' : "clinic_id={$request->user()?->clinic_id}";
+        $this->logAudit($request, 'graft_log_view_all', "Bulk patient graft logs accessed (count={$count}, scope={$scopeLabel})");
+
+        $data = $logs->map(function ($log) {
+            $c = $log->clinician;
+            $clinicianName = $c ? trim("{$c->first_name} {$c->middle_name} {$c->last_name}") : '';
+
+            return [
+                'graft_log_id' => $log->graft_log_id,
+                'graft_log_code' => $log->graft_log_code ?? ('GRL-' . $log->graft_log_id),
+                'patient_id' => $log->patient_id,
+                'patient_name' => $log->patient?->patient_name ?? ('Patient #' . $log->patient_id),
+                'clinic_id' => $log->clinic_id,
+                'clinic_name' => $log->clinic?->clinic_name ?? 'Unknown Clinic',
+                'clinician_id' => $log->clinician_id,
+                'clinician_name' => $clinicianName !== '' ? $clinicianName : 'Unknown Clinician',
+                'brand_id' => $log->brand_id,
+                'brand_name' => $log->brand?->brand_name ?? 'Unknown Brand',
+                'graft_size_id' => $log->graft_size_id,
+                'size' => $log->graftSize?->size ?? 'N/A',
+                'serial_number' => $log->serial_number ?? 'N/A',
+                'date_of_service' => $log->date_of_service ? $log->date_of_service->format('Y-m-d') : 'N/A',
+                'wound_site' => $log->wound_site ?? 'N/A',
+                'wound_number' => $log->wound_number ?? 1,
+                'week_number' => $log->week_number ?? 1,
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'data' => $data,
+        ]);
+    }
+
     /**
      * Initial payload for the page: patients (left list), serials (drawer
      * dropdown) and clinicians (drawer dropdown). Single round-trip.
      */
     public function init(Request $request): JsonResponse
     {
+        $patients = $this->buildPatientList($request);
+        $patientCount = count($patients);
+
+        $this->logAudit($request, 'graft_log_init', "Patient graft log page initialized (patients_count={$patientCount})");
+
         return response()->json([
             'success' => true,
             'data' => [
-                'patients'     => $this->buildPatientList(),
-                'all_patients' => $this->buildAllPatientList(),
+                'patients'     => $patients,
+                'all_patients' => $this->buildAllPatientList($request),
                 'serials'      => $this->buildSerialList(),
-                'clinicians'   => $this->buildClinicianList(),
+                'clinicians'   => $this->buildClinicianList($request),
             ],
         ]);
     }
@@ -73,7 +174,11 @@ class PatientGraftLogController extends Controller
     public function getPatients(Request $request): JsonResponse
     {
         $search = trim((string) $request->query('search', ''));
-        $patients = $this->buildPatientList($search);
+        $patients = $this->buildPatientList($request, $search);
+        $count = count($patients);
+        $searchLabel = $search !== '' ? ", search='{$search}'" : '';
+
+        $this->logAudit($request, 'graft_log_patient_list', "Patient graft log listing viewed (count={$count}{$searchLabel})");
 
         return response()->json([
             'success' => true,
@@ -84,11 +189,18 @@ class PatientGraftLogController extends Controller
     /**
      * Patient header + full timeline of graft applications (newest first).
      */
-    public function getPatientHistory(int $id): JsonResponse
+    public function getPatientHistory(int $id, Request $request): JsonResponse
     {
         $patient = PatientInfo::with('clinic:clinic_id,clinic_name')->findOrFail($id);
 
-        $logs = PatientGraftLog::with([
+        if (!$this->authorizePatientAccess($patient, $request)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized access to patient graft history.',
+            ], 403);
+        }
+
+        $query = PatientGraftLog::with([
             'brand:brand_id,brand_name',
             'graftSize:graft_size_id,size',
             'clinic:clinic_id,clinic_name',
@@ -97,10 +209,22 @@ class PatientGraftLogController extends Controller
             'clinician.clinic:clinic_id,clinic_name',
             'ledger:ledger_id,serial_number,status,is_used',
         ])
-            ->where('patient_id', $id)
-            ->orderBy('date_of_service', 'desc')
+            ->where('patient_id', $id);
+
+        $query = $this->scopeClinicQuery($query, $request);
+
+        $logs = $query->orderBy('date_of_service', 'desc')
             ->orderBy('graft_log_id', 'desc')
             ->get();
+        $total = $logs->count();
+
+        // HIPAA audit trail — record graft history access with item count
+        $this->logAudit(
+            $request,
+            'graft_log_history_view',
+            "Patient graft log history viewed for patient_id={$id} (count={$total})",
+            $id
+        );
 
         // Application N is computed against chronological order
         // (oldest = Application 1, newest = Application N).
@@ -162,11 +286,11 @@ class PatientGraftLogController extends Controller
     /**
      * Active clinician users for the drawer dropdown.
      */
-    public function getClinicians(): JsonResponse
+    public function getClinicians(Request $request): JsonResponse
     {
         return response()->json([
             'success' => true,
-            'data'    => $this->buildClinicianList(),
+            'data'    => $this->buildClinicianList($request),
         ]);
     }
 
@@ -188,29 +312,67 @@ class PatientGraftLogController extends Controller
             'invoice_number'  => 'nullable|string|max:100',
         ]);
 
-        // Resolve optional invoice link by number -> id (strict lookup).
-        $invoiceId = null;
-        if (!empty($validated['invoice_number'])) {
-            $invoice = Invoice::where('invoice_number', $validated['invoice_number'])->first();
-            if (!$invoice) {
+        $patient = PatientInfo::findOrFail($validated['patient_id']);
+        if (!$this->authorizePatientAccess($patient, $request)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized to create graft log entry for this patient.',
+            ], 403);
+        }
+
+        // Enforce HIPAA Scoping: Clinician must belong to the same clinic as the patient (unless super admin)
+        $clinician = User::find($validated['clinician_id']);
+        if (!$clinician) {
+            return response()->json([
+                'success' => false,
+                'message' => 'The selected clinician was not found.',
+                'errors'  => ['clinician_id' => ['Selected clinician does not exist.']],
+            ], 422);
+        }
+
+        if (!$this->isSuperAdmin($request->user())) {
+            if ($clinician->clinic_id && (int) $clinician->clinic_id !== (int) $patient->clinic_id) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Invoice number not found.',
-                    'errors'  => ['invoice_number' => ['Invoice number not found.']],
+                    'message' => 'The selected clinician does not belong to this patient\'s clinic.',
+                    'errors'  => ['clinician_id' => ['The selected clinician does not belong to this patient\'s clinic.']],
                 ], 422);
             }
-            $invoiceId = (int) $invoice->id;
+        }
+
+        // Resolve optional invoice link by number -> id (strict lookup with clinic scoping & case-insensitivity).
+        $invoiceId = null;
+        if (!empty($validated['invoice_number'])) {
+            $num = trim((string) $validated['invoice_number']);
+            if ($num !== '') {
+                $invoiceQuery = Invoice::where(function ($q) use ($num) {
+                    $q->where('invoice_number', $num)
+                      ->orWhere('invoice_number', strtoupper($num))
+                      ->orWhere('invoice_number', strtolower($num));
+                });
+                if (!$this->isSuperAdmin($request->user()) && $patient->clinic_id) {
+                    $invoiceQuery->where('clinic_id', $patient->clinic_id);
+                }
+                $invoice = $invoiceQuery->first();
+                if (!$invoice) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Invoice number not found for this clinic.',
+                        'errors'  => ['invoice_number' => ['Invoice number not found for this clinic.']],
+                    ], 422);
+                }
+                $invoiceId = (int) $invoice->id;
+            }
         }
         unset($validated['invoice_number']);
 
-        $log = DB::transaction(function () use ($validated, $request, $invoiceId) {
-            $graft     = GraftSize::findOrFail($validated['graft_size_id']);
-            $clinician = User::find($validated['clinician_id']);
+        $log = DB::transaction(function () use ($validated, $request, $invoiceId, $patient, $clinician) {
+            $graft = GraftSize::findOrFail($validated['graft_size_id']);
 
             $payload = array_merge($validated, [
                 'serial_number' => $graft->item_no,
                 'brand_id'      => $graft->brand_id,
-                'clinic_id'     => $clinician?->clinic_id,
+                'clinic_id'     => $patient->clinic_id ?? $clinician?->clinic_id ?? $request->user()?->clinic_id,
                 'invoice_id'    => $invoiceId,
                 'ledger_id'     => null,
                 'logged_by'     => $request->user()?->id,
@@ -262,6 +424,13 @@ class PatientGraftLogController extends Controller
     {
         $log = PatientGraftLog::findOrFail($id);
 
+        if ($log->patient && !$this->authorizePatientAccess($log->patient, $request)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized to update this graft log entry.',
+            ], 403);
+        }
+
         $validated = $request->validate([
             'patient_id'      => 'sometimes|integer|exists:woundmed_patient_info,patient_id',
             'graft_size_id'   => 'sometimes|integer|exists:woundmed_graft_sizes,graft_size_id',
@@ -275,6 +444,39 @@ class PatientGraftLogController extends Controller
             'invoice_number'  => 'nullable|string|max:100',
         ]);
 
+        if (isset($validated['patient_id']) && (int) $validated['patient_id'] !== (int) $log->patient_id) {
+            $newPatient = PatientInfo::findOrFail($validated['patient_id']);
+            if (!$this->authorizePatientAccess($newPatient, $request)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized to move graft log to this patient.',
+                ], 403);
+            }
+        }
+
+        $targetPatient = isset($validated['patient_id']) ? PatientInfo::find($validated['patient_id']) : $log->patient;
+
+        // Enforce HIPAA Scoping: Clinician must belong to the same clinic as the patient (unless super admin)
+        if (isset($validated['clinician_id'])) {
+            $clinician = User::find($validated['clinician_id']);
+            if (!$clinician) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'The selected clinician was not found.',
+                    'errors'  => ['clinician_id' => ['Selected clinician does not exist.']],
+                ], 422);
+            }
+            if ($targetPatient && !$this->isSuperAdmin($request->user())) {
+                if ($clinician->clinic_id && (int) $clinician->clinic_id !== (int) $targetPatient->clinic_id) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'The selected clinician does not belong to this patient\'s clinic.',
+                        'errors'  => ['clinician_id' => ['The selected clinician does not belong to this patient\'s clinic.']],
+                    ], 422);
+                }
+            }
+        }
+
         // When invoice_number is present in the request, resolve it (or clear
         // the link entirely when the field is blank).
         if ($request->has('invoice_number')) {
@@ -282,12 +484,20 @@ class PatientGraftLogController extends Controller
             if ($num === '') {
                 $validated['invoice_id'] = null;
             } else {
-                $invoice = Invoice::where('invoice_number', $num)->first();
+                $invoiceQuery = Invoice::where(function ($q) use ($num) {
+                    $q->where('invoice_number', $num)
+                      ->orWhere('invoice_number', strtoupper($num))
+                      ->orWhere('invoice_number', strtolower($num));
+                });
+                if (!$this->isSuperAdmin($request->user()) && $targetPatient?->clinic_id) {
+                    $invoiceQuery->where('clinic_id', $targetPatient->clinic_id);
+                }
+                $invoice = $invoiceQuery->first();
                 if (!$invoice) {
                     return response()->json([
                         'success' => false,
-                        'message' => 'Invoice number not found.',
-                        'errors'  => ['invoice_number' => ['Invoice number not found.']],
+                        'message' => 'Invoice number not found for this clinic.',
+                        'errors'  => ['invoice_number' => ['Invoice number not found for this clinic.']],
                     ], 422);
                 }
                 $validated['invoice_id'] = (int) $invoice->id;
@@ -359,9 +569,16 @@ class PatientGraftLogController extends Controller
     /**
      * Soft-delete a graft log entry and release the linked ledger row.
      */
-    public function destroy(int $id): JsonResponse
+    public function destroy(int $id, Request $request): JsonResponse
     {
         $log = PatientGraftLog::findOrFail($id);
+
+        if ($log->patient && !$this->authorizePatientAccess($log->patient, $request)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized to delete this graft log entry.',
+            ], 403);
+        }
 
         DB::transaction(function () use ($log) {
             if ($log->ledger_id) {
@@ -380,7 +597,7 @@ class PatientGraftLogController extends Controller
 
         // HIPAA audit trail — record graft log deletion
         $this->logAudit(
-            request(),
+            $request,
             'graft_log_delete',
             "Patient graft log deleted: {$log->graft_log_code} (patient_id={$log->patient_id})",
             $log->graft_log_id
@@ -397,8 +614,16 @@ class PatientGraftLogController extends Controller
      * Triggered from the patient card on the list page. Also releases any
      * legacy ledger rows still tied to those logs.
      */
-    public function destroyByPatient(int $patientId): JsonResponse
+    public function destroyByPatient(int $patientId, Request $request): JsonResponse
     {
+        $patient = PatientInfo::findOrFail($patientId);
+        if (!$this->authorizePatientAccess($patient, $request)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized to delete graft logs for this patient.',
+            ], 403);
+        }
+
         $logs = PatientGraftLog::where('patient_id', $patientId)
             ->whereNull('deleted_at')
             ->get();
@@ -430,11 +655,13 @@ class PatientGraftLogController extends Controller
             return $n;
         });
 
-        // HIPAA audit trail — record bulk patient-level graft log deletion
+        $logCodes = $logs->pluck('graft_log_code')->filter()->implode(', ');
+
+        // HIPAA audit trail — record bulk patient-level graft log deletion with specific log codes
         $this->logAudit(
-            request(),
+            $request,
             'graft_log_delete_by_patient',
-            "Bulk deleted {$count} patient graft log entries for patient_id={$patientId}",
+            "Bulk deleted {$count} patient graft log entries for patient_id={$patientId} [codes: {$logCodes}]",
             $patientId
         );
 
@@ -454,17 +681,19 @@ class PatientGraftLogController extends Controller
      * Add-Log modal dropdown. Unlike buildPatientList(), this does NOT
      * filter out patients without any graft log entries.
      */
-    private function buildAllPatientList(): array
+    private function buildAllPatientList(Request $request): array
     {
-        $counts = PatientGraftLog::select('patient_id', DB::raw('COUNT(*) as c'))
-            ->whereNull('deleted_at')
-            ->groupBy('patient_id')
+        $countQuery = PatientGraftLog::select('patient_id', DB::raw('COUNT(*) as c'))
+            ->whereNull('deleted_at');
+        $countQuery = $this->scopeClinicQuery($countQuery, $request);
+        $counts = $countQuery->groupBy('patient_id')
             ->pluck('c', 'patient_id')
             ->toArray();
 
-        $patients = PatientInfo::with('clinic:clinic_id,clinic_name')
-            ->whereNull('deleted_at')
-            ->get();
+        $patientQuery = PatientInfo::with('clinic:clinic_id,clinic_name')
+            ->whereNull('deleted_at');
+        $patientQuery = $this->scopeClinicQuery($patientQuery, $request);
+        $patients = $patientQuery->get();
 
         return $patients->map(function ($p) use ($counts) {
             return [
@@ -480,12 +709,13 @@ class PatientGraftLogController extends Controller
         ->all();
     }
 
-    private function buildPatientList(string $search = ''): array
+    private function buildPatientList(Request $request, string $search = ''): array
     {
         // Only include patients that have at least one graft log entry.
-        $counts = PatientGraftLog::select('patient_id', DB::raw('COUNT(*) as c'))
-            ->whereNull('deleted_at')
-            ->groupBy('patient_id')
+        $countQuery = PatientGraftLog::select('patient_id', DB::raw('COUNT(*) as c'))
+            ->whereNull('deleted_at');
+        $countQuery = $this->scopeClinicQuery($countQuery, $request);
+        $counts = $countQuery->groupBy('patient_id')
             ->pluck('c', 'patient_id')
             ->toArray();
 
@@ -497,10 +727,11 @@ class PatientGraftLogController extends Controller
         // Fetch only patients that appear in the graft log table.
         // Patient name/email are encrypted in DB so SQL LIKE on name is
         // not feasible; do a PHP-side filter after decryption.
-        $patients = PatientInfo::with('clinic:clinic_id,clinic_name')
+        $patientQuery = PatientInfo::with('clinic:clinic_id,clinic_name')
             ->whereIn('patient_id', $patientIds)
-            ->whereNull('deleted_at')
-            ->get();
+            ->whereNull('deleted_at');
+        $patientQuery = $this->scopeClinicQuery($patientQuery, $request);
+        $patients = $patientQuery->get();
 
         $rows = $patients->map(function ($p) use ($counts) {
             return [
@@ -537,15 +768,16 @@ class PatientGraftLogController extends Controller
         return $sizes->map(fn($g) => $this->transformSerial($g))->values()->all();
     }
 
-    private function buildClinicianList(): array
+    private function buildClinicianList(Request $request): array
     {
-        $clinicians = User::select('id', 'first_name', 'middle_name', 'last_name', 'clinic_id', 'user_role', 'user_status')
+        $query = User::select('id', 'first_name', 'middle_name', 'last_name', 'clinic_id', 'user_role', 'user_status')
             ->with('clinic:clinic_id,clinic_name')
             ->whereIn('user_role', [2, 3]) // Clinic + Clinician
             ->where('user_status', 0)       // Active
-            ->whereNull('deleted_at')
-            ->orderBy('first_name')
-            ->get();
+            ->whereNull('deleted_at');
+
+        $query = $this->scopeClinicQuery($query, $request);
+        $clinicians = $query->orderBy('first_name')->get();
 
         return $clinicians->map(function ($u) {
             $name = trim("{$u->first_name} {$u->middle_name} {$u->last_name}");

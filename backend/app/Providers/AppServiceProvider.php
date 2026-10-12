@@ -19,6 +19,13 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Enforce HIPAA § 164.308(a)(5)(ii)(D) & NIST SP 800-63B password complexity standards
+        \Illuminate\Validation\Rules\Password::defaults(function () {
+            return \Illuminate\Validation\Rules\Password::min(12)
+                ->letters()
+                ->mixedCase()
+                ->numbers()
+                ->symbols();
+        });
     }
 }

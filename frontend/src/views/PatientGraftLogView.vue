@@ -238,135 +238,26 @@ frontend/src/router/index.ts and the api.ts service block.
 		/>
 
 		<!-- Log Entry Choice Modal -->
-		<div v-if="showChoiceModal" class="fixed inset-0 z-50 flex items-end lg:items-center justify-center">
-			<div class="fixed inset-0 bg-black/40 transition-opacity" @click="closeChoiceModal"></div>
-			<div class="relative bg-white dark:bg-gray-800 rounded-t-2xl lg:rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col lg:mx-4 my-0 lg:my-8 overflow-hidden">
-				<div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
-					<h3 class="text-lg font-semibold text-gray-900 dark:text-white">Add Log Entry</h3>
-					<button
-						type="button"
-						class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-						@click="closeChoiceModal"
-					>
-						<X class="w-5 h-5" />
-					</button>
-				</div>
-				<div class="flex-1 overflow-y-auto p-6 space-y-6">
-					<p class="text-sm text-gray-600 dark:text-gray-400">Choose how you want to create the graft log entry:</p>
-					<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-						<button
-							type="button"
-							class="group flex flex-col items-center justify-center p-6 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-2 border-blue-200 dark:border-blue-700 rounded-xl hover:border-blue-500 dark:hover:border-blue-500 hover:shadow-lg transition-all duration-200"
-							@click="chooseManual"
-						>
-							<div class="w-12 h-12 bg-blue-100 dark:bg-blue-800/50 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-200">
-								<Edit class="w-6 h-6 text-blue-600 dark:text-blue-400" />
-							</div>
-							<span class="font-semibold text-gray-900 dark:text-white text-base">Manual Entry</span>
-							<span class="text-sm text-gray-500 dark:text-gray-400 mt-1.5 text-center">Enter graft log details manually</span>
-						</button>
-
-						<button
-							type="button"
-							class="group flex flex-col items-center justify-center p-6 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border-2 border-purple-200 dark:border-purple-700 rounded-xl hover:border-purple-500 dark:hover:border-purple-500 hover:shadow-lg transition-all duration-200"
-							@click="chooseUpload"
-						>
-							<div class="w-12 h-12 bg-purple-100 dark:bg-purple-800/50 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-200">
-								<UploadCloud class="w-6 h-6 text-purple-600 dark:text-purple-400" />
-							</div>
-							<span class="font-semibold text-gray-900 dark:text-white text-base">Upload File</span>
-							<span class="text-sm text-gray-500 dark:text-gray-400 mt-1.5 text-center">Upload graft log data via file</span>
-						</button>
-					</div>
-				</div>
-				<div class="px-6 py-4 border-t border-gray-100 dark:border-gray-700 flex items-center justify-end gap-3">
-					<button
-						type="button"
-						class="px-5 py-2.5 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-medium"
-						@click="closeChoiceModal"
-					>
-						Cancel
-					</button>
-				</div>
-			</div>
-		</div>
+		<LogEntryChoiceModal
+			v-model="showChoiceModal"
+			@choose-manual="chooseManual"
+			@choose-upload="chooseUpload"
+		/>
 
 		<!-- Upload File Modal (placeholder) -->
-		<div v-if="showUploadModal" class="fixed inset-0 z-50 flex items-end lg:items-center justify-center">
-			<div class="fixed inset-0 bg-black/40 transition-opacity" @click="closeUploadModal"></div>
-			<div class="relative bg-white dark:bg-gray-800 rounded-t-2xl lg:rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col lg:mx-4 my-0 lg:my-8 overflow-hidden">
-				<div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
-					<h3 class="text-lg font-semibold text-gray-900 dark:text-white">Upload Graft Log File</h3>
-					<button
-						type="button"
-						class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-						@click="closeUploadModal"
-					>
-						<X class="w-5 h-5" />
-					</button>
-				</div>
-				<div class="flex-1 overflow-y-auto p-6 space-y-4">
-					<div class="border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl p-8 text-center">
-						<div class="w-14 h-14 rounded-full bg-purple-50 dark:bg-purple-900/20 flex items-center justify-center mx-auto mb-3">
-							<UploadCloud class="w-7 h-7 text-purple-500" />
-						</div>
-						<p class="text-base font-medium text-gray-900 dark:text-white">File upload coming soon</p>
-						<p class="text-sm text-gray-500 dark:text-gray-400 mt-1">This feature is under development. For now, please use Manual Entry to log graft usage.</p>
-					</div>
-				</div>
-				<div class="px-6 py-4 border-t border-gray-100 dark:border-gray-700 flex items-center justify-end gap-3">
-					<button
-						type="button"
-						class="px-5 py-2.5 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-medium"
-						@click="closeUploadModal"
-					>
-						Cancel
-					</button>
-				</div>
-			</div>
-		</div>
+		<UploadFileModal
+			v-model="showUploadModal"
+			@update:model-value="handleUploadModalClose"
+		/>
 
 		<!-- Delete Confirmation Modal (Patient graft logs) -->
-		<div v-if="showDeleteModal" class="fixed inset-0 z-50 flex items-end lg:items-center justify-center">
-			<div class="fixed inset-0 bg-black/40 transition-opacity" @click="cancelDelete"></div>
-			<div class="relative bg-white dark:bg-gray-800 rounded-t-2xl lg:rounded-2xl shadow-2xl w-full max-w-md flex flex-col lg:mx-4 my-0 lg:my-8 overflow-hidden">
-				<div class="flex-1 overflow-y-auto p-6">
-					<div class="space-y-5">
-						<div class="flex justify-center">
-							<div class="w-14 h-14 rounded-full bg-red-50 dark:bg-red-900/20 flex items-center justify-center">
-								<AlertTriangle class="w-7 h-7 text-red-500 dark:text-red-400" />
-							</div>
-						</div>
-						<div class="text-center space-y-1.5">
-							<h3 class="text-lg font-semibold text-gray-900 dark:text-white">Delete all graft logs?</h3>
-							<p class="text-sm text-gray-500 dark:text-gray-400">Every graft log record tied to this patient will be permanently deleted. This action cannot be undone.</p>
-						</div>
-						<div v-if="patientToDelete" class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4 space-y-2">
-							<div class="flex justify-between">
-								<span class="text-xs text-gray-500 dark:text-gray-400">Patient</span>
-								<span class="text-sm font-medium text-gray-900 dark:text-white truncate ml-3">{{ patientToDelete.patient_name }}</span>
-							</div>
-							<div class="flex justify-between">
-								<span class="text-xs text-gray-500 dark:text-gray-400">Clinic</span>
-								<span class="text-sm font-medium text-gray-900 dark:text-white truncate ml-3">{{ patientToDelete.clinic_name }}</span>
-							</div>
-							<div class="flex justify-between">
-								<span class="text-xs text-gray-500 dark:text-gray-400">Records to delete</span>
-								<span class="text-sm font-medium text-red-600 dark:text-red-400">{{ patientToDelete.graft_count }} {{ patientToDelete.graft_count === 1 ? 'entry' : 'entries' }}</span>
-							</div>
-						</div>
-					</div>
-				</div>
-				<div class="px-6 py-4 border-t border-gray-100 dark:border-gray-700 flex items-center justify-end gap-3">
-					<button @click="cancelDelete" class="px-5 py-2.5 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-medium">Cancel</button>
-					<button @click="deletePatientLogs" :disabled="isDeleting" class="px-5 py-2.5 bg-red-600 text-white rounded-xl hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium flex items-center gap-2 shadow-md">
-						<Loader2 v-if="isDeleting" class="w-4 h-4 animate-spin" />
-						<Trash2 v-else class="w-4 h-4" />
-						Delete
-					</button>
-				</div>
-			</div>
-		</div>
+		<DeletePatientLogsModal
+			v-model="showDeleteModal"
+			:patient="patientToDelete"
+			:is-deleting="isDeleting"
+			@confirm="deletePatientLogs"
+			@update:model-value="handleDeleteModalClose"
+		/>
 	</div>
 </template>
 
@@ -375,10 +266,13 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
 	Plus, Search, X, UserSearch, UserCircle, Building2, Activity, ChevronRight, ChevronDown,
-	Trash2, AlertTriangle, Loader2, Edit, UploadCloud, BarChart3, Users, Package,
+	Trash2, Loader2, BarChart3, Users, Package,
 } from 'lucide-vue-next'
 import { patientGraftLogService } from '@/services/api'
-import PatientGraftLogFormModal from '@/views/PatientGraftLogFormModal.vue'
+import PatientGraftLogFormModal from '@/components/graft/modals/PatientGraftLogFormModal.vue'
+import LogEntryChoiceModal from '@/components/graft/modals/LogEntryChoiceModal.vue'
+import UploadFileModal from '@/components/graft/modals/UploadFileModal.vue'
+import DeletePatientLogsModal from '@/components/graft/modals/DeletePatientLogsModal.vue'
 import Pagination from '@/components/ui/Pagination.vue'
 import { useAuthStore } from '@/stores/auth'
 
@@ -548,10 +442,20 @@ function chooseUpload() {
 	showUploadModal.value = true
 }
 
-function closeUploadModal() {
-	showUploadModal.value = false
+function handleUploadModalClose(value: boolean) {
+	showUploadModal.value = value
 	// Return to the choice modal so the user can still pick Manual Entry
-	showChoiceModal.value = true
+	if (!value) {
+		showChoiceModal.value = true
+	}
+}
+
+function handleDeleteModalClose(value: boolean) {
+	if (isDeleting.value) return
+	showDeleteModal.value = value
+	if (!value) {
+		patientToDelete.value = null
+	}
 }
 
 function closeModal() {

@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Hash as LaravelHash;
 use App\Services\VerificationCodeService;
 use App\Services\HmacHashService;
 use App\Traits\AuditLogger;
+use Illuminate\Support\Facades\Password;
 
 class AuthController extends Controller
 {
@@ -61,6 +62,35 @@ class AuthController extends Controller
             return response()->json([
                 'message' => 'The provided credentials are incorrect.',
             ], 400);
+        }
+
+        // Enforce HIPAA § 164.308(a)(3)(ii)(C): Inactive, archived, or deleted accounts cannot authenticate
+        if ((int) $user->user_status !== 0 || $user->trashed()) {
+            $statusLabel = match ((int) $user->user_status) {
+                1 => 'inactive',
+                2 => 'archived',
+                default => 'suspended',
+            };
+            if ($user->trashed()) {
+                $statusLabel = 'deleted';
+            }
+
+            $this->logAudit(
+                $request,
+                'authentication',
+                "login blocked: account is {$statusLabel} (user_status: {$user->user_status})",
+                $user->id,
+                1,
+                $request->email
+            );
+
+            // Invalidate any existing tokens
+            $user->tokens()->delete();
+
+            return response()->json([
+                'message' => "Your account is {$statusLabel}. Please contact your administrator.",
+                'error' => 'account_inactive',
+            ], 403);
         }
 
         // Check if user has enabled one-time email verification
@@ -113,10 +143,17 @@ class AuthController extends Controller
 
         $this->logAudit($request, 'authentication', "login success", $user->id);
 
-        return response()->json([
+        $response = [
             'user' => $user,
             'token' => $token,
-        ]);
+            'force_password_change' => (bool) $user->force_password_change,
+        ];
+
+        if ($user->force_password_change) {
+            $response['reset_token'] = Password::createToken($user);
+        }
+
+        return response()->json($response);
     }
 
     /**
@@ -137,6 +174,14 @@ class AuthController extends Controller
             return response()->json([
                 'message' => 'User not found.',
             ], 404);
+        }
+
+        if ((int) $user->user_status !== 0 || $user->trashed()) {
+            $user->tokens()->delete();
+            return response()->json([
+                'message' => 'Your account is inactive or archived. Please contact your administrator.',
+                'error' => 'account_inactive',
+            ], 403);
         }
 
         // Verify the code using the service
@@ -166,10 +211,17 @@ class AuthController extends Controller
         // Log successful login
         $this->logAudit($request, 'authentication-one-time-email', "One-time email verification success", $user->id);
 
-        return response()->json([
+        $response = [
             'user' => $user,
             'token' => $token,
-        ]);
+            'force_password_change' => (bool) $user->force_password_change,
+        ];
+
+        if ($user->force_password_change) {
+            $response['reset_token'] = Password::createToken($user);
+        }
+
+        return response()->json($response);
     }
 
     /**
@@ -278,6 +330,14 @@ class AuthController extends Controller
             ], 404);
         }
 
+        if ((int) $user->user_status !== 0 || $user->trashed()) {
+            $user->tokens()->delete();
+            return response()->json([
+                'message' => 'Your account is inactive or archived. Please contact your administrator.',
+                'error' => 'account_inactive',
+            ], 403);
+        }
+
         if (!$user->tfa_enabled) {
             return response()->json([
                 'message' => '2FA is not enabled for this user.'
@@ -296,11 +356,18 @@ class AuthController extends Controller
         $this->logAudit($request, 'authentication-2fa', "2FA verification successful", $user->id);
 
         # Passed 2FA
-        return response()->json([
+        $response = [
             'message' => '2FA verification successful.',
             'user' => $user,
-            'token' => $user->createToken('auth_token')->plainTextToken
-        ]);
+            'token' => $user->createToken('auth_token', ['*'], now()->addHours(4))->plainTextToken,
+            'force_password_change' => (bool) $user->force_password_change,
+        ];
+
+        if ($user->force_password_change) {
+            $response['reset_token'] = Password::createToken($user);
+        }
+
+        return response()->json($response);
     }
 
 
@@ -493,6 +560,14 @@ class AuthController extends Controller
             ], 404);
         }
 
+        if ((int) $user->user_status !== 0 || $user->trashed()) {
+            $user->tokens()->delete();
+            return response()->json([
+                'message' => 'Your account is inactive or archived. Please contact your administrator.',
+                'error' => 'account_inactive',
+            ], 403);
+        }
+
         // Find the backup code for this user
         $backupCode = \App\Models\BackupCode::where('user_id', $user->id)
             ->where('code', $request->code)
@@ -525,10 +600,17 @@ class AuthController extends Controller
         // Log successful login
         $this->logAudit($request, 'authentication-backup-codes', "Backup codes verification successful", $user->id);
 
-        return response()->json([
+        $response = [
             'user' => $user,
             'token' => $token,
-        ]);
+            'force_password_change' => (bool) $user->force_password_change,
+        ];
+
+        if ($user->force_password_change) {
+            $response['reset_token'] = Password::createToken($user);
+        }
+
+        return response()->json($response);
     }
 
     /**

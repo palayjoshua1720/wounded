@@ -29,6 +29,7 @@ class User extends Authenticatable
         'phone',
         'one_time_email_verification',
         'backup_codes_enabled',
+        'force_password_change',
     ];
 
     protected $hidden = [

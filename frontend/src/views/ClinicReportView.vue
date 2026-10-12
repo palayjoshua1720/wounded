@@ -435,6 +435,7 @@ const dateRange = ref('last_30_days')
 const startDate = ref('')
 const endDate = ref('')
 const brandFilter = ref('all')
+const anonymizePhi = ref(false)
 const isLoadingData = ref(false)
 const isExporting = ref(false)
 const reportGenerated = ref(false)
@@ -782,6 +783,7 @@ const exportAsPdf = async () => {
 		const filters: any = {
 			report_type: 'clinic',
 			date_range: dateRange.value,
+			anonymize_phi: anonymizePhi.value,
 		}
 		// Only include clinic_id if it exists
 		if (myClinic.value?.clinic_id) {
@@ -828,6 +830,7 @@ const exportAsExcel = async () => {
 		const filters: any = {
 			report_type: 'clinic',
 			date_range: dateRange.value,
+			anonymize_phi: anonymizePhi.value,
 		}
 		// Only include clinic_id if it exists
 		if (myClinic.value?.clinic_id) {

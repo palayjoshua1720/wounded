@@ -141,12 +141,16 @@ export const userService = {
     return api.patch(`/users/${id}/archive`);
   },
 
-  softDeleteUser(id: string) {
-    return api.delete(`/users/${id}/soft-delete`);
+  softDeleteUser(id: string, data?: { current_password?: string }) {
+    return api.delete(`/users/${id}/soft-delete`, { data });
   },
 
   restoreUser(id: string) {
     return api.patch(`/users/${id}/restore`);
+  },
+
+  sendPasswordResetLink(id: string) {
+    return api.post(`/users/${id}/send-reset-link`);
   },
 };
 
@@ -495,6 +499,9 @@ export const inventoryLedgerService = {
 export const patientGraftLogService = {
   getInitData() {
     return api.get('/patient-graft-log/init')
+  },
+  getAllLogs() {
+    return api.get('/patient-graft-log/all')
   },
   getPatients(search = '') {
     return api.get('/patient-graft-log/patients', { params: { search } })

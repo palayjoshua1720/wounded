@@ -329,7 +329,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import ReturnsManagement from '@/components/Returns/ReturnsManagement.vue'
-import NewReturnModal from '@/components/Returns/NewReturnModal.vue'
+import NewReturnModal from '@/components/Returns/modals/NewReturnModal.vue'
 import BaseModal from '@/components/common/BaseModal.vue'
 import { RefreshCcw, Upload, CheckCircle2, Eye, Undo2, BarChart3, Plus } from 'lucide-vue-next'
 import api from '@/services/api'

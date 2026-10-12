@@ -90,6 +90,7 @@ class ReportExport implements FromArray, WithHeadings, WithTitle, WithStyles, Sh
             'ivr' => 'IVR Report',
             'returns' => 'Returns Report',
             'clinic' => 'Clinic Report',
+            'patient_graft_application' => 'Patient Graft Application Report',
         ];
 
         return $titles[$this->reportType] ?? 'Report';
@@ -110,9 +111,59 @@ class ReportExport implements FromArray, WithHeadings, WithTitle, WithStyles, Sh
                 return $this->getIVRData();
             case 'clinic':
                 return $this->getClinicData();
+            case 'patient_graft_application':
+                return $this->getPatientGraftApplicationData();
             default:
                 return [];
         }
+    }
+
+    private function getPatientGraftApplicationData(): array
+    {
+        $data = [];
+
+        // Brand Distribution
+        if (isset($this->data['brand_distribution']) && count($this->data['brand_distribution']) > 0) {
+            $data[] = ['Brand Distribution:'];
+            $data[] = ['Brand Name', 'Applications Count'];
+            foreach ($this->data['brand_distribution'] as $b) {
+                $data[] = [$b['brand_name'], $b['count']];
+            }
+            $data[] = [''];
+        }
+
+        // Top Clinicians
+        if (isset($this->data['top_clinicians']) && count($this->data['top_clinicians']) > 0) {
+            $data[] = ['Top Clinicians:'];
+            $data[] = ['Clinician Name', 'Applications Count'];
+            foreach ($this->data['top_clinicians'] as $c) {
+                $data[] = [$c['clinician_name'], $c['count']];
+            }
+            $data[] = [''];
+        }
+
+        // Applications List
+        $data[] = ['Patient Graft Applications List:'];
+        $data[] = ['Graft Code', 'Date of Service', 'Patient Name', 'Clinic', 'Clinician', 'Brand', 'Size', 'Serial Number', 'Wound Site', 'Week #'];
+
+        if (isset($this->data['applications'])) {
+            foreach ($this->data['applications'] as $app) {
+                $data[] = [
+                    $app['graft_log_code'],
+                    $app['date_of_service'],
+                    $app['patient_name'],
+                    $app['clinic_name'],
+                    $app['clinician_name'],
+                    $app['brand_name'],
+                    $app['size'],
+                    $app['serial_number'],
+                    $app['wound_site'],
+                    'Week ' . $app['week_number'],
+                ];
+            }
+        }
+
+        return $data;
     }
 
     private function getOrdersData(): array

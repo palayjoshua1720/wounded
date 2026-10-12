@@ -19,6 +19,14 @@ module.exports = defineConfig({
   publicPath: process.env.VUE_APP_BASE_URL,
   lintOnSave: false, // Disable ESLint to fix CLIEngine error
   devServer: {
+    historyApiFallback: true,
+    client: {
+      overlay: {
+        errors: true,
+        warnings: false,
+        runtimeErrors: false
+      }
+    },
     proxy: {
       '/api': {
         target: 'http://127.0.0.1:8000',

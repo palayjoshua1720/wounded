@@ -35,8 +35,10 @@ Route::get('/version', function (Request $request) {
 });
 
 //  ############## FORGOT PASSWORD #####################
-Route::post('/forgot-password', [ForgotPassword::class, 'sendResetLink']);
-Route::post('/reset-password', [ResetPassword::class, 'reset']);
+Route::middleware('throttle:10,1')->group(function () {
+    Route::post('/forgot-password', [ForgotPassword::class, 'sendResetLink']);
+    Route::post('/reset-password', [ResetPassword::class, 'reset']);
+});
 Route::post('/magic-order-auth', [OrderController::class, 'validateMagicLink']);
 Route::post('/magic-ivr-auth', [IVRRequestController::class, 'validateMagicLinkIVR']);
 
@@ -46,10 +48,12 @@ Route::put('/management/public/magicorder/update/{id}/updateorderstatus', [Order
 
 // Sample Routes
 Route::get('/sample', [SampleController::class, 'index']);
-Route::post('/auth/login', [AuthController::class, 'login']);
-Route::post('/auth/login/verify-code', [AuthController::class, 'verifyLoginCode']);
-Route::post('/auth/login/verify-backup-code', [AuthController::class, 'verifyBackupCode']);
-Route::post('/auth/validation/validate-tfauth', [AuthController::class, 'validate_tfauth']);
+Route::middleware('throttle:10,1')->group(function () {
+    Route::post('/auth/login', [AuthController::class, 'login'])->name('login');
+    Route::post('/auth/login/verify-code', [AuthController::class, 'verifyLoginCode']);
+    Route::post('/auth/login/verify-backup-code', [AuthController::class, 'verifyBackupCode']);
+    Route::post('/auth/validation/validate-tfauth', [AuthController::class, 'validate_tfauth']);
+});
 Route::get('/auth/profile/security/backup-codes', [AuthController::class, 'getUserBackupCodes']);
 
 // ivr file stream
@@ -65,7 +69,7 @@ Route::get('/sanctum/csrf-cookie', function () {
     return response()->json(['csrf' => 'ok']);
 });
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', 'active'])->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::get('/auth/me', [AuthController::class, 'user']);
     Route::post('/auth/profile/security/enable-tfa', [AuthController::class, 'enable_tfauth']);
@@ -90,39 +94,62 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Clinicians
     Route::get('/management/users/clinician', [ClinicController::class, 'getAllClinicians']);
-    Route::post('/management/users/add/clinician', [ClinicController::class, 'addClinician']);
+    Route::middleware('role:0,1,2')->post('/management/users/add/clinician', [ClinicController::class, 'addClinician']);
     Route::get('/utility/activity/clinician', [ClinicController::class, 'getAllActivity']);
 
-    // Clinics
+    // Clinics Management
     Route::get('/management/users/clinics', [ClinicController::class, 'getAllClinic']);
-    Route::post('/management/facilities/clinics', [ClinicController::class, 'addClinic']);
+    Route::middleware('role:0,1,2')->post('/management/facilities/clinics/{clinicId}/update', [ClinicController::class, 'updateClinic']);
+    Route::middleware('role:0,1')->group(function () {
+        Route::post('/management/facilities/clinics', [ClinicController::class, 'addClinic']);
+        Route::put('/management/facilities/clinics/{clinicId}/updatestatus', [ClinicController::class, 'updateClinicStatus']);
+        Route::put('/management/facilities/clinics/{clinicId}/deleteclinic', [ClinicController::class, 'deleteClinic']);
+        Route::put('/management/facilities/clinics/{clinicId}/archiveclinic', [ClinicController::class, 'archiveClinic']);
+        Route::put('/management/facilities/clinics/{clinicId}/unarchiveclinic', [ClinicController::class, 'unarchiveClinic']);
+    });
 
     // Manufacturer
     Route::get('/management/manufacturers', [ManufacturerController::class, 'getAllManufacturers']);
-    Route::post('/management/manufacturers', [ManufacturerController::class, 'addManufacturer']);
-    Route::get('/management/manufacturers/{id}/archive', [ManufacturerController::class, 'archiveManufacturer']);
-    Route::get('/management/manufacturers/{id}/toggle', [ManufacturerController::class, 'toggleManufacturerStatus']);
-    Route::delete('/management/manufacturers/{id}', [ManufacturerController::class, 'deleteManufacturer']);
-    Route::post('/management/manufacturers/{id}', [ManufacturerController::class, 'updateManufacturer']);
+    Route::middleware('role:0,1')->group(function () {
+        Route::post('/management/manufacturers', [ManufacturerController::class, 'addManufacturer']);
+        Route::get('/management/manufacturers/{id}/archive', [ManufacturerController::class, 'archiveManufacturer']);
+        Route::get('/management/manufacturers/{id}/toggle', [ManufacturerController::class, 'toggleManufacturerStatus']);
+        Route::delete('/management/manufacturers/{id}', [ManufacturerController::class, 'deleteManufacturer']);
+        Route::post('/management/manufacturers/{id}', [ManufacturerController::class, 'updateManufacturer']);
+    });
     Route::get('/management/manufacturers/{id}/download/{type}', [ManufacturerController::class, 'downloadFile']);
 
-    // User management routes
-    Route::get('/users/stats', [UserController::class, 'stats']);
-    Route::get('/users', [UserController::class, 'index']);
-    Route::post('/users', [UserController::class, 'store']);
-    Route::get('/users/{user}', [UserController::class, 'show']);
+    // User management routes (Admin = 0, Office Staff = 1, Clinic Admin = 2)
     Route::put('/users/{user}', [UserController::class, 'update']);
-    Route::patch('/users/{user}/toggle-status', [UserController::class, 'toggleStatus']);
-    Route::patch('/users/{user}/archive', [UserController::class, 'archive']);
-    Route::delete('/users/{user}/soft-delete', [UserController::class, 'softDelete']);
-    Route::patch('/users/{user}/restore', [UserController::class, 'restore']);
+    Route::middleware('role:0,1,2')->group(function () {
+        Route::get('/users/stats', [UserController::class, 'stats']);
+        Route::get('/users', [UserController::class, 'index']);
+        Route::post('/users', [UserController::class, 'store']);
+        Route::get('/users/{user}', [UserController::class, 'show']);
+        Route::patch('/users/{user}/toggle-status', [UserController::class, 'toggleStatus']);
+        Route::patch('/users/{user}/archive', [UserController::class, 'archive']);
+        Route::delete('/users/{user}/soft-delete', [UserController::class, 'softDelete']);
+        Route::delete('/users/{user}', [UserController::class, 'destroy']);
+        Route::patch('/users/{user}/restore', [UserController::class, 'restore']);
+        Route::post('/users/{user}/send-reset-link', [UserController::class, 'sendPasswordResetLink']);
+    });
 
-    // Route::get('/manufacturers/{id}/ivr-form', [ManufacturerController::class, 'downloadForm']);
-    Route::post('/management/facilities/clinics/{clinicId}/update', [ClinicController::class, 'updateClinic']);
-    Route::put('/management/facilities/clinics/{clinicId}/updatestatus', [ClinicController::class, 'updateClinicStatus']);
-    Route::put('/management/facilities/clinics/{clinicId}/deleteclinic', [ClinicController::class, 'deleteClinic']);
-    Route::put('/management/facilities/clinics/{clinicId}/archiveclinic', [ClinicController::class, 'archiveClinic']);
-    Route::put('/management/facilities/clinics/{clinicId}/unarchiveclinic', [ClinicController::class, 'unarchiveClinic']);
+    // Patient management routes (HIPAA: restricted to Admin, Office Staff, Clinic Admin, Clinician)
+    Route::middleware('role:0,1,2,3')->group(function () {
+        Route::get('/patients/stats', [PatientController::class, 'stats']);
+        Route::get('/patients/clinics/list', [PatientController::class, 'getClinics']);
+        Route::get('/patients/clinicians/list', [PatientController::class, 'getAssignableClinicians']);
+        Route::get('/patients', [PatientController::class, 'index']);
+        Route::post('/patients', [PatientController::class, 'store']);
+        Route::get('/patients/{id}', [PatientController::class, 'show']);
+        Route::put('/patients/{id}', [PatientController::class, 'update']);
+
+        // Data integrity (HIPAA § 164.312(c)(1)): Restrict deletion and restoration to Admin (0) and Clinic Admin (2)
+        Route::middleware('role:0,2')->group(function () {
+            Route::delete('/patients/{id}', [PatientController::class, 'destroy']);
+            Route::post('/patients/{id}/restore', [PatientController::class, 'restore']);
+        });
+    });
 
     // IVR
     Route::get('/management/ivr/ivrrequests', [IVRRequestController::class, 'getAllIVRRequests']);
@@ -134,44 +161,49 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/management/update/{id}/updateivr', [IVRRequestController::class, 'updateIVRRequest']);
     Route::put('/management/update/{id}/updateivreligiblity', [IVRRequestController::class, 'updateEligibilityStatus']);
     Route::post('/management/update/{id}/updateivrrequest', [IVRRequestController::class, 'updateMagicIVRStatus']);
-    Route::put('/management/delete/{id}/deleteivrrequest', [IVRRequestController::class, 'deleteIVRRequest']);
+    Route::middleware('role:0,1')->put('/management/delete/{id}/deleteivrrequest', [IVRRequestController::class, 'deleteIVRRequest']);
     Route::put('/management/archive/{id}/archiveivrrequest', [IVRRequestController::class, 'archiveIVRRequest']);
     Route::put('/management/archive/{id}/unarchiveivrrequest', [IVRRequestController::class, 'unarchiveIVRRequest']);
     Route::get('/management/ivr/download/{id}/downloadivrform', [IVRRequestController::class, 'downloadIVRForm']);
 
     // Brand
     Route::get('/management/brands', [BrandController::class, 'getAllBrands']);
-    Route::post('/management/brands', [BrandController::class, 'addBrand']);
-    Route::post('management/brands/{id}', [BrandController::class, 'updateBrand']);
-    Route::get('/management/brands/{id}/archive', [BrandController::class, 'archiveBrand']);
-    Route::get('/management/brands/{id}/toggle', [BrandController::class, 'toggleBrandStatus']);
-    Route::delete('/management/brands/{id}', [BrandController::class, 'deleteBrand']);
+    Route::middleware('role:0,1')->group(function () {
+        Route::post('/management/brands', [BrandController::class, 'addBrand']);
+        Route::post('management/brands/{id}', [BrandController::class, 'updateBrand']);
+        Route::get('/management/brands/{id}/archive', [BrandController::class, 'archiveBrand']);
+        Route::get('/management/brands/{id}/toggle', [BrandController::class, 'toggleBrandStatus']);
+        Route::delete('/management/brands/{id}', [BrandController::class, 'deleteBrand']);
+    });
 
     // Graft Size 
     Route::get('/management/graft-sizes', [ProductController::class, 'getAllGraftSizes']);
-    Route::post('/management/graft-sizes', [ProductController::class, 'addNewGraftSize']);
-    Route::put('/management/update/{id}/updategraftsize', [ProductController::class, 'updateGraftSize']);
-    Route::put('/management/archive/{id}/archivegraftsize', [ProductController::class, 'archiveGraftSize']);
-    Route::put('/management/archive/{id}/unarchivegraftsize', [ProductController::class, 'unarchiveGraftSize']);
-    Route::put('/management/delete/{id}/deletegraftsize', [ProductController::class, 'deleteGraftSize']);
-    Route::put('/management/deactivate/{id}/deactivategraftsize', [ProductController::class, 'toggleInactiveGraftSize']);
-    Route::put('/management/activate/{id}/activategraftsize', [ProductController::class, 'activateGraftSize']);
     Route::get('/management/graft-sizes/stats', [ProductController::class, 'getGraftStats']);
     Route::get('/management/graft-sizes/getAllBrands', [ProductController::class, 'getAllBrands']);
+    Route::middleware('role:0,1')->group(function () {
+        Route::post('/management/graft-sizes', [ProductController::class, 'addNewGraftSize']);
+        Route::put('/management/update/{id}/updategraftsize', [ProductController::class, 'updateGraftSize']);
+        Route::put('/management/archive/{id}/archivegraftsize', [ProductController::class, 'archiveGraftSize']);
+        Route::put('/management/archive/{id}/unarchivegraftsize', [ProductController::class, 'unarchiveGraftSize']);
+        Route::put('/management/delete/{id}/deletegraftsize', [ProductController::class, 'deleteGraftSize']);
+        Route::put('/management/deactivate/{id}/deactivategraftsize', [ProductController::class, 'toggleInactiveGraftSize']);
+        Route::put('/management/activate/{id}/activategraftsize', [ProductController::class, 'activateGraftSize']);
+    });
 
     // Other Product
     Route::get('/management/other-products', [ProductController::class, 'getAllOtherProducts']);
-    Route::post('/management/other-products', [ProductController::class, 'addOtherProduct']);
-    Route::put('/management/other-products/{id}/updateotherproduct', [ProductController::class, 'updateOtherProduct']);
     Route::get('/management/other-products/stats', [ProductController::class, 'getOtherProductsStats']);
-    Route::put('/management/other-products/{id}/activate',    [ProductController::class, 'activateOtherProduct']);
-    Route::put('/management/other-products/{id}/deactivate',  [ProductController::class, 'deactivateOtherProduct']);
-    Route::put('/management/other-products/{id}/archive',     [ProductController::class, 'archiveOtherProduct']);
-    Route::put('/management/other-products/{id}/unarchive',   [ProductController::class, 'unarchiveOtherProduct']);
-    Route::delete('/management/other-products/{id}',          [ProductController::class, 'deleteOtherProduct']);
+    Route::middleware('role:0,1')->group(function () {
+        Route::post('/management/other-products', [ProductController::class, 'addOtherProduct']);
+        Route::put('/management/other-products/{id}/updateotherproduct', [ProductController::class, 'updateOtherProduct']);
+        Route::put('/management/other-products/{id}/activate',    [ProductController::class, 'activateOtherProduct']);
+        Route::put('/management/other-products/{id}/deactivate',  [ProductController::class, 'deactivateOtherProduct']);
+        Route::put('/management/other-products/{id}/archive',     [ProductController::class, 'archiveOtherProduct']);
+        Route::put('/management/other-products/{id}/unarchive',   [ProductController::class, 'unarchiveOtherProduct']);
+        Route::delete('/management/other-products/{id}',          [ProductController::class, 'deleteOtherProduct']);
+    });
 
     // Order
-    Route::get('/management/order/getorders', [OrderController::class, 'getAllOrders']);
     Route::get('/management/order/{id}/getorderbyid', [OrderController::class, 'getAllOrdersById']);
     Route::get('/management/order/getclinics', [OrderController::class, 'getAllClinics']);
     Route::get('/management/order/getbrands', [OrderController::class, 'getAllPatients']);
@@ -179,10 +211,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/management/order/users/getpatients', [OrderController::class, 'getAllPatients']);
     Route::get('/management/order/download/{id}/downloadOrderFile', [OrderController::class, 'downloadOrderFile']);
 
-    Route::post('/management/order/add/neworder', [OrderController::class, 'addNewOrder']);
-    Route::put('/management/order/update/{id}/updateorder', [OrderController::class, 'updateOrder']);
-    Route::put('/management/order/delete/{id}/deleteorder', [OrderController::class, 'deleteOrder']);
-    Route::put('/management/order/update/{id}/updateorderstatus', [OrderController::class, 'updateOrderStatus']);
+    // Admin & Office Staff Global Order Management (roles 0, 1)
+    Route::middleware('role:0,1')->group(function () {
+        Route::get('/management/order/getorders', [OrderController::class, 'getAllOrders']);
+        Route::post('/management/order/add/neworder', [OrderController::class, 'addNewOrder']);
+        Route::put('/management/order/update/{id}/updateorder', [OrderController::class, 'updateOrder']);
+        Route::put('/management/order/delete/{id}/deleteorder', [OrderController::class, 'deleteOrder']);
+        Route::put('/management/order/update/{id}/updateorderstatus', [OrderController::class, 'updateOrderStatus']);
+    });
+
     Route::put('/management/magicorder/update/{id}/updateorderstatus', [OrderController::class, 'updateMagicOrderStatus']);
     Route::post('/management/order/update/{id}/followuporderstatus', [OrderController::class, 'followUpOrder']);
 
@@ -210,59 +247,28 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/inventory/{id}/status', [InventoryController::class, 'updateInventoryStatus']);
     Route::delete('/inventory/usage-logs/{id}', [InventoryController::class, 'deleteUsageLog']);
     Route::post('/inventory/usage-logs/{id}/restore', [InventoryController::class, 'restoreUsageLog']);
-    Route::post('/inventory-ledger/import', [InventoryLedgerController::class, 'import']);
-    Route::get('/inventory-ledger/import/template', [InventoryLedgerController::class, 'downloadTemplate']);
-
-    // Dashboard
-    Route::get('/dashboard/stats', [AdminDashboardController::class, 'getStats']);
-    Route::get('/dashboard/recent-activity', [AdminDashboardController::class, 'recentActivity']);
-    Route::get('/dashboard/system-alerts', [AdminDashboardController::class, 'getSystemAlerts']);
-    Route::get('/clinic-dashboard/order-overview', [ClinicDashboardController::class, 'orderOverview']);
-    Route::get('/clinic-dashboard/system-alerts', [ClinicDashboardController::class, 'getSystemAlerts']);
-
-    // Returns Management
-    Route::get('/management/returns', [ReturnsController::class, 'getAllReturns']);
-    Route::get('/management/returns/{id}', [ReturnsController::class, 'getReturnById']);
-    Route::post('/management/returns', [ReturnsController::class, 'createReturn']);
-    Route::put('/management/returns/{id}', [ReturnsController::class, 'updateReturn']);
-    Route::delete('/management/returns/{id}', [ReturnsController::class, 'deleteReturn']);
-    Route::post('/management/returns/{id}/restore', [ReturnsController::class, 'restoreReturn']);
-    Route::get('/management/returns/stats', [ReturnsController::class, 'getReturnStats']);
-
-    // Patient Management
-    Route::get('/patients', [PatientController::class, 'index']);
-    Route::get('/patients/stats', [PatientController::class, 'stats']);
-    Route::post('/patients', [PatientController::class, 'store']);
-    Route::get('/patients/{id}', [PatientController::class, 'show']);
-    Route::put('/patients/{id}', [PatientController::class, 'update']);
-    Route::delete('/patients/{id}', [PatientController::class, 'destroy']);
-    Route::patch('/patients/{id}/restore', [PatientController::class, 'restore']);
-    Route::get('/patients/clinics/list', [PatientController::class, 'getClinics']);
-    Route::get('/patients/clinicians/list', [PatientController::class, 'getAssignableClinicians']);
-
-    // Report Exports
-    Route::post('/reports/export/pdf', [ReportExportController::class, 'exportPdf']);
-    Route::post('/reports/export/excel', [ReportExportController::class, 'exportExcel']);
-
     // ============================================================================
-    // INVENTORY LEDGER MANAGEMENT MODULE - ROUTES
+    // INVENTORY LEDGER MANAGEMENT MODULE - ROUTES (Admin = 0, Office Staff = 1)
     // ----------------------------------------------------------------------------
-    // These routes power the standalone Inventory Ledger Management feature.
-    // To remove this module, delete these routes and the controller file.
-    // IMPORTANT: Static routes (products/list, invoices/list) must come BEFORE
-    // parameterized routes ({id}) to avoid route conflicts.
+    // Static routes (products/list, invoices/list, import, template) must come
+    // BEFORE parameterized routes ({id}) to avoid route conflicts.
+    // Restricted strictly to Admin (0) and Office Staff (1).
     // ============================================================================
-    Route::get('/inventory-ledger', [InventoryLedgerController::class, 'index']);
-    Route::get('/inventory-ledger/init', [InventoryLedgerController::class, 'init']);
-    Route::get('/inventory-ledger/stats', [InventoryLedgerController::class, 'stats']);
-    Route::get('/inventory-ledger/products/list', [InventoryLedgerController::class, 'getProducts']);
-    Route::get('/inventory-ledger/invoices/list', [InventoryLedgerController::class, 'getInvoices']);
-    Route::get('/inventory-ledger/orders/search', [InventoryLedgerController::class, 'getOrders']);
-    Route::post('/inventory-ledger', [InventoryLedgerController::class, 'store']);
-    Route::get('/inventory-ledger/{id}', [InventoryLedgerController::class, 'show']);
-    Route::put('/inventory-ledger/{id}', [InventoryLedgerController::class, 'update']);
-    Route::delete('/inventory-ledger/{id}', [InventoryLedgerController::class, 'destroy']);
-    Route::post('/inventory-ledger/{id}/restore', [InventoryLedgerController::class, 'restore']);
+    Route::middleware('role:0,1')->group(function () {
+        Route::get('/inventory-ledger', [InventoryLedgerController::class, 'index']);
+        Route::get('/inventory-ledger/init', [InventoryLedgerController::class, 'init']);
+        Route::get('/inventory-ledger/stats', [InventoryLedgerController::class, 'stats']);
+        Route::get('/inventory-ledger/products/list', [InventoryLedgerController::class, 'getProducts']);
+        Route::get('/inventory-ledger/invoices/list', [InventoryLedgerController::class, 'getInvoices']);
+        Route::get('/inventory-ledger/orders/search', [InventoryLedgerController::class, 'getOrders']);
+        Route::post('/inventory-ledger/import', [InventoryLedgerController::class, 'import']);
+        Route::get('/inventory-ledger/import/template', [InventoryLedgerController::class, 'downloadTemplate']);
+        Route::post('/inventory-ledger', [InventoryLedgerController::class, 'store']);
+        Route::get('/inventory-ledger/{id}', [InventoryLedgerController::class, 'show']);
+        Route::put('/inventory-ledger/{id}', [InventoryLedgerController::class, 'update']);
+        Route::delete('/inventory-ledger/{id}', [InventoryLedgerController::class, 'destroy']);
+        Route::post('/inventory-ledger/{id}/restore', [InventoryLedgerController::class, 'restore']);
+    });
     // ============================================================================
     // END INVENTORY LEDGER MANAGEMENT MODULE
     // ============================================================================
@@ -275,6 +281,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // To remove this module, delete this entire block.
     // ============================================================================
     Route::get('/patient-graft-log/init',            [PatientGraftLogController::class, 'init']);
+    Route::get('/patient-graft-log/all',             [PatientGraftLogController::class, 'getAllLogs']);
     Route::get('/patient-graft-log/patients',        [PatientGraftLogController::class, 'getPatients']);
     Route::get('/patient-graft-log/patient/{id}',    [PatientGraftLogController::class, 'getPatientHistory']);
     Route::get('/patient-graft-log/serials/search',  [PatientGraftLogController::class, 'searchSerials']);
@@ -292,6 +299,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/notifications/stats', [NotificationController::class, 'stats']);
     Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
     Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead']);
+
+    // Report Exports
+    Route::post('/reports/export/pdf', [ReportExportController::class, 'exportPdf']);
+    Route::post('/reports/export/excel', [ReportExportController::class, 'exportExcel']);
+    Route::post('/reports/export-pdf', [ReportExportController::class, 'exportPdf']);
+    Route::post('/reports/export-excel', [ReportExportController::class, 'exportExcel']);
 });
 
 // Biller Tracking (public access for testing)

@@ -6,6 +6,7 @@ use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 use Illuminate\Support\Facades\Log;
 
+if (!class_exists(Kernel::class)) {
 class Kernel extends ConsoleKernel
 {
     /**
@@ -53,4 +54,5 @@ class Kernel extends ConsoleKernel
         // Optionally require routes/console.php if you have closure commands
         require base_path('routes/console.php');
     }
+}
 }
