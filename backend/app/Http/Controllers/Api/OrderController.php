@@ -41,6 +41,18 @@ class OrderController extends Controller
 
     public function getAllOrders(Request $request)
     {
+        $currentUser = $request->user();
+
+        // Enforce HIPAA § 164.312(a)(1) Access Control & § 164.502(b) Minimum Necessary:
+        // Only Super Admin (0) and Office Staff (1) may view global orders across all facilities.
+        // Clinic users and clinicians must use getAllOrdersByClinics to ensure facility tenant scoping.
+        if (!$currentUser || !in_array($currentUser->user_role, [0, 1], true)) {
+            return response()->json([
+                'message' => 'Unauthorized. Only internal administrators and office staff may view global orders.',
+                'error' => 'unauthorized'
+            ], 403);
+        }
+
         $perPage = $request->query('per_page', 10);
 
         try {
@@ -88,6 +100,17 @@ class OrderController extends Controller
                 ], 404);
             }
 
+            $currentUser = $request->user();
+            // Facility tenant boundary: Clinic Admin (2) and Clinician (3) can only inspect orders from their own clinic
+            if ($currentUser && in_array($currentUser->user_role, [2, 3], true)) {
+                if ((int) $order->clinic_id !== (int) $currentUser->clinic_id) {
+                    return response()->json([
+                        'message' => 'Unauthorized. You do not have permission to view orders from a different clinic facility.',
+                        'error' => 'cross_tenant_access_denied'
+                    ], 403);
+                }
+            }
+
             return response()->json([
                 'success' => true,
                 'order' => $order
@@ -104,11 +127,31 @@ class OrderController extends Controller
 
     public function getAllClinics(Request $request)
     {
+        $currentUser = $request->user();
+        if (!$currentUser || !in_array($currentUser->user_role, [0, 1, 2, 3], true)) {
+            return response()->json([
+                'message' => 'Unauthorized. You do not have permission to view clinic facilities.',
+                'error' => 'unauthorized'
+            ], 403);
+        }
+
         try {
-            $clinics = Clinic::with(['clinicians'])
+            $query = Clinic::with(['clinicians'])
                 ->whereNull('deleted_at')
-                ->orderBy('created_at', 'desc')
-                ->get();
+                ->orderBy('created_at', 'desc');
+
+            // Facility tenant isolation: Clinic Admins (2) and Clinicians (3) only receive their own facility
+            if (in_array($currentUser->user_role, [2, 3], true)) {
+                if (empty($currentUser->clinic_id)) {
+                    return response()->json([
+                        'message' => 'Unauthorized. Your account is not associated with any clinic facility.',
+                        'error' => 'unassigned_clinic_facility'
+                    ], 403);
+                }
+                $query->where('clinic_id', $currentUser->clinic_id);
+            }
+
+            $clinics = $query->get();
 
             return response()->json([
                 'success' => true,
@@ -124,11 +167,46 @@ class OrderController extends Controller
 
     public function getAllPatients(Request $request)
     {
+        $currentUser = $request->user();
+        // Enforce HIPAA § 164.502(b) Minimum Necessary & § 164.312(a)(1) Access Control:
+        // Only internal staff (0, 1), clinic admins (2), and clinicians (3) may view patients for ordering.
+        // External partner roles (Manufacturer 4, Biller 5) are strictly prohibited.
+        if (!$currentUser || !in_array($currentUser->user_role, [0, 1, 2, 3], true)) {
+            return response()->json([
+                'message' => 'Unauthorized. You do not have permission to view patient records.',
+                'error' => 'unauthorized'
+            ], 403);
+        }
+
         try {
-            $clinics = PatientInfo::with(['clinics', 'ivrs.manufacturer.brands', 'user'])
+            $query = PatientInfo::with(['clinics', 'ivrs.manufacturer.brands', 'user'])
                 ->whereNull('deleted_at')
-                ->orderBy('created_at', 'desc')
-                ->get();
+                ->orderBy('created_at', 'desc');
+
+            // Clinic Admin (role 2): only patients from their clinic facility
+            if ($currentUser->user_role === 2) {
+                if (empty($currentUser->clinic_id)) {
+                    return response()->json([
+                        'message' => 'Unauthorized. Your account is not associated with any clinic facility.',
+                        'error' => 'unassigned_clinic_facility'
+                    ], 403);
+                }
+                $query->where('clinic_id', $currentUser->clinic_id);
+            }
+
+            // Clinician (role 3): only patients assigned to them in their clinic facility
+            if ($currentUser->user_role === 3) {
+                if (empty($currentUser->clinic_id)) {
+                    return response()->json([
+                        'message' => 'Unauthorized. Your account is not associated with any clinic facility.',
+                        'error' => 'unassigned_clinic_facility'
+                    ], 403);
+                }
+                $query->where('clinic_id', $currentUser->clinic_id)
+                      ->where('assigned_clinician_id', $currentUser->id);
+            }
+
+            $clinics = $query->get();
 
             return response()->json([
                 'success' => true,
@@ -137,7 +215,7 @@ class OrderController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to fetch clinics: ' . $e->getMessage(),
+                'message' => 'Failed to fetch patients: ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -201,7 +279,15 @@ class OrderController extends Controller
 
     public function addNewOrder(Request $request)
     {
-        $userId = $request->user()->id ?? null;
+        $currentUser = $request->user();
+        if (!$currentUser || !in_array($currentUser->user_role, [0, 1], true)) {
+            return response()->json([
+                'message' => 'Unauthorized. Only internal administrators and office staff may create global orders directly.',
+                'error' => 'unauthorized'
+            ], 403);
+        }
+
+        $userId = $currentUser->id ?? null;
 
         $request->merge([
             'items' => json_decode($request->items, true),
@@ -541,6 +627,14 @@ class OrderController extends Controller
 
     public function updateOrder(Request $request, $orderId)
     {
+        $currentUser = $request->user();
+        if (!$currentUser || !in_array($currentUser->user_role, [0, 1], true)) {
+            return response()->json([
+                'message' => 'Unauthorized. Only internal administrators and office staff may modify global orders.',
+                'error' => 'unauthorized'
+            ], 403);
+        }
+
         // dd($request->all());
         $request->merge([
             'items' => json_decode($request->items, true),
@@ -761,6 +855,14 @@ class OrderController extends Controller
 
     public function updateOrderStatus(Request $request, $orderId)
     {
+        $currentUser = $request->user();
+        if (!$currentUser || !in_array($currentUser->user_role, [0, 1], true)) {
+            return response()->json([
+                'message' => 'Unauthorized. Only internal administrators and office staff may update order status.',
+                'error' => 'unauthorized'
+            ], 403);
+        }
+
         $validated = $request->validate([
             'order_status' => 'required|integer|min:0|max:4'
         ]);
@@ -797,6 +899,17 @@ class OrderController extends Controller
 
     public function deleteOrder(Request $request, $orderId)
     {
+        $currentUser = $request->user();
+
+        // Enforce HIPAA § 164.312(a)(1) Access Control:
+        // Only Super Admin (0) and Office Staff (1) may delete orders.
+        if (!$currentUser || !in_array($currentUser->user_role, [0, 1], true)) {
+            return response()->json([
+                'message' => 'Unauthorized. You do not have permission to delete orders.',
+                'error' => 'unauthorized'
+            ], 403);
+        }
+
         try {
             $order = Orders::findOrFail($orderId);
             $order->delete();
@@ -1226,6 +1339,38 @@ class OrderController extends Controller
             'products.*.product_type' => 'nullable|numeric|min:0',
         ]);
 
+        // Enforce facility tenant boundary for clinic users and clinicians:
+        if (in_array($user->user_role, [2, 3], true)) {
+            if (empty($user->clinic_id)) {
+                return response()->json([
+                    'message' => 'Unauthorized. Your account is not associated with any clinic facility.',
+                    'error' => 'unassigned_clinic_facility'
+                ], 403);
+            }
+            // Force clinic_id to be user's clinic_id to prevent cross-tenant forging
+            $validated['clinic_id'] = $user->clinic_id;
+
+            // Clinician (role 3) must only submit orders under their own clinician identity
+            if ($user->user_role === 3) {
+                $validated['clinician_id'] = $user->id;
+            }
+
+            // Verify patient belongs to the clinic (and assigned clinician for role 3)
+            $patient = PatientInfo::find($validated['patient_id']);
+            if (!$patient || (int) $patient->clinic_id !== (int) $validated['clinic_id']) {
+                return response()->json([
+                    'message' => 'Unauthorized. Patient does not belong to your clinic facility.',
+                    'error' => 'cross_tenant_access_denied'
+                ], 403);
+            }
+            if ($user->user_role === 3 && (int) $patient->assigned_clinician_id !== (int) $user->id) {
+                return response()->json([
+                    'message' => 'Unauthorized. You may only place orders for your assigned patients.',
+                    'error' => 'unauthorized_patient_access'
+                ], 403);
+            }
+        }
+
         # Stock validation
         $graftIds = collect($validated['items'] ?? [])->pluck('graft_id')->unique()->all();
         $grafts = GraftSize::whereIn('graft_size_id', $graftIds)->get()->keyBy('graft_size_id');
@@ -1512,7 +1657,33 @@ class OrderController extends Controller
 
     public function updateOrderByClinic(Request $request, $orderId)
     {
+        $user = Auth::user();
+        if (!$user || !in_array($user->user_role, [2, 3], true)) {
+            return response()->json([
+                'message' => 'Unauthorized. Only clinic users can update orders this way.',
+                'error' => 'unauthorized'
+            ], 403);
+        }
+
         try {
+            $order = Orders::findOrFail($orderId);
+
+            // Enforce clinic facility tenant isolation:
+            if ((int) $order->clinic_id !== (int) $user->clinic_id) {
+                return response()->json([
+                    'message' => 'Unauthorized. You do not have permission to modify orders from a different clinic facility.',
+                    'error' => 'cross_tenant_access_denied'
+                ], 403);
+            }
+
+            // Clinicians (role 3) may only update their own assigned orders
+            if ($user->user_role === 3 && (int) $order->user_id !== (int) $user->id) {
+                return response()->json([
+                    'message' => 'Unauthorized. You can only update orders assigned to you.',
+                    'error' => 'unauthorized'
+                ], 403);
+            }
+
             $validated = $request->validate([
                 'clinic_id' => 'required|int|max:255',
                 'clinician_id' => 'required|int|max:255',
@@ -1528,10 +1699,29 @@ class OrderController extends Controller
                 'items.*.device_type' => 'nullable|string|max:255',
             ]);
 
+            // Force clinic_id to remain user's clinic_id to prevent re-assignment
+            $validated['clinic_id'] = $user->clinic_id;
+            if ($user->user_role === 3) {
+                $validated['clinician_id'] = $user->id;
+            }
+
+            // Verify patient belongs to the clinic
+            $patient = PatientInfo::find($validated['patient_id']);
+            if (!$patient || (int) $patient->clinic_id !== (int) $user->clinic_id) {
+                return response()->json([
+                    'message' => 'Unauthorized. Patient does not belong to your clinic facility.',
+                    'error' => 'cross_tenant_access_denied'
+                ], 403);
+            }
+            if ($user->user_role === 3 && (int) $patient->assigned_clinician_id !== (int) $user->id) {
+                return response()->json([
+                    'message' => 'Unauthorized. You may only update orders for your assigned patients.',
+                    'error' => 'unauthorized_patient_access'
+                ], 403);
+            }
+
             $orderCode = 'ORD-' . strtoupper(uniqid(10));
             $trackingNum = 'TRK-' . strtoupper(Str::random(10));
-
-            $order = Orders::findOrFail($orderId);
 
             $order->update([
                 'order_code' => $orderCode,

@@ -10,12 +10,39 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use App\Traits\AuditLogger;
+use App\Services\EmailService;
+use App\Template\WelcomeEmail;
+use Illuminate\Support\Facades\Password;
 
 class ClinicController extends Controller
 {
+    use AuditLogger;
+
+    protected function getEntityName()
+    {
+        return 'woundmed_clinics';
+    }
+
+    protected function getEntityType()
+    {
+        return 'clinic';
+    }
     
     public function getAllActivity(Request $request)
     {
+        $currentUser = $request->user();
+
+        // Enforce HIPAA § 164.312(b) Audit Controls & § 164.502(b) Minimum Necessary:
+        // Only Super Admin (0), Office Staff (1), Clinic Admin (2), and Clinician (3) may view activity logs.
+        // External partner roles (Manufacturer 4, Biller 5) are strictly prohibited from inspecting audit trails.
+        if (!$currentUser || !in_array($currentUser->user_role, [0, 1, 2, 3], true)) {
+            return response()->json([
+                'message' => 'Unauthorized. You do not have permission to view audit activity logs.',
+                'error' => 'unauthorized'
+            ], 403);
+        }
+
         $query = DB::table('woundmed_audit_logs')
             ->select(
                 'audit_log_id',
@@ -29,12 +56,47 @@ class ClinicController extends Controller
                 'entity_type',
                 'status',
                 'timestamp'
-            )
-            // Removed restrictive entity_type filter so all recent audit logs are returned
-            ->orderBy('timestamp', 'desc')
-            ->limit(10);
+            );
 
-        $logs = $query->get();
+        // Facility tenant isolation for Clinic Admin (role 2):
+        // Only view activities for users belonging to their assigned clinic facility
+        if ($currentUser->user_role === 2) {
+            if (empty($currentUser->clinic_id)) {
+                return response()->json([
+                    'message' => 'Unauthorized. Your account is not associated with any clinic facility.',
+                    'error' => 'unassigned_clinic_facility'
+                ], 403);
+            }
+            $clinicUserIds = DB::table('woundmed_users')
+                ->where('clinic_id', $currentUser->clinic_id)
+                ->pluck('id');
+            $query->whereIn('user_id', $clinicUserIds);
+        }
+
+        // Minimum necessary scoping for Clinician (role 3):
+        // Clinicians may only view their own activity trail
+        if ($currentUser->user_role === 3) {
+            if (empty($currentUser->clinic_id)) {
+                return response()->json([
+                    'message' => 'Unauthorized. Your account is not associated with any clinic facility.',
+                    'error' => 'unassigned_clinic_facility'
+                ], 403);
+            }
+            $query->where('user_id', $currentUser->id);
+        }
+
+        // Internal workforce isolation for Office Staff (role 1):
+        // Office staff cannot view internal Super Admin audit entries
+        if ($currentUser->user_role === 1) {
+            $superAdminIds = DB::table('woundmed_users')
+                ->where('user_role', 0)
+                ->pluck('id');
+            $query->whereNotIn('user_id', $superAdminIds);
+        }
+
+        $logs = $query->orderBy('timestamp', 'desc')
+            ->limit(10)
+            ->get();
 
         return response()->json([
             'message' => 'Activity fetched successfully',
@@ -44,11 +106,47 @@ class ClinicController extends Controller
 
     public function getAllClinicians(Request $request)
     {
+        $currentUser = $request->user();
+
+        // Enforce HIPAA § 164.312(a)(1) Access Control & § 164.502(b) Minimum Necessary:
+        // Only Super Admin (0), Office Staff (1), Clinic Admin (2), and Clinician (3) may view clinician listings.
+        // External partner roles (Manufacturer 4, Biller 5) are strictly prohibited.
+        if (!$currentUser || !in_array($currentUser->user_role, [0, 1, 2, 3], true)) {
+            return response()->json([
+                'message' => 'Unauthorized. You do not have permission to view clinician listings.',
+                'error' => 'unauthorized'
+            ], 403);
+        }
+
         $perPage = $request->query('per_page', 10);
         $simple  = $request->query('simple', false);
 
+        // Enforce HIPAA § 164.502(b) Minimum Necessary:
+        // Clinicians (role 3) may only access simplified clinician references (simple=true) for clinical assignment/dropdowns.
+        // Full administrative management views with last logins and account statuses are restricted to Admin (0), Office Staff (1), and Clinic Admin (2).
+        if ($currentUser->user_role === 3 && !$simple) {
+            return response()->json([
+                'message' => 'Unauthorized. Clinicians may only access simplified clinician directory for clinical workflows.',
+                'error' => 'unauthorized_administrative_view'
+            ], 403);
+        }
+
         $query = DB::table('woundmed_users as u')
-            ->where('u.user_role', 3);
+            ->where('u.user_role', 3)
+            ->whereNull('u.deleted_at');
+
+        // Facility tenant isolation: Clinic Admins and Clinicians only see clinicians from their own clinic facility
+        if (in_array($currentUser->user_role, [2, 3], true)) {
+            if (empty($currentUser->clinic_id)) {
+                return response()->json([
+                    'message' => 'Unauthorized. Your account is not associated with any clinic facility.',
+                    'error' => 'unassigned_clinic_facility'
+                ], 403);
+            }
+            $query->where('u.clinic_id', $currentUser->clinic_id);
+        }
+
+        $this->logAudit($request, 'clinician_list_view', 'Clinician listing viewed');
 
         if ($simple) {
             // Load User models to get decrypted values
@@ -122,7 +220,7 @@ class ClinicController extends Controller
                 'id'        => (string) $user->id,
                 'email'     => $email,
                 'name'      => $fullname,
-                'phone'     => $phone,
+                'phone'     => $this->maskPhone($phone),
                 'role'      => 'Clinician',
                 // 'clinicPubId' => $user->clinic_public_id,
                 'clinicIds' => $user->clinic_ids ? explode(',', $user->clinic_ids) : [],
@@ -145,9 +243,13 @@ class ClinicController extends Controller
 
     public function addClinician(Request $request)
     {
-        $ip = $request->server('HTTP_X_FORWARDED_FOR') ?? $request->server('REMOTE_ADDR');
-        $tempPassword = Str::random(12);
-        $prevHash = $this->getLastRowHash();
+        $currentUser = $request->user();
+        if (!$currentUser || !in_array($currentUser->user_role, [0, 1, 2], true)) {
+            return response()->json([
+                'message' => 'Unauthorized. You do not have permission to create clinician accounts.',
+                'error' => 'unauthorized'
+            ], 403);
+        }
 
         $roleMap = [
             'Admin' => 1,
@@ -158,6 +260,7 @@ class ClinicController extends Controller
         try {
             $validated = $request->validate([
                 'first_name' => 'required|string|max:255',
+                'middle_name' => 'nullable|string|max:255',
                 'last_name' => 'required|string|max:255',
                 'email' => 'required|email|unique:woundmed_users,email',
                 'role' => 'required|string',
@@ -167,82 +270,140 @@ class ClinicController extends Controller
                 'phone' => 'nullable|string|max:20',
             ]);
 
-            $validated['role'] = $roleMap[$validated['role']] ?? $validated['role'];
+            $targetRole = $roleMap[$validated['role']] ?? (is_numeric($validated['role']) ? (int) $validated['role'] : 3);
+
+            // Enforce clinic tenant boundaries for clinic admin users
+            if ($currentUser->user_role === 2) {
+                if (empty($currentUser->clinic_id)) {
+                    return response()->json([
+                        'message' => 'Unauthorized. Your account is not associated with any clinic facility.',
+                        'error' => 'unassigned_clinic_facility'
+                    ], 403);
+                }
+                if (isset($validated['clinicId']) && (int) $validated['clinicId'] !== (int) $currentUser->clinic_id) {
+                    return response()->json([
+                        'message' => 'Unauthorized. You cannot create accounts for a different clinic facility.',
+                        'error' => 'unauthorized_clinic_assignment'
+                    ], 403);
+                }
+                $validated['clinicId'] = $currentUser->clinic_id;
+                $validated['manufacturerId'] = null;
+                $targetRole = 3; // Clinic Admin can only create Clinicians (role 3)
+            }
+
+            // Office Staff cannot create Admin (0) or Office Staff (1) accounts
+            if ($currentUser->user_role === 1 && in_array($targetRole, [0, 1], true)) {
+                return response()->json([
+                    'message' => 'Unauthorized. You do not have permission to create Admin or Office Staff accounts.',
+                    'error' => 'unauthorized_role_assignment'
+                ], 403);
+            }
+
+            // Validate clinicId is mandatory and points to an active clinic
+            if (empty($validated['clinicId'])) {
+                return response()->json([
+                    'message' => 'A clinic facility must be assigned to this clinician.',
+                    'error' => 'clinic_id_required'
+                ], 422);
+            }
+
+            $targetClinic = Clinic::where('clinic_id', $validated['clinicId'])->first();
+            if (!$targetClinic || $targetClinic->clinic_status !== 0) {
+                return response()->json([
+                    'message' => 'The selected clinic facility is inactive or invalid.',
+                    'error' => 'inactive_clinic_facility'
+                ], 422);
+            }
+
             $newClinician = User::create([
-                'clinic_id' => $validated['clinicId'] ?? null,
+                'clinic_id' => $validated['clinicId'],
                 'manufacturer_id' => $validated['manufacturerId'] ?? null,
                 'first_name' => $validated['first_name'],
                 'middle_name' => $validated['middle_name'] ?? null,
                 'last_name' => $validated['last_name'],
                 'email' => $validated['email'],
-                'password' => bcrypt($tempPassword),
+                'password' => \Illuminate\Support\Facades\Hash::make(\Illuminate\Support\Str::random(64)),
                 'force_password_change' => true,
-                'user_role' => $validated['role'],
+                'user_role' => $targetRole,
                 'user_status' => $validated['isActive'] ?? 0,
                 'phone' => $validated['phone'] ?? null,
             ]);
 
-            if($newClinician){
-                $log = [
-                    'user_id' => $user->id,
-                    'attempted_identifier' => null,
-                    'ip_address'=> $ip,
-                    'action_type' => 'add_clincian',
-                    'action_message' => 'Successful Adding Clinician',
-                    'entity_id' => $user->id,
-                    'entity' => 'woundmed_users',
-                    'entity_type' => 'authentication',
-                    'status' => 0,
-                    'timestamp' => now(),
-                ];
-                $log['prev_hash'] = $prevHash;
-                $log['row_hash'] = $this->generateRowHash($log, $prevHash);
+            if ($newClinician) {
+                // Synchronize clinic-clinician relationship in woundmed_clinic_clinician pivot
+                if ((int) $newClinician->user_role === 3 && $newClinician->clinic_id) {
+                    DB::table('woundmed_clinic_clinician')->updateOrInsert(
+                        ['clinician_id' => $newClinician->id],
+                        ['clinic_id' => $newClinician->clinic_id, 'updated_at' => now(), 'created_at' => now()]
+                    );
+                }
+                // Send welcome email with password reset link
+                try {
+                    $userName = trim($newClinician->first_name . ' ' . $newClinician->last_name);
+                    $token = Password::createToken($newClinician);
+                    $resetUrl = config('app.frontend_url') . '/reset-password?token=' . $token . '&email=' . urlencode($newClinician->email);
+                    $emailBody = WelcomeEmail::getTemplate($userName, $newClinician->email, $resetUrl);
 
-                DB::table('woundmed_audit_logs')->insert($log);
+                    $emailService = new EmailService();
+                    $emailParams = [
+                        'to'        => $newClinician->email,
+                        'from'      => 'noreply@woundmed.com',
+                        'from_name' => 'WOUNDMED INC. Support',
+                        'subject'   => 'Welcome to WOUNDMED INC. - Set Up Your Account',
+                        'body'      => $emailBody,
+                    ];
+
+                    $emailService->send_email(
+                        $emailParams,
+                        'Welcome email sent successfully',
+                        'Failed to send welcome email'
+                    );
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error('Failed to send welcome email to clinician: ' . $e->getMessage());
+                }
+
+                $this->logAudit(
+                    $request,
+                    'clinician_create',
+                    "Clinician created: {$newClinician->first_name} {$newClinician->last_name} (ID: {$newClinician->id})",
+                    $newClinician->id,
+                    0,
+                    null,
+                    'woundmed_users',
+                    'clinician'
+                );
 
                 return response()->json([
                     'message' => 'Clinician Added Successfully'
                 ]);
             } else {
-                $log = [
-                    'user_id' => $user->id,
-                    'attempted_identifier' => null,
-                    'ip_address'=> $ip,
-                    'action_type' => 'add_clincian',
-                    'action_message' => 'Failed Adding Clinician',
-                    'entity_id' => $user->id,
-                    'entity' => 'woundmed_users',
-                    'entity_type' => 'authentication',
-                    'status' => 1,
-                    'timestamp' => now(),
-                ];
-                $log['prev_hash'] = $prevHash;
-                $log['row_hash'] = $this->generateRowHash($log, $prevHash);
-
-                DB::table('woundmed_audit_logs')->insert($log);
+                $this->logAudit(
+                    $request,
+                    'clinician_create',
+                    'Failed adding clinician',
+                    null,
+                    1,
+                    null,
+                    'woundmed_users',
+                    'clinician'
+                );
 
                 return response()->json([
                     'message' => 'Error on adding Clinician'
                 ], 401);
             }
         } catch (ValidationException $e) {
-            $log = [
-                'user_id' => $user->id,
-                'attempted_identifier' => null,
-                'ip_address'=> $ip,
-                'action_type' => 'add_clincian',
-                'action_message' => 'Failed Adding Clinician, Email already taken',
-                'entity_id' => $user->id,
-                'entity' => 'woundmed_users',
-                'entity_type' => 'authentication',
-                'status' => 1,
-                'timestamp' => now(),
-            ];
-            $log['prev_hash'] = $prevHash;
-            $log['row_hash'] = $this->generateRowHash($log, $prevHash);
+            $this->logAudit(
+                $request,
+                'clinician_create',
+                'Failed adding clinician: email already taken',
+                null,
+                1,
+                $request->input('email'),
+                'woundmed_users',
+                'clinician'
+            );
 
-            DB::table('woundmed_audit_logs')->insert($log);
-            
             return response()->json([
                 'message' => 'Error on adding Clinician',
                 'errors'  => $e->errors()
@@ -252,16 +413,43 @@ class ClinicController extends Controller
 
     public function getAllClinic(Request $request)
     {
+        $currentUser = $request->user();
+
+        // Enforce HIPAA § 164.312(a)(1) Access Control & § 164.502(b) Minimum Necessary:
+        // Only Super Admin (0), Office Staff (1), and Clinic Admin (2) may view clinic facilities.
+        // Clinicians (3), Manufacturers (4), and Billers (5) are strictly prohibited from viewing clinic facility records.
+        if (!$currentUser || !in_array($currentUser->user_role, [0, 1, 2], true)) {
+            return response()->json([
+                'message' => 'Unauthorized. You do not have permission to view clinic facilities.',
+                'error' => 'unauthorized'
+            ], 403);
+        }
+
         $perPage = $request->query('per_page', 9);
 
-        $clinics = Clinic::whereNull('deleted_at')
-            ->paginate($perPage);
+        $this->logAudit($request, 'clinic_list_view', 'Clinic listing viewed');
+
+        $query = Clinic::whereNull('deleted_at');
+
+        // Tenant isolation: Clinic Admins (role 2) can only see their own clinic facility
+        if ($currentUser->user_role === 2) {
+            if (empty($currentUser->clinic_id)) {
+                return response()->json([
+                    'message' => 'Unauthorized. Your account is not associated with any clinic facility.',
+                    'error' => 'unassigned_clinic_facility'
+                ], 403);
+            }
+            $query->where('clinic_id', $currentUser->clinic_id);
+        }
+
+        $clinics = $query->paginate($perPage);
 
         $formattedClinics = $clinics->map(function (Clinic $clinic) {
             $clinicians = DB::table('woundmed_clinic_clinician as cc')
                 ->join('woundmed_users as u', 'cc.clinician_id', '=', 'u.id')
                 ->where('cc.clinic_id', $clinic->clinic_id)
                 ->where('u.user_role', 3)
+                ->whereNull('u.deleted_at')
                 ->select('u.id', 'u.first_name', 'u.middle_name', 'u.last_name', 'u.email', 'u.phone')
                 ->get()
                 ->map(function ($u) {
@@ -273,7 +461,7 @@ class ClinicController extends Controller
                         'id'    => (string) $u->id,
                         'name'  => $fullname,
                         'email' => $u->email,
-                        'phone' => $u->phone,
+                        'phone' => $this->maskPhone($u->phone),
                     ];
                 });
 
@@ -297,12 +485,21 @@ class ClinicController extends Controller
 
     public function addClinic(Request $request)
     {
+        $currentUser = $request->user();
+
+        // Enforce HIPAA § 164.312(a)(1) Access Control:
+        // Only Super Admin (0) and Office Staff (1) may create clinic facilities.
+        if (!$currentUser || !in_array($currentUser->user_role, [0, 1], true)) {
+            return response()->json([
+                'message' => 'Unauthorized. You do not have permission to create clinic facilities.',
+                'error' => 'unauthorized'
+            ], 403);
+        }
+
         $isActive = filter_var($request->input('isActive'), FILTER_VALIDATE_BOOLEAN);
         $isActive = $isActive ? 1 : 0;
         
-        $ip = $request->server('HTTP_X_FORWARDED_FOR') ?? $request->server('REMOTE_ADDR');
         $tempPassword = Str::random(12);
-        $prevHash = $this->getLastRowHash();
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -338,6 +535,8 @@ class ClinicController extends Controller
             $clinic->clinicians()->attach($validated['assigned_clinicians_id']);
         }
 
+        $this->logAudit($request, 'clinic_create', "Clinic created: {$clinic->clinic_name} (ID: {$clinic->clinic_id})", $clinic->clinic_id);
+
         return response()->json([
             'message' => 'Clinic created successfully',
             'data' => $this->formatClinicResponse($clinic),
@@ -346,8 +545,33 @@ class ClinicController extends Controller
 
     public function updateClinic(Request $request, $clinicId)
     {
-        $isActive = filter_var($request->input('isActive'), FILTER_VALIDATE_BOOLEAN);
-        $isActive = $isActive ? 1 : 0;
+        $currentUser = $request->user();
+
+        // Enforce HIPAA § 164.312(a)(1) Access Control:
+        // Super Admin (0), Office Staff (1), and Clinic Admin (2) for their own clinic only.
+        if (!$currentUser || !in_array($currentUser->user_role, [0, 1, 2], true)) {
+            return response()->json([
+                'message' => 'Unauthorized. You do not have permission to update clinic facilities.',
+                'error' => 'unauthorized'
+            ], 403);
+        }
+
+        // Cross-Tenant Boundary Enforcement for Clinic Admin (role 2):
+        if ($currentUser->user_role === 2) {
+            if (empty($currentUser->clinic_id)) {
+                return response()->json([
+                    'message' => 'Unauthorized. Your account is not associated with any clinic facility.',
+                    'error' => 'unassigned_clinic_facility'
+                ], 403);
+            }
+
+            if ((int) $clinicId !== (int) $currentUser->clinic_id) {
+                return response()->json([
+                    'message' => 'Unauthorized. You do not have permission to modify a different clinic facility.',
+                    'error' => 'cross_tenant_access_denied'
+                ], 403);
+            }
+        }
 
         $validated = $request->validate([
             'name' => 'nullable|string|max:255',
@@ -361,6 +585,21 @@ class ClinicController extends Controller
             'assigned_clinicians_id.*' => 'integer|exists:woundmed_users,id',
         ]);
 
+        // Prevent cross-tenant clinician hijacking by Clinic Admins:
+        if ($currentUser->user_role === 2 && !empty($validated['assigned_clinicians_id'])) {
+            $foreignClinicians = DB::table('woundmed_users')
+                ->whereIn('id', $validated['assigned_clinicians_id'])
+                ->where('clinic_id', '!=', $currentUser->clinic_id)
+                ->exists();
+
+            if ($foreignClinicians) {
+                return response()->json([
+                    'message' => 'Unauthorized. You cannot assign clinicians from another clinic facility.',
+                    'error' => 'cross_tenant_clinician_assignment'
+                ], 403);
+            }
+        }
+
         $clinic = Clinic::findOrFail($clinicId);
 
         $logoPath = $clinic->logo;
@@ -373,14 +612,18 @@ class ClinicController extends Controller
             $logoPath = $request->file('logo')->store('clinics/logos', 'public');
         }
 
+        // Clinic Admin (role 2) cannot alter clinic facility operational status:
+        $isActive = $currentUser->user_role === 2
+            ? $clinic->clinic_status
+            : (filter_var($request->input('isActive'), FILTER_VALIDATE_BOOLEAN) ? 1 : 0);
+
         $clinic->update([
-            'clinic_name' => $validated['name'],
-            'email' => $validated['email'],
-            'clinic_public_id' => $validated['publicId'],
-            'contact_person' => $validated['contactPerson'],
-            'phone' => $validated['phone'],
-            'address' => $validated['address'],
-            // 'clinic_status' => $request->boolean('isActive'),
+            'clinic_name' => $validated['name'] ?? $clinic->clinic_name,
+            'email' => $validated['email'] ?? $clinic->email,
+            'clinic_public_id' => $validated['publicId'] ?? $clinic->clinic_public_id,
+            'contact_person' => $validated['contactPerson'] ?? $clinic->contact_person,
+            'phone' => $validated['phone'] ?? $clinic->phone,
+            'address' => $validated['address'] ?? $clinic->address,
             'clinic_status' => $isActive,
             'logo' => $logoPath,
         ]);
@@ -388,6 +631,8 @@ class ClinicController extends Controller
         if (!empty($validated['assigned_clinicians_id'])) {
             $clinic->clinicians()->sync($validated['assigned_clinicians_id']);
         }
+
+        $this->logAudit($request, 'clinic_update', "Clinic updated: {$clinic->clinic_name} (ID: {$clinicId})", (int) $clinicId);
 
         return response()->json([
             'message' => 'Clinic updated successfully',
@@ -397,6 +642,17 @@ class ClinicController extends Controller
 
     public function updateClinicStatus(Request $request, $clinicId)
     {
+        $currentUser = $request->user();
+
+        // Enforce HIPAA § 164.312(a)(1) Access Control:
+        // Only Super Admin (0) and Office Staff (1) may alter clinic facility operational status.
+        if (!$currentUser || !in_array($currentUser->user_role, [0, 1], true)) {
+            return response()->json([
+                'message' => 'Unauthorized. You do not have permission to update clinic facility status.',
+                'error' => 'unauthorized'
+            ], 403);
+        }
+
         $clinic = Clinic::findOrFail($clinicId);
 
         if ($clinic->clinic_status == 0) {
@@ -406,6 +662,8 @@ class ClinicController extends Controller
         }
 
         $clinic->save();
+
+        $this->logAudit($request, 'clinic_status_update', "Clinic status toggled: {$clinic->clinic_name} (ID: {$clinicId}) to status={$clinic->clinic_status}", (int) $clinicId);
 
         return response()->json([
             'success' => true,
@@ -418,8 +676,22 @@ class ClinicController extends Controller
 
     public function deleteClinic(Request $request, $clinicId)
     {
+        $currentUser = $request->user();
+
+        // Enforce HIPAA § 164.312(a)(1) Access Control:
+        // Only Super Admin (0) and Office Staff (1) may delete clinic facilities.
+        if (!$currentUser || !in_array($currentUser->user_role, [0, 1], true)) {
+            return response()->json([
+                'message' => 'Unauthorized. You do not have permission to delete clinic facilities.',
+                'error' => 'unauthorized'
+            ], 403);
+        }
+
         $clinic = Clinic::findOrFail($clinicId);
+        $clinicName = $clinic->clinic_name;
         $clinic->delete();
+
+        $this->logAudit($request, 'clinic_delete', "Clinic deleted: {$clinicName} (ID: {$clinicId})", (int) $clinicId);
 
         return response()->json([
             'success' => true,
@@ -429,12 +701,25 @@ class ClinicController extends Controller
 
     public function archiveClinic(Request $request, $clinicId)
     {
+        $currentUser = $request->user();
+
+        // Enforce HIPAA § 164.312(a)(1) Access Control:
+        // Only Super Admin (0) and Office Staff (1) may archive clinic facilities.
+        if (!$currentUser || !in_array($currentUser->user_role, [0, 1], true)) {
+            return response()->json([
+                'message' => 'Unauthorized. You do not have permission to archive clinic facilities.',
+                'error' => 'unauthorized'
+            ], 403);
+        }
+
         try {
             $clinic = Clinic::findOrFail($clinicId);
             $clinic->clinic_status = 2;
             if (!$clinic->save()) {
                 \Log::error('Clinic save failed', $clinic->toArray());
             }
+
+            $this->logAudit($request, 'clinic_archive', "Clinic archived: {$clinic->clinic_name} (ID: {$clinicId})", (int) $clinicId);
 
             return response()->json([
                 'success' => true,
@@ -450,9 +735,22 @@ class ClinicController extends Controller
 
     public function unarchiveClinic(Request $request, $clinicId)
     {
+        $currentUser = $request->user();
+
+        // Enforce HIPAA § 164.312(a)(1) Access Control:
+        // Only Super Admin (0) and Office Staff (1) may unarchive clinic facilities.
+        if (!$currentUser || !in_array($currentUser->user_role, [0, 1], true)) {
+            return response()->json([
+                'message' => 'Unauthorized. You do not have permission to unarchive clinic facilities.',
+                'error' => 'unauthorized'
+            ], 403);
+        }
+
         $clinic = Clinic::findOrFail($clinicId);
         $clinic->clinic_status = 0;
         $clinic->save();
+
+        $this->logAudit($request, 'clinic_unarchive', "Clinic unarchived: {$clinic->clinic_name} (ID: {$clinicId})", (int) $clinicId);
 
         return response()->json([
             'success' => true,
@@ -460,24 +758,6 @@ class ClinicController extends Controller
         ]);
     }
 
-    private function generateRowHash(array $data, $prevHash = null)
-    {
-        $string = json_encode($data) . $prevHash;
-        return hash('sha256', $string);
-    }
-
-    private function getLastRowHash()
-    {
-        $last = DB::table('woundmed_audit_logs')
-            ->select('row_hash')
-            ->latest('audit_log_id')
-            ->first();
-        return $last?->row_hash ?? null;
-    }
-
-    /**
-     * Format clinic response for frontend (handles decryption via attribute access)
-     */
     private function formatClinicResponse(Clinic $clinic): array
     {
         return [
@@ -494,5 +774,23 @@ class ClinicController extends Controller
             'updatedAt'     => $clinic->updated_at,
             'logo'          => $clinic->logo ?? null,
         ];
+    }
+
+    /**
+     * Mask phone number for bulk listing views (HIPAA § 164.502(b) Minimum Necessary standard)
+     */
+    private function maskPhone(?string $phone): ?string
+    {
+        if (empty($phone)) {
+            return null;
+        }
+
+        $digits = preg_replace('/\D/', '', $phone);
+        if (strlen($digits) >= 4) {
+            $lastFour = substr($digits, -4);
+            return '***-***-' . $lastFour;
+        }
+
+        return '***-***-****';
     }
 }

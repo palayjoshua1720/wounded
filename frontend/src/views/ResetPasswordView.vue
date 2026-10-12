@@ -144,10 +144,31 @@ const handleReset = async () => {
     error.value = ''
     errors.value = {}
 
-    // Redirect to login after short delay
-    setTimeout(() => {
-      router.push({ name: 'login' })
-    }, 2000)
+    // If this is a forced password change (user is already authenticated), redirect to dashboard
+    const isForceChange = route.query.force === '1'
+    if (isForceChange && localStorage.getItem('token')) {
+      setTimeout(() => {
+        // User is logged in, redirect based on stored role
+        const userStr = localStorage.getItem('user')
+        let role = 0
+        try {
+          const user = userStr ? JSON.parse(userStr) : null
+          role = user?.user_role ?? 0
+        } catch {}
+        if (role === 0) router.push('/admin/dashboard')
+        else if (role === 1) router.push('/office-staff/dashboard')
+        else if (role === 2) router.push('/clinic/dashboard')
+        else if (role === 3) router.push('/clinician/dashboard')
+        else if (role === 4) router.push('/manufacturer/ivr-management')
+        else if (role === 5) router.push('/biller/ivr-management')
+        else router.push('/')
+      }, 1500)
+    } else {
+      // Normal forgot-password flow, redirect to login
+      setTimeout(() => {
+        router.push({ name: 'login' })
+      }, 2000)
+    }
   } catch (err: any) {
     if (err.response?.status === 422 && err.response.data?.errors) {
       // Map errors to single strings

@@ -78,13 +78,13 @@
                 <div class="mt-6">
                     <h4 class="text-md font-semibold text-gray-800 dark:text-gray-200 mb-4">Role Breakdown</h4>
                     <div class="grid grid-cols-2 sm:grid-cols-3 gap-x-8 gap-y-4">
-                        <div class="flex items-center justify-between">
+                        <div v-if="!isOfficeStaff" class="flex items-center justify-between">
                             <span class="flex items-center text-sm text-gray-600 dark:text-gray-300">
                                 <ShieldCheck class="w-4 h-4 mr-2 text-purple-500" /> Admins
                             </span>
                             <span class="font-semibold text-gray-900 dark:text-white">{{ stats.roles.admin }}</span>
                         </div>
-                        <div class="flex items-center justify-between">
+                        <div v-if="!isOfficeStaff" class="flex items-center justify-between">
                             <span class="flex items-center text-sm text-gray-600 dark:text-gray-300">
                                 <Briefcase class="w-4 h-4 mr-2 text-blue-500" /> Office Staff
                             </span>
@@ -166,11 +166,11 @@
                                 :class="['flex-shrink-0 py-2 px-3 rounded-lg text-xs font-medium transition-colors', roleFilter === 'all' ? 'bg-blue-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300']">
                                 All
                             </button>
-                            <button @click="roleFilter = 'admin'" 
+                            <button v-if="!isOfficeStaff" @click="roleFilter = 'admin'" 
                                 :class="['flex-shrink-0 py-2 px-3 rounded-lg text-xs font-medium transition-colors', roleFilter === 'admin' ? 'bg-blue-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300']">
                                 Admin
                             </button>
-                            <button @click="roleFilter = 'office-staff'" 
+                            <button v-if="!isOfficeStaff" @click="roleFilter = 'office-staff'" 
                                 :class="['flex-shrink-0 py-2 px-3 rounded-lg text-xs font-medium transition-colors', roleFilter === 'office-staff' ? 'bg-blue-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300']">
                                 Office
                             </button>
@@ -231,8 +231,8 @@
                         <select v-model="roleFilter"
                             class="pl-10 pr-8 py-3.5 border-0 bg-gray-50 dark:bg-gray-700/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-gray-700 text-gray-900 dark:text-white appearance-none transition-all duration-200">
                             <option value="all">All Roles</option>
-                            <option value="admin">Admin</option>
-                            <option value="office-staff">Office Staff</option>
+                            <option v-if="!isOfficeStaff" value="admin">Admin</option>
+                            <option v-if="!isOfficeStaff" value="office-staff">Office Staff</option>
                             <option value="clinic">Clinics</option>
                             <option value="clinician">Clinicians</option>
                             <option value="manufacturer">Manufacturer</option>
@@ -315,17 +315,17 @@
                         <!-- Card Actions -->
                         <div class="px-4 pt-2 pb-3 bg-gray-50 dark:bg-gray-700/30 border-t border-gray-100 dark:border-gray-700">
                             <div class="flex items-center justify-end gap-2">
-                                <button @click="selectedUser = user"
+                                <button @click="handleViewUser(user)"
                                     class="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors">
                                     <Eye class="w-5 h-5" />
                                     View
                                 </button>
-                                <button @click="editUser(user)"
+                                <button v-if="canManageUser(user)" @click="editUser(user)"
                                     class="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-medium text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 rounded-lg hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors">
                                     <FilePenLine class="w-5 h-5" />
                                     Edit
                                 </button>
-                                <button v-if="!user.isArchived" @click="handleArchiveUser(user.id)"
+                                <button v-if="canManageUser(user) && !user.isArchived" @click="handleArchiveUser(user.id)"
                                     class="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-medium text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/20 rounded-lg hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-colors">
                                     <Archive class="w-5 h-5" />
                                     Archive
@@ -418,17 +418,17 @@
                                 </td>
                                 <td class="px-6 py-5 whitespace-nowrap text-sm font-medium text-center">
                                     <div class="flex items-center justify-center space-x-2">
-                                        <button @click="selectedUser = user"
+                                        <button @click="handleViewUser(user)"
                                             class="inline-flex items-center justify-center w-9 h-9 text-gray-400 dark:text-gray-500 hover:bg-blue-100 dark:hover:bg-blue-900/30 hover:text-blue-700 dark:hover:text-blue-400 rounded-lg transition-all duration-200"
                                             title="View Details">
                                             <Eye class="w-5 h-5" />
                                         </button>
-                                        <button @click="editUser(user)"
+                                        <button v-if="canManageUser(user)" @click="editUser(user)"
                                             class="inline-flex items-center justify-center w-9 h-9 text-gray-400 dark:text-gray-500 hover:bg-amber-100 dark:hover:bg-amber-900/30 hover:text-amber-700 dark:hover:text-amber-400 rounded-lg transition-all duration-200"
                                             title="Edit User">
                                             <FilePenLine class="w-5 h-5" />
                                         </button>
-                                        <button @click="handleToggleStatus(user.id)" :class="[
+                                        <button v-if="canManageUser(user)" @click="handleToggleStatus(user.id)" :class="[
                                             'inline-flex items-center justify-center w-9 h-9 rounded-lg transition-all duration-200',
                                             user.isActive
                                                 ? 'text-gray-400 dark:text-gray-500 hover:text-red-700 dark:hover:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30'
@@ -436,7 +436,7 @@
                                         ]" :title="user.isActive ? 'Deactivate' : 'Activate'">
                                             <component :is="user.isActive ? XCircle : CheckCircle2" class="w-5 h-5" />
                                         </button>
-                                        <button v-if="!user.isArchived" @click="handleArchiveUser(user.id)"
+                                        <button v-if="canManageUser(user) && !user.isArchived" @click="handleArchiveUser(user.id)"
                                             class="inline-flex items-center justify-center w-9 h-9 text-gray-400 dark:text-gray-500 hover:text-orange-700 dark:hover:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/30 rounded-lg transition-all duration-200"
                                             title="Archive User">
                                             <Archive class="w-5 h-5" />
@@ -471,587 +471,75 @@
         </div>
 
         <!-- User Details Modal -->
-        <BaseModal v-model="showUserDetailsModal" title="User Information" size="lg">
-            <template v-if="selectedUser">
-                <div class="space-y-4 sm:space-y-6">
-                    <!-- Header Card -->
-                    <div
-                        class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl sm:rounded-2xl p-4 sm:p-6">
-                        <div class="flex flex-col sm:flex-row sm:items-center sm:space-x-5">
-                            <div
-                                class="h-16 w-16 sm:h-20 sm:w-20 bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl shadow-sm flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold text-xl sm:text-2xl mx-auto sm:mx-0">
-                                {{ getUserInitials(selectedUser) }}
-                            </div>
-                            <div class="flex-1 text-center sm:text-left mt-4 sm:mt-0">
-                                <h2 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">{{
-                                    formatFullName(selectedUser) }}</h2>
-                                <div class="flex flex-col sm:flex-row sm:items-center mt-2 sm:space-x-4 space-y-1 sm:space-y-0">
-                                    <span class="inline-flex items-center text-sm text-gray-600 dark:text-gray-400 justify-center sm:justify-start">
-                                        <Mail class="w-4 h-4 mr-1.5 text-gray-400" />
-                                        {{ selectedUser.email }}
-                                    </span>
-                                    <span v-if="selectedUser.phone"
-                                        class="inline-flex items-center text-sm text-gray-600 dark:text-gray-400 justify-center sm:justify-start">
-                                        <Phone class="w-4 h-4 mr-1.5 text-gray-400" />
-                                        {{ selectedUser.phone }}
-                                    </span>
-                                </div>
-                                <div class="mt-3 flex items-center justify-center sm:justify-start space-x-2">
-                                    <span
-                                        :class="['px-3 py-1 text-xs font-medium rounded-full', getRoleColor(selectedUser.role)]">
-                                        {{ formatRoleName(selectedUser.role) }}
-                                    </span>
-                                    <span :class="['px-3 py-1 text-xs font-medium rounded-full',
-                                        selectedUser.isArchived ? 'bg-orange-100 dark:bg-orange-800 text-orange-700 dark:text-orange-300' :
-                                            selectedUser.isActive ? 'bg-green-100 dark:bg-green-800 text-green-700 dark:text-green-300' :
-                                                'bg-red-100 dark:bg-red-800 text-red-700 dark:text-red-300']">
-                                        {{ selectedUser.isArchived ? 'Archived' : (selectedUser.isActive ? 'Active' :
-                                            'Inactive') }}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Info Grid -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <!-- Role -->
-                        <div class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
-                            <div class="flex items-center space-x-3">
-                                <div
-                                    class="h-10 w-10 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
-                                    <ShieldCheck class="w-5 h-5 text-purple-600 dark:text-purple-400" />
-                                </div>
-                                <div>
-                                    <p
-                                        class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                                        Role</p>
-                                    <p class="text-sm font-semibold text-gray-900 dark:text-white">{{
-                                        formatRoleName(selectedUser.role) }}</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Status -->
-                        <div class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
-                            <div class="flex items-center space-x-3">
-                                <div class="h-10 w-10 rounded-lg flex items-center justify-center" :class="selectedUser.isArchived ? 'bg-orange-100 dark:bg-orange-900/30' :
-                                    selectedUser.isActive ? 'bg-green-100 dark:bg-green-900/30' :
-                                        'bg-red-100 dark:bg-red-900/30'">
-                                    <component
-                                        :is="selectedUser.isArchived ? Archive : (selectedUser.isActive ? CheckCircle2 : XCircle)"
-                                        class="w-5 h-5" :class="selectedUser.isArchived ? 'text-orange-600 dark:text-orange-400' :
-                                            selectedUser.isActive ? 'text-green-600 dark:text-green-400' :
-                                                'text-red-600 dark:text-red-400'" />
-                                </div>
-                                <div>
-                                    <p
-                                        class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                                        Status</p>
-                                    <p class="text-sm font-semibold text-gray-900 dark:text-white">
-                                        {{ selectedUser.isArchived ? 'Archived' : (selectedUser.isActive ? 'Active' :
-                                            'Inactive') }}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Created Date -->
-                        <div class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
-                            <div class="flex items-center space-x-3">
-                                <div
-                                    class="h-10 w-10 bg-orange-100 dark:bg-orange-900/30 rounded-lg flex items-center justify-center">
-                                    <Calendar class="w-5 h-5 text-orange-600 dark:text-orange-400" />
-                                </div>
-                                <div>
-                                    <p
-                                        class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                                        Created Date</p>
-                                    <p class="text-sm font-semibold text-gray-900 dark:text-white">{{
-                                        formatDate(selectedUser.createdAt) }}</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- User ID (Front-facing UID) -->
-                        <div class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
-                            <div class="flex items-center space-x-3">
-                                <div
-                                    class="h-10 w-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
-                                    <Fingerprint class="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                                </div>
-                                <div class="flex-1 min-w-0">
-                                    <p
-                                        class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                                        User ID</p>
-                                    <div class="flex items-center justify-between mt-1">
-                                        <code
-                                            class="text-sm font-semibold text-gray-900 dark:text-white">{{ generateUserUID(selectedUser.id) }}</code>
-                                        <button @click="copyId(generateUserUID(selectedUser.id))"
-                                            class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors">
-                                            <Copy class="w-3.5 h-3.5 mr-1.5" />
-                                            Copy
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Department/Facility Info & Clinic Code (side by side for clinic users) -->
-                    <div v-if="selectedUser.department || selectedUser.clinicCode" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <!-- Department/Facility Info -->
-                        <div v-if="selectedUser.department" class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
-                            <div class="flex items-start space-x-3">
-                                <div
-                                    class="h-10 w-10 bg-teal-100 dark:bg-teal-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
-                                    <Building class="w-5 h-5 text-teal-600 dark:text-teal-400" />
-                                </div>
-                                <div class="flex-1">
-                                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                                        <span v-if="selectedUser.role === 'clinic'">Managing Clinic Facility</span>
-                                        <span v-else-if="selectedUser.role === 'clinician'">Works at Clinic Facility</span>
-                                        <span v-else-if="selectedUser.role === 'manufacturer'">Associated
-                                            Manufacturer</span>
-                                        <span v-else>Department</span>
-                                    </p>
-                                    <p class="text-sm font-semibold text-gray-900 dark:text-white">{{
-                                        selectedUser.department }}</p>
-                                    <p v-if="selectedUser.role === 'clinic'"
-                                        class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                        This user is the administrator of this clinic facility.
-                                    </p>
-                                    <p v-else-if="selectedUser.role === 'clinician'"
-                                        class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                        This clinician provides medical services at this facility.
-                                    </p>
-                                    <p v-else-if="selectedUser.role === 'manufacturer'"
-                                        class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                        This user is associated with the specified manufacturer.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Clinic Code -->
-                        <div v-if="selectedUser.clinicCode" class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
-                            <div class="flex items-center space-x-3">
-                                <div
-                                    class="h-10 w-10 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg flex items-center justify-center">
-                                    <Hash class="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-                                </div>
-                                <div class="flex-1">
-                                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                                        Associated Clinic Code</p>
-                                    <div class="flex items-center justify-between mt-1">
-                                        <code
-                                            class="text-sm font-semibold text-gray-900 dark:text-white">{{ selectedUser.clinicCode }}</code>
-                                        <button @click="copyId(selectedUser.clinicCode)"
-                                            class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors">
-                                            <Copy class="w-3.5 h-3.5 mr-1.5" />
-                                            Copy
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Clinicians Section (for Clinic Admins) -->
-                    <div v-if="selectedUser.role === 'clinic'" class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
-                        <!-- Accordion Header -->
-                        <button @click="isCliniciansAccordionOpen = !isCliniciansAccordionOpen"
-                            class="w-full flex items-center justify-between text-left focus:outline-none group">
-                            <div class="flex items-center space-x-3">
-                                <div
-                                    class="h-10 w-10 bg-teal-100 dark:bg-teal-900/30 rounded-lg flex items-center justify-center">
-                                    <Stethoscope class="w-5 h-5 text-teal-600 dark:text-teal-400" />
-                                </div>
-                                <div>
-                                    <p
-                                        class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                                        Clinicians at this Facility</p>
-                                    <p class="text-sm font-semibold text-gray-900 dark:text-white">{{
-                                        associatedClinicians.length }} Medical Staff</p>
-                                </div>
-                            </div>
-                            <ChevronDown
-                                class="w-5 h-5 text-gray-500 dark:text-gray-400 transition-transform duration-300 transform"
-                                :class="{ 'rotate-180': isCliniciansAccordionOpen }" />
-                        </button>
-
-                        <!-- Accordion Content -->
-                        <transition enter-active-class="transition ease-out duration-200"
-                            enter-from-class="opacity-0 -translate-y-2" enter-to-class="opacity-100 translate-y-0"
-                            leave-active-class="transition ease-in duration-150"
-                            leave-from-class="opacity-100 translate-y-0" leave-to-class="opacity-0 -translate-y-2">
-                            <div v-if="isCliniciansAccordionOpen"
-                                class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
-                                <div v-if="associatedClinicians.length > 0">
-                                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
-                                        Medical staff working at {{ selectedUser.department }}
-                                    </p>
-                                    <ul class="space-y-3">
-                                        <li v-for="clinician in displayedClinicians" :key="clinician.id"
-                                            class="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
-                                            <div class="flex items-center">
-                                                <div
-                                                    class="flex-shrink-0 h-8 w-8 bg-gradient-to-br from-green-100 to-teal-100 dark:from-green-900/30 dark:to-teal-900/30 rounded-full flex items-center justify-center text-green-600 dark:text-green-400 font-medium text-xs">
-                                                    {{ getUserInitials(clinician) }}
-                                                </div>
-                                                <div class="ml-3">
-                                                    <p class="text-sm font-medium text-gray-900 dark:text-white">{{
-                                                        formatFullName(clinician) }}</p>
-                                                    <p class="text-xs text-gray-500 dark:text-gray-400">{{
-                                                        clinician.email }}</p>
-                                                </div>
-                                            </div>
-                                            <span
-                                                :class="['inline-flex items-center px-2 py-1 rounded-full text-xs font-medium', clinician.isActive ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400']">
-                                                {{ clinician.isActive ? 'Active' : 'Inactive' }}
-                                            </span>
-                                        </li>
-                                    </ul>
-                                    <div v-if="associatedClinicians.length > initialClinicianCount" class="mt-3">
-                                        <button @click="showAllClinicians = !showAllClinicians"
-                                            class="w-full text-center px-4 py-2 text-sm font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors">
-                                            {{ showAllClinicians ? 'Show Less' : `Show ${associatedClinicians.length -
-                                                initialClinicianCount} More` }}
-                                        </button>
-                                    </div>
-                                </div>
-                                <div v-else
-                                    class="bg-white dark:bg-gray-800 rounded-lg p-4 border border-dashed border-gray-300 dark:border-gray-600">
-                                    <p class="text-sm text-gray-500 dark:text-gray-400 text-center">
-                                        No clinicians are currently assigned to this clinic facility.
-                                    </p>
-                                </div>
-                            </div>
-                        </transition>
-                    </div>
-
-                    <!-- Quick Actions -->
-                    <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
-                        <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
-                            Quick Actions</p>
-                        <div class="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:gap-3">
-                            <button @click="editUser(selectedUser)"
-                                class="inline-flex items-center justify-center px-3 sm:px-4 py-2 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 rounded-lg hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors text-sm font-medium">
-                                <FilePenLine class="w-5 h-5 mr-1 sm:mr-2" />
-                                <span class="hidden sm:inline">Edit User</span>
-                                <span class="sm:hidden">Edit</span>
-                            </button>
-                            <button v-if="!selectedUser.isArchived"
-                                @click="handleToggleStatus(selectedUser.id)"
-                                :class="['inline-flex items-center justify-center px-3 sm:px-4 py-2 rounded-lg transition-colors text-sm font-medium',
-                                    selectedUser.isActive
-                                        ? 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/30'
-                                        : 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 hover:bg-green-100 dark:hover:bg-green-900/30']">
-                                <component :is="selectedUser.isActive ? XCircle : CheckCircle2" class="w-5 h-5 mr-1 sm:mr-2" />
-                                {{ selectedUser.isActive ? 'Deactivate' : 'Activate' }}
-                            </button>
-                            <button v-if="!selectedUser.isArchived"
-                                @click="handleArchiveUser(selectedUser.id)"
-                                class="inline-flex items-center justify-center px-3 sm:px-4 py-2 bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300 rounded-lg hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-colors text-sm font-medium">
-                                <Archive class="w-5 h-5 mr-1 sm:mr-2" />
-                                <span class="hidden sm:inline">Archive User</span>
-                                <span class="sm:hidden">Archive</span>
-                            </button>
-                            <button v-else-if="!isOfficeStaff"
-                                @click="handleDeleteUser(selectedUser.id)"
-                                class="inline-flex items-center justify-center px-3 sm:px-4 py-2 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors text-sm font-medium">
-                                <Trash2 class="w-5 h-5 mr-1 sm:mr-2" />
-                                <span class="hidden sm:inline">Delete User</span>
-                                <span class="sm:hidden">Delete</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Copy Tooltip -->
-                    <transition enter-active-class="transition ease-out duration-200"
-                        enter-from-class="transform opacity-0 scale-95" enter-to-class="transform opacity-100 scale-100"
-                        leave-active-class="transition ease-in duration-100"
-                        leave-from-class="transform opacity-100 scale-100"
-                        leave-to-class="transform opacity-0 scale-95">
-                        <div v-if="copiedTooltip"
-                            class="fixed bottom-4 right-4 px-4 py-2 text-sm text-white bg-gray-800 dark:bg-gray-900 rounded-lg shadow-lg">
-                            Copied to clipboard!
-                        </div>
-                    </transition>
-                </div>
-            </template>
-        </BaseModal>
+        <UserDetailsModal
+            v-model="showUserDetailsModal"
+            :user="selectedUser"
+            :associated-clinicians="associatedClinicians"
+            :is-office-staff="isOfficeStaff"
+            @edit="editUser"
+            @toggle-status="handleToggleStatus"
+            @archive="handleArchiveUser"
+            @delete="handleDeleteUser"
+            @send-reset-link="handleSendPasswordResetLink"
+        />
 
         <!-- Create/Edit User Form Modal -->
-        <BaseModal v-model="showFormModal" :title="showCreateForm ? 'Create New User' : 'Edit User'" size="2xl">
-            <form @submit.prevent="handleSubmitForm" class="space-y-4 sm:space-y-5">
-                <!-- User Header (only shown when editing) -->
-                <div v-if="!showCreateForm && selectedUser"
-                    class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-3 sm:p-4">
-                    <div class="flex items-center space-x-3 sm:space-x-4">
-                        <div
-                            class="h-10 w-10 sm:h-12 sm:w-12 bg-white dark:bg-gray-800 rounded-lg sm:rounded-xl shadow-sm flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold text-base sm:text-lg">
-                            {{ getUserInitials(selectedUser) }}
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Editing User</p>
-                            <p class="text-base sm:text-lg font-semibold text-gray-900 dark:text-white truncate">
-                                {{ formatFullName(selectedUser) }}
-                            </p>
-                        </div>
-                    </div>
-                </div>
+        <UserFormModal
+            v-model="showFormModal"
+            :is-create="showCreateForm"
+            :form-data="formData"
+            :selected-user="selectedUser"
+            :departments="departments"
+            :manufacturers="manufacturers"
+            :is-office-staff="isOfficeStaff"
+            :current-user-role="currentUserRole"
+            :current-user-clinic-id="currentUserClinicId"
+            :current-user-id="currentUserId"
+            :is-submitting="isSubmitting"
+            @submit="handleSubmitForm"
+            @cancel="closeForm"
+        />
 
-                <!-- Form Fields -->
-                <div class="space-y-4 sm:space-y-5">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                <span class="flex items-center">
-                                    <UserCircle class="w-4 h-4 mr-2 text-gray-400" />
-                                    First Name<span class="text-red-500 ml-1">*</span>
-                                </span>
-                            </label>
-                            <input v-model="formData.firstName" type="text" required
-                                class="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200"
-                                placeholder="Enter first name" />
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                <span class="flex items-center">
-                                    <UserCircle class="w-4 h-4 mr-2 text-gray-400" />
-                                    Middle Name
-                                </span>
-                            </label>
-                            <input v-model="formData.middleName" type="text"
-                                class="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200"
-                                placeholder="Enter middle name" />
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                <span class="flex items-center">
-                                    <UserCircle class="w-4 h-4 mr-2 text-gray-400" />
-                                    Last Name<span class="text-red-500 ml-1">*</span>
-                                </span>
-                            </label>
-                            <input v-model="formData.lastName" type="text" required
-                                class="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200"
-                                placeholder="Enter last name" />
-                        </div>
-                    </div>
+        <!-- Sudo Confirm Delete Modal -->
+        <SudoConfirmModal
+            ref="sudoDeleteModalRef"
+            v-model="showSudoDeleteModal"
+            title="Confirm User Deletion"
+            :message="sudoDeleteMessage"
+            confirm-button-text="Authorize & Delete"
+            variant="danger"
+            :is-loading="isDeletingUser"
+            @confirm="onSudoDeleteConfirm"
+            @cancel="onSudoDeleteCancel"
+        />
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                <span class="flex items-center">
-                                    <Mail class="w-4 h-4 mr-2 text-gray-400" />
-                                    Email<span class="text-red-500 ml-1">*</span>
-                                </span>
-                            </label>
-                            <input v-model="formData.email" type="email" required
-                                class="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200"
-                                placeholder="Enter email address" />
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                <span class="flex items-center">
-                                    <Phone class="w-4 h-4 mr-2 text-gray-400" />
-                                    Phone
-                                </span>
-                            </label>
-                            <input v-model="formData.phone" type="tel"
-                                class="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200"
-                                placeholder="Enter phone number" />
-                        </div>
-                    </div>
-
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
-                        <div>
-                            <span class="flex items-center mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                                <IdCardLanyard class="w-4 h-4 mr-2 text-gray-400" />
-                                Role<span class="text-red-500 ml-1">*</span>
-                            </span>
-                            <div class="relative">
-                                <select v-model="formData.role" required
-                                    class="w-full px-3 sm:px-4 pr-10 py-2.5 sm:py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white appearance-none transition-all duration-200">
-                                    <!-- Office Staff only visible to admins -->
-                                    <option v-if="!isOfficeStaff" value="office-staff">Office Staff</option>
-                                    <!-- Roles available to both admin and office staff -->
-                                    <option value="clinic">Clinic Administrator</option>
-                                    <option value="clinician">Clinician (Medical Staff)</option>
-                                    <option value="manufacturer">Manufacturer</option>
-                                    <option value="biller">Biller</option>
-                                </select>
-                                <ChevronDown class="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400 pointer-events-none" />
-                            </div>
-                        </div>
-                        <div>
-                            <span class="flex items-center mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                                <Loader class="w-4 h-4 mr-2 text-gray-400" />
-                                Status<span class="text-red-500 ml-1">*</span>
-                            </span>
-                            <div class="relative">
-                                <select v-model="formData.isActive" required
-                                    class="w-full px-3 sm:px-4 pr-10 py-2.5 sm:py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white appearance-none transition-all duration-200">
-                                    <option :value="true">Active</option>
-                                    <option :value="false">Inactive</option>
-                                </select>
-                                <ChevronDown class="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400 pointer-events-none" />
-                            </div>
-                        </div>
-                    </div>
-
-                    <div v-if="formData.role === 'clinic'">
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Clinic Facility
-                            <span class="text-red-500 ml-1">*</span>
-                        </label>
-                        <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">Select the clinic facility this user
-                            will
-                            manage</p>
-                        <div class="relative">
-                            <select v-model="formData.clinicId" :required="formData.role === 'clinic'"
-                                class="w-full px-3 sm:px-4 pr-10 py-2.5 sm:py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white appearance-none transition-all duration-200">
-                                <option disabled value="">Select a clinic facility</option>
-                                <option v-for="dept in departments" :key="dept.id" :value="dept.id">
-                                    {{ dept.name }}
-                                </option>
-                            </select>
-                            <ChevronDown class="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400 pointer-events-none" />
-                        </div>
-                    </div>
-
-                    <div v-if="formData.role === 'manufacturer'">
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Manufacturer<span
-                                class="text-red-500 ml-1">*</span></label>
-                        <div class="relative">
-                            <select v-model="formData.manufacturerId" :required="formData.role === 'manufacturer'"
-                                class="w-full px-3 sm:px-4 pr-10 py-2.5 sm:py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white appearance-none transition-all duration-200">
-                                <option disabled value="">Select a manufacturer</option>
-                                <option v-for="manu in manufacturers" :key="manu.id" :value="manu.id">
-                                    {{ manu.name }}
-                                </option>
-                            </select>
-                            <ChevronDown class="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400 pointer-events-none" />
-                        </div>
-                    </div>
-
-                    <div v-if="formData.role === 'clinician'">
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Associated Clinic
-                            Facility
-                            <span class="text-red-500 ml-1">*</span>
-                        </label>
-                        <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">Select the clinic facility where this
-                            clinician
-                            works</p>
-                        <div class="relative">
-                            <select v-model="formData.clinicId" :required="formData.role === 'clinician'"
-                                class="w-full px-3 sm:px-4 pr-10 py-2.5 sm:py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white appearance-none transition-all duration-200">
-                                <option disabled value="">Select a clinic facility</option>
-                                <option v-for="dept in departments" :key="dept.id" :value="dept.id">
-                                    {{ dept.name }}
-                                </option>
-                            </select>
-                            <ChevronDown class="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400 pointer-events-none" />
-                        </div>
-                    </div>
-
-                    <div v-if="showCreateForm">
-                        <span class="flex items-center mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                            <LockKeyhole class="w-4 h-4 mr-2 text-gray-400" />
-                            Password<span class="text-red-500 ml-1">*</span>
-                        </span>
-                        <div class="relative">
-                            <input v-model="formData.password" type="text" :required="showCreateForm"
-                                :class="['w-full px-3 sm:px-4 py-2.5 sm:py-3 border rounded-xl focus:ring-2 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200 pr-12', passwordValidationError ? 'border-red-300 dark:border-red-500 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-blue-500']"
-                                placeholder="Enter or generate a password" />
-                            <button type="button" @click="generateRandomPassword"
-                                class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400"
-                                title="Generate Random Password">
-                                <Sparkles class="w-5 h-5" />
-                            </button>
-                        </div>
-
-                        <!-- Password Requirements -->
-                        <div v-if="formData.password" class="mt-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                            <p class="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">Password Requirements:
-                            </p>
-                            <ul class="space-y-1">
-                                <li class="flex items-center text-xs">
-                                    <component :is="passwordRequirements.minLength ? 'CheckCircle2' : 'XCircle'"
-                                        :class="['w-3.5 h-3.5 mr-2', passwordRequirements.minLength ? 'text-green-500' : 'text-gray-400']" />
-                                    <span
-                                        :class="passwordRequirements.minLength ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'">At
-                                        least 8 characters</span>
-                                </li>
-                                <li class="flex items-center text-xs">
-                                    <component :is="passwordRequirements.noSpaces ? 'CheckCircle2' : 'XCircle'"
-                                        :class="['w-3.5 h-3.5 mr-2', passwordRequirements.noSpaces ? 'text-green-500' : 'text-gray-400']" />
-                                    <span
-                                        :class="passwordRequirements.noSpaces ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'">No
-                                        spaces allowed</span>
-                                </li>
-                                <li class="flex items-center text-xs">
-                                    <component :is="passwordRequirements.hasLower ? 'CheckCircle2' : 'XCircle'"
-                                        :class="['w-3.5 h-3.5 mr-2', passwordRequirements.hasLower ? 'text-green-500' : 'text-gray-400']" />
-                                    <span
-                                        :class="passwordRequirements.hasLower ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'">At
-                                        least one lowercase letter (a-z)</span>
-                                </li>
-                                <li class="flex items-center text-xs">
-                                    <component :is="passwordRequirements.hasUpper ? 'CheckCircle2' : 'XCircle'"
-                                        :class="['w-3.5 h-3.5 mr-2', passwordRequirements.hasUpper ? 'text-green-500' : 'text-gray-400']" />
-                                    <span
-                                        :class="passwordRequirements.hasUpper ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'">At
-                                        least one uppercase letter (A-Z)</span>
-                                </li>
-                                <li class="flex items-center text-xs">
-                                    <component :is="passwordRequirements.hasNumber ? 'CheckCircle2' : 'XCircle'"
-                                        :class="['w-3.5 h-3.5 mr-2', passwordRequirements.hasNumber ? 'text-green-500' : 'text-gray-400']" />
-                                    <span
-                                        :class="passwordRequirements.hasNumber ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'">At
-                                        least one number (0-9)</span>
-                                </li>
-                                <li class="flex items-center text-xs">
-                                    <component :is="passwordRequirements.hasSpecial ? 'CheckCircle2' : 'XCircle'"
-                                        :class="['w-3.5 h-3.5 mr-2', passwordRequirements.hasSpecial ? 'text-green-500' : 'text-gray-400']" />
-                                    <span
-                                        :class="passwordRequirements.hasSpecial ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'">At
-                                        least one special character (!@#$%^&*...)</span>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-
-                </div>
-
-                <!-- Action Buttons -->
-                <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 sm:space-x-3 sm:gap-0 pt-4 border-t border-gray-200 dark:border-gray-700">
-                    <button type="button" @click="closeForm" :disabled="isSubmitting"
-                        class="w-full sm:w-auto px-5 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
-                        Cancel
-                    </button>
-                    <button type="submit" :disabled="isSubmitting"
-                        class="w-full sm:w-auto inline-flex items-center justify-center px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-md disabled:opacity-70 disabled:cursor-not-allowed sm:min-w-[140px]">
-                        <Loader2 v-if="isSubmitting" class="w-4 h-4 mr-2 animate-spin" />
-                        <Save v-else class="w-4 h-4 mr-2" />
-                        {{ isSubmitting ? 'Saving...' : (showCreateForm ? 'Create User' : 'Save Changes') }}
-                    </button>
-                </div>
-            </form>
-        </BaseModal>
+        <!-- Sudo Confirm Admin Role Modal -->
+        <SudoConfirmModal
+            ref="sudoAdminModalRef"
+            v-model="showSudoAdminModal"
+            title="Sudo Authorization Required"
+            message="Creating or promoting a user to <strong>Administrator</strong> grants full administrative access.<br><br>Please enter your current account password to authorize this action."
+            confirm-button-text="Authorize & Proceed"
+            variant="warning"
+            :is-loading="isSubmitting"
+            @confirm="onSudoAdminConfirm"
+            @cancel="onSudoAdminCancel"
+        />
     </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
-import BaseModal from '@/components/common/BaseModal.vue'
 import TableLoader from '@/components/ui/TableLoader.vue'
 import Pagination from '@/components/ui/Pagination.vue'
+import UserDetailsModal from '@/components/users/modals/UserDetailsModal.vue'
+import UserFormModal from '@/components/users/modals/UserFormModal.vue'
+import SudoConfirmModal from '@/components/users/modals/SudoConfirmModal.vue'
 import { userService } from '@/services/api'
 import { useAuthStore } from '@/stores/auth'
 import { confirmAction } from '@/services/alert'
 import { useAppToast } from '@/composables/ui/useAppToast'
+import Swal from 'sweetalert2'
 import {
     Plus,
     Search,
@@ -1065,7 +553,6 @@ import {
     Clock,
     Users,
     Archive,
-    Sparkles,
     Factory,
     FileText,
     Building,
@@ -1073,18 +560,6 @@ import {
     ShieldCheck,
     Briefcase,
     Stethoscope,
-    Copy,
-    Mail,
-    Phone,
-    UserCircle,
-    Save,
-    Fingerprint,
-    Hash,
-    Calendar,
-    Loader2,
-    IdCardLanyard,
-    Loader,
-    LockKeyhole,
     SlidersHorizontal,
     X
 } from 'lucide-vue-next'
@@ -1128,14 +603,30 @@ const currentPage = ref(1)
 const itemsPerPage = ref(10)
 const totalResults = ref(0)
 const showStats = ref(false)
-const copiedTooltip = ref(false);
-const isCliniciansAccordionOpen = ref(false);
-const showAllClinicians = ref(false);
-const initialClinicianCount = 3;
-const isSubmitting = ref(false);
+const isSubmitting = ref(false)
 
-// Check if current user is office staff
-const isOfficeStaff = computed(() => authStore.currentUser?.user_role === 1)
+// Current User context and role hierarchy
+const currentUserRole = computed(() => authStore.currentUser?.user_role ?? -1)
+const isOfficeStaff = computed(() => currentUserRole.value === 1)
+const isClinicAdmin = computed(() => currentUserRole.value === 2)
+const currentUserClinicId = computed(() => authStore.currentUser?.clinic_id ? String(authStore.currentUser.clinic_id) : '')
+const currentUserId = computed(() => authStore.currentUser?.id ? String(authStore.currentUser.id) : '')
+
+const canManageUser = (user: User) => {
+    if (isOfficeStaff.value) {
+        return user.role !== 'admin' && user.role !== 'office-staff'
+    }
+    if (isClinicAdmin.value) {
+        return user.role === 'clinician'
+    }
+    return true
+}
+
+const getInitialRole = (): User['role'] => {
+    if (isClinicAdmin.value) return 'clinician'
+    if (isOfficeStaff.value) return 'clinic'
+    return 'office-staff'
+}
 
 const defaultFormData = {
     firstName: '',
@@ -1147,10 +638,13 @@ const defaultFormData = {
     isActive: true,
     clinicId: '',
     manufacturerId: '',
-    password: ''
 }
 
-const formData = ref({ ...defaultFormData });
+const formData = ref({
+    ...defaultFormData,
+    role: getInitialRole(),
+    clinicId: isClinicAdmin.value ? currentUserClinicId.value : '',
+});
 
 function escapeHtml(value: string) {
     return value
@@ -1202,13 +696,6 @@ watch(() => selectedUser.value, (newUser) => {
 }, { immediate: true });
 
 const associatedClinicians = computed(() => associatedCliniciansData.value)
-
-const displayedClinicians = computed(() => {
-    if (showAllClinicians.value) {
-        return associatedClinicians.value;
-    }
-    return associatedClinicians.value.slice(0, initialClinicianCount);
-});
 
 // Fetch clinicians for a specific clinic
 const fetchCliniciansForClinic = async (clinicId: string) => {
@@ -1353,40 +840,115 @@ async function handleArchiveUser(userId: string) {
     }
 }
 
-async function handleDeleteUser(userId: string) {
-    const user = users.value.find(u => u.id === userId)
+async function handleSendPasswordResetLink(user: User) {
     if (!user) return
 
-    const result = await confirmAction({
-        title: 'Delete User?',
-        html: `
-            Are you sure you want to delete <b>${escapeHtml(formatFullName(user))}</b>?<br>
-            <span style="color:#d33;">This action cannot be undone!</span>
-        `,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#3085d6',
-        confirmButtonText: 'Yes, delete it!',
+    const result = await Swal.fire({
+        title: 'Send Password Reset Link',
+        text: `Send a secure password reset link to ${user.email}? This will allow the user to establish a new password compliant with security requirements.`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#4f46e5',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Yes, send reset link',
         cancelButtonText: 'Cancel'
     })
 
     if (!result.isConfirmed) return
 
     try {
-        await userService.softDeleteUser(userId)
-        users.value = users.value.filter(user => user.id !== userId)
-        await fetchUserStats()
-
-        // Close modal before showing success
-        selectedUser.value = null
-
-        toast.success(`${formatFullName(user)} was permanently deleted.`)
-    } catch (err) {
-        console.error('Failed to delete user', err)
-        toast.error('Error trying to delete user')
+        const response = await userService.sendPasswordResetLink(user.id)
+        const msg = response.data?.message || `Password reset link sent to ${user.email}.`
+        toast.success(msg)
+    } catch (err: any) {
+        console.error('Failed to send password reset link', err)
+        const msg = err.response?.data?.message || 'Failed to send password reset link. Please try again.'
+        toast.error(msg)
     }
 }
 
-function editUser(user: User) {
+// --- Sudo Delete Modal State ---
+const showSudoDeleteModal = ref(false)
+const sudoDeleteMessage = ref('')
+const sudoDeleteTargetUserId = ref<string | null>(null)
+const isDeletingUser = ref(false)
+const sudoDeleteModalRef = ref<InstanceType<typeof SudoConfirmModal> | null>(null)
+
+function handleDeleteUser(userId: string) {
+    const user = users.value.find(u => u.id === userId)
+    if (!user) return
+
+    sudoDeleteTargetUserId.value = userId
+    sudoDeleteMessage.value = `You are about to permanently delete <strong>${formatFullName(user)}</strong>.<br><br>Enter your current account password to authorize this action.`
+    showSudoDeleteModal.value = true
+}
+
+async function onSudoDeleteConfirm(password: string) {
+    if (!sudoDeleteTargetUserId.value) return
+    isDeletingUser.value = true
+
+    try {
+        await userService.softDeleteUser(sudoDeleteTargetUserId.value, { current_password: password })
+        users.value = users.value.filter(user => user.id !== sudoDeleteTargetUserId.value)
+        await fetchUserStats()
+
+        // Close modals and reset
+        showSudoDeleteModal.value = false
+        selectedUser.value = null
+        sudoDeleteTargetUserId.value = null
+
+        toast.success('User has been deleted successfully.')
+    } catch (err: any) {
+        console.error('Failed to delete user', err)
+        const errorCode = err.response?.data?.error
+        const msg = err.response?.data?.message || 'Failed to delete user. Please try again.'
+
+        if (errorCode === 'password_confirmation_required') {
+            sudoDeleteModalRef.value?.setError('Incorrect password. Please try again.')
+        } else {
+            showSudoDeleteModal.value = false
+            toast.error(msg)
+        }
+    } finally {
+        isDeletingUser.value = false
+    }
+}
+
+function onSudoDeleteCancel() {
+    sudoDeleteTargetUserId.value = null
+}
+
+async function handleViewUser(user: User) {
+    selectedUser.value = user
+
+    try {
+        const { data } = await userService.getUser(user.id)
+        if (data && data.user) {
+            const u = data.user
+            selectedUser.value = {
+                id: String(u.id),
+                email: u.email,
+                firstName: u.firstName ?? u.first_name ?? user.firstName,
+                middleName: u.middleName ?? u.middle_name ?? user.middleName,
+                lastName: u.lastName ?? u.last_name ?? user.lastName,
+                phone: u.phone ?? user.phone,
+                role: normalizeRole(u.role),
+                department: u.department ?? user.department,
+                clinicId: u.clinicId ?? u.clinic_id ?? user.clinicId,
+                clinicCode: u.clinicCode ?? u.clinic_code ?? user.clinicCode,
+                manufacturerId: u.manufacturerId ?? u.manufacturer_id ?? user.manufacturerId,
+                isActive: Boolean(u.isActive),
+                isArchived: Boolean(u.isArchived ?? false),
+                lastLogin: u.lastLogin ?? user.lastLogin,
+                createdAt: u.createdAt ?? user.createdAt,
+            }
+        }
+    } catch (err) {
+        console.error('Failed to load audited user details', err)
+    }
+}
+
+async function editUser(user: User) {
     selectedUser.value = user
     formData.value = {
         firstName: user.firstName,
@@ -1398,47 +960,71 @@ function editUser(user: User) {
         isActive: user.isActive,
         clinicId: user.clinicId || '',
         manufacturerId: user.manufacturerId ? String(user.manufacturerId) : '',
-        password: ''
     }
     showEditForm.value = true
+
+    try {
+        const { data } = await userService.getUser(user.id)
+        if (data && data.user && data.user.phone) {
+            formData.value.phone = data.user.phone
+        }
+    } catch (err) {
+        console.error('Failed to fetch unmasked phone for editing', err)
+    }
 }
 
-async function handleSubmitForm() {
-    if (showCreateForm.value) {
-        // Validate password requirements
-        if (passwordValidationError.value) {
-            toast.error('Please ensure your password meets all the requirements.', 'Invalid password')
-            return;
-        }
+// --- Sudo Admin Modal State ---
+const showSudoAdminModal = ref(false)
+const sudoAdminModalRef = ref<InstanceType<typeof SudoConfirmModal> | null>(null)
+let pendingAdminFormData: any = null
+let pendingAdminPassword: string | undefined = undefined
 
+async function handleSubmitForm(submittedData?: any) {
+    const dataToUse = submittedData || formData.value
+
+    const isAssigningAdmin = roleToInt(dataToUse.role) === 0 && (showCreateForm.value || (showEditForm.value && selectedUser.value?.role !== 'admin'))
+
+    if (isAssigningAdmin && !pendingAdminPassword) {
+        // Store pending data and open the sudo modal
+        pendingAdminFormData = dataToUse
+        showSudoAdminModal.value = true
+        return
+    }
+
+    const currentPassword = pendingAdminPassword
+    pendingAdminPassword = undefined
+    pendingAdminFormData = null
+    
+    if (showCreateForm.value) {
         isSubmitting.value = true
         try {
             const payload: any = {
-                first_name: formData.value.firstName,
-                middle_name: formData.value.middleName || null,
-                last_name: formData.value.lastName,
-                email: formData.value.email,
-                phone: formData.value.phone || null,
-                user_role: roleToInt(formData.value.role),
-                user_status: formData.value.isActive ? 0 : 1,
-                clinic_id: (formData.value.role === 'clinician' || formData.value.role === 'clinic') ? (formData.value.clinicId || null) : null,
-                manufacturer_id: formData.value.role === 'manufacturer' ? (formData.value.manufacturerId || null) : null,
-                password: formData.value.password,
-                password_confirmation: formData.value.password,
+                first_name: dataToUse.firstName,
+                middle_name: dataToUse.middleName || null,
+                last_name: dataToUse.lastName,
+                email: dataToUse.email,
+                phone: dataToUse.phone || null,
+                user_role: roleToInt(dataToUse.role),
+                user_status: dataToUse.isActive ? 0 : 1,
+                clinic_id: (dataToUse.role === 'clinician' || dataToUse.role === 'clinic') 
+                    ? (isClinicAdmin.value ? currentUserClinicId.value : (dataToUse.clinicId || null)) 
+                    : null,
+                manufacturer_id: isClinicAdmin.value ? null : (dataToUse.role === 'manufacturer' ? (dataToUse.manufacturerId || null) : null),
+                current_password: currentPassword,
             }
             const { data } = await userService.createUser(payload)
             const u = data.user
             const newUser: User = {
                 id: String(u.id),
                 email: u.email,
-                firstName: u.firstName ?? u.first_name ?? formData.value.firstName,
-                middleName: u.middleName ?? u.middle_name ?? formData.value.middleName,
-                lastName: u.lastName ?? u.last_name ?? formData.value.lastName,
-                phone: u.phone ?? formData.value.phone,
+                firstName: u.firstName ?? u.first_name ?? dataToUse.firstName,
+                middleName: u.middleName ?? u.middle_name ?? dataToUse.middleName,
+                lastName: u.lastName ?? u.last_name ?? dataToUse.lastName,
+                phone: u.phone ?? dataToUse.phone,
                 role: normalizeRole(u.role),
                 department: u.department ?? undefined,
-                manufacturerId: u.manufacturerId ?? u.manufacturer_id ?? (formData.value.role === 'manufacturer' ? formData.value.manufacturerId : undefined),
-                clinicId: u.clinicId ?? u.clinic_id ?? ((formData.value.role === 'clinician' || formData.value.role === 'clinic') ? formData.value.clinicId : undefined),
+                manufacturerId: u.manufacturerId ?? u.manufacturer_id ?? (dataToUse.role === 'manufacturer' ? dataToUse.manufacturerId : undefined),
+                clinicId: u.clinicId ?? u.clinic_id ?? ((dataToUse.role === 'clinician' || dataToUse.role === 'clinic') ? dataToUse.clinicId : undefined),
                 clinicCode: u.clinicCode ?? u.clinic_code ?? undefined,
                 isActive: Boolean(u.isActive),
                 isArchived: Boolean(u.isArchived ?? false),
@@ -1475,29 +1061,32 @@ async function handleSubmitForm() {
         isSubmitting.value = true
         try {
             const payload: any = {
-                first_name: formData.value.firstName,
-                middle_name: formData.value.middleName || null,
-                last_name: formData.value.lastName,
-                email: formData.value.email,
-                phone: formData.value.phone || null,
-                user_role: roleToInt(formData.value.role),
-                user_status: formData.value.isActive ? 0 : 1,
-                clinic_id: (formData.value.role === 'clinician' || formData.value.role === 'clinic') ? (formData.value.clinicId || null) : null,
-                manufacturer_id: formData.value.role === 'manufacturer' ? (formData.value.manufacturerId || null) : null,
+                first_name: dataToUse.firstName,
+                middle_name: dataToUse.middleName || null,
+                last_name: dataToUse.lastName,
+                email: dataToUse.email,
+                phone: dataToUse.phone || null,
+                user_role: roleToInt(dataToUse.role),
+                user_status: dataToUse.isActive ? 0 : 1,
+                clinic_id: (dataToUse.role === 'clinician' || dataToUse.role === 'clinic') 
+                    ? (isClinicAdmin.value ? currentUserClinicId.value : (dataToUse.clinicId || null)) 
+                    : null,
+                manufacturer_id: isClinicAdmin.value ? null : (dataToUse.role === 'manufacturer' ? (dataToUse.manufacturerId || null) : null),
+                current_password: currentPassword,
             }
             const { data } = await userService.updateUser(selectedUser.value.id, payload)
             const u = data.user
             const updated: User = {
                 id: String(u.id),
                 email: u.email,
-                firstName: u.firstName ?? u.first_name ?? formData.value.firstName,
-                middleName: u.middleName ?? u.middle_name ?? formData.value.middleName,
-                lastName: u.lastName ?? u.last_name ?? formData.value.lastName,
-                phone: u.phone ?? formData.value.phone,
+                firstName: u.firstName ?? u.first_name ?? dataToUse.firstName,
+                middleName: u.middleName ?? u.middle_name ?? dataToUse.middleName,
+                lastName: u.lastName ?? u.last_name ?? dataToUse.lastName,
+                phone: u.phone ?? dataToUse.phone,
                 role: normalizeRole(u.role),
                 department: u.department ?? undefined,
-                manufacturerId: u.manufacturerId ?? formData.value.manufacturerId ?? undefined,
-                clinicId: u.clinicId ?? u.clinic_id ?? ((formData.value.role === 'clinician' || formData.value.role === 'clinic') ? formData.value.clinicId : undefined),
+                manufacturerId: u.manufacturerId ?? dataToUse.manufacturerId ?? undefined,
+                clinicId: u.clinicId ?? u.clinic_id ?? ((dataToUse.role === 'clinician' || dataToUse.role === 'clinic') ? dataToUse.clinicId : undefined),
                 clinicCode: u.clinicCode ?? u.clinic_code ?? undefined,
                 isActive: Boolean(u.isActive),
                 isArchived: Boolean(u.isArchived ?? false),
@@ -1522,7 +1111,13 @@ async function handleSubmitForm() {
             if (errorCode === 'manufacturer_account_exists') {
                 toast.warning(errorMessage, 'Manufacturer account already exists')
             } else if (errorCode === 'clinic_admin_exists') {
-                toast.warning(errorMessage, 'Clinic admin already exists')
+                toast.warning('Clinic Admin Already Exists: ' + errorMessage)
+            } else if (errorCode === 'unauthorized_role_assignment' || errorCode === 'unauthorized_role_creation') {
+                toast.error('Permission Denied: ' + errorMessage)
+            } else if (errorCode === 'unauthorized_clinic_assignment') {
+                toast.error('Facility Error: ' + errorMessage)
+            } else if (errorCode === 'self_role_modification_prohibited' || errorCode === 'self_status_modification_prohibited') {
+                toast.error('Forbidden: ' + errorMessage)
             } else {
                 toast.error(errorMessage)
             }
@@ -1536,48 +1131,11 @@ function closeForm() {
     showCreateForm.value = false
     showEditForm.value = false
     selectedUser.value = null
-    formData.value = { ...defaultFormData }
-}
-
-const copyId = (id: string | undefined) => {
-    if (!id) return;
-    const textArea = document.createElement("textarea");
-    textArea.value = id;
-    textArea.style.position = 'fixed';
-    textArea.style.top = '0';
-    textArea.style.left = '0';
-    document.body.appendChild(textArea);
-    textArea.select();
-    try {
-        document.execCommand('copy');
-        copiedTooltip.value = true;
-        setTimeout(() => { copiedTooltip.value = false; }, 2000);
-    } catch (err) {
-        console.error('Failed to copy ID: ', err);
+    formData.value = {
+        ...defaultFormData,
+        role: getInitialRole(),
+        clinicId: isClinicAdmin.value ? currentUserClinicId.value : '',
     }
-    document.body.removeChild(textArea);
-}
-
-// Generate a front-facing User ID (UID) from the database ID
-// Uses a simple hash to create a consistent, user-friendly identifier
-const generateUserUID = (dbId: string): string => {
-    if (!dbId) return 'UID-000000';
-    
-    // Create a numeric hash from the string ID
-    let hash = 0;
-    for (let i = 0; i < dbId.length; i++) {
-        const char = dbId.charCodeAt(i);
-        hash = ((hash << 5) - hash) + char;
-        hash = hash & hash; // Convert to 32bit integer
-    }
-    
-    // Convert to positive number and take absolute value
-    const positiveHash = Math.abs(hash);
-    
-    // Format as 6-digit number with leading zeros
-    const randomNumber = String(positiveHash % 1000000).padStart(6, '0');
-    
-    return `UID-${randomNumber}`;
 }
 
 const formatFullName = (user: { firstName: string, middleName?: string, lastName: string }) => {
@@ -1833,11 +1391,16 @@ watch(currentPage, () => {
     fetchUsers().catch((err) => { console.error('Failed to fetch users on page change', err) })
 })
 
-// Auto-select 'clinic' role when office staff opens the create form
-// (office staff cannot create accounts with the same role)
+// Auto-configure role and clinic boundary when opening the create form
 watch(showCreateForm, (isOpen) => {
-    if (isOpen && isOfficeStaff.value) {
-        formData.value.role = 'clinic'
+    if (isOpen) {
+        if (isClinicAdmin.value) {
+            formData.value.role = 'clinician'
+            formData.value.clinicId = currentUserClinicId.value
+            formData.value.manufacturerId = ''
+        } else if (isOfficeStaff.value) {
+            formData.value.role = 'clinic'
+        }
     }
 })
 
@@ -1855,8 +1418,6 @@ const showUserDetailsModal = computed({
     set: (value: boolean) => {
         if (!value) {
             selectedUser.value = null;
-            isCliniciansAccordionOpen.value = false;
-            showAllClinicians.value = false;
         }
     }
 })
@@ -1865,35 +1426,6 @@ const getUserInitials = (user: { firstName: string, lastName: string }) => {
     const firstInitial = user.firstName ? user.firstName.charAt(0) : '';
     const lastInitial = user.lastName ? user.lastName.charAt(0) : '';
     return `${firstInitial}${lastInitial}`.toUpperCase();
-}
-
-// Password validation
-const passwordRequirements = computed(() => {
-    const password = formData.value.password || '';
-    return {
-        minLength: password.length >= 8,
-        noSpaces: !/\s/.test(password),
-        hasLower: /[a-z]/.test(password),
-        hasUpper: /[A-Z]/.test(password),
-        hasNumber: /[0-9]/.test(password),
-        hasSpecial: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password),
-    };
-});
-
-const passwordValidationError = computed(() => {
-    if (!formData.value.password) return false;
-    const req = passwordRequirements.value;
-    return !(req.minLength && req.noSpaces && req.hasLower && req.hasUpper && req.hasNumber && req.hasSpecial);
-});
-
-const generateRandomPassword = () => {
-    const length = 14;
-    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+";
-    let password = "";
-    for (let i = 0, n = charset.length; i < length; ++i) {
-        password += charset.charAt(Math.floor(Math.random() * n));
-    }
-    formData.value.password = password;
 }
 
 </script>

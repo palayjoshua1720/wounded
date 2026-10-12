@@ -142,7 +142,7 @@
                             </div>
 
                             <!-- Assigned Clinician -->
-                            <div v-if="!isClinician">
+                            <div>
                                 <p class="text-xs text-gray-500 dark:text-gray-400 mb-0.5 flex items-center gap-1">
                                     <Stethoscope class="w-3 h-3" />
                                     Assigned To
@@ -172,7 +172,7 @@
                                     <FilePenLine class="w-5 h-5" />
                                     Edit
                                 </button>
-                                <button v-if="!isOfficeStaff" @click="handleDeletePatient(patient.patient_id)"
+                                <button v-if="!isOfficeStaff && !isClinician" @click="handleDeletePatient(patient.patient_id)"
                                     class="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors">
                                     <Trash2 class="w-5 h-5" />
                                     Delete
@@ -210,7 +210,7 @@
                                 class="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                 IVR Records
                             </th>
-                            <th v-if="!isClinician"
+                            <th
                                 class="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                 Assigned To
                             </th>
@@ -225,7 +225,7 @@
                         </tr>
                     </thead>
                     <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                        <TableLoader v-if="tableLoader" :colspan="isClinician ? 4 : (isClinicScoped ? 5 : 6)" />
+                        <TableLoader v-if="tableLoader" :colspan="isClinicScoped ? 5 : 6" />
                         <template v-else>
                         <tr v-for="patient in paginatedPatients" :key="patient.patient_id"
                             class="hover:bg-gray-50/70 dark:hover:bg-gray-700/50 transition-colors duration-150">
@@ -261,7 +261,7 @@
                                     {{ patient.ivr_count }} Records
                                 </span>
                             </td>
-                            <td v-if="!isClinician" class="px-6 py-5 whitespace-nowrap">
+                            <td class="px-6 py-5 whitespace-nowrap">
                                 <div class="flex items-center">
                                     <div v-if="patient.assigned_clinician_name" class="flex items-center">
                                         <div class="h-8 w-8 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -299,7 +299,7 @@
                                         title="Edit Patient">
                                         <FilePenLine class="w-5 h-5" />
                                     </button>
-                                    <button v-if="!isOfficeStaff" @click="handleDeletePatient(patient.patient_id)"
+                                    <button v-if="!isOfficeStaff && !isClinician" @click="handleDeletePatient(patient.patient_id)"
                                         class="inline-flex items-center justify-center w-9 h-9 text-gray-400 dark:text-gray-500 hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-700 dark:hover:text-red-400 rounded-lg transition-all duration-200"
                                         title="Delete Patient">
                                         <Trash2 class="w-5 h-5" />
@@ -329,302 +329,43 @@
         </div>
 
         <!-- Patient Details Modal -->
-        <BaseModal v-model="showPatientDetailsModal" title="Patient Information" size="lg">
-            <template v-if="selectedPatient">
-                <!-- Loading Indicator -->
-                <div v-if="isLoadingDetails" class="flex items-center justify-center py-8">
-                    <div class="w-6 h-6 rounded-full border-4 border-blue-200 border-t-blue-600 animate-spin mr-3">
-                    </div>
-                    <span class="text-sm text-gray-600 dark:text-gray-400">Loading patient details...</span>
-                </div>
-                <div class="space-y-4 sm:space-y-6">
-                    <!-- Header Card -->
-                    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl sm:rounded-2xl p-4 sm:p-6">
-                        <div class="flex flex-col sm:flex-row sm:items-center sm:space-x-5">
-                            <div
-                                class="h-16 w-16 sm:h-20 sm:w-20 bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl shadow-sm flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold text-xl sm:text-2xl mx-auto sm:mx-0">
-                                {{ getPatientInitials(selectedPatient.patient_name) }}
-                            </div>
-                            <div class="flex-1 text-center sm:text-left mt-4 sm:mt-0">
-                                <h2 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">{{ selectedPatient.patient_name }}</h2>
-                                <div class="flex items-center justify-center sm:justify-start mt-2">
-                                    <span class="inline-flex items-center text-sm text-gray-600 dark:text-gray-400">
-                                        <Mail class="w-4 h-4 mr-1.5 text-gray-400" />
-                                        {{ selectedPatient.email }}
-                                    </span>
-                                </div>
-                                <div class="mt-3 flex items-center justify-center sm:justify-start space-x-2">
-                                    <span class="px-3 py-1 bg-blue-100 dark:bg-blue-800 text-blue-700 dark:text-blue-300 text-xs font-medium rounded-full">
-                                        PID: {{ generatePatientPID(selectedPatient.patient_id) }}
-                                    </span>
-                                    <span v-if="selectedPatient.ivr_count > 0"
-                                        class="px-3 py-1 bg-purple-100 dark:bg-purple-800 text-purple-700 dark:text-purple-300 text-xs font-medium rounded-full">
-                                        {{ selectedPatient.ivr_count }} IVR Records
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Info Grid -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <!-- Created By -->
-                        <div class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
-                            <div class="flex items-center space-x-3">
-                                <div
-                                    class="h-10 w-10 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
-                                    <UserCircle class="w-5 h-5 text-green-600 dark:text-green-400" />
-                                </div>
-                                <div>
-                                    <p
-                                        class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                                        Created By</p>
-                                    <p class="text-sm font-semibold text-gray-900 dark:text-white">{{
-                                        selectedPatient.user_name || 'System' }}</p>
-                                    <p v-if="selectedPatient.user_role !== null"
-                                        class="text-xs text-gray-500 dark:text-gray-400">
-                                        {{ getRoleLabel(selectedPatient.user_role) }}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Created Date -->
-                        <div class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
-                            <div class="flex items-center space-x-3 h-full">
-                                <div class="h-10 w-10 bg-orange-100 dark:bg-orange-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
-                                    <Calendar class="w-5 h-5 text-orange-600 dark:text-orange-400" />
-                                </div>
-                                <div class="flex flex-col justify-center">
-                                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Created Date</p>
-                                    <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ formatDateTime(selectedPatient.created_at) }}</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Last Updated -->
-                        <div class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
-                            <div class="flex items-center space-x-3">
-                                <div
-                                    class="h-10 w-10 bg-teal-100 dark:bg-teal-900/30 rounded-lg flex items-center justify-center">
-                                    <Clock class="w-5 h-5 text-teal-600 dark:text-teal-400" />
-                                </div>
-                                <div>
-                                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Last Updated</p>
-                                    <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ selectedPatient.updated_at ? formatDate(selectedPatient.updated_at) : 'No Records Found' }}</p>
-                                    <p v-if="selectedPatient.updated_by_user_name" class="text-xs text-gray-500 dark:text-gray-400">
-                                        by {{ selectedPatient.updated_by_user_name }}
-                                        <span v-if="selectedPatient.updated_by_user_role !== null">({{
-                                            getRoleLabel(selectedPatient.updated_by_user_role) }})</span>
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- IVR Records -->
-                        <div class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
-                            <div class="flex items-center space-x-3">
-                                <div
-                                    class="h-10 w-10 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
-                                    <ClipboardList class="w-5 h-5 text-purple-600 dark:text-purple-400" />
-                                </div>
-                                <div>
-                                    <p
-                                        class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                                        IVR Records</p>
-                                    <p class="text-sm font-semibold text-gray-900 dark:text-white">{{
-                                        selectedPatient.ivr_count }} Total Records</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Assigned Clinician -->
-                        <div v-if="!isClinician" class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
-                            <div class="flex items-center space-x-3">
-                                <div
-                                    class="h-10 w-10 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg flex items-center justify-center">
-                                    <Stethoscope class="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-                                </div>
-                                <div>
-                                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                                        Assigned To</p>
-                                    <p class="text-sm font-semibold text-gray-900 dark:text-white">
-                                        {{ selectedPatient.assigned_clinician_name || 'Unassigned' }}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Clinic Info (Admin Only) -->
-                    <div v-if="isAdmin && selectedPatient.clinic_name" class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
-                        <div class="flex items-start space-x-3">
-                            <div class="h-10 w-10 bg-teal-100 dark:bg-teal-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
-                                <Hospital class="w-5 h-5 text-teal-600 dark:text-teal-400" />
-                            </div>
-                            <div class="flex-1">
-                                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Associated Clinic</p>
-                                <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ selectedPatient.clinic_name }}</p>
-                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                    This patient is associated with the above clinic facility.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Quick Actions -->
-                    <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
-                        <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">Quick Actions</p>
-                        <div class="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:gap-3">
-                            <button @click="editPatient(selectedPatient); selectedPatient = null"
-                                class="inline-flex items-center justify-center px-3 sm:px-4 py-2 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900/30 transition-colors text-sm font-medium">
-                                <FilePenLine class="w-4 h-4 mr-1 sm:mr-2" />
-                                <span>Edit Patient</span>
-                            </button>
-                            <button v-if="!isOfficeStaff" @click="handleDeletePatient(selectedPatient.patient_id); selectedPatient = null"
-                                class="inline-flex items-center justify-center px-3 sm:px-4 py-2 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors text-sm font-medium">
-                                <Trash2 class="w-4 h-4 mr-1 sm:mr-2" />
-                                <span>Delete Patient</span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </template>
-        </BaseModal>
+        <PatientDetailsModal
+            v-model="showPatientDetailsModal"
+            :patient="selectedPatient"
+            :is-loading-details="isLoadingDetails"
+            :is-clinician="isClinician"
+            :is-admin="isAdmin"
+            :is-office-staff="isOfficeStaff"
+            @edit="handleEditFromDetails"
+            @delete="handleDeleteFromDetails"
+        />
 
         <!-- Create/Edit Patient Form Modal -->
-        <BaseModal v-model="showFormModal" :title="showCreateForm ? 'Add New Patient' : 'Edit Patient'" size="lg">
-            <form @submit.prevent="handleSubmitForm" class="space-y-4 sm:space-y-6">
-                <!-- Loading Indicator (only shown when editing and loading) -->
-                <div v-if="!showCreateForm && isLoadingDetails"
-                    class="flex items-center justify-center py-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
-                    <div class="w-6 h-6 rounded-full border-4 border-blue-200 border-t-blue-600 animate-spin mr-3">
-                    </div>
-                    <span class="text-sm text-gray-600 dark:text-gray-400">Loading fresh data...</span>
-                </div>
-                <!-- Patient Header (only shown when editing) -->
-                <div v-if="!showCreateForm && selectedPatient" class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-3 sm:p-4">
-                    <div class="flex items-center space-x-3 sm:space-x-4">
-                        <div class="h-10 w-10 sm:h-12 sm:w-12 bg-white dark:bg-gray-800 rounded-lg sm:rounded-xl shadow-sm flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold text-base sm:text-lg">
-                            {{ getPatientInitials(selectedPatient.patient_name) }}
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Editing Patient</p>
-                            <p class="text-base sm:text-lg font-semibold text-gray-900 dark:text-white truncate">{{ selectedPatient.patient_name }}</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Form Fields -->
-                <div class="space-y-4 sm:space-y-5">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            <span class="flex items-center">
-                                <UserCircle class="w-4 h-4 mr-2 text-gray-400" />
-                                Patient Name<span class="text-red-500 ml-1">*</span>
-                            </span>
-                        </label>
-                        <input v-model="formData.patient_name" type="text" required
-                            class="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200"
-                            placeholder="Enter patient name" />
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            <span class="flex items-center">
-                                <Mail class="w-4 h-4 mr-2 text-gray-400" />
-                                Email Address<span class="text-red-500 ml-1">*</span>
-                            </span>
-                        </label>
-                        <input v-model="formData.email" type="email" required
-                            class="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200"
-                            placeholder="Enter email address" />
-                    </div>
-
-                    <!-- Clinic Selection (Admin only - both Create and Edit) -->
-                    <div v-if="isAdmin">
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            <span class="flex items-center">
-                                <Hospital class="w-4 h-4 mr-2 text-gray-400" />
-                                Clinic<span class="text-red-500 ml-1">*</span>
-                            </span>
-                        </label>
-                        <div class="relative">
-                            <select v-model="formData.clinic_id" required
-                                :disabled="isLoadingClinics"
-                                class="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white appearance-none transition-all duration-200">
-                                <option value="" disabled>Select a clinic</option>
-                                <option v-for="clinic in clinics" :key="clinic.id" :value="clinic.id">
-                                    {{ clinic.name }}
-                                </option>
-                            </select>
-                            <div v-if="isLoadingClinics" class="absolute right-10 top-3.5">
-                                <div
-                                    class="w-5 h-5 rounded-full border-2 border-gray-300 border-t-blue-600 animate-spin">
-                                </div>
-                            </div>
-                            <ChevronDown v-else
-                                class="absolute right-4 top-3.5 h-5 w-5 text-gray-400 pointer-events-none" />
-                        </div>
-                        <p v-if="clinics.length === 0 && !isLoadingClinics" class="text-xs text-amber-600 mt-1">
-                            No clinics available. Please create a clinic first.
-                        </p>
-                    </div>
-
-                    <!-- Assigned Clinician (Clinic users only - both Create and Edit) -->
-                    <div v-if="isClinicUser">
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            <span class="flex items-center">
-                                <Stethoscope class="w-4 h-4 mr-2 text-gray-400" />
-                                Assigned To
-                                <span class="ml-2 text-xs text-gray-400 font-normal">(optional)</span>
-                            </span>
-                        </label>
-                        <div class="relative">
-                            <select v-model="formData.assigned_clinician_id"
-                                :disabled="isLoadingAssignableClinicians"
-                                class="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white appearance-none transition-all duration-200">
-                                <option value="">Unassigned</option>
-                                <option v-for="c in assignableClinicians" :key="c.id" :value="String(c.id)">
-                                    {{ c.full_name }}
-                                </option>
-                            </select>
-                            <div v-if="isLoadingAssignableClinicians" class="absolute right-10 top-3.5">
-                                <div
-                                    class="w-5 h-5 rounded-full border-2 border-gray-300 border-t-blue-600 animate-spin">
-                                </div>
-                            </div>
-                            <ChevronDown v-else
-                                class="absolute right-4 top-3.5 h-5 w-5 text-gray-400 pointer-events-none" />
-                        </div>
-                        <p v-if="assignableClinicians.length === 0 && !isLoadingAssignableClinicians" class="text-xs text-amber-600 mt-1">
-                            No clinicians available for your clinic.
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Action Buttons -->
-                <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 sm:gap-0 sm:space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700">
-                    <button type="button" @click="closeForm"
-                        class="w-full sm:w-auto px-5 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200">
-                        Cancel
-                    </button>
-                    <button type="submit"
-                        class="w-full sm:w-auto inline-flex items-center justify-center px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-md">
-                        <Save class="w-4 h-4 mr-2" />
-                        {{ showCreateForm ? 'Add Patient' : 'Save Changes' }}
-                    </button>
-                </div>
-            </form>
-        </BaseModal>
+        <PatientFormModal
+            v-model="showFormModal"
+            :is-create="showCreateForm"
+            :form-data="formData"
+            :selected-patient="selectedPatient"
+            :clinics="clinics"
+            :assignable-clinicians="assignableClinicians"
+            :is-loading-details="isLoadingDetails"
+            :is-loading-clinics="isLoadingClinics"
+            :is-loading-assignable-clinicians="isLoadingAssignableClinicians"
+            :is-admin="isAdmin"
+            :is-office-staff="isOfficeStaff"
+            :is-clinic-user="isClinicUser"
+            @submit="handleSubmitForm"
+            @cancel="closeForm"
+        />
     </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
-import BaseModal from '@/components/common/BaseModal.vue'
 import TableLoader from '@/components/ui/TableLoader.vue'
 import Pagination from '@/components/ui/Pagination.vue'
+import PatientDetailsModal from '@/components/patients/modals/PatientDetailsModal.vue'
+import PatientFormModal from '@/components/patients/modals/PatientFormModal.vue'
 import { patientService } from '@/services/api'
 import { useAuthStore } from '@/stores/auth'
 import { confirmAction } from '@/services/alert'
@@ -635,17 +376,11 @@ import {
     Eye,
     FilePenLine,
     Trash2,
-    ChevronDown,
     Users,
     BarChart2,
     ClipboardList,
-    Mail,
-    UserCircle,
-    Calendar,
-    Clock,
-    Save,
-    Hospital,
     Stethoscope,
+    Hospital,
     X
 } from 'lucide-vue-next'
 
@@ -805,9 +540,11 @@ function nextPage() {
     }
 }
 
-const formatDate = (dateStr: string | null) => {
-    if (!dateStr) return '-'
-    return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+const getPatientInitials = (name: string) => {
+    if (!name) return ''
+    const parts = name.split(' ')
+    if (parts.length === 1) return parts[0].charAt(0).toUpperCase()
+    return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase()
 }
 
 // Format date with time in 12-hour format with square brackets
@@ -818,38 +555,6 @@ const formatDateTime = (dateStr: string | null) => {
     const datePart = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
     const timePart = date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }).replace(' ', '')
     return `${datePart} [${timePart}]`
-}
-
-const getPatientInitials = (name: string) => {
-    if (!name) return ''
-    const parts = name.split(' ')
-    if (parts.length === 1) return parts[0].charAt(0).toUpperCase()
-    return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase()
-}
-
-// Generate a front-facing Patient ID (PID) from the database ID
-// Uses a simple hash to create a consistent, user-friendly identifier
-const generatePatientPID = (dbId: number | null): string => {
-    if (!dbId) return 'PID-000000'
-
-    // Convert number to string for hashing
-    const idString = String(dbId)
-
-    // Create a numeric hash from the string ID
-    let hash = 0
-    for (let i = 0; i < idString.length; i++) {
-        const char = idString.charCodeAt(i)
-        hash = ((hash << 5) - hash) + char
-        hash = hash & hash // Convert to 32bit integer
-    }
-
-    // Convert to positive number and take absolute value
-    const positiveHash = Math.abs(hash)
-
-    // Format as 6-digit number with leading zeros
-    const randomNumber = String(positiveHash % 1000000).padStart(6, '0')
-
-    return `PID-${randomNumber}`
 }
 
 const getUserInitials = (name: string | null) => {
@@ -873,6 +578,11 @@ const getRoleLabel = (role: number | null): string => {
 }
 
 async function handleDeletePatient(patientId: number) {
+    if (isClinician.value || isOfficeStaff.value) {
+        toast.error('You do not have permission to delete patient records.')
+        return
+    }
+
     const patient = patients.value.find(p => p.patient_id === patientId)
     if (!patient) return
 
@@ -966,21 +676,23 @@ async function editPatient(patient: Patient) {
     }
 }
 
-async function handleSubmitForm() {
+async function handleSubmitForm(submittedData?: any) {
+    const dataToUse = submittedData || formData.value
+    
     if (showCreateForm.value) {
         try {
             // Build payload - admin can select clinic, others use backend auto-populate
             const payload: { patient_name: string; email: string; clinic_id?: string; assigned_clinician_id?: string | null } = {
-                patient_name: formData.value.patient_name,
-                email: formData.value.email,
+                patient_name: dataToUse.patient_name,
+                email: dataToUse.email,
             }
-            // Admin users can specify clinic_id
-            if (isAdmin.value && formData.value.clinic_id) {
-                payload.clinic_id = formData.value.clinic_id
+            // Admin & Office Staff users can specify clinic_id
+            if ((isAdmin.value || isOfficeStaff.value) && dataToUse.clinic_id) {
+                payload.clinic_id = dataToUse.clinic_id
             }
             // Clinic users can assign a clinician from their clinic
             if (isClinicUser.value) {
-                payload.assigned_clinician_id = formData.value.assigned_clinician_id || null
+                payload.assigned_clinician_id = dataToUse.assigned_clinician_id || null
             }
             const { data } = await patientService.createPatient(payload)
             const p = data.patient
@@ -1016,18 +728,18 @@ async function handleSubmitForm() {
         }
     } else if (showEditForm.value && selectedPatient.value) {
         try {
-            // When editing: admin can change clinic_id; clinic users / clinicians cannot
+            // When editing: admin & office staff can change clinic_id; clinic users / clinicians cannot
             const payload: { patient_name: string; email: string; clinic_id?: string; assigned_clinician_id?: string | null } = {
-                patient_name: formData.value.patient_name,
-                email: formData.value.email,
+                patient_name: dataToUse.patient_name,
+                email: dataToUse.email,
             }
-            // Admin users can update the patient's clinic
-            if (isAdmin.value && formData.value.clinic_id) {
-                payload.clinic_id = formData.value.clinic_id
+            // Admin & Office Staff users can update the patient's clinic
+            if ((isAdmin.value || isOfficeStaff.value) && dataToUse.clinic_id) {
+                payload.clinic_id = dataToUse.clinic_id
             }
             // Clinic users can update the assigned clinician
             if (isClinicUser.value) {
-                payload.assigned_clinician_id = formData.value.assigned_clinician_id || null
+                payload.assigned_clinician_id = dataToUse.assigned_clinician_id || null
             }
             const { data } = await patientService.updatePatient(selectedPatient.value.patient_id, payload)
             const p = data.patient
@@ -1072,8 +784,20 @@ function closeForm() {
     formData.value = { ...defaultFormData }
 }
 
+// Handler for edit action from details modal
+function handleEditFromDetails(patient: Patient) {
+    selectedPatient.value = null
+    editPatient(patient)
+}
+
+// Handler for delete action from details modal
+async function handleDeleteFromDetails(patientId: number) {
+    selectedPatient.value = null
+    await handleDeletePatient(patientId)
+}
+
 const fetchClinics = async () => {
-    if (!isAdmin.value) return
+    if (!isAdmin.value && !isOfficeStaff.value) return
     isLoadingClinics.value = true
     try {
         const { data } = await patientService.getPatientClinics()
@@ -1102,7 +826,7 @@ const fetchAssignableClinicians = async () => {
 
 // Watch for create form opening to fetch clinics
 watch(showCreateForm, (isOpen) => {
-    if (isOpen && isAdmin.value) {
+    if (isOpen && (isAdmin.value || isOfficeStaff.value)) {
         fetchClinics()
     }
     if (isOpen && isClinicUser.value) {
@@ -1110,9 +834,9 @@ watch(showCreateForm, (isOpen) => {
     }
 })
 
-// Watch for edit form opening to fetch assignable clinicians (clinic users only)
+// Watch for edit form opening to fetch clinics / assignable clinicians
 watch(showEditForm, (isOpen) => {
-    if (isOpen && isAdmin.value) {
+    if (isOpen && (isAdmin.value || isOfficeStaff.value)) {
         fetchClinics()
     }
     if (isOpen && isClinicUser.value) {

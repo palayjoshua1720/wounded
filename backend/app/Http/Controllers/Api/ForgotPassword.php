@@ -29,14 +29,23 @@ class ForgotPassword extends Controller
         $prevHash = $this->getLastRowHash();
 
 
-        if (!$user) {
+        if (!$user || (int) $user->user_status !== 0 || $user->trashed()) {
+            $statusLabel = $user ? match ((int) $user->user_status) {
+                1 => 'inactive',
+                2 => 'archived',
+                default => 'suspended',
+            } : 'not_found';
+            if ($user?->trashed()) {
+                $statusLabel = 'deleted';
+            }
+
             $log = [
-                'user_id' => null, 
+                'user_id' => $user?->id, 
                 'attempted_identifier' => $request->email,
                 'ip_address' => $ip,
                 'action_type' => 'forgot_password_request',
-                'action_message' => 'password reset requested failed',
-                'entity_id' => null,
+                'action_message' => "password reset requested blocked: account is {$statusLabel}",
+                'entity_id' => $user?->id,
                 'entity' => 'woundmed_users',
                 'entity_type' => 'authentication',
                 'status' => 1, // failed

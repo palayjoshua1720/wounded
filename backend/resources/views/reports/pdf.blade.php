@@ -130,9 +130,31 @@
         .status-paid { background: #d1fae5; color: #065f46; }
         .status-eligible { background: #d1fae5; color: #065f46; }
         .status-not_eligible { background: #fee2e2; color: #991b1b; }
+        .watermark {
+            position: fixed;
+            top: 38%;
+            left: 5%;
+            width: 90%;
+            text-align: center;
+            opacity: 0.08;
+            transform: rotate(-30deg);
+            z-index: -1000;
+            font-size: 24px;
+            font-weight: bold;
+            color: #dc2626;
+            line-height: 1.6;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
     </style>
 </head>
 <body>
+    <div class="watermark">
+        CONFIDENTIAL &bull; FOR AUTHORIZED USE ONLY<br>
+        <span style="font-size: 14px; font-weight: normal; color: #4b5563; text-transform: none;">
+            Downloaded by: {{ $downloadedBy ?? 'Authorized System User' }} &bull; {{ $generatedAt ?? now()->format('Y-m-d H:i:s') }}
+        </span>
+    </div>
     <div class="header">
         <h1>WoundMed Inc.</h1>
         <p>Medical Device Management System</p>
@@ -166,6 +188,12 @@
                     <tr>
                         <td>Manufacturer:</td>
                         <td>{{ $filters['manufacturer'] }}</td>
+                    </tr>
+                    @endif
+                    @if(isset($anonymizePhi) && $anonymizePhi)
+                    <tr>
+                        <td>HIPAA Compliance:</td>
+                        <td><strong style="color: #059669;">[✓] PHI Anonymized (De-identified Report)</strong></td>
                     </tr>
                     @endif
                 </table>
@@ -482,6 +510,40 @@
                         <td>{{ $ivr['clinic_name'] }}</td>
                         <td>{{ $ivr['manufacturer_name'] }}</td>
                         <td><span class="status-badge status-{{ $ivr['eligibility_status'] }}">{{ ucwords(str_replace('_', ' ', $ivr['eligibility_status'])) }}</span></td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+        @endif
+
+        @if(isset($data['applications']) && count($data['applications']) > 0)
+        <div class="section">
+            <div class="section-title">Patient Graft Applications List</div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Graft Code</th>
+                        <th>Date</th>
+                        <th>Patient</th>
+                        <th>Clinic</th>
+                        <th>Clinician</th>
+                        <th>Brand & Size</th>
+                        <th>Serial #</th>
+                        <th>Wound Site</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($data['applications'] as $app)
+                    <tr>
+                        <td><strong>{{ $app['graft_log_code'] }}</strong></td>
+                        <td>{{ $app['date_of_service'] }}</td>
+                        <td>{{ $app['patient_name'] }}</td>
+                        <td>{{ $app['clinic_name'] }}</td>
+                        <td>{{ $app['clinician_name'] }}</td>
+                        <td>{{ $app['brand_name'] }} ({{ $app['size'] }})</td>
+                        <td>{{ $app['serial_number'] }}</td>
+                        <td>{{ $app['wound_site'] }} (Wk {{ $app['week_number'] }})</td>
                     </tr>
                     @endforeach
                 </tbody>

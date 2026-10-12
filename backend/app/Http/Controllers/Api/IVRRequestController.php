@@ -36,16 +36,34 @@ class IVRRequestController extends Controller
 
     public function getAllIVRRequests(Request $request)
     {
+        $currentUser = $request->user();
         $perPage = $request->query('per_page', 10);
 
-        $ivrRequests = IVR::with([
+        $query = IVR::with([
             'clinic',
             'brand.manufacturer',
             'manufacturer',
             'patient'
         ])
-            ->orderBy('created_at', 'desc')
-            ->paginate($perPage);
+            ->orderBy('created_at', 'desc');
+
+        // Tenant isolation: Clinic Admins (2) and Clinicians (3) can only view IVR requests from their assigned clinic
+        if ($currentUser && in_array($currentUser->user_role, [2, 3], true)) {
+            if (empty($currentUser->clinic_id)) {
+                return response()->json([
+                    'message' => 'Unauthorized. Your account is not associated with any clinic facility.',
+                    'error' => 'unassigned_clinic_facility'
+                ], 403);
+            }
+            $query->where('clinic_id', $currentUser->clinic_id);
+        }
+
+        // Manufacturer (4) can only view IVRs associated with their manufacturer facility
+        if ($currentUser && $currentUser->user_role === 4) {
+            $query->where('manufacturer_id', $currentUser->manufacturer_id);
+        }
+
+        $ivrRequests = $query->paginate($perPage);
 
         // $ivrRequests->getCollection()->transform(function ($ivr) {
 
@@ -115,15 +133,48 @@ class IVRRequestController extends Controller
 
     public function getAllPatientInfo(Request $request)
     {
+        $currentUser = $request->user();
+        // Enforce HIPAA § 164.502(b) Minimum Necessary & § 164.312(a)(1) Access Control:
+        // Only internal staff (0, 1), clinic admins (2), and clinicians (3) may view patient records.
+        if (!$currentUser || !in_array($currentUser->user_role, [0, 1, 2, 3], true)) {
+            return response()->json([
+                'message' => 'Unauthorized. You do not have permission to view patient records.',
+                'error' => 'unauthorized'
+            ], 403);
+        }
+
         $perPage = $request->query('per_page', 10);
 
-        $patientData = PatientInfo::with([
+        $query = PatientInfo::with([
             'user',
             'clinic',
             'ivrs'
-        ])
-            ->orderBy('created_at', 'desc')
-            ->paginate($perPage);
+        ])->orderBy('created_at', 'desc');
+
+        // Clinic Admin (role 2): only patients from their clinic facility
+        if ($currentUser->user_role === 2) {
+            if (empty($currentUser->clinic_id)) {
+                return response()->json([
+                    'message' => 'Unauthorized. Your account is not associated with any clinic facility.',
+                    'error' => 'unassigned_clinic_facility'
+                ], 403);
+            }
+            $query->where('clinic_id', $currentUser->clinic_id);
+        }
+
+        // Clinician (role 3): only patients assigned to them in their clinic facility
+        if ($currentUser->user_role === 3) {
+            if (empty($currentUser->clinic_id)) {
+                return response()->json([
+                    'message' => 'Unauthorized. Your account is not associated with any clinic facility.',
+                    'error' => 'unassigned_clinic_facility'
+                ], 403);
+            }
+            $query->where('clinic_id', $currentUser->clinic_id)
+                  ->where('assigned_clinician_id', $currentUser->id);
+        }
+
+        $patientData = $query->paginate($perPage);
 
         return response()->json([
             'patient_data' => $patientData->items(),
@@ -138,6 +189,14 @@ class IVRRequestController extends Controller
 
     public function addIVRRequest(Request $request)
     {
+        $currentUser = $request->user();
+        if (!$currentUser || !in_array($currentUser->user_role, [0, 1, 2, 3], true)) {
+            return response()->json([
+                'message' => 'Unauthorized. You do not have permission to create IVR requests.',
+                'error' => 'unauthorized'
+            ], 403);
+        }
+
         $tempPassword = Str::random(12);
         try {
             $validated = $request->validate([
@@ -150,7 +209,32 @@ class IVRRequestController extends Controller
                 'eligibility_email'=> 'required|email',
             ]);
 
-            $result = DB::transaction(function () use ($request, $validated) {
+            // Enforce clinic facility tenant isolation for clinic users and clinicians
+            if (in_array($currentUser->user_role, [2, 3], true)) {
+                if (empty($currentUser->clinic_id)) {
+                    return response()->json([
+                        'message' => 'Unauthorized. Your account is not associated with any clinic facility.',
+                        'error' => 'unassigned_clinic_facility'
+                    ], 403);
+                }
+                $validated['clinic_id'] = $currentUser->clinic_id;
+
+                $patient = PatientInfo::find($validated['patient_id']);
+                if (!$patient || (int) $patient->clinic_id !== (int) $currentUser->clinic_id) {
+                    return response()->json([
+                        'message' => 'Unauthorized. Patient does not belong to your clinic facility.',
+                        'error' => 'cross_tenant_access_denied'
+                    ], 403);
+                }
+                if ($currentUser->user_role === 3 && (int) $patient->assigned_clinician_id !== (int) $currentUser->id) {
+                    return response()->json([
+                        'message' => 'Unauthorized. You may only create IVR requests for your assigned patients.',
+                        'error' => 'unauthorized_patient_access'
+                    ], 403);
+                }
+            }
+
+            $result = DB::transaction(function () use ($request, $validated, $currentUser) {
                 // $path = $request->file('ivr_file')->store('ivr', 'public');
                 $path = null;
                 if ($request->hasFile('ivr_file')) {
@@ -161,7 +245,7 @@ class IVRRequestController extends Controller
                 $ivrNumber = '#IVR-' . strtoupper(uniqid());
                 $newIVR = IVR::create([
                     'ivr_number' => $ivrNumber,
-                    'clinic_id' => $request['clinic_id'] ?? null,
+                    'clinic_id' => $validated['clinic_id'] ?? ($request['clinic_id'] ?? null),
                     'brand_id' => $validated['brand_id'] ?? null,
                     'manufacturer_id' => $validated['manufacturer_id'] ?? null,
                     'patient_id' => $validated['patient_id'] ?? null,
@@ -238,7 +322,25 @@ class IVRRequestController extends Controller
 
     public function updateIVRRequest(Request $request, $id)
     {
-        $tempPassword = Str::random(12);
+        $currentUser = $request->user();
+        if (!$currentUser || !in_array($currentUser->user_role, [0, 1, 2, 3], true)) {
+            return response()->json([
+                'message' => 'Unauthorized. You do not have permission to modify IVR requests.',
+                'error' => 'unauthorized'
+            ], 403);
+        }
+
+        $ivr = IVR::findOrFail($id);
+
+        // Facility tenant isolation: Clinic Admins and Clinicians can only modify their clinic's requests
+        if (in_array($currentUser->user_role, [2, 3], true)) {
+            if (empty($currentUser->clinic_id) || (int) $ivr->clinic_id !== (int) $currentUser->clinic_id) {
+                return response()->json([
+                    'message' => 'Unauthorized. You cannot modify IVR requests from another clinic facility.',
+                    'error' => 'cross_tenant_access_denied'
+                ], 403);
+            }
+        }
 
         try {
             $validated = $request->validate([
@@ -250,7 +352,21 @@ class IVRRequestController extends Controller
                 'remove_existing_file' => 'nullable|boolean',
             ]);
 
-            $ivr = IVR::findOrFail($id);
+            if (in_array($currentUser->user_role, [2, 3], true)) {
+                $patient = PatientInfo::find($validated['patient_id']);
+                if (!$patient || (int) $patient->clinic_id !== (int) $currentUser->clinic_id) {
+                    return response()->json([
+                        'message' => 'Unauthorized. Patient does not belong to your clinic facility.',
+                        'error' => 'cross_tenant_access_denied'
+                    ], 403);
+                }
+                if ($currentUser->user_role === 3 && (int) $patient->assigned_clinician_id !== (int) $currentUser->id) {
+                    return response()->json([
+                        'message' => 'Unauthorized. You may only update IVR requests for your assigned patients.',
+                        'error' => 'unauthorized_patient_access'
+                    ], 403);
+                }
+            }
 
             if ($request->hasFile('ivr_file')) {
                 if ($ivr->ivr_file && Storage::disk('private')->exists($ivr->ivr_file)) {
@@ -267,12 +383,15 @@ class IVRRequestController extends Controller
                 $ivr->ivr_file = null;
             }
 
-            $ivr->clinic_id = $request->clinic_id ?? $ivr->clinic_id;
+            $ivr->clinic_id = in_array($currentUser->user_role, [2, 3], true) ? $currentUser->clinic_id : ($request->clinic_id ?? $ivr->clinic_id);
             $ivr->brand_id = $validated['brand_id'] ?? null;
             $ivr->manufacturer_id = $validated['manufacturer_id'];
             $ivr->patient_id = $validated['patient_id'];
             $ivr->description = $validated['notes'] ?? null;
-            $ivr->eligibility_status = $validated['eligibility_status'];
+            // Clinicians cannot change eligibility status
+            if ($currentUser->user_role !== 3 && isset($validated['eligibility_status'])) {
+                $ivr->eligibility_status = $validated['eligibility_status'];
+            }
 
             $ivr->save();
 
@@ -292,14 +411,27 @@ class IVRRequestController extends Controller
 
     public function updateEligibilityStatus(Request $request, $id)
     {
-        $tempPassword = Str::random(12);
+        $currentUser = $request->user();
+        if (!$currentUser || !in_array($currentUser->user_role, [0, 1, 4], true)) {
+            return response()->json([
+                'message' => 'Unauthorized. Clinicians and clinic staff are not permitted to override eligibility status.',
+                'error' => 'unauthorized'
+            ], 403);
+        }
+
+        $ivr = IVR::findOrFail($id);
+
+        if ($currentUser->user_role === 4 && (int) $ivr->manufacturer_id !== (int) $currentUser->manufacturer_id) {
+            return response()->json([
+                'message' => 'Unauthorized. You may only update eligibility for your own manufacturer requests.',
+                'error' => 'cross_tenant_access_denied'
+            ], 403);
+        }
 
         try {
             $validated = $request->validate([
                 'eligibility_status' => 'required|int|max:255',
             ]);
-
-            $ivr = IVR::findOrFail($id);
 
             $ivr->eligibility_status = $validated['eligibility_status'];
 
@@ -321,6 +453,17 @@ class IVRRequestController extends Controller
 
     public function deleteIVRRequest(Request $request, $id)
     {
+        $currentUser = $request->user();
+
+        // Enforce HIPAA § 164.312(a)(1) Access Control:
+        // Only Super Admin (0) and Office Staff (1) may delete IVR requests.
+        if (!$currentUser || !in_array($currentUser->user_role, [0, 1], true)) {
+            return response()->json([
+                'message' => 'Unauthorized. You do not have permission to delete IVR requests.',
+                'error' => 'unauthorized'
+            ], 403);
+        }
+
         $ivr = null;
         try {
             $ivr = IVR::findOrFail($id);
@@ -353,7 +496,18 @@ class IVRRequestController extends Controller
 
     public function archiveIVRRequest(Request $request, $id)
     {
+        $currentUser = $request->user();
         $ivr = IVR::findOrFail($id);
+
+        if ($currentUser && in_array($currentUser->user_role, [2, 3], true)) {
+            if (empty($currentUser->clinic_id) || (int) $ivr->clinic_id !== (int) $currentUser->clinic_id) {
+                return response()->json([
+                    'message' => 'Unauthorized. You cannot archive IVR requests from another clinic facility.',
+                    'error' => 'cross_tenant_access_denied'
+                ], 403);
+            }
+        }
+
         $ivr->update(['ivr_status' => 1]);
 
         $this->logAudit($request, 'ivr_request_archive', "IVR Request Archived: {$ivr->ivr_number}", $ivr->ivr_id);
@@ -363,7 +517,18 @@ class IVRRequestController extends Controller
 
     public function unarchiveIVRRequest(Request $request, $id)
     {
+        $currentUser = $request->user();
         $ivr = IVR::findOrFail($id);
+
+        if ($currentUser && in_array($currentUser->user_role, [2, 3], true)) {
+            if (empty($currentUser->clinic_id) || (int) $ivr->clinic_id !== (int) $currentUser->clinic_id) {
+                return response()->json([
+                    'message' => 'Unauthorized. You cannot unarchive IVR requests from another clinic facility.',
+                    'error' => 'cross_tenant_access_denied'
+                ], 403);
+            }
+        }
+
         $ivr->update(['ivr_status' => 0]);
 
         $this->logAudit($request, 'ivr_request_unarchive', "IVR Request Unarchived: {$ivr->ivr_number}", $ivr->ivr_id);

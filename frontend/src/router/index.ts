@@ -194,7 +194,7 @@ const routes: RouteRecordRaw[] = [
 					requiresAuth: true,
 					title: 'Patients',
 					icon: UserCircle,
-					role: 1
+					role: 0
 				}
 			},
 			// *****
@@ -803,6 +803,99 @@ const router = createRouter({
 	routes
 })
 
+// Role-based route access mapping
+export const routeRoles: Record<string, number[]> = {
+	// Dashboard
+	'admin-dashboard': [0],
+	'office-staff-dashboard': [1],
+	'clinic-dashboard': [2],
+	'clinician-dashboard': [3],
+	// User Management
+	'admin-users': [0],
+	'office-staff-users': [1],
+	'clinic-users': [2],
+	'user-clinicians': [0, 1, 2],
+	'clinic-patients': [2],
+	'clinician-patients': [3],
+	'admin-patients': [0],
+	'office-staff-patients': [1],
+	// Clinic/Manufacturers/Brands/Graft Size Management
+	'clinic-management': [0, 1],
+	'manufacturer-management': [0, 1],
+	'brand-management': [0, 1],
+	'graft-size-management': [0, 1],
+	'product-management': [0, 1, 2],
+	// IVR Management
+	'admin-ivr-management': [0],
+	'office-staff-ivr-management': [1],
+	'clinic-ivr-management': [2],
+	'clinician-ivr-management': [3],
+	'manufacturer-ivr-management': [4],
+	'biller-ivr-management': [5],
+	'biller-tracking': [5],
+	// Order Management
+	'admin-order-management': [0],
+	'office-staff-order-management': [1],
+	'clinic-order-management': [2],
+	'clinician-order-management': [3],
+	'manufacturer-order-management': [4],
+	// Invoice Management
+	'admin-invoice-management': [0],
+	'office-staff-invoice-management': [1],
+	'clinic-invoice-management': [2],
+	'clinician-invoice-management': [3],
+	'manufacturer-invoice-management': [4],
+	'biller-invoice-management': [5],
+	// Inventory Management
+	'admin-inventory': [0],
+	// 'office-staff-inventory': [1],
+	// ============================================================================
+	// INVENTORY LEDGER MANAGEMENT MODULE - NAVIGATION ROLES
+	// ----------------------------------------------------------------------------
+	// To remove this module, delete these navigation role entries.
+	// ============================================================================
+	'admin-inventory-ledger': [0],
+	'office-staff-inventory-ledger': [1],
+	// ============================================================================
+	// END INVENTORY LEDGER MANAGEMENT MODULE
+	// ============================================================================
+	// ============================================================================
+	// PATIENT GRAFT LOG MODULE - NAVIGATION ROLES
+	// To remove this module, delete this block.
+	// ============================================================================
+	'admin-patient-graft-log': [0],
+	'admin-patient-graft-log-detail': [0],
+	'office-staff-patient-graft-log': [1],
+	'office-staff-patient-graft-log-detail': [1],
+	'clinic-patient-graft-log': [2],
+	'clinic-patient-graft-log-detail': [2],
+	// ============================================================================
+	// END PATIENT GRAFT LOG MODULE
+	// ============================================================================
+	// 'manufacturer-inventory': [4],
+	'biller-inventory': [5],
+	'invoice-management': [0, 1, 2],
+	'ivr-management': [0, 1, 2, 4],
+	'order-management': [0, 1, 2, 3],
+	'manufacturer/order-management': [4],
+	'manufacturer/ivr-management': [4],
+	'clinic/order-management': [2],
+	// Return Management
+	'returns': [0],
+	'office-staff-returns': [1],
+	'clinic-returns': [2],
+	'clinician-returns': [3],
+
+	// Other Management
+	'usage': [],
+	'smart-selector': [],
+	'reports': [0],
+	'office-staff-reports': [1],
+	'clinic-reports': [2, 3],
+	'notifications': [0, 1, 2, 3],
+	'profile': [0, 1, 2, 3, 4, 5],
+}
+
 // Navigation Helper
 export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] => {
 	const authStore = useAuthStore()
@@ -810,98 +903,6 @@ export const getNavigationItems = (routes: RouteRecordRaw[]): NavigationItem[] =
 	if (!layoutRoute?.children) return []
 
 	const role = authStore.user?.user_role ?? 0
-
-	const routeRoles: Record<string, number[]> = {
-		// Dashboard
-		'admin-dashboard': [0],
-		'office-staff-dashboard': [1],
-		'clinic-dashboard': [2],
-		'clinician-dashboard': [3],
-		// User Management
-		'admin-users': [0],
-		'office-staff-users': [1],
-		'clinic-users': [2],
-		'clinic-patients': [2],
-		'clinician-patients': [3],
-		'admin-patients': [0],
-		'office-staff-patients': [1],
-		// Clinic/Manufacturers/Brands/Graft Size Management
-		'clinic-management': [0, 1],
-		'manufacturer-management': [0, 1],
-		'brand-management': [0, 1],
-		'graft-size-management': [0, 1],
-		'product-management': [0, 1, 2],
-		// IVR Management
-		'admin-ivr-management': [0],
-		'office-staff-ivr-management': [1],
-		'clinic-ivr-management': [2],
-		'clinician-ivr-management': [3],
-		'manufacturer-ivr-management': [4],
-		'biller-ivr-management': [5],
-		'biller-tracking': [5],
-		// Order Management
-		'admin-order-management': [0],
-		'office-staff-order-management': [1],
-		'clinic-order-management': [2],
-		'clinician-order-management': [3],
-		'manufacturer-order-management': [4],
-		// Invoice Management
-		'admin-invoice-management': [0],
-		'office-staff-invoice-management': [1],
-		'clinic-invoice-management': [2],
-		'clinician-invoice-management': [3],
-		'manufacturer-invoice-management': [4],
-		'biller-invoice-management': [5],
-		// Inventory Management
-		'admin-inventory': [0],
-		// 'office-staff-inventory': [1],
-		// ============================================================================
-		// INVENTORY LEDGER MANAGEMENT MODULE - NAVIGATION ROLES
-		// ----------------------------------------------------------------------------
-		// To remove this module, delete these navigation role entries.
-		// ============================================================================
-		'admin-inventory-ledger': [0],
-		'office-staff-inventory-ledger': [1],
-		// ============================================================================
-		// END INVENTORY LEDGER MANAGEMENT MODULE
-		// ============================================================================
-		// ============================================================================
-		// PATIENT GRAFT LOG MODULE - NAVIGATION ROLES
-		// To remove this module, delete this block.
-		// ============================================================================
-		'admin-patient-graft-log': [0],
-		'admin-patient-graft-log-detail': [0],
-		'office-staff-patient-graft-log': [1],
-		'office-staff-patient-graft-log-detail': [1],
-		'clinic-patient-graft-log': [2],
-		'clinic-patient-graft-log-detail': [2],
-		// ============================================================================
-		// END PATIENT GRAFT LOG MODULE
-		// ============================================================================
-		// 'manufacturer-inventory': [4],
-		'biller-inventory': [5],
-		'invoice-management': [0, 1, 2],
-		'ivr-management': [0, 1, 2, 4],
-		'order-management': [0, 1, 2, 3],
-		'manufacturer/order-management': [4],
-		'manufacturer/ivr-management': [4],
-		'clinic/order-management': [2],
-		// Return Management
-		'returns': [0],
-		'office-staff-returns': [1],
-		'clinic-returns': [2],
-		'clinician-returns': [3],
-
-		// Other Management
-		'usage': [],
-		'smart-selector': [],
-		'reports': [0],
-		'office-staff-reports': [1],
-		'clinic-reports': [2, 3],
-		'notifications': [0, 1, 2, 3],
-		'profile': [],
-	}
-
 	return layoutRoute.children
 		.filter(route => {
 			// Admin
@@ -1061,6 +1062,20 @@ router.beforeEach(async (to, from, next) => {
 
 		// Ensure role is numeric
 		const role = authStore.user?.user_role ?? parseInt(localStorage.getItem('user_role') || '-1')
+
+		// RBAC Route Enforcement via routeRoles mapping
+		const routeName = to.name ? String(to.name) : ''
+		if (routeName && routeRoles[routeName] && routeRoles[routeName].length > 0) {
+			if (!routeRoles[routeName].includes(role)) {
+				// Unauthorized route access attempt: redirect to appropriate dashboard
+				if (role === Clinics || role === Clinician) {
+					next({ name: 'clinic-dashboard' })
+				} else {
+					next({ name: 'admin-dashboard' })
+				}
+				return
+			}
+		}
 
 		// Admin Dashboard access → Admin + OfficeStaff
 		if (to.name === 'admin-dashboard' && role !== Admin && role !== OfficeStaff) {

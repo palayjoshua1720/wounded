@@ -337,7 +337,7 @@ import {
 	Crosshair, Building2, AlertTriangle, Loader2,
 } from 'lucide-vue-next'
 import { patientGraftLogService } from '@/services/api'
-import PatientGraftLogFormModal from '@/views/PatientGraftLogFormModal.vue'
+import PatientGraftLogFormModal from '@/components/graft/modals/PatientGraftLogFormModal.vue'
 import { useAuthStore } from '@/stores/auth'
 
 interface PatientRow {

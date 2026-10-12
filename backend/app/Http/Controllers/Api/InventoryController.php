@@ -38,6 +38,26 @@ class InventoryController extends Controller
             'graftSize.brand.manufacturer'
         ]);
 
+        $currentUser = $request->user();
+        if ($currentUser && in_array($currentUser->user_role, [2, 3], true)) {
+            if (empty($currentUser->clinic_id)) {
+                return response()->json([
+                    'success' => true,
+                    'data' => [],
+                    'total' => 0,
+                    'current_page' => 1,
+                    'per_page' => $perPage,
+                    'last_page' => 1
+                ]);
+            }
+            $query->whereHas('patient', function ($pq) use ($currentUser) {
+                $pq->where('clinic_id', $currentUser->clinic_id);
+            });
+            if ($currentUser->user_role === 3) {
+                $query->where('logged_by', $currentUser->id);
+            }
+        }
+
         // Apply search filter if provided
         if ($request->has('search') && !empty($request->search)) {
             $search = $request->search;
@@ -110,6 +130,8 @@ class InventoryController extends Controller
             ];
         });
 
+        $this->logAudit($request, 'usage_log_list', 'Inventory usage log listing viewed');
+
         return response()->json([
             'success' => true,
             'data' => $inventory,
@@ -125,9 +147,17 @@ class InventoryController extends Controller
      */
     public function getInventoryBySerial($serialNumber)
     {
-        $logs = UsageLog::where('serial_number', $serialNumber)
-            ->with(['patient.clinic', 'clinician', 'graftSize.brand'])
-            ->get();
+        $currentUser = request()->user();
+        $query = UsageLog::where('serial_number', $serialNumber)
+            ->with(['patient.clinic', 'clinician', 'graftSize.brand']);
+
+        if ($currentUser && in_array($currentUser->user_role, [2, 3], true)) {
+            $query->whereHas('patient', function ($pq) use ($currentUser) {
+                $pq->where('clinic_id', $currentUser->clinic_id);
+            });
+        }
+
+        $logs = $query->get();
 
         if ($logs->isEmpty()) {
             return response()->json([
@@ -155,6 +185,8 @@ class InventoryController extends Controller
             'totalQuantityUsed' => $logs->sum('quantity_used')
         ];
 
+        $this->logAudit(request(), 'usage_log_view', "Inventory usage log viewed by serial: {$serialNumber}");
+
         return response()->json([
             'success' => true,
             'data' => $inventoryItem
@@ -168,9 +200,20 @@ class InventoryController extends Controller
     {
         $logStatus = $this->getLogStatusFromStatus($statusParam);
 
-        $usageLogs = UsageLog::where('log_status', $logStatus)
-            ->with(['patient.clinic', 'clinician', 'graftSize.brand'])
-            ->get();
+        $currentUser = request()->user();
+        $query = UsageLog::where('log_status', $logStatus)
+            ->with(['patient.clinic', 'clinician', 'graftSize.brand']);
+
+        if ($currentUser && in_array($currentUser->user_role, [2, 3], true)) {
+            $query->whereHas('patient', function ($pq) use ($currentUser) {
+                $pq->where('clinic_id', $currentUser->clinic_id);
+            });
+            if ($currentUser->user_role === 3) {
+                $query->where('logged_by', $currentUser->id);
+            }
+        }
+
+        $usageLogs = $query->get();
 
         $inventory = $usageLogs->map(function ($log) use ($statusParam) {
             return [
@@ -185,6 +228,8 @@ class InventoryController extends Controller
                 'loggedAt' => $log->logged_at ? $log->logged_at->format('Y-m-d H:i:s') : null
             ];
         });
+
+        $this->logAudit(request(), 'usage_log_filter', "Inventory usage log filtered by status: {$statusParam}");
 
         return response()->json([
             'success' => true,
@@ -212,6 +257,20 @@ class InventoryController extends Controller
             'expired_at' => 'nullable|date',
             'filepath' => 'nullable|string'
         ]);
+
+        $currentUser = $request->user();
+        if ($currentUser && in_array($currentUser->user_role, [2, 3], true)) {
+            $patient = PatientInfo::find($validated['patient_id']);
+            if (!$patient || (int) $patient->clinic_id !== (int) $currentUser->clinic_id) {
+                return response()->json([
+                    'message' => 'Unauthorized. Patient does not belong to your clinic facility.',
+                    'error' => 'cross_tenant_access_denied'
+                ], 403);
+            }
+            if ($currentUser->user_role === 3) {
+                $validated['logged_by'] = $currentUser->id;
+            }
+        }
 
         $usageLog = UsageLog::create($validated);
 
@@ -274,7 +333,23 @@ class InventoryController extends Controller
      */
     public function deleteUsageLog(Request $request, $id)
     {
-        $usageLog = UsageLog::findOrFail($id);
+        $currentUser = $request->user();
+        $usageLog = UsageLog::with('patient')->findOrFail($id);
+
+        if ($currentUser && in_array($currentUser->user_role, [2, 3], true)) {
+            if ($usageLog->patient && (int) $usageLog->patient->clinic_id !== (int) $currentUser->clinic_id) {
+                return response()->json([
+                    'message' => 'Unauthorized. You cannot delete inventory records from another clinic facility.',
+                    'error' => 'cross_tenant_access_denied'
+                ], 403);
+            }
+            if ($currentUser->user_role === 3 && (int) $usageLog->logged_by !== (int) $currentUser->id) {
+                return response()->json([
+                    'message' => 'Unauthorized. You can only delete your own usage logs.',
+                    'error' => 'unauthorized'
+                ], 403);
+            }
+        }
         $serialNumber = $usageLog->serial_number;
         $patientId = $usageLog->patient_id;
 
@@ -384,8 +459,31 @@ class InventoryController extends Controller
         // Fetch patients and filter in PHP after decryption.
         $searchLower = strtolower($query);
 
-        $patients = PatientInfo::with('clinic')
-            ->orderBy('created_at', 'desc')
+        $currentUser = $request->user();
+        if (!$currentUser || !in_array($currentUser->user_role, [0, 1, 2, 3], true)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized. You do not have permission to search patient records.',
+                'data' => []
+            ], 403);
+        }
+
+        $patientQuery = PatientInfo::with('clinic')->orderBy('created_at', 'desc');
+
+        if (in_array($currentUser->user_role, [2, 3], true)) {
+            if (empty($currentUser->clinic_id)) {
+                return response()->json([
+                    'success' => true,
+                    'data' => []
+                ]);
+            }
+            $patientQuery->where('clinic_id', $currentUser->clinic_id);
+            if ($currentUser->user_role === 3) {
+                $patientQuery->where('assigned_clinician_id', $currentUser->id);
+            }
+        }
+
+        $patients = $patientQuery
             ->get()
             ->filter(function ($patient) use ($searchLower) {
                 $nameLower = strtolower($patient->patient_name ?? '');
@@ -455,6 +553,8 @@ class InventoryController extends Controller
 
         $usageLog->update($validated);
 
+        $this->logAudit($request, 'usage_log_status_update', "Inventory status updated for usage log (id={$id}) to status={$usageLog->log_status}", $id);
+
         return response()->json([
             'success' => true,
             'message' => 'Inventory status updated successfully',
@@ -516,12 +616,21 @@ class InventoryController extends Controller
     /**
      * Get clinicians with their clinic information for inventory usage
      */
-    public function getCliniciansForInventory()
+    public function getCliniciansForInventory(Request $request)
     {
-        $clinicians = User::where('user_role', 3) // Clinician role
+        $currentUser = $request->user();
+        $query = User::where('user_role', 3) // Clinician role
             ->with(['clinic']) // Load clinic relationship
             ->select('id', 'first_name', 'middle_name', 'last_name', 'clinic_id')
-            ->orderBy('created_at', 'desc')
+            ->orderBy('created_at', 'desc');
+
+        if ($currentUser && in_array($currentUser->user_role, [2, 3], true)) {
+            if ($currentUser->clinic_id) {
+                $query->where('clinic_id', $currentUser->clinic_id);
+            }
+        }
+
+        $clinicians = $query
             ->get()
             ->map(function ($clinician) {
                 $fullname = $clinician->first_name . 

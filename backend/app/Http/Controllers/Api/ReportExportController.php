@@ -14,28 +14,130 @@ use App\Models\Invoice;
 use App\Models\IVR;
 use App\Models\UsageLog;
 use App\Models\Returns;
+use App\Models\PatientGraftLog;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
+use App\Traits\AuditLogger;
+
 class ReportExportController extends Controller
 {
+    use AuditLogger;
+
+    protected function getEntityName()
+    {
+        return 'woundmed_report_exports';
+    }
+
+    protected function getEntityType()
+    {
+        return 'report_export';
+    }
+
+    /**
+     * Check if the requesting user is a Super Admin or Admin (roles 0, 1).
+     */
+    private function isSuperAdmin(?User $user): bool
+    {
+        return $user && in_array((int) $user->user_role, [0, 1], true);
+    }
+
+    /**
+     * Determine the effective clinic_id to filter report queries.
+     * Super Admin / Admin: uses $filters['clinic_id'] if specified and not 'all'.
+     * Non-Admin: strictly forces $request->user()->clinic_id.
+     */
+    private function getEffectiveClinicId(Request $request, array $filters): ?int
+    {
+        $user = $request->user();
+        if ($this->isSuperAdmin($user)) {
+            if (!empty($filters['clinic_id']) && $filters['clinic_id'] !== 'all') {
+                return (int) $filters['clinic_id'];
+            }
+            return null;
+        }
+
+        // Non-admin user: strictly scoped to their assigned clinic_id.
+        return $user?->clinic_id ? (int) $user->clinic_id : -1;
+    }
+
+    /**
+     * Anonymize patient name to initials (HIPAA de-identification)
+     */
+    private function anonymizeName(?string $name): string
+    {
+        if (empty($name)) {
+            return 'N/A';
+        }
+        $trimmed = trim($name);
+        $parts = preg_split('/\s+/', $trimmed);
+        if (count($parts) === 1) {
+            return mb_substr($parts[0], 0, 1) . '.';
+        }
+        $initials = array_map(fn($p) => mb_substr($p, 0, 1) . '.', $parts);
+        return implode(' ', $initials);
+    }
+
+    /**
+     * Anonymize email address for HIPAA compliance
+     */
+    private function anonymizeEmail(?string $email): string
+    {
+        if (empty($email)) {
+            return 'N/A';
+        }
+        if (!str_contains($email, '@')) {
+            return '[REDACTED]';
+        }
+        [$local, $domain] = explode('@', $email, 2);
+        $firstChar = mb_substr($local, 0, 1);
+        return $firstChar . '***@' . $domain;
+    }
+
     /**
      * Export report as PDF
      */
     public function exportPdf(Request $request)
     {
         $validated = $request->validate([
-            'report_type' => 'required|string|in:orders,inventory,usage,invoices,ivr,clinic',
+            'report_type' => 'required|string|in:orders,inventory,usage,invoices,ivr,clinic,patient_graft_application',
             'date_range' => 'required|string',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date',
             'clinic_id' => 'nullable|string',
             'brand_id' => 'nullable|string',
             'manufacturer_id' => 'nullable|string',
+            'anonymize_phi' => 'nullable|boolean',
         ]);
 
-        $reportData = $this->getReportData($validated);
-        $filters = $this->getFilterLabels($validated);
+        $currentUser = $request->user();
+        $isSuperAdmin = $currentUser && in_array((int) $currentUser->user_role, [0, 1], true);
+
+        // Enforce HIPAA Privacy Safeguard: Non-admins (roles 2, 3, 4, 5) MUST have PHI anonymized on exported reports.
+        // Admins (roles 0, 1) can un-anonymize only if explicitly requested.
+        if (isset($validated['anonymize_phi'])) {
+            $anonymizePhi = filter_var($validated['anonymize_phi'], FILTER_VALIDATE_BOOLEAN);
+            if (!$isSuperAdmin && !$anonymizePhi) {
+                $anonymizePhi = true;
+            }
+        } else {
+            $anonymizePhi = true;
+        }
+
+        $validated['anonymize_phi'] = $anonymizePhi;
+
+        $reportData = $this->getReportData($validated, $request);
+        $filters = $this->getFilterLabels($validated, $request);
+
+        $user = $request->user();
+        $downloadedBy = $user ? trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? '')) : '';
+        if (empty($downloadedBy) && $user) {
+            $downloadedBy = $user->email;
+        }
+        if (empty($downloadedBy)) {
+            $downloadedBy = 'Authorized System User';
+        }
 
         $pdf = PDF::loadView('reports.pdf', [
             'reportType' => $this->getReportTypeName($validated['report_type']),
@@ -43,9 +145,26 @@ class ReportExportController extends Controller
             'filters' => $filters,
             'data' => $reportData,
             'generatedAt' => now()->format('Y-m-d H:i:s'),
+            'anonymizePhi' => $anonymizePhi,
+            'downloadedBy' => $downloadedBy,
         ]);
 
         $filename = $validated['report_type'] . '_report_' . now()->format('Y-m-d') . '.pdf';
+
+        $effectiveClinicId = $this->getEffectiveClinicId($request, $validated);
+        $clinicAuditLabel = $effectiveClinicId !== null ? "clinic_id={$effectiveClinicId}" : "clinic_id=all";
+
+        $anonLabel = $anonymizePhi ? 'Yes' : 'No';
+        $this->logAudit(
+            $request,
+            'report_export_pdf',
+            "PDF report exported (Anonymized PHI: {$anonLabel}, {$clinicAuditLabel}): type={$validated['report_type']}, date_range={$validated['date_range']}",
+            null,
+            0,
+            null,
+            'woundmed_report_exports',
+            'report_export'
+        );
 
         return $pdf->download($filename);
     }
@@ -56,17 +175,33 @@ class ReportExportController extends Controller
     public function exportExcel(Request $request)
     {
         $validated = $request->validate([
-            'report_type' => 'required|string|in:orders,inventory,usage,invoices,ivr,clinic',
+            'report_type' => 'required|string|in:orders,inventory,usage,invoices,ivr,clinic,patient_graft_application',
             'date_range' => 'required|string',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date',
             'clinic_id' => 'nullable|string',
             'brand_id' => 'nullable|string',
             'manufacturer_id' => 'nullable|string',
+            'anonymize_phi' => 'nullable|boolean',
         ]);
 
-        $reportData = $this->getReportData($validated);
-        $filters = $this->getFilterLabels($validated);
+        $currentUser = $request->user();
+        $isSuperAdmin = $currentUser && in_array((int) $currentUser->user_role, [0, 1], true);
+
+        // Enforce HIPAA Privacy Safeguard: Non-admins (roles 2, 3, 4, 5) MUST have PHI anonymized on exported reports.
+        if (isset($validated['anonymize_phi'])) {
+            $anonymizePhi = filter_var($validated['anonymize_phi'], FILTER_VALIDATE_BOOLEAN);
+            if (!$isSuperAdmin && !$anonymizePhi) {
+                $anonymizePhi = true;
+            }
+        } else {
+            $anonymizePhi = true;
+        }
+
+        $validated['anonymize_phi'] = $anonymizePhi;
+
+        $reportData = $this->getReportData($validated, $request);
+        $filters = $this->getFilterLabels($validated, $request);
 
         $export = new \App\Exports\ReportExport(
             $validated['report_type'],
@@ -76,30 +211,47 @@ class ReportExportController extends Controller
 
         $filename = $validated['report_type'] . '_report_' . now()->format('Y-m-d') . '.xlsx';
 
+        $effectiveClinicId = $this->getEffectiveClinicId($request, $validated);
+        $clinicAuditLabel = $effectiveClinicId !== null ? "clinic_id={$effectiveClinicId}" : "clinic_id=all";
+
+        $anonLabel = $anonymizePhi ? 'Yes' : 'No';
+        $this->logAudit(
+            $request,
+            'report_export_excel',
+            "Excel report exported (Anonymized PHI: {$anonLabel}, {$clinicAuditLabel}): type={$validated['report_type']}, date_range={$validated['date_range']}",
+            null,
+            0,
+            null,
+            'woundmed_report_exports',
+            'report_export'
+        );
+
         return Excel::download($export, $filename);
     }
 
     /**
      * Get report data based on type and filters
      */
-    private function getReportData(array $filters): array
+    private function getReportData(array $filters, Request $request): array
     {
         $reportType = $filters['report_type'];
         $dateRange = $this->getDateRange($filters);
 
         switch ($reportType) {
             case 'orders':
-                return $this->getOrdersReport($dateRange, $filters);
+                return $this->getOrdersReport($dateRange, $filters, $request);
             case 'inventory':
-                return $this->getInventoryReport($dateRange, $filters);
+                return $this->getInventoryReport($dateRange, $filters, $request);
             case 'usage':
-                return $this->getUsageReport($dateRange, $filters);
+                return $this->getUsageReport($dateRange, $filters, $request);
             case 'invoices':
-                return $this->getInvoiceReport($dateRange, $filters);
+                return $this->getInvoiceReport($dateRange, $filters, $request);
             case 'ivr':
-                return $this->getIVRReport($dateRange, $filters);
+                return $this->getIVRReport($dateRange, $filters, $request);
             case 'clinic':
-                return $this->getClinicReport($dateRange, $filters);
+                return $this->getClinicReport($dateRange, $filters, $request);
+            case 'patient_graft_application':
+                return $this->getPatientGraftApplicationReport($dateRange, $filters, $request);
             default:
                 return [];
         }
@@ -140,13 +292,14 @@ class ReportExportController extends Controller
     /**
      * Get orders report data
      */
-    private function getOrdersReport(array $dateRange, array $filters): array
+    private function getOrdersReport(array $dateRange, array $filters, Request $request): array
     {
         $query = Orders::query()
             ->whereBetween('ordered_at', [$dateRange['start'], $dateRange['end']]);
 
-        if (!empty($filters['clinic_id']) && $filters['clinic_id'] !== 'all') {
-            $query->where('clinic_id', $filters['clinic_id']);
+        $effectiveClinicId = $this->getEffectiveClinicId($request, $filters);
+        if ($effectiveClinicId !== null) {
+            $query->where('clinic_id', $effectiveClinicId);
         }
 
         if (!empty($filters['brand_id']) && $filters['brand_id'] !== 'all') {
@@ -309,20 +462,20 @@ class ReportExportController extends Controller
     /**
      * Get inventory report data
      */
-    private function getInventoryReport(array $dateRange, array $filters): array
+    private function getInventoryReport(array $dateRange, array $filters, Request $request): array
     {
         // Inventory is based on usage logs with their status
         $query = UsageLog::query()
             ->whereBetween('logged_at', [$dateRange['start'], $dateRange['end']]);
 
-        $usageLogs = $query->with(['patient.clinic', 'graftSize.brand'])->get();
-
-        // Filter by clinic if specified
-        if (!empty($filters['clinic_id']) && $filters['clinic_id'] !== 'all') {
-            $usageLogs = $usageLogs->filter(function ($log) use ($filters) {
-                return $log->patient?->clinic_id == $filters['clinic_id'];
+        $effectiveClinicId = $this->getEffectiveClinicId($request, $filters);
+        if ($effectiveClinicId !== null) {
+            $query->whereHas('patient', function ($q) use ($effectiveClinicId) {
+                $q->where('clinic_id', $effectiveClinicId);
             });
         }
+
+        $usageLogs = $query->with(['patient.clinic', 'graftSize.brand'])->get();
 
         // Filter by brand if specified
         if (!empty($filters['brand_id']) && $filters['brand_id'] !== 'all') {
@@ -408,19 +561,19 @@ class ReportExportController extends Controller
     /**
      * Get usage report data
      */
-    private function getUsageReport(array $dateRange, array $filters): array
+    private function getUsageReport(array $dateRange, array $filters, Request $request): array
     {
         $query = UsageLog::query()
             ->whereBetween('date_of_service', [$dateRange['start'], $dateRange['end']]);
 
-        $usageLogs = $query->with(['patient.clinic', 'graftSize.brand'])->get();
-
-        // Filter by clinic if specified
-        if (!empty($filters['clinic_id']) && $filters['clinic_id'] !== 'all') {
-            $usageLogs = $usageLogs->filter(function ($log) use ($filters) {
-                return $log->patient?->clinic_id == $filters['clinic_id'];
+        $effectiveClinicId = $this->getEffectiveClinicId($request, $filters);
+        if ($effectiveClinicId !== null) {
+            $query->whereHas('patient', function ($q) use ($effectiveClinicId) {
+                $q->where('clinic_id', $effectiveClinicId);
             });
         }
+
+        $usageLogs = $query->with(['patient.clinic', 'graftSize.brand'])->get();
 
         // Filter by brand if specified
         if (!empty($filters['brand_id']) && $filters['brand_id'] !== 'all') {
@@ -480,7 +633,12 @@ class ReportExportController extends Controller
             'top_products' => $topProducts,
             'top_clinics' => $topClinics,
             'brand_distribution' => $brandDistribution,
-            'usage_logs' => $usageLogs->map(function ($log) {
+            'usage_logs' => $usageLogs->map(function ($log) use ($filters) {
+                $anonymizePhi = $filters['anonymize_phi'] ?? false;
+                $patientName = $log->patient?->patient_name ?? null;
+                if ($anonymizePhi && $patientName) {
+                    $patientName = $this->anonymizeName($patientName);
+                }
                 return [
                     'usage_id' => $log->graft_log_id,
                     'used_at' => $log->date_of_service?->format('Y-m-d'),
@@ -488,6 +646,7 @@ class ReportExportController extends Controller
                     'product_name' => $log->graftSize?->size ?? 'Unknown',
                     'quantity_used' => $log->quantity_used,
                     'patient_id' => $log->patient_id,
+                    'patient_name' => $patientName ?? ('Patient #' . $log->patient_id),
                 ];
             }),
         ];
@@ -496,13 +655,14 @@ class ReportExportController extends Controller
     /**
      * Get invoice report data
      */
-    private function getInvoiceReport(array $dateRange, array $filters): array
+    private function getInvoiceReport(array $dateRange, array $filters, Request $request): array
     {
         $query = Invoice::query()
             ->whereBetween('invoice_date', [$dateRange['start'], $dateRange['end']]);
 
-        if (!empty($filters['clinic_id']) && $filters['clinic_id'] !== 'all') {
-            $query->where('clinic_id', $filters['clinic_id']);
+        $effectiveClinicId = $this->getEffectiveClinicId($request, $filters);
+        if ($effectiveClinicId !== null) {
+            $query->where('clinic_id', $effectiveClinicId);
         }
 
         $invoices = $query->with('clinic')->get();
@@ -593,13 +753,14 @@ class ReportExportController extends Controller
     /**
      * Get IVR report data
      */
-    private function getIVRReport(array $dateRange, array $filters): array
+    private function getIVRReport(array $dateRange, array $filters, Request $request): array
     {
         $query = IVR::query()
             ->whereBetween('created_at', [$dateRange['start'], $dateRange['end']]);
 
-        if (!empty($filters['clinic_id']) && $filters['clinic_id'] !== 'all') {
-            $query->where('clinic_id', $filters['clinic_id']);
+        $effectiveClinicId = $this->getEffectiveClinicId($request, $filters);
+        if ($effectiveClinicId !== null) {
+            $query->where('clinic_id', $effectiveClinicId);
         }
 
         if (!empty($filters['manufacturer_id']) && $filters['manufacturer_id'] !== 'all') {
@@ -672,14 +833,16 @@ class ReportExportController extends Controller
     /**
      * Get clinic report data
      */
-    private function getClinicReport(array $dateRange, array $filters): array
+    private function getClinicReport(array $dateRange, array $filters, Request $request): array
     {
+        $effectiveClinicId = $this->getEffectiveClinicId($request, $filters);
+
         // Query Orders filtered by clinic_id and date range
         $ordersQuery = Orders::query()
             ->whereBetween('ordered_at', [$dateRange['start'], $dateRange['end']]);
 
-        if (!empty($filters['clinic_id']) && $filters['clinic_id'] !== 'all') {
-            $ordersQuery->where('clinic_id', $filters['clinic_id']);
+        if ($effectiveClinicId !== null) {
+            $ordersQuery->where('clinic_id', $effectiveClinicId);
         }
 
         if (!empty($filters['brand_id']) && $filters['brand_id'] !== 'all') {
@@ -693,8 +856,8 @@ class ReportExportController extends Controller
         // Query PatientInfo filtered by clinic_id
         $patientsQuery = \App\Models\PatientInfo::query();
 
-        if (!empty($filters['clinic_id']) && $filters['clinic_id'] !== 'all') {
-            $patientsQuery->where('clinic_id', $filters['clinic_id']);
+        if ($effectiveClinicId !== null) {
+            $patientsQuery->where('clinic_id', $effectiveClinicId);
         }
 
         $patients = $patientsQuery->with(['clinic'])->get();
@@ -703,8 +866,8 @@ class ReportExportController extends Controller
         $ivrQuery = IVR::query()
             ->whereBetween('created_at', [$dateRange['start'], $dateRange['end']]);
 
-        if (!empty($filters['clinic_id']) && $filters['clinic_id'] !== 'all') {
-            $ivrQuery->where('clinic_id', $filters['clinic_id']);
+        if ($effectiveClinicId !== null) {
+            $ivrQuery->where('clinic_id', $effectiveClinicId);
         }
 
         $ivrRequests = $ivrQuery->with(['clinic', 'patient', 'manufacturer'])->get();
@@ -713,8 +876,8 @@ class ReportExportController extends Controller
         $invoicesQuery = Invoice::query()
             ->whereBetween('invoice_date', [$dateRange['start'], $dateRange['end']]);
 
-        if (!empty($filters['clinic_id']) && $filters['clinic_id'] !== 'all') {
-            $invoicesQuery->where('clinic_id', $filters['clinic_id']);
+        if ($effectiveClinicId !== null) {
+            $invoicesQuery->where('clinic_id', $effectiveClinicId);
         }
 
         $invoices = $invoicesQuery->with('clinic')->get();
@@ -844,6 +1007,108 @@ class ReportExportController extends Controller
     }
 
     /**
+     * Get Patient Graft Application report data
+     */
+    private function getPatientGraftApplicationReport(array $dateRange, array $filters, Request $request): array
+    {
+        $query = PatientGraftLog::query()
+            ->whereBetween('date_of_service', [$dateRange['start'], $dateRange['end']]);
+
+        $effectiveClinicId = $this->getEffectiveClinicId($request, $filters);
+        if ($effectiveClinicId !== null) {
+            $query->where('clinic_id', $effectiveClinicId);
+        }
+
+        // Filter by brand if specified
+        if (!empty($filters['brand_id']) && $filters['brand_id'] !== 'all') {
+            $query->where('brand_id', $filters['brand_id']);
+        }
+
+        $logs = $query->with([
+            'patient.clinic',
+            'clinician:id,first_name,middle_name,last_name',
+            'graftSize:graft_size_id,size',
+            'brand:brand_id,brand_name',
+            'clinic:clinic_id,clinic_name',
+            'invoice:id,invoice_number',
+        ])
+        ->orderBy('date_of_service', 'desc')
+        ->get();
+
+        $totalApplications = $logs->count();
+        $totalPatients = $logs->pluck('patient_id')->filter()->unique()->count();
+        $totalSerials = $logs->pluck('serial_number')->filter()->unique()->count();
+
+        // Brand distribution
+        $brandDistribution = $logs->groupBy('brand_id')
+            ->filter()
+            ->map(function ($group) {
+                return [
+                    'brand_name' => $group->first()->brand?->brand_name ?? 'Unknown Brand',
+                    'count' => $group->count(),
+                ];
+            })
+            ->sortByDesc('count')
+            ->values();
+
+        // Top Clinicians
+        $topClinicians = $logs->groupBy('clinician_id')
+            ->filter()
+            ->map(function ($group) {
+                $c = $group->first()->clinician;
+                $name = $c ? trim("{$c->first_name} {$c->middle_name} {$c->last_name}") : 'Unknown Clinician';
+                return [
+                    'clinician_name' => $name !== '' ? $name : ('Clinician #' . $group->first()->clinician_id),
+                    'count' => $group->count(),
+                ];
+            })
+            ->sortByDesc('count')
+            ->take(5)
+            ->values();
+
+        $anonymizePhi = $filters['anonymize_phi'] ?? false;
+
+        $applications = $logs->map(function ($log) use ($anonymizePhi) {
+            $patientName = $log->patient?->patient_name ?? null;
+            if ($anonymizePhi && $patientName) {
+                $patientName = $this->anonymizeName($patientName);
+            }
+
+            $c = $log->clinician;
+            $clinicianName = $c ? trim("{$c->first_name} {$c->middle_name} {$c->last_name}") : 'Unknown Clinician';
+            if ($clinicianName === '') {
+                $clinicianName = 'Unknown Clinician';
+            }
+
+            return [
+                'graft_log_code' => $log->graft_log_code ?? ('GRL-' . $log->graft_log_id),
+                'date_of_service' => $log->date_of_service ? $log->date_of_service->format('Y-m-d') : 'N/A',
+                'patient_id' => $log->patient_id,
+                'patient_name' => $patientName ?? ('Patient #' . $log->patient_id),
+                'clinic_name' => $log->clinic?->clinic_name ?? 'Unknown Clinic',
+                'clinician_name' => $clinicianName,
+                'brand_name' => $log->brand?->brand_name ?? 'Unknown Brand',
+                'size' => $log->graftSize?->size ?? 'N/A',
+                'serial_number' => $log->serial_number ?? 'N/A',
+                'wound_site' => $log->wound_site ?? 'N/A',
+                'wound_number' => $log->wound_number ?? 1,
+                'week_number' => $log->week_number ?? 1,
+            ];
+        });
+
+        return [
+            'summary' => [
+                'total_applications' => $totalApplications,
+                'total_patients' => $totalPatients,
+                'total_serials' => $totalSerials,
+            ],
+            'brand_distribution' => $brandDistribution,
+            'top_clinicians' => $topClinicians,
+            'applications' => $applications,
+        ];
+    }
+
+    /**
      * Get report type name
      */
     private function getReportTypeName(string $type): string
@@ -856,6 +1121,7 @@ class ReportExportController extends Controller
             'ivr' => 'IVR Report',
             'clinic' => 'Clinic Report',
             'returns' => 'Returns Report',
+            'patient_graft_application' => 'Patient Graft Application Report',
         ];
 
         return $names[$type] ?? 'Report';
@@ -864,11 +1130,12 @@ class ReportExportController extends Controller
     /**
      * Get filter labels for display
      */
-    private function getFilterLabels(array $filters): array
+    private function getFilterLabels(array $filters, Request $request): array
     {
+        $effectiveClinicId = $this->getEffectiveClinicId($request, $filters);
         $clinicName = 'All Clinics';
-        if (!empty($filters['clinic_id']) && $filters['clinic_id'] !== 'all') {
-            $clinic = Clinic::find($filters['clinic_id']);
+        if ($effectiveClinicId !== null) {
+            $clinic = Clinic::find($effectiveClinicId);
             $clinicName = $clinic ? $clinic->clinic_name : 'Unknown Clinic';
         }
 

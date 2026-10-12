@@ -8,6 +8,28 @@
     <link rel="icon" type="image/svg+xml" href="<%= BASE_URL %>icons/fav.webp">
     <link rel="apple-touch-icon" href="<%= BASE_URL %>icons/apple-touch-icon.png">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+      // Safe fallback for browser extensions expecting jQuery ($)
+      window.$ = window.$ || function(arg) {
+        if (typeof arg === 'function') {
+          if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', arg);
+          } else {
+            arg();
+          }
+        }
+        return {
+          ready: function(fn) {
+            if (document.readyState === 'loading') {
+              document.addEventListener('DOMContentLoaded', fn);
+            } else {
+              fn();
+            }
+          }
+        };
+      };
+      window.jQuery = window.jQuery || window.$;
+    </script>
     
     <!-- Primary Meta Tags -->
     <title><%= VUE_APP_TITLE %></title>

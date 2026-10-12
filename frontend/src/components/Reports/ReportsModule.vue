@@ -1,1054 +1,141 @@
 <template>
 	<div class="space-y-6">
 		<!-- Report Type Selection Card -->
-		<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
-			<div class="flex items-center justify-between mb-6">
-				<div>
-					<h3 class="text-lg font-semibold text-gray-900 dark:text-white">Select Report Type</h3>
-					<p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Choose the type of report you want to generate</p>
-				</div>
-			</div>
-			<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-				<div
-					v-for="type in reportTypes"
-					:key="type.id"
-					@click="reportType = type.id"
-					:class="[
-						'p-4 border-2 rounded-xl cursor-pointer transition-all duration-300 group relative overflow-hidden',
-						reportType === type.id
-							? 'border-red-500 bg-gradient-to-br from-red-50 to-rose-50 dark:from-red-900/30 dark:to-rose-900/20 shadow-md'
-							: 'border-gray-200 dark:border-gray-600 hover:border-red-300 dark:hover:border-red-700 hover:shadow-sm'
-					]"
-				>
-					<!-- Selected Indicator -->
-					<div v-if="reportType === type.id" class="absolute top-3 right-3">
-						<div class="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
-							<svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
-							</svg>
-						</div>
-					</div>
-					
-					<div class="flex items-start space-x-3">
-						<div :class="[
-							'p-2.5 rounded-xl transition-all duration-300 shadow-sm',
-							reportType === type.id 
-								? 'bg-gradient-to-br from-red-500 to-rose-600 shadow-red-200 dark:shadow-red-900/50' 
-								: 'bg-gray-100 dark:bg-gray-700 group-hover:bg-red-50 dark:group-hover:bg-red-900/30'
-						]">
-							<component 
-								:is="type.icon" 
-								:class="[
-									'w-5 h-5 transition-all duration-300',
-									reportType === type.id ? 'text-white' : 'text-gray-500 dark:text-gray-400 group-hover:text-red-500'
-								]" 
-							/>
-						</div>
-						<div class="flex-1 pr-6">
-							<h4 :class="[
-								'font-semibold text-sm mb-0.5',
-								reportType === type.id ? 'text-red-900 dark:text-red-100' : 'text-gray-900 dark:text-white'
-							]">
-								{{ type.name }}
-							</h4>
-							<p :class="[
-								'text-xs leading-relaxed',
-								reportType === type.id ? 'text-red-700 dark:text-red-300' : 'text-gray-500 dark:text-gray-400'
-							]">
-								{{ type.description }}
-							</p>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
+		<ReportTypeSelector
+			:report-types="reportTypes"
+			:selected-type="reportType"
+			@select="reportType = $event"
+		/>
 
 		<!-- Filters Card -->
-		<div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
-			<div class="flex items-center justify-between mb-4">
-				<h3 class="text-base font-semibold text-gray-900 dark:text-white flex items-center">
-					<svg class="w-4 h-4 mr-2 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
-					</svg>
-					Report Filters
-				</h3>
-				<button 
-					@click="clearFilters"
-					class="text-xs text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-medium flex items-center transition-colors"
-				>
-					<svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-					</svg>
-					Clear Filters
-				</button>
-			</div>
-			
-			<div class="flex flex-wrap items-end gap-3">
-				<!-- Date Range Filter -->
-				<div class="flex-1 min-w-[180px]">
-					<label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 flex items-center">
-						<svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-						</svg>
-						Date Range
-					</label>
-					<select
-						v-model="dateRange"
-						class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900 dark:text-white transition-all duration-200"
-					>
-						<option v-for="option in dateRangeOptions" :key="option.value" :value="option.value">
-							{{ option.label }}
-						</option>
-					</select>
-				</div>
-
-				<!-- Custom Date Range -->
-				<template v-if="dateRange === 'custom'">
-					<div class="flex-1 min-w-[140px]">
-						<label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Start Date</label>
-						<input
-							v-model="startDate"
-							type="date"
-							class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900 dark:text-white transition-all duration-200"
-						/>
-					</div>
-					<div class="flex-1 min-w-[140px]">
-						<label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">End Date</label>
-						<input
-							v-model="endDate"
-							type="date"
-							class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900 dark:text-white transition-all duration-200"
-						/>
-					</div>
-				</template>
-
-				<!-- Clinic Filter -->
-				<div class="flex-1 min-w-[180px]">
-					<label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 flex items-center">
-						<svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-						</svg>
-						Clinic
-					</label>
-					<select
-						v-model="clinicFilter"
-						class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900 dark:text-white transition-all duration-200"
-					>
-						<option value="all">All Clinics</option>
-						<option v-for="clinic in clinics" :key="clinic.id" :value="clinic.id">
-							{{ clinic.name }}
-						</option>
-					</select>
-				</div>
-
-				<!-- Brand Filter - Only show for Orders, Inventory, Usage reports -->
-				<div v-if="['orders', 'inventory', 'usage'].includes(reportType)" class="flex-1 min-w-[180px]">
-					<label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 flex items-center">
-						<svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
-						</svg>
-						Brand
-					</label>
-					<select
-						v-model="brandFilter"
-						class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900 dark:text-white transition-all duration-200"
-					>
-						<option value="all">All Brands</option>
-						<option v-for="brand in brands" :key="brand.id" :value="brand.id">
-							{{ brand.name }}
-						</option>
-					</select>
-				</div>
-
-				<!-- Manufacturer Filter - Only show for IVR report -->
-				<div v-if="reportType === 'ivr'" class="flex-1 min-w-[180px]">
-					<label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 flex items-center">
-						<svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>
-						</svg>
-						Manufacturer
-					</label>
-					<select
-						v-model="manufacturerFilter"
-						class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900 dark:text-white transition-all duration-200"
-					>
-						<option value="all">All Manufacturers</option>
-						<option v-for="manufacturer in manufacturers" :key="manufacturer.id" :value="manufacturer.id">
-							{{ manufacturer.name }}
-						</option>
-					</select>
-				</div>
-			</div>
-			
-			<p v-if="dateRange === 'custom' && dateRangeError" class="mt-3 text-xs text-red-600 dark:text-red-400 flex items-center">
-				<svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-				</svg>
-				{{ dateRangeError }}
-			</p>
-			
-			<!-- Action Buttons Bar -->
-			<div class="mt-5 pt-4 border-t border-gray-100 dark:border-gray-700 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-				<div class="contents sm:flex sm:items-center sm:gap-3">
-					<button
-						@click="handleGenerateReport"
-						:disabled="isLoadingData || (dateRange === 'custom' && dateRangeError !== '')"
-						class="flex items-center justify-center space-x-2 px-5 py-2.5 bg-gradient-to-r from-red-600 to-rose-600 text-white text-sm font-medium rounded-lg hover:from-red-700 hover:to-rose-700 transition-all duration-200 shadow-sm hover:shadow-md group disabled:opacity-50 disabled:cursor-not-allowed"
-					>
-						<ChartBarIcon v-if="!isLoadingData" class="w-4 h-4 text-white group-hover:scale-110 transition-transform" />
-						<svg v-else class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-							<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-							<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-						</svg>
-						<span>{{ isLoadingData ? 'Generating...' : 'Generate Report' }}</span>
-					</button>
-					
-					<!-- Export Dropdown -->
-					<div v-if="selectedReportType" class="relative" ref="exportDropdownRef">
-						<button
-							@click="toggleExportDropdown"
-							:disabled="isExporting || !reportGenerated"
-							class="flex items-center justify-center space-x-2 px-4 py-2.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
-						>
-							<ArrowDownTrayIcon v-if="!isExporting" class="w-4 h-4" />
-							<svg v-else class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-								<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-								<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-							</svg>
-							<span>{{ isExporting ? 'Exporting...' : 'Export' }}</span>
-							<svg class="w-3 h-3 ml-1.5 transition-transform" :class="showExportDropdown ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-							</svg>
-						</button>
-						
-						<!-- Export Options Dropdown -->
-						<div
-							v-if="showExportDropdown"
-							class="absolute left-0 right-0 sm:right-auto sm:w-44 mt-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50 overflow-hidden"
-						>
-							<div class="py-1">
-								<button
-									@click="exportAsPdf"
-									class="w-full px-4 py-2.5 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center space-x-2 transition-colors"
-								>
-									<svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
-									</svg>
-									<span>Export as PDF</span>
-								</button>
-								<button
-									@click="exportAsExcel"
-									class="w-full px-4 py-2.5 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center space-x-2 transition-colors"
-								>
-									<svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-									</svg>
-									<span>Export as Excel</span>
-								</button>
-							</div>
-						</div>
-					</div>
-				</div>
-				
-				<!-- Report Info -->
-				<div v-if="reportGenerated" class="text-xs text-gray-500 dark:text-gray-400 flex items-center justify-center sm:justify-start whitespace-nowrap">
-					<svg class="w-3 h-3 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-					</svg>
-					<span>Report generated</span>
-				</div>
-			</div>
-		</div>
+		<ReportFilters
+			:date-range="dateRange"
+			:date-range-options="dateRangeOptions"
+			:start-date="startDate"
+			:end-date="endDate"
+			:date-range-error="dateRangeError"
+			:clinic-filter="clinicFilter"
+			:clinics="clinics"
+			:brand-filter="brandFilter"
+			:brands="brands"
+			:manufacturer-filter="manufacturerFilter"
+			:manufacturers="manufacturers"
+			:anonymize-phi="anonymizePhi"
+			:report-type="reportType"
+			:is-loading-data="isLoadingData"
+			:is-exporting="isExporting"
+			:report-generated="reportGenerated"
+			:show-export-dropdown="showExportDropdown"
+			:selected-report-type="selectedReportType"
+			@clear="clearFilters"
+			@generate="handleGenerateReport"
+			@toggle-export="toggleExportDropdown"
+			@export-pdf="exportAsPdf"
+			@export-excel="exportAsExcel"
+			@update:date-range="dateRange = $event"
+			@update:start-date="startDate = $event"
+			@update:end-date="endDate = $event"
+			@update:clinic-filter="clinicFilter = $event"
+			@update:brand-filter="brandFilter = $event"
+			@update:manufacturer-filter="manufacturerFilter = $event"
+			@update:anonymize-phi="anonymizePhi = $event"
+		/>
 
 		<!-- Report Preview -->
 		<div v-if="selectedReportType && reportGenerated" class="report-preview-container space-y-6">
-			<!-- Report Header - Simplified -->
-			<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-				<!-- Title Row -->
-				<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-					<div>
-						<h2 class="text-xl font-bold text-gray-900 dark:text-white">
-							{{ selectedReportType.name }}
-						</h2>
-						<p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-							{{ dateRange === 'custom' ? `${startDate} to ${endDate}` : dateRangeOptions.find(opt => opt.value === dateRange)?.label }}
-						</p>
-					</div>
-					<div class="sm:text-right">
-						<span class="inline-flex items-center px-2.5 py-1 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 text-xs font-medium rounded-md">
-							Generated {{ currentTimestamp }}
-						</span>
-					</div>
-				</div>
+			<!-- Report Header -->
+			<ReportHeader
+				:report-name="selectedReportType.name"
+				:date-range-label="dateRange === 'custom' ? `${startDate} to ${endDate}` : dateRangeOptions.find(opt => opt.value === dateRange)?.label || ''"
+				:current-timestamp="currentTimestamp"
+				:clinic-filter="clinicFilter"
+				:clinics="clinics"
+				:brand-filter="brandFilter"
+				:brands="brands"
+				:manufacturer-filter="manufacturerFilter"
+				:manufacturers="manufacturers"
+				:report-type="reportType"
+			/>
 
-				<!-- Filter Badges -->
-				<div class="flex flex-wrap gap-2">
-					<span class="inline-flex items-center px-2.5 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs rounded-md">
-						<svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-						</svg>
-						{{ dateRange === 'custom' ? `${startDate} to ${endDate}` : dateRangeOptions.find(opt => opt.value === dateRange)?.label }}
-					</span>
-					<span class="inline-flex items-center px-2.5 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs rounded-md">
-						<svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-						</svg>
-						{{ clinicFilter === 'all' ? 'All Clinics' : clinics.find(c => c.id === clinicFilter)?.name || 'Unknown' }}
-					</span>
-					<span v-if="['orders', 'inventory', 'usage'].includes(reportType)" class="inline-flex items-center px-2.5 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs rounded-md">
-						<svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
-						</svg>
-						{{ brandFilter === 'all' ? 'All Brands' : brands.find(b => b.id === brandFilter)?.name || 'Unknown' }}
-					</span>
-					<span v-else-if="reportType === 'ivr'" class="inline-flex items-center px-2.5 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs rounded-md">
-						<svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>
-						</svg>
-						{{ manufacturerFilter === 'all' ? 'All Manufacturers' : (manufacturers.find(m => String(m.id) === String(manufacturerFilter))?.name || 'Unknown') }}
-					</span>
-				</div>
-			</div>
 			<!-- Orders Report -->
-			<div v-if="reportType === 'orders'" class="space-y-5">
-			<!-- KPI Cards Row -->
-			<div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-				<div class="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm">
-					<div class="flex items-center justify-between">
-						<div>
-							<p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Total Orders</p>
-							<p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">{{ totalOrders }}</p>
-						</div>
-						<div class="p-2.5 bg-red-50 dark:bg-red-900/30 rounded-lg">
-							<ClipboardDocumentListIcon class="w-5 h-5 text-red-600 dark:text-red-400" />
-						</div>
-					</div>
-				</div>
-				<div class="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm">
-					<div class="flex items-center justify-between">
-						<div>
-							<p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Total Items</p>
-							<p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">{{ totalOrderItems }}</p>
-						</div>
-						<div class="p-2.5 bg-green-50 dark:bg-green-900/30 rounded-lg">
-							<CubeIcon class="w-5 h-5 text-green-600 dark:text-green-400" />
-						</div>
-					</div>
-				</div>
-				<div class="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm">
-					<div class="flex items-center justify-between">
-						<div>
-							<p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Total Value</p>
-							<p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">${{ totalOrderValue.toLocaleString() }}</p>
-						</div>
-						<div class="p-2.5 bg-purple-50 dark:bg-purple-900/30 rounded-lg">
-							<CurrencyDollarIcon class="w-5 h-5 text-purple-600 dark:text-purple-400" />
-						</div>
-					</div>
-				</div>
-			</div>
-
-			<!-- Order Status Breakdown -->
-			<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5">
-				<div class="flex items-center justify-between mb-4">
-					<h3 class="text-base font-semibold text-gray-900 dark:text-white flex items-center">
-						<span class="w-1 h-5 bg-red-500 rounded-full mr-2"></span>
-						Order Status Breakdown
-					</h3>
-				</div>
-				<div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-					<!-- Pie Chart -->
-					<div class="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-4 flex items-center justify-center">
-						<canvas ref="statusChartRef" style="max-width:100%;max-height:250px;"></canvas>
-					</div>
-					<!-- Status List -->
-					<div class="space-y-2">
-						<div v-for="status in orderStatusBreakdown" :key="status.name" 
-							class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors">
-							<div class="flex items-center space-x-2">
-								<div :class="`w-2.5 h-2.5 rounded-full ${status.color}`"></div>
-								<span class="text-sm font-medium text-gray-700 dark:text-gray-300 capitalize">{{ status.name }}</span>
-							</div>
-							<div class="flex items-center space-x-3">
-								<span class="text-sm font-bold text-gray-900 dark:text-white">{{ status.count }}</span>
-								<span class="text-xs text-gray-500 dark:text-gray-400 w-10 text-right">{{ status.percentage }}%</span>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-
-			<!-- Top Clinics/Products & Brand/Size Distribution -->
-			<div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-				<!-- Top Clinics OR Top Products -->
-				<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5 flex flex-col">
-					<div class="flex items-center space-x-2 mb-4">
-						<div class="p-1.5 bg-red-50 dark:bg-red-900/30 rounded-lg">
-							<component :is="clinicFilter !== 'all' ? CubeIcon : Building2" class="w-4 h-4 text-red-600 dark:text-red-400" />
-						</div>
-						<h3 class="text-sm font-semibold text-gray-900 dark:text-white">{{ clinicFilter !== 'all' ? 'Top Products' : 'Top Clinics' }}</h3>
-					</div>
-					<div class="space-y-2 flex-1 min-h-[120px]">
-						<template v-if="clinicFilter !== 'all'">
-							<div v-for="(product, index) in topProducts.slice(0, 5)" :key="product.product_id" 
-								class="flex items-center justify-between p-2.5 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
-								<div class="flex items-center space-x-2.5 flex-1 min-w-0">
-									<div :class="[
-										'w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0',
-										index === 0 ? 'bg-yellow-500' : index === 1 ? 'bg-gray-400' : index === 2 ? 'bg-orange-600' : 'bg-gray-500'
-									]">{{ index + 1 }}</div>
-									<div class="flex-1 min-w-0">
-										<p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ product.name }}</p>
-									</div>
-								</div>
-								<div class="flex items-center space-x-3 flex-shrink-0">
-									<span class="text-xs text-gray-500 dark:text-gray-400">{{ product.count }}</span>
-									<div class="w-16 bg-gray-200 dark:bg-gray-600 rounded-full h-1.5">
-										<div class="bg-red-500 h-1.5 rounded-full" :style="{ width: `${product.percentage}%` }"></div>
-									</div>
-								</div>
-							</div>
-						</template>
-						<template v-else>
-							<div v-for="(clinic, index) in topClinics.slice(0, 5)" :key="clinic.clinic_id" 
-								class="flex items-center justify-between p-2.5 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
-								<div class="flex items-center space-x-2.5 flex-1 min-w-0">
-									<div :class="[
-										'w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0',
-										index === 0 ? 'bg-yellow-500' : index === 1 ? 'bg-gray-400' : index === 2 ? 'bg-orange-600' : 'bg-gray-500'
-									]">{{ index + 1 }}</div>
-									<div class="flex-1 min-w-0">
-										<p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ clinic.name }}</p>
-									</div>
-								</div>
-								<div class="flex items-center space-x-3 flex-shrink-0">
-									<span class="text-xs text-gray-500 dark:text-gray-400">{{ clinic.count }}</span>
-									<div class="w-16 bg-gray-200 dark:bg-gray-600 rounded-full h-1.5">
-										<div class="bg-green-500 h-1.5 rounded-full" :style="{ width: `${clinic.percentage}%` }"></div>
-									</div>
-								</div>
-							</div>
-						</template>
-						<div v-if="reportGenerated && !isLoadingData && (clinicFilter !== 'all' ? topProducts : topClinics).length === 0" class="flex-1 flex items-center justify-center py-8 text-sm text-gray-500 dark:text-gray-400">
-							No data available
-						</div>
-					</div>
-				</div>
-
-				<!-- Brand OR Size Distribution -->
-				<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5 flex flex-col">
-					<div class="flex items-center space-x-2 mb-4">
-						<div class="p-1.5 bg-purple-50 dark:bg-purple-900/30 rounded-lg">
-							<component :is="brandFilter !== 'all' ? ChartBarSquareIcon : Package" class="w-4 h-4 text-purple-600 dark:text-purple-400" />
-						</div>
-						<h3 class="text-sm font-semibold text-gray-900 dark:text-white">{{ brandFilter !== 'all' ? 'Size Distribution' : 'Brand Distribution' }}</h3>
-					</div>
-					<div v-if="reportGenerated && !isLoadingData && (brandFilter !== 'all' ? sizeDistribution : brandDistribution).length === 0" class="flex-1 flex items-center justify-center py-8 text-sm text-gray-500 dark:text-gray-400">
-							No data available
-						</div>
-					<div class="flex items-center justify-center mb-3">
-						<canvas v-if="brandFilter !== 'all'" ref="sizeChartRef" style="max-width:180px;max-height:180px;"></canvas>
-						<canvas v-else ref="brandChartRef" style="max-width:180px;max-height:180px;"></canvas>
-					</div>
-					<div class="space-y-1.5 flex-1 min-h-[80px]">
-						<template v-if="brandFilter !== 'all'">
-							<div v-for="size in sizeDistribution" :key="size.size_id" 
-								class="flex items-center justify-between p-1.5 rounded hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
-								<div class="flex items-center space-x-2">
-									<div :class="`w-2.5 h-2.5 rounded-full ${size.color}`"></div>
-									<span class="text-xs text-gray-700 dark:text-gray-300">{{ size.name }}</span>
-								</div>
-								<span class="text-xs font-semibold text-gray-900 dark:text-white">{{ size.count }}</span>
-							</div>
-						</template>
-						<template v-else>
-							<div v-for="brand in brandDistribution" :key="brand.brand_id" 
-								class="flex items-center justify-between p-1.5 rounded hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
-								<div class="flex items-center space-x-2">
-									<div :class="`w-2.5 h-2.5 rounded-full ${brand.color}`"></div>
-									<span class="text-xs text-gray-700 dark:text-gray-300">{{ brand.name }}</span>
-								</div>
-								<span class="text-xs font-semibold text-gray-900 dark:text-white">{{ brand.count }}</span>
-							</div>
-						</template>
-					</div>
-				</div>
-			</div>
-			</div>
+			<OrdersReport
+				v-if="reportType === 'orders'"
+				:total-orders="totalOrders"
+				:total-order-items="totalOrderItems"
+				:total-order-value="totalOrderValue"
+				:order-status-breakdown="orderStatusBreakdown"
+				:top-clinics="topClinics"
+				:top-products="topProducts"
+				:brand-distribution="brandDistribution"
+				:size-distribution="sizeDistribution"
+				:clinic-filter="clinicFilter"
+				:brand-filter="brandFilter"
+				:report-generated="reportGenerated"
+				:is-loading-data="isLoadingData"
+			/>
 
 			<!-- Inventory Report -->
-			<div v-else-if="reportType === 'inventory'" class="space-y-5">
-				<!-- KPI Cards Row -->
-				<div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-					<div class="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm">
-						<div class="flex items-center justify-between">
-							<div>
-								<p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Total Items</p>
-								<p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">{{ totalInventory }}</p>
-							</div>
-							<div class="p-2.5 bg-green-50 dark:bg-green-900/30 rounded-lg">
-								<CubeIcon class="w-5 h-5 text-green-600 dark:text-green-400" />
-							</div>
-						</div>
-					</div>
-					<div class="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm">
-						<div class="flex items-center justify-between">
-							<div>
-								<p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Used</p>
-								<p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">{{ usedInventoryCount }}</p>
-							</div>
-							<div class="p-2.5 bg-red-50 dark:bg-red-900/30 rounded-lg">
-								<CheckCircleIcon class="w-5 h-5 text-red-600 dark:text-red-400" />
-							</div>
-						</div>
-					</div>
-					<div class="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm">
-						<div class="flex items-center justify-between">
-							<div>
-								<p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">In Use</p>
-								<p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">{{ inUseInventoryCount }}</p>
-							</div>
-							<div class="p-2.5 bg-orange-50 dark:bg-orange-900/30 rounded-lg">
-								<ArrowPathIcon class="w-5 h-5 text-orange-600 dark:text-orange-400" />
-							</div>
-						</div>
-					</div>
-				</div>
-
-				<!-- Inventory Status Breakdown -->
-				<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5">
-					<div class="flex items-center justify-between mb-4">
-						<h3 class="text-base font-semibold text-gray-900 dark:text-white flex items-center">
-							<span class="w-1 h-5 bg-green-500 rounded-full mr-2"></span>
-							Inventory Status Breakdown
-						</h3>
-					</div>
-					<div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-						<!-- Pie Chart -->
-						<div class="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-4 flex items-center justify-center">
-							<canvas ref="inventoryStatusChartRef" style="max-width:100%;max-height:250px;"></canvas>
-						</div>
-						<!-- Status List -->
-						<div class="space-y-2">
-							<div v-for="status in inventoryStatusBreakdown" :key="status.name" 
-								class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors">
-								<div class="flex items-center space-x-2">
-									<div :class="`w-2.5 h-2.5 rounded-full ${status.color}`"></div>
-									<span class="text-sm font-medium text-gray-700 dark:text-gray-300 capitalize">{{ status.name }}</span>
-								</div>
-								<div class="flex items-center space-x-3">
-									<span class="text-sm font-bold text-gray-900 dark:text-white">{{ status.count }}</span>
-									<span class="text-xs text-gray-500 dark:text-gray-400 w-10 text-right">{{ status.percentage }}%</span>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
-
-				<!-- Top Clinics and Brand Distribution -->
-				<div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-					<!-- Top Clinics -->
-					<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5 flex flex-col">
-						<div class="flex items-center space-x-2 mb-4">
-							<div class="p-1.5 bg-red-50 dark:bg-red-900/30 rounded-lg">
-								<Building2 class="w-4 h-4 text-red-600 dark:text-red-400" />
-							</div>
-							<h3 class="text-sm font-semibold text-gray-900 dark:text-white">Top Clinics</h3>
-						</div>
-						<div class="space-y-2 flex-1 min-h-[120px]">
-							<div v-for="(clinic, index) in topInventoryClinics.slice(0, 5)" :key="clinic.clinic_id" 
-								class="flex items-center justify-between p-2.5 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
-								<div class="flex items-center space-x-2.5 flex-1 min-w-0">
-									<div :class="[
-										'w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0',
-										index === 0 ? 'bg-yellow-500' : index === 1 ? 'bg-gray-400' : index === 2 ? 'bg-orange-600' : 'bg-gray-500'
-									]">{{ index + 1 }}</div>
-									<div class="flex-1 min-w-0">
-										<p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ clinic.name }}</p>
-									</div>
-								</div>
-								<div class="flex items-center space-x-3 flex-shrink-0">
-									<span class="text-xs text-gray-500 dark:text-gray-400">{{ clinic.count }}</span>
-									<div class="w-16 bg-gray-200 dark:bg-gray-600 rounded-full h-1.5">
-										<div class="bg-red-500 h-1.5 rounded-full" :style="{ width: `${clinic.percentage}%` }"></div>
-									</div>
-								</div>
-							</div>
-							<div v-if="reportGenerated && !isLoadingData && topInventoryClinics.length === 0" class="flex-1 flex items-center justify-center py-8 text-sm text-gray-500 dark:text-gray-400">
-								No clinic data available
-							</div>
-						</div>
-					</div>
-
-					<!-- Brand Distribution -->
-					<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5 flex flex-col">
-						<div class="flex items-center space-x-2 mb-4">
-							<div class="p-1.5 bg-purple-50 dark:bg-purple-900/30 rounded-lg">
-								<Package class="w-4 h-4 text-purple-600 dark:text-purple-400" />
-							</div>
-							<h3 class="text-sm font-semibold text-gray-900 dark:text-white">Brand Distribution</h3>
-						</div>
-						<div v-if="reportGenerated && !isLoadingData && inventoryBrandDistribution.length === 0" class="flex-1 flex items-center justify-center py-8 text-sm text-gray-500 dark:text-gray-400">
-								No brand data available
-							</div>
-						<div class="flex items-center justify-center mb-3">
-							<canvas ref="inventoryBrandChartRef" style="max-width:180px;max-height:180px;"></canvas>
-						</div>
-						<div class="space-y-1.5 flex-1 min-h-[80px]">
-							<div v-for="brand in inventoryBrandDistribution" :key="brand.brand_id" 
-								class="flex items-center justify-between p-1.5 rounded hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
-								<div class="flex items-center space-x-2">
-									<div :class="`w-2.5 h-2.5 rounded-full ${brand.color}`"></div>
-									<span class="text-xs text-gray-700 dark:text-gray-300">{{ brand.name }}</span>
-								</div>
-								<span class="text-xs font-semibold text-gray-900 dark:text-white">{{ brand.count }}</span>
-							</div>
-						</div>
-					</div>
-				</div>
-
-				<!-- E. Utilization Rate Card -->
-				<div class="bg-gradient-to-br from-rose-50 to-purple-50 dark:from-rose-900/20 dark:to-purple-900/20 rounded-xl p-6 border border-rose-100 dark:border-rose-800">
-					<div class="flex items-center justify-between mb-4">
-						<div>
-							<h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-1">Utilization Rate</h3>
-							<p class="text-sm text-gray-600 dark:text-gray-400">Efficiency of inventory usage</p>
-						</div>
-						<div class="text-right">
-							<p class="text-4xl font-bold text-rose-600 dark:text-rose-400">{{ utilizationRate }}%</p>
-							<p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Used / Delivered</p>
-						</div>
-					</div>
-					<div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4">
-						<div class="bg-gradient-to-r from-rose-500 to-purple-500 h-4 rounded-full transition-all duration-500" 
-							:style="{ width: `${utilizationRate}%` }"></div>
-					</div>
-				</div>
-			</div>
+			<InventoryReport
+				v-else-if="reportType === 'inventory'"
+				:total-inventory="totalInventory"
+				:used-inventory-count="usedInventoryCount"
+				:in-use-inventory-count="inUseInventoryCount"
+				:inventory-status-breakdown="inventoryStatusBreakdown"
+				:top-inventory-clinics="topInventoryClinics"
+				:inventory-brand-distribution="inventoryBrandDistribution"
+				:utilization-rate="utilizationRate"
+				:report-generated="reportGenerated"
+				:is-loading-data="isLoadingData"
+			/>
 
 			<!-- Usage Report -->
-			<div v-else-if="reportType === 'usage'" class="space-y-5">
-				<!-- KPI Cards Row -->
-				<div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-					<div class="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm">
-						<div class="flex items-center justify-between">
-							<div>
-								<p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Total Grafts Used</p>
-								<p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">{{ filteredUsageLogs.length }}</p>
-							</div>
-							<div class="p-2.5 bg-green-50 dark:bg-green-900/30 rounded-lg">
-								<ArrowTrendingUpIcon class="w-5 h-5 text-green-600 dark:text-green-400" />
-							</div>
-						</div>
-					</div>
-					<div class="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm">
-						<div class="flex items-center justify-between">
-							<div>
-								<p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Top Wound Part</p>
-								<p class="mt-1 text-sm italic font-normal text-gray-400 dark:text-gray-500">{{ usageByWoundPart[0]?.name || 'No data available' }}</p>
-							</div>
-							<div class="p-2.5 bg-orange-50 dark:bg-orange-900/30 rounded-lg">
-								<BeakerIcon class="w-5 h-5 text-orange-600 dark:text-orange-400" />
-							</div>
-						</div>
-					</div>
-					<div class="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm">
-						<div class="flex items-center justify-between">
-							<div>
-								<p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Top Brand</p>
-								<p class="mt-1 text-sm italic font-normal text-gray-400 dark:text-gray-500">{{ usageBrandDistribution[0]?.name || 'No data available' }}</p>
-							</div>
-							<div class="p-2.5 bg-purple-50 dark:bg-purple-900/30 rounded-lg">
-								<Package class="w-5 h-5 text-purple-600 dark:text-purple-400" />
-							</div>
-						</div>
-					</div>
-				</div>
+			<UsageReport
+				v-else-if="reportType === 'usage'"
+				:total-usage-logs="filteredUsageLogs.length"
+				:usage-by-wound-part="usageByWoundPart"
+				:top-usage-clinics="topUsageClinics"
+				:usage-brand-distribution="usageBrandDistribution"
+				:report-generated="reportGenerated"
+				:is-loading-data="isLoadingData"
+			/>
 
-				<!-- Usage Analytics Grid -->
-				<div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-					<!-- Usage by Wound Part -->
-					<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5 flex flex-col">
-						<div class="flex items-center space-x-2 mb-4">
-							<div class="p-1.5 bg-orange-50 dark:bg-orange-900/30 rounded-lg">
-								<BeakerIcon class="w-4 h-4 text-orange-600 dark:text-orange-400" />
-							</div>
-							<h3 class="text-sm font-semibold text-gray-900 dark:text-white">Usage by Wound Part</h3>
-						</div>
-						<div v-if="reportGenerated && !isLoadingData && usageByWoundPart.length === 0" class="flex-1 flex items-center justify-center py-8 text-sm text-gray-500 dark:text-gray-400">
-								No usage data available
-							</div>
-						<div class="flex items-center justify-center mb-3">
-							<canvas ref="usageWoundPartChartRef" style="max-width:180px;max-height:180px;"></canvas>
-						</div>
-						<div class="space-y-1.5 flex-1 min-h-[80px]">
-							<div v-for="part in usageByWoundPart" :key="part.name" 
-								class="flex items-center justify-between p-1.5 rounded hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
-								<div class="flex items-center space-x-2">
-									<div :class="`w-2.5 h-2.5 rounded-full ${part.color}`"></div>
-									<span class="text-xs text-gray-700 dark:text-gray-300">{{ part.name }}</span>
-								</div>
-								<span class="text-xs font-semibold text-gray-900 dark:text-white">{{ part.count }}</span>
-							</div>
-						</div>
-					</div>
-
-					<!-- Top Clinics by Usage -->
-					<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5 flex flex-col">
-						<div class="flex items-center space-x-2 mb-4">
-							<div class="p-1.5 bg-red-50 dark:bg-red-900/30 rounded-lg">
-								<Building2 class="w-4 h-4 text-red-600 dark:text-red-400" />
-							</div>
-							<h3 class="text-sm font-semibold text-gray-900 dark:text-white">Top Clinics by Usage</h3>
-						</div>
-						<div class="space-y-2 flex-1 min-h-[120px]">
-							<div v-for="(clinic, index) in topUsageClinics.slice(0, 5)" :key="clinic.clinic_id" 
-								class="flex items-center justify-between p-2.5 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
-								<div class="flex items-center space-x-2.5 flex-1 min-w-0">
-									<div :class="[
-										'w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0',
-										index === 0 ? 'bg-yellow-500' : index === 1 ? 'bg-gray-400' : index === 2 ? 'bg-orange-600' : 'bg-gray-500'
-									]">{{ index + 1 }}</div>
-									<div class="flex-1 min-w-0">
-										<p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ clinic.name }}</p>
-									</div>
-								</div>
-								<div class="flex items-center space-x-3 flex-shrink-0">
-									<span class="text-xs text-gray-500 dark:text-gray-400">{{ clinic.count }}</span>
-									<div class="w-16 bg-gray-200 dark:bg-gray-600 rounded-full h-1.5">
-										<div class="bg-red-500 h-1.5 rounded-full" :style="{ width: `${clinic.percentage}%` }"></div>
-									</div>
-								</div>
-							</div>
-							<div v-if="reportGenerated && !isLoadingData && topUsageClinics.length === 0" class="flex-1 flex items-center justify-center py-8 text-sm text-gray-500 dark:text-gray-400">
-								No clinic data available
-							</div>
-						</div>
-					</div>
-				</div>
-
-				<!-- Brand Usage Distribution -->
-				<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5 flex flex-col">
-					<div class="flex items-center space-x-2 mb-4">
-						<div class="p-1.5 bg-purple-50 dark:bg-purple-900/30 rounded-lg">
-							<Package class="w-4 h-4 text-purple-600 dark:text-purple-400" />
-						</div>
-						<h3 class="text-sm font-semibold text-gray-900 dark:text-white">Brand Usage Distribution</h3>
-					</div>
-					<div class="grid grid-cols-1 lg:grid-cols-2 gap-5 flex-1 relative">
-						<div v-if="reportGenerated && !isLoadingData && usageBrandDistribution.length === 0" class="absolute inset-0 flex items-center justify-center text-sm text-gray-500 dark:text-gray-400 z-10">
-							No brand data available
-						</div>
-						<div class="flex items-center justify-center">
-							<canvas ref="usageBrandChartRef" style="max-width:180px;max-height:180px;"></canvas>
-						</div>
-						<div class="space-y-1.5 flex-1 min-h-[80px]">
-							<div v-for="brand in usageBrandDistribution" :key="brand.brand_id" 
-								class="flex items-center justify-between p-1.5 rounded hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
-								<div class="flex items-center space-x-2">
-									<div :class="`w-2.5 h-2.5 rounded-full ${brand.color}`"></div>
-									<span class="text-xs text-gray-700 dark:text-gray-300">{{ brand.name }}</span>
-								</div>
-								<span class="text-xs font-semibold text-gray-900 dark:text-white">{{ brand.count }}</span>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-			
 			<!-- Invoice Report -->
-			<div v-else-if="reportType === 'invoices'" class="space-y-5">
-				<!-- KPI Cards Row -->
-				<div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-					<div class="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm">
-						<div class="flex items-center justify-between">
-							<div>
-								<p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Total Invoices</p>
-								<p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">{{ filteredInvoices.length }}</p>
-							</div>
-							<div class="p-2.5 bg-red-50 dark:bg-red-900/30 rounded-lg">
-								<DocumentTextIcon class="w-5 h-5 text-red-600 dark:text-red-400" />
-							</div>
-						</div>
-					</div>
-					<div class="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm">
-						<div class="flex items-center justify-between">
-							<div>
-								<p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Total Amount</p>
-								<p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">${{ totalInvoiceAmount.toLocaleString() }}</p>
-							</div>
-							<div class="p-2.5 bg-green-50 dark:bg-green-900/30 rounded-lg">
-								<CurrencyDollarIcon class="w-5 h-5 text-green-600 dark:text-green-400" />
-							</div>
-						</div>
-					</div>
-					<div class="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm">
-						<div class="flex items-center justify-between">
-							<div>
-								<p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Pending</p>
-								<p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">${{ pendingInvoiceAmount.toLocaleString() }}</p>
-							</div>
-							<div class="p-2.5 bg-orange-50 dark:bg-orange-900/30 rounded-lg">
-								<ClockIcon class="w-5 h-5 text-orange-600 dark:text-orange-400" />
-							</div>
-						</div>
-					</div>
-				</div>
+			<InvoiceReport
+				v-else-if="reportType === 'invoices'"
+				:total-invoices="filteredInvoices.length"
+				:total-invoice-amount="totalInvoiceAmount"
+				:pending-invoice-amount="pendingInvoiceAmount"
+				:invoice-status-breakdown="invoiceStatusBreakdown"
+				:top-invoice-clinics="topInvoiceClinics"
+				:report-generated="reportGenerated"
+				:is-loading-data="isLoadingData"
+			/>
 
-				<!-- Invoice Status Breakdown -->
-				<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5 flex flex-col">
-					<div class="flex items-center justify-between mb-4">
-						<h3 class="text-base font-semibold text-gray-900 dark:text-white flex items-center">
-							<span class="w-1 h-5 bg-red-500 rounded-full mr-2"></span>
-							Invoice Status Breakdown
-						</h3>
-					</div>
-					<div class="grid grid-cols-1 lg:grid-cols-2 gap-5 flex-1">
-						<!-- Pie Chart -->
-						<div class="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-4 flex items-center justify-center">
-							<canvas ref="invoiceStatusChartRef" style="max-width:100%;max-height:250px;"></canvas>
-						</div>
-						<!-- Status List -->
-						<div class="space-y-2 flex-1 min-h-[120px]">
-							<div v-for="status in invoiceStatusBreakdown" :key="status.name" 
-								class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors">
-								<div class="flex items-center space-x-2">
-									<div :class="`w-2.5 h-2.5 rounded-full ${status.color}`"></div>
-									<span class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ status.displayName }}</span>
-								</div>
-								<div class="flex items-center space-x-3">
-									<span class="text-sm font-bold text-gray-900 dark:text-white">{{ status.count }}</span>
-									<span class="text-xs text-gray-500 dark:text-gray-400">${{ status.amount.toLocaleString() }}</span>
-								</div>
-							</div>
-							<div v-if="reportGenerated && !isLoadingData && invoiceStatusBreakdown.length === 0" class="flex-1 flex items-center justify-center py-8 text-sm text-gray-500 dark:text-gray-400">
-								No invoice data available
-							</div>
-						</div>
-					</div>
-				</div>
-
-				<!-- Top Clinics by Invoice Amount -->
-				<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5 flex flex-col">
-					<div class="flex items-center space-x-2 mb-4">
-						<div class="p-1.5 bg-purple-50 dark:bg-purple-900/30 rounded-lg">
-							<Building2 class="w-4 h-4 text-purple-600 dark:text-purple-400" />
-						</div>
-						<h3 class="text-sm font-semibold text-gray-900 dark:text-white">Top Clinics by Invoice Amount</h3>
-					</div>
-					<div class="space-y-2 flex-1 min-h-[120px]">
-						<div v-for="(clinic, index) in topInvoiceClinics.slice(0, 5)" :key="clinic.clinic_id" 
-							class="flex items-center justify-between p-2.5 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
-							<div class="flex items-center space-x-2.5 flex-1 min-w-0">
-								<div :class="[
-									'w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0',
-									index === 0 ? 'bg-yellow-500' : index === 1 ? 'bg-gray-400' : index === 2 ? 'bg-orange-600' : 'bg-gray-500'
-								]">{{ index + 1 }}</div>
-								<div class="flex-1 min-w-0">
-									<p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ clinic.name }}</p>
-								</div>
-							</div>
-							<div class="flex items-center space-x-3 flex-shrink-0">
-								<span class="text-xs font-semibold text-purple-600 dark:text-purple-400">${{ clinic.amount.toLocaleString() }}</span>
-								<div class="w-16 bg-gray-200 dark:bg-gray-600 rounded-full h-1.5">
-									<div class="bg-purple-500 h-1.5 rounded-full" :style="{ width: `${clinic.percentage}%` }"></div>
-								</div>
-							</div>
-						</div>
-						<div v-if="reportGenerated && !isLoadingData && topInvoiceClinics.length === 0" class="flex-1 flex items-center justify-center py-8 text-sm text-gray-500 dark:text-gray-400">
-							No clinic data available
-						</div>
-					</div>
-				</div>
-			</div>
-			
 			<!-- IVR Report -->
-			<div v-else-if="reportType === 'ivr'" class="space-y-5">
-				<!-- KPI Cards Row -->
-				<div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-					<div class="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm">
-						<div class="flex items-center justify-between">
-							<div>
-								<p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Total Requests</p>
-								<p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">{{ filteredIVRRequests.length }}</p>
-							</div>
-							<div class="p-2.5 bg-rose-50 dark:bg-rose-900/30 rounded-lg">
-								<ShieldCheckIcon class="w-5 h-5 text-rose-600 dark:text-rose-400" />
-							</div>
-						</div>
-					</div>
-					<div class="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm">
-						<div class="flex items-center justify-between">
-							<div>
-								<p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Approval Rate</p>
-								<p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">{{ overallApprovalRate }}%</p>
-							</div>
-							<div class="p-2.5 bg-green-50 dark:bg-green-900/30 rounded-lg">
-								<CheckCircleIcon class="w-5 h-5 text-green-600 dark:text-green-400" />
-							</div>
-						</div>
-					</div>
-					<div class="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm">
-						<div class="flex items-center justify-between">
-							<div>
-								<p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Top Status</p>
-								<p class="mt-1 text-sm italic font-normal text-gray-400 dark:text-gray-500 capitalize">{{ ivrEligibilityBreakdown[0]?.name || 'No data available' }}</p>
-							</div>
-							<div class="p-2.5 bg-red-50 dark:bg-red-900/30 rounded-lg">
-								<ClipboardDocumentCheckIcon class="w-5 h-5 text-red-600 dark:text-red-400" />
-							</div>
-						</div>
-					</div>
-				</div>
+			<IVRReport
+				v-else-if="reportType === 'ivr'"
+				:totalIVRRequests="filteredIVRRequests.length"
+				:overallApprovalRate="overallApprovalRate"
+				:manufacturerApprovalRate="manufacturerApprovalRate"
+				:clinicApprovalRate="clinicApprovalRate"
+				:ivrEligibilityBreakdown="ivrEligibilityBreakdown"
+				:topIVRManufacturers="topIVRManufacturers"
+				:topIVRClinics="topIVRClinics"
+				:manufacturerFilter="manufacturerFilter"
+				:manufacturers="manufacturers"
+				:clinicFilter="clinicFilter"
+				:clinics="clinics"
+				:reportGenerated="reportGenerated"
+				:isLoadingData="isLoadingData"
+			/>
 
-				<!-- Eligibility Status & Manufacturers/Insights -->
-				<div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-					<!-- Eligibility Status Breakdown -->
-					<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5 flex flex-col">
-						<div class="flex items-center space-x-2 mb-4">
-							<div class="p-1.5 bg-green-50 dark:bg-green-900/30 rounded-lg">
-								<ShieldCheckIcon class="w-4 h-4 text-green-600 dark:text-green-400" />
-							</div>
-							<h3 class="text-sm font-semibold text-gray-900 dark:text-white">Eligibility Status</h3>
-						</div>
-						<div v-if="reportGenerated && !isLoadingData && ivrEligibilityBreakdown.length === 0" class="flex-1 flex items-center justify-center py-8 text-sm text-gray-500 dark:text-gray-400">
-								No IVR data available
-							</div>
-						<div class="flex items-center justify-center mb-3">
-							<canvas ref="ivrEligibilityChartRef" style="max-width:180px;max-height:180px;"></canvas>
-						</div>
-						<div class="space-y-1.5 flex-1 min-h-[80px]">
-							<div v-for="status in ivrEligibilityBreakdown" :key="status.name" 
-								class="flex items-center justify-between p-1.5 rounded hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
-								<div class="flex items-center space-x-2">
-									<div :class="`w-2.5 h-2.5 rounded-full ${status.color}`"></div>
-									<span class="text-xs text-gray-700 dark:text-gray-300 capitalize">{{ status.name }}</span>
-								</div>
-								<span class="text-xs font-semibold text-gray-900 dark:text-white">{{ status.count }}</span>
-							</div>
-						</div>
-					</div>
-
-					<!-- Top Manufacturers OR Manufacturer Insights -->
-					<div v-if="manufacturerFilter === 'all'" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5 flex flex-col">
-						<div class="flex items-center space-x-2 mb-4">
-							<div class="p-1.5 bg-orange-50 dark:bg-orange-900/30 rounded-lg">
-								<BuildingStorefrontIcon class="w-4 h-4 text-orange-600 dark:text-orange-400" />
-							</div>
-							<h3 class="text-sm font-semibold text-gray-900 dark:text-white">Top Manufacturers</h3>
-						</div>
-						<div class="space-y-2 flex-1 min-h-[120px]">
-							<div v-for="(mfr, index) in topIVRManufacturers.slice(0, 5)" :key="mfr.manufacturer_id" 
-								class="flex items-center justify-between p-2.5 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
-								<div class="flex items-center space-x-2.5 flex-1 min-w-0">
-									<div :class="[
-										'w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0',
-										index === 0 ? 'bg-yellow-500' : index === 1 ? 'bg-gray-400' : index === 2 ? 'bg-orange-600' : 'bg-gray-500'
-									]">{{ index + 1 }}</div>
-									<div class="flex-1 min-w-0">
-										<p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ mfr.name }}</p>
-									</div>
-								</div>
-								<div class="flex items-center space-x-3 flex-shrink-0">
-									<span class="text-xs text-gray-500 dark:text-gray-400">{{ mfr.count }}</span>
-									<div class="w-16 bg-gray-200 dark:bg-gray-600 rounded-full h-1.5">
-										<div class="bg-orange-500 h-1.5 rounded-full" :style="{ width: `${mfr.percentage}%` }"></div>
-									</div>
-								</div>
-							</div>
-							<div v-if="reportGenerated && !isLoadingData && topIVRManufacturers.length === 0" class="flex-1 flex items-center justify-center py-8 text-sm text-gray-500 dark:text-gray-400">
-								No manufacturer data available
-							</div>
-						</div>
-					</div>
-
-					<!-- Manufacturer Insights - Show when manufacturer is filtered -->
-					<div v-else class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5">
-						<div class="flex items-center space-x-2 mb-4">
-							<div class="p-1.5 bg-purple-50 dark:bg-purple-900/30 rounded-lg">
-								<BuildingStorefrontIcon class="w-4 h-4 text-purple-600 dark:text-purple-400" />
-							</div>
-							<div class="flex-1 min-w-0">
-								<h3 class="text-sm font-semibold text-gray-900 dark:text-white">Manufacturer Insights</h3>
-								<p class="text-xs text-gray-500 dark:text-gray-400 truncate">{{ manufacturers.find(m => String(m.id) === String(manufacturerFilter))?.name || 'Selected Manufacturer' }}</p>
-							</div>
-						</div>
-						<div class="grid grid-cols-2 gap-3 mb-3">
-							<div class="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-3 border border-purple-100 dark:border-purple-800">
-								<p class="text-xs text-purple-600 dark:text-purple-400 mb-1">Total Requests</p>
-								<p class="text-xl font-bold text-gray-900 dark:text-white">{{ filteredIVRRequests.length }}</p>
-							</div>
-							<div class="bg-green-50 dark:bg-green-900/20 rounded-lg p-3 border border-green-100 dark:border-green-800">
-								<p class="text-xs text-green-600 dark:text-green-400 mb-1">Approval Rate</p>
-								<p class="text-xl font-bold text-gray-900 dark:text-white">{{ manufacturerApprovalRate }}%</p>
-							</div>
-						</div>
-						<div class="space-y-1.5 max-h-28 overflow-y-auto">
-							<div v-for="status in ivrEligibilityBreakdown" :key="status.name" 
-								class="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
-								<div class="flex items-center space-x-2">
-									<div :class="`w-2.5 h-2.5 rounded-full ${status.color}`"></div>
-									<span class="text-xs text-gray-700 dark:text-gray-300 capitalize">{{ status.name }}</span>
-								</div>
-								<div class="flex items-center space-x-2">
-									<span class="text-xs font-bold text-gray-900 dark:text-white">{{ status.count }}</span>
-									<span class="text-xs text-gray-500 dark:text-gray-400">({{ ((status.count / filteredIVRRequests.length) * 100).toFixed(0) }}%)</span>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
-
-				<!-- Clinic Insights or Top Clinics -->
-				<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5 flex flex-col">
-					<div class="flex items-center space-x-2 mb-4">
-						<div class="p-1.5 bg-red-50 dark:bg-red-900/30 rounded-lg">
-							<Building2 class="w-4 h-4 text-red-600 dark:text-red-400" />
-						</div>
-						<div class="flex-1 min-w-0">
-							<h3 class="text-sm font-semibold text-gray-900 dark:text-white">{{ clinicFilter !== 'all' ? 'Clinic Insights' : 'Top Clinics by IVR Requests' }}</h3>
-							<p class="text-xs text-gray-500 dark:text-gray-400 truncate">{{ clinicFilter !== 'all' ? clinics.find(c => String(c.id) === String(clinicFilter))?.name || 'Selected Clinic' : 'Highest verification volume' }}</p>
-						</div>
-					</div>
-
-					<!-- Clinic Insights - Show when clinic is filtered -->
-					<div v-if="clinicFilter !== 'all'" class="grid grid-cols-2 gap-3 flex-1">
-						<div class="bg-red-50 dark:bg-red-900/20 rounded-lg p-3 border border-red-100 dark:border-red-800">
-							<p class="text-xs text-red-600 dark:text-red-400 mb-1">Total Requests</p>
-							<p class="text-xl font-bold text-gray-900 dark:text-white">{{ filteredIVRRequests.length }}</p>
-						</div>
-						<div class="bg-green-50 dark:bg-green-900/20 rounded-lg p-3 border border-green-100 dark:border-green-800">
-							<p class="text-xs text-green-600 dark:text-green-400 mb-1">Approval Rate</p>
-							<p class="text-xl font-bold text-gray-900 dark:text-white">{{ clinicApprovalRate }}%</p>
-						</div>
-					</div>
-
-					<!-- Top Clinics - Show when no specific clinic is selected -->
-					<div v-else class="space-y-2 flex-1 min-h-[120px]">
-						<div v-for="(clinic, index) in topIVRClinics.slice(0, 5)" :key="clinic.clinic_id" 
-							class="flex items-center justify-between p-2.5 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
-							<div class="flex items-center space-x-2.5 flex-1 min-w-0">
-								<div :class="[
-									'w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0',
-									index === 0 ? 'bg-yellow-500' : index === 1 ? 'bg-gray-400' : index === 2 ? 'bg-orange-600' : 'bg-gray-500'
-								]">{{ index + 1 }}</div>
-								<div class="flex-1 min-w-0">
-									<p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ clinic.name }}</p>
-								</div>
-							</div>
-							<div class="flex items-center space-x-3 flex-shrink-0">
-								<span class="text-xs text-gray-500 dark:text-gray-400">{{ clinic.count }}</span>
-								<div class="w-16 bg-gray-200 dark:bg-gray-600 rounded-full h-1.5">
-									<div class="bg-red-500 h-1.5 rounded-full" :style="{ width: `${clinic.percentage}%` }"></div>
-								</div>
-							</div>
-						</div>
-						<div v-if="reportGenerated && !isLoadingData && topIVRClinics.length === 0" class="flex-1 flex items-center justify-center py-8 text-sm text-gray-500 dark:text-gray-400">
-							No clinic data available
-						</div>
-					</div>
-				</div>
-			</div>
+			<!-- Patient Graft Application Report -->
+			<PatientGraftApplicationReport
+				v-else-if="reportType === 'patient_graft_application'"
+				:graft-logs="filteredPatientGraftLogs"
+				:is-loading-data="isLoadingData"
+				:anonymize-phi="anonymizePhi"
+			/>
 		</div>
 	</div>
 </template>
@@ -1075,11 +162,20 @@ import {
 } from '@heroicons/vue/24/outline'
 import { Chart, registerables, type ChartType } from 'chart.js'
 import type { Ref } from 'vue'
-import { orderService, userService, brandService, inventoryService, invoiceService, ivrService, returnsService, api } from '@/services/api'
+import { orderService, userService, brandService, inventoryService, invoiceService, ivrService, returnsService, patientGraftLogService, api } from '@/services/api'
 import { Package, Building2 } from 'lucide-vue-next'
 import { useAppToast } from '@/composables/ui/useAppToast'
 import html2canvas from 'html2canvas'
 import * as XLSX from 'xlsx'
+import ReportTypeSelector from './sections/ReportTypeSelector.vue'
+import ReportFilters from './sections/ReportFilters.vue'
+import ReportHeader from './sections/ReportHeader.vue'
+import OrdersReport from './sections/OrdersReport.vue'
+import InventoryReport from './sections/InventoryReport.vue'
+import UsageReport from './sections/UsageReport.vue'
+import InvoiceReport from './sections/InvoiceReport.vue'
+import IVRReport from './sections/IVRReport.vue'
+import PatientGraftApplicationReport from './sections/PatientGraftApplicationReport.vue'
 
 Chart.register(...registerables)
 const toast = useAppToast()
@@ -1093,6 +189,7 @@ const inventory = ref<any[]>([])
 const invoices = ref<any[]>([])
 const ivrRequests = ref<any[]>([])
 const usageLogs = ref<any[]>([])
+const patientGraftLogs = ref<any[]>([])
 const isLoadingData = ref(false)
 const isExporting = ref(false) // Track if export is in progress
 const reportGenerated = ref(false) // Track if report has been generated
@@ -1104,15 +201,20 @@ async function fetchReportData() {
 	isLoadingData.value = true
 	try {
 		// Fetch all data including manufacturers in parallel
-		const [ordersRes, clinicsRes, brandsRes, manufacturersRes, inventoryRes, invoicesRes, ivrRes] = await Promise.all([
+		const [ordersRes, clinicsRes, brandsRes, manufacturersRes, inventoryRes, invoicesRes, ivrRes, graftLogsRes] = await Promise.all([
 			orderService.getAllOrders({ per_page: 10000 }),
 			userService.getClinics(),
 			brandService.getAllBrands({ per_page: 1000 }),
 			userService.getManufacturers(),
 			inventoryService.getAllInventory(),
 			invoiceService.getAllInvoices({ per_page: 10000 }),
-			ivrService.getAllIVRRequests({ per_page: 10000 })
+			ivrService.getAllIVRRequests({ per_page: 10000 }),
+			patientGraftLogService.getAllLogs()
 		])
+
+		if (graftLogsRes.data?.success && Array.isArray(graftLogsRes.data?.data)) {
+			patientGraftLogs.value = graftLogsRes.data.data
+		}
 
 		// Parse orders
 		const orderRows = Array.isArray(ordersRes.data?.order_data) ? ordersRes.data.order_data : []
@@ -1279,6 +381,7 @@ const dateRangeError = ref('') // Validation error message for custom date range
 const clinicFilter = ref('all')
 const brandFilter = ref('all')
 const manufacturerFilter = ref('all') // For IVR report
+const anonymizePhi = ref(false) // HIPAA De-identification toggle
 const graphType = ref('area') // 'area', 'line', 'bar'
 
 const reportTypes: ReportType[] = [
@@ -1311,6 +414,12 @@ const reportTypes: ReportType[] = [
 		name: 'IVR Report', 
 		icon: ShieldCheckIcon, 
 		description: 'Insurance verification status' 
+	},
+	{ 
+		id: 'patient_graft_application', 
+		name: 'Patient Graft Application Report', 
+		icon: ClipboardDocumentCheckIcon, 
+		description: 'Graft applications, serials, and wound sites' 
 	}
 ]
 
@@ -1413,6 +522,7 @@ const exportAsPdf = async () => {
 			clinic_id: clinicFilter.value,
 			brand_id: brandFilter.value,
 			manufacturer_id: manufacturerFilter.value,
+			anonymize_phi: anonymizePhi.value,
 		}
 		// Only include dates if they have values (for custom date range)
 		if (startDate.value) filters.start_date = startDate.value
@@ -1460,6 +570,7 @@ const exportAsExcel = async () => {
 			clinic_id: clinicFilter.value,
 			brand_id: brandFilter.value,
 			manufacturer_id: manufacturerFilter.value,
+			anonymize_phi: anonymizePhi.value,
 		}
 		// Only include dates if they have values (for custom date range)
 		if (startDate.value) filters.start_date = startDate.value
@@ -2108,7 +1219,7 @@ const utilizationRate = computed(() => {
 		return logStatus === 2 || logStatus === 3
 	}).length
 	
-	if (delivered === 0) return 0
+	if (delivered === 0) return '0'
 	return ((used / delivered) * 100).toFixed(1)
 })
 
@@ -2437,6 +1548,59 @@ const filteredIVRRequests = computed(() => {
 	return filtered
 })
 
+// ========== PATIENT GRAFT APPLICATION COMPUTED PROPERTIES ==========
+const filteredPatientGraftLogs = computed(() => {
+	let filtered = patientGraftLogs.value
+
+	// Apply clinic filter
+	if (clinicFilter.value !== 'all') {
+		filtered = filtered.filter((log: any) => {
+			const cId = String(log.clinic_id || log.clinicId || '')
+			return cId === String(clinicFilter.value)
+		})
+	}
+
+	// Apply brand filter
+	if (brandFilter.value !== 'all') {
+		filtered = filtered.filter((log: any) => {
+			const bId = String(log.brand_id || log.brandId || '')
+			return bId === String(brandFilter.value)
+		})
+	}
+
+	// Apply date range filter
+	const today = new Date()
+	let startDateFilter: Date | null = null
+	let endDateFilter: Date | null = null
+
+	if (dateRange.value === 'last_7_days') {
+		startDateFilter = new Date(today)
+		startDateFilter.setDate(today.getDate() - 7)
+		endDateFilter = today
+	} else if (dateRange.value === 'last_30_days') {
+		startDateFilter = new Date(today)
+		startDateFilter.setDate(today.getDate() - 30)
+		endDateFilter = today
+	} else if (dateRange.value === 'last_year') {
+		startDateFilter = new Date(today)
+		startDateFilter.setFullYear(today.getFullYear() - 1)
+		endDateFilter = today
+	} else if (dateRange.value === 'custom' && startDate.value && endDate.value) {
+		startDateFilter = new Date(startDate.value)
+		endDateFilter = new Date(endDate.value)
+	}
+
+	if (startDateFilter && endDateFilter) {
+		filtered = filtered.filter((log: any) => {
+			if (!log.date_of_service) return true
+			const itemDate = new Date(log.date_of_service)
+			return itemDate >= startDateFilter! && itemDate <= endDateFilter!
+		})
+	}
+
+	return filtered
+})
+
 const ivrEligibilityBreakdown = computed(() => {
 	// eligibility_status: 0 = pending, 1 = approved, 2 = denied
 	const statusCounts: Record<string, { count: number; color: string }> = {
@@ -2529,7 +1693,7 @@ const topIVRClinics = computed(() => {
 // Manufacturer Approval Rate - for filtered manufacturer
 const manufacturerApprovalRate = computed(() => {
 	const total = filteredIVRRequests.value.length
-	if (total === 0) return 0
+	if (total === 0) return '0'
 	
 	const approved = filteredIVRRequests.value.filter((ivr: any) => {
 		const eligibilityStatus = Number(ivr.eligibility_status ?? ivr.eligibilityStatus ?? 0)
@@ -2542,7 +1706,7 @@ const manufacturerApprovalRate = computed(() => {
 // Overall Approval Rate - for all IVR requests
 const overallApprovalRate = computed(() => {
 	const total = filteredIVRRequests.value.length
-	if (total === 0) return 0
+	if (total === 0) return '0'
 	
 	const approved = filteredIVRRequests.value.filter((ivr: any) => {
 		const eligibilityStatus = Number(ivr.eligibility_status ?? ivr.eligibilityStatus ?? 0)
@@ -2555,7 +1719,7 @@ const overallApprovalRate = computed(() => {
 // Clinic Approval Rate - for filtered clinic
 const clinicApprovalRate = computed(() => {
 	const total = filteredIVRRequests.value.length
-	if (total === 0) return 0
+	if (total === 0) return '0'
 	
 	const approved = filteredIVRRequests.value.filter((ivr: any) => {
 		const eligibilityStatus = Number(ivr.eligibility_status ?? ivr.eligibilityStatus ?? 0)

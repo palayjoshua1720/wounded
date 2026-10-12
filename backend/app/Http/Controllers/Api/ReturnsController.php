@@ -73,6 +73,8 @@ class ReturnsController extends Controller
             ];
         });
 
+        $this->logAudit($request, 'return_list', 'Returns listing viewed');
+
         return response()->json([
             'returns' => $formattedReturns,
             'meta' => [

@@ -34,6 +34,8 @@ class GlobalEncryptionService
         'backup_code_id',
         'email_verification_code_id',
         'magic_token_id',
+        'ledger_id',
+        'graft_log_id',
         
         // Foreign keys
         'updated_by',
@@ -65,6 +67,7 @@ class GlobalEncryptionService
         'status',
         'entity_type',
         'graft_status',
+        'product_type',
         
         // Boolean flags
         'backup_codes_enabled',
@@ -102,6 +105,9 @@ class GlobalEncryptionService
         'tracking_code',
         'code',
         'token',
+        'serial_number',
+        'graft_log_code',
+        'graft_usage_id',
         
         // File paths (files are encrypted separately, not the paths)
         'ivr_file',
@@ -184,7 +190,7 @@ class GlobalEncryptionService
         $decrypted = [];
         
         foreach ($attributes as $field => $value) {
-            if (!is_null($value) && $this->isEncrypted($value) && !$this->isExcludedField($field)) {
+            if (!is_null($value) && $this->isEncrypted($value) && !$this->isExcludedField($field, $model)) {
                 try {
                     $decrypted[$field] = Crypt::decryptString($value);
                 } catch (\Exception $e) {
@@ -216,7 +222,7 @@ class GlobalEncryptionService
     protected function shouldEncrypt(Model $model, string $field, $value): bool
     {
         // Skip if field is in never-encrypt list
-        if ($this->isExcludedField($field)) {
+        if ($this->isExcludedField($field, $model)) {
             return false;
         }
 
@@ -256,10 +262,16 @@ class GlobalEncryptionService
      * Check if a field is in the never-encrypt list
      *
      * @param string $field
+     * @param Model|null $model
      * @return bool
      */
-    protected function isExcludedField(string $field): bool
+    protected function isExcludedField(string $field, ?Model $model = null): bool
     {
+        // For PatientGraftLog, serial_number is encrypted at rest for HIPAA compliance
+        if ($field === 'serial_number' && $model instanceof \App\Models\PatientGraftLog) {
+            return false;
+        }
+
         return in_array($field, $this->neverEncrypt, true);
     }
 

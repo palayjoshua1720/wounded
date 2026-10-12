@@ -8,10 +8,7 @@
 			</div>
 
 			<button
-				@click="
-					selectedUser = null; 
-					showCreateForm = true
-				"
+				@click="openCreateUser"
 				class="flex items-center px-5 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg group"
 			>
 				<UserPlus class="w-4 h-4 mr-2" />
@@ -308,21 +305,27 @@
 
 				<div class="grid grid-cols-2 gap-4">
 					<div>
-						<label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Clinic ID (for clinicians/staff)</label>
+						<label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Associated Clinic Facility</label>
+						<div v-if="isClinicOrClinician" class="mt-1 px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700/50 text-gray-700 dark:text-gray-300 text-sm flex items-center justify-between">
+							<span>Clinic #{{ currentUserClinicId }}</span>
+							<span class="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded font-medium">Your Clinic Facility</span>
+						</div>
 						<input
+							v-else
 							v-model="formData.clinicId"
 							type="number"
 							class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-							placeholder="Optional - only for clinic users"
+							placeholder="Enter Clinic ID"
+							required
 						/>
 					</div>
-					<div>
-						<label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Manufacturer ID (for clinicians/staff)</label>
+					<div v-if="!isClinicOrClinician">
+						<label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Manufacturer ID</label>
 						<input
 							v-model="formData.manufacturerId"
 							type="number"
 							class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-							placeholder="Optional - only for clinic users"
+							placeholder="Optional"
 						/>
 					</div>
 				</div>
@@ -368,6 +371,7 @@ import {
 	ChevronDown
 } from 'lucide-vue-next'
 import api from '../services/api'
+import { useAuthStore } from '@/stores/auth'
 import { confirmAction } from '@/services/alert'
 import { useAppToast } from '@/composables/ui/useAppToast'
 
@@ -408,6 +412,11 @@ const statusFilter = ref('all')
 const selectedUser = ref<User | null>(null)
 const showCreateForm = ref(false)
 const showEditForm = ref(false)
+
+const authStore = useAuthStore()
+const currentUserRole = computed(() => authStore.currentUser?.user_role ?? -1)
+const isClinicOrClinician = computed(() => [2, 3].includes(currentUserRole.value))
+const currentUserClinicId = computed(() => authStore.currentUser?.clinic_id ? String(authStore.currentUser.clinic_id) : '')
 const toast = useAppToast()
 
 const formData = ref({
@@ -417,10 +426,26 @@ const formData = ref({
 	last_name: '',
 	phone: '',
 	role: 'Clinician' as User['role'],
-	isActive: false,
+	isActive: true,
 	clinicId: '',
 	manufacturerId: '',
 })
+
+function openCreateUser() {
+	selectedUser.value = null
+	formData.value = {
+		email: '',
+		first_name: '',
+		middle_name: '',
+		last_name: '',
+		phone: '',
+		role: 'Clinician',
+		isActive: true,
+		clinicId: isClinicOrClinician.value ? currentUserClinicId.value : '',
+		manufacturerId: '',
+	}
+	showCreateForm.value = true
+}
 
 function handleToggleStatus(userId: string) {
 	const userIndex = users.value.findIndex(user => user.id === userId)
@@ -472,9 +497,9 @@ async function handleSubmitForm() {
 			last_name: formData.value.last_name,
 			email: formData.value.email,
 			role: formData.value.role,
-			isActive: formData.value.isActive ? 1 : 0,
-			clinicId: formData.value.clinicId || undefined,
-			manufacturerId: formData.value.manufacturerId || '',
+			isActive: formData.value.isActive ? 0 : 1,
+			clinicId: isClinicOrClinician.value ? currentUserClinicId.value : (formData.value.clinicId || undefined),
+			manufacturerId: isClinicOrClinician.value ? '' : (formData.value.manufacturerId || ''),
 			phone: formData.value.phone,
 		}
 
@@ -517,7 +542,9 @@ async function handleSubmitForm() {
 			const status = err.response?.status
 			const data = err.response?.data
 
-			if (status === 422 && data?.errors) {
+			if (status === 403 && data?.error === 'unauthorized_clinic_assignment') {
+				toast.error("Facility Error: You cannot assign clinicians to another clinic facility.")
+			} else if (status === 422 && data?.errors) {
 				const messages = Object.values(data.errors).flat()
 				toast.error("Error: " + messages.join("\n"))
 			} else {
@@ -543,7 +570,7 @@ function closeForm() {
 		phone: '',
 		role: 'Clinician',
 		isActive: true,
-		clinicId: '',
+		clinicId: isClinicOrClinician.value ? currentUserClinicId.value : '',
 		manufacturerId: '',
 	}
 }
