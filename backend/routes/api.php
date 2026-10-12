@@ -92,6 +92,22 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
     Route::post('/invoice-management/upload-pdf', [InvoiceController::class, 'uploadPdf']);
     Route::post('/invoice-management/sync-google-sheet', [InvoiceController::class, 'syncWithGoogleSheet']);
 
+    // Dashboard
+    Route::get('/dashboard/stats', [AdminDashboardController::class, 'getStats']);
+    Route::get('/dashboard/recent-activity', [AdminDashboardController::class, 'recentActivity']);
+    Route::get('/dashboard/system-alerts', [AdminDashboardController::class, 'getSystemAlerts']);
+    Route::get('/clinic-dashboard/order-overview', [ClinicDashboardController::class, 'orderOverview']);
+    Route::get('/clinic-dashboard/system-alerts', [ClinicDashboardController::class, 'getSystemAlerts']);
+
+    // Returns Management
+    Route::get('/management/returns', [ReturnsController::class, 'getAllReturns']);
+    Route::get('/management/returns/{id}', [ReturnsController::class, 'getReturnById']);
+    Route::post('/management/returns', [ReturnsController::class, 'createReturn']);
+    Route::put('/management/returns/{id}', [ReturnsController::class, 'updateReturn']);
+    Route::delete('/management/returns/{id}', [ReturnsController::class, 'deleteReturn']);
+    Route::post('/management/returns/{id}/restore', [ReturnsController::class, 'restoreReturn']);
+    Route::get('/management/returns/stats', [ReturnsController::class, 'getReturnStats']);
+
     // Clinicians
     Route::get('/management/users/clinician', [ClinicController::class, 'getAllClinicians']);
     Route::middleware('role:0,1,2')->post('/management/users/add/clinician', [ClinicController::class, 'addClinician']);
@@ -145,11 +161,11 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
         Route::get('/patients/{id}', [PatientController::class, 'show']);
         Route::put('/patients/{id}', [PatientController::class, 'update']);
 
-        // Data integrity (HIPAA § 164.312(c)(1)): Restrict deletion and restoration to Admin (0) and Clinic Admin (2)
-        Route::middleware('role:0,2')->group(function () {
-            Route::delete('/patients/{id}', [PatientController::class, 'destroy']);
-            Route::post('/patients/{id}/restore', [PatientController::class, 'restore']);
-        });
+    // Data integrity (HIPAA § 164.312(c)(1)): Restrict deletion and restoration to Admin (0) and Clinic Admin (2)
+    Route::middleware('role:0,2')->group(function () {
+        Route::delete('/patients/{id}', [PatientController::class, 'destroy']);
+        Route::post('/patients/{id}/restore', [PatientController::class, 'restore']);
+    });
     });
 
     // IVR
