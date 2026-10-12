@@ -100,6 +100,10 @@ class InvoiceController extends Controller
 
     public function update(Request $request, Invoice $invoice): JsonResponse
     {
+        if ($authorization = $this->authorizeInvoiceMutation()) {
+            return $authorization;
+        }
+
         // Filter out empty line items before validation
         $requestData = $request->all();
         if (isset($requestData['line_items']) && is_array($requestData['line_items'])) {
@@ -285,9 +289,13 @@ class InvoiceController extends Controller
 
     public function updateStatus(Request $request, Invoice $invoice): JsonResponse
     {
+        if ($authorization = $this->authorizeInvoiceMutation()) {
+            return $authorization;
+        }
+
         $validator = Validator::make($request->all(), [
             'status'            => 'required|in:pending,paid,overdue,cancelled',
-            'paid_amount'       => 'nullable|numeric|min:0',
+            'paid_amount'       => 'nullable|numeric|min:0|max:' . $invoice->amount,
             'payment_method'    => 'nullable|string',
             'payment_reference' => 'nullable|string',
         ]);
@@ -320,6 +328,10 @@ class InvoiceController extends Controller
 
     public function uploadPdf(Request $request): JsonResponse
     {
+        if ($authorization = $this->authorizeInvoiceMutation()) {
+            return $authorization;
+        }
+
         $validator = Validator::make($request->all(), [
             'pdf_file' => 'required|file|mimes:pdf|max:10240', // 10MB max
         ]);
@@ -390,7 +402,7 @@ class InvoiceController extends Controller
                 'message' => 'PDF uploaded successfully',
                 'path'    => $path,
                 'filename' => $file->getClientOriginalName(),
-                'extracted_data' => $extractedData,
+                'extracted_data' => array_merge($extractedData, ['pdf_path' => $path]),
             ]);
 
         } catch (\Exception $e) {
@@ -495,14 +507,11 @@ class InvoiceController extends Controller
             // Fallback to simulated data if PDF parsing fails
             \Log::error('PDF parsing failed completely, using fallback data');
             
-            // Generate realistic invoice data
-            $invoiceNumber = 'INV-' . now()->format('Ymd') . '-' . strtoupper(substr(md5(time()), 0, 6));
-            
             return [
-                'invoice_number' => $invoiceNumber,
-                'amount'         => rand(500, 10000),
-                'invoice_date'   => now()->format('Y-m-d'),
-                'due_date'       => now()->addDays(30)->format('Y-m-d'),
+                'invoice_number' => '',
+                'amount'         => 0,
+                'invoice_date'   => '',
+                'due_date'       => '',
                 'serials'        => [],
                 'line_items'     => [],
                 'source'         => 'fallback',
@@ -1397,6 +1406,10 @@ class InvoiceController extends Controller
 
     public function store(Request $request): JsonResponse
     {
+        if ($authorization = $this->authorizeInvoiceMutation()) {
+            return $authorization;
+        }
+
         // Filter out empty line items before validation
         $requestData = $request->all();
         if (isset($requestData['line_items']) && is_array($requestData['line_items'])) {
@@ -1429,6 +1442,8 @@ class InvoiceController extends Controller
             'line_items.*.quantity' => 'required|integer|min:1',
             'line_items.*.amount' => 'required|numeric|min:0',
             'bill_to'        => 'nullable|string',
+            'notes'          => 'nullable|string',
+            'pdf_path'       => 'nullable|string|max:255',
         ]);
 
         if ($validator->fails()) {
@@ -1547,6 +1562,8 @@ class InvoiceController extends Controller
             'has_line_items' => $hasLineItems,
             'needs_review'   => $request->status === 'pending_review',
             'paid_date'      => $request->status === 'paid' ? now() : null,
+            'notes'          => $request->notes,
+            'pdf_path'       => $request->pdf_path,
             'bill_to'        => $request->bill_to ?? null,
         ]);
 
@@ -1557,6 +1574,10 @@ class InvoiceController extends Controller
 
     public function syncWithGoogleSheet(Request $request): JsonResponse
     {
+        if ($authorization = $this->authorizeAdmin()) {
+            return $authorization;
+        }
+
         // Validate the request
         $validator = Validator::make($request->all(), [
             'sheet_id' => 'required|string',
@@ -1663,6 +1684,10 @@ class InvoiceController extends Controller
 
     public function updateSerialPayment(Request $request, Invoice $invoice): JsonResponse
     {
+        if ($authorization = $this->authorizeInvoiceMutation()) {
+            return $authorization;
+        }
+
         $validator = Validator::make($request->all(), [
             'serial_number' => 'required|string',
             'status' => 'required|in:pending,paid,cancelled',
@@ -1675,11 +1700,20 @@ class InvoiceController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
+        $serialNumber = strtoupper(trim($request->serial_number));
+        if (!in_array($serialNumber, $this->invoiceSerialNumbers($invoice), true)) {
+            return response()->json([
+                'errors' => [
+                    'serial_number' => ['Serial number does not belong to this invoice.'],
+                ],
+            ], 422);
+        }
+
         // Find or create serial payment record
         $serialPayment = SerialPayment::updateOrCreate(
             [
                 'invoice_id' => $invoice->id,
-                'serial_number' => $request->serial_number,
+                'serial_number' => $serialNumber,
             ],
             [
                 'status' => $request->status,
@@ -1705,22 +1739,7 @@ class InvoiceController extends Controller
 
     private function updateInvoiceStatusBasedOnSerialPayments(Invoice $invoice): void
     {
-        // Get all serials from the invoice (from line_items or serials array)
-        $allSerials = [];
-        
-        if (!empty($invoice->line_items)) {
-            foreach ($invoice->line_items as $item) {
-                if (!empty($item['serial'])) {
-                    $allSerials[] = $item['serial'];
-                }
-            }
-        }
-        
-        if (!empty($invoice->serials)) {
-            $allSerials = array_merge($allSerials, $invoice->serials);
-        }
-        
-        $allSerials = array_unique($allSerials);
+        $allSerials = $this->invoiceSerialNumbers($invoice);
         
         if (empty($allSerials)) {
             return; // No serials to track
@@ -1756,5 +1775,50 @@ class InvoiceController extends Controller
         $serialPayments = $invoice->serialPayments()->get();
         
         return response()->json($serialPayments);
+    }
+
+    private function invoiceSerialNumbers(Invoice $invoice): array
+    {
+        $serials = [];
+
+        foreach ($invoice->line_items ?? [] as $item) {
+            if (!empty($item['serial']) && is_string($item['serial'])) {
+                $serials[] = strtoupper(trim($item['serial']));
+            }
+        }
+
+        foreach ($invoice->serials ?? [] as $serial) {
+            if (!empty($serial) && is_string($serial)) {
+                $serials[] = strtoupper(trim($serial));
+            }
+        }
+
+        return array_values(array_unique(array_filter($serials)));
+    }
+
+    private function authorizeInvoiceMutation(): ?JsonResponse
+    {
+        $user = auth()->user();
+
+        if (!$user || !in_array((int) $user->user_role, [0, 1, 5], true)) {
+            return response()->json([
+                'message' => 'Only administrators, office staff, and billers can modify invoices.',
+            ], 403);
+        }
+
+        return null;
+    }
+
+    private function authorizeAdmin(): ?JsonResponse
+    {
+        $user = auth()->user();
+
+        if (!$user || (int) $user->user_role !== 0) {
+            return response()->json([
+                'message' => 'Only administrators can perform this action.',
+            ], 403);
+        }
+
+        return null;
     }
 }
