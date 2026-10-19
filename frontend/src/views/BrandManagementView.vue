@@ -163,8 +163,182 @@
 		</template>
 
 		<!-- Create/Edit Form Modal -->
-		<BrandFormModal v-model="showFormModal" :is-edit="showEditForm" :form-data="formData"
-			:manufacturers="manufacturers" @submit="handleFormModalSubmit" @cancel="handleFormModalCancel" />
+		<BaseModal v-model="showFormModal" :title="showEditForm ? 'Edit Brand' : 'Add New Brand'"
+			:class="{ 'pointer-events-none': isCropperOpen, 'opacity-0': isCropperOpen }">
+			<form @submit.prevent="handleSubmitForm" class="space-y-4">
+				<!-- Brand Information -->
+				<div>
+					<div class="flex items-center gap-2 mb-2">
+						<Package class="w-5 h-5 text-green-500" />
+						<h3 class="text-md font-semibold text-gray-900 dark:text-gray-100">Brand Information</h3>
+					</div>
+					<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+						<div>
+							<label class="block text-sm font-medium text-gray-600 dark:text-gray-400">Name<span
+									class="text-red-500">*</span></label>
+							<div class="relative">
+								<Package class="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+								<input v-model="formData.brandName" type="text" required placeholder="Brand Name"
+									class="mt-1 block w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg 
+									focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+							</div>
+						</div>
+
+						<!-- Status -->
+						<div>
+							<label class="block text-sm font-medium text-gray-600 dark:text-gray-400">Status<span
+									class="text-red-500">*</span></label>
+							<div class="relative">
+								<CircleCheck class="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+								<select v-model="formData.brandStatus" required
+									class="mt-1 block w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+									<option :value="0">Active</option>
+									<option :value="1">Inactive</option>
+									<option :value="2">Archived</option>
+								</select>
+							</div>
+						</div>
+
+						<!-- Manufacturer -->
+						<div>
+							<label class="block text-sm font-medium text-gray-600 dark:text-gray-400">Manufacturer<span
+									class="text-red-500">*</span></label>
+							<div class="relative">
+								<Factory class="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+								<select v-model="formData.manufacturerId" required
+									class="mt-1 block w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+									<option v-for="opt in manufacturerOptions" :key="opt.value ?? 'none'"
+										:value="opt.value">
+										{{ opt.label }}
+									</option>
+								</select>
+							</div>
+						</div>
+
+						<div>
+							<label class="block text-sm font-medium text-gray-600 dark:text-gray-400">MUE (MedicallyUnlikely
+								Edits) <span class="text-red-500">*</span>
+							</label>
+							<div class="relative">
+								<Hash class="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+								<input v-model.number="formData.mue" type="number" min="1" required
+									placeholder="Enter MUE value" class="mt-1 block w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg 
+								focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+							</div>
+							<p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Maximum units allowed per day per
+								patient
+							</p>
+						</div>
+
+						<!-- Logo Upload Section -->
+						<div class="sm:col-span-2">
+							<ImageUploadCrop v-model="selectedLogoFile" v-model:model-preview-url="formData.logoUrl"
+								v-model:model-remove-flag="removeLogoFlag" label="Brand Logo" :show-label="true"
+								:is-optional="true" existing-label="Current logo:" @cropper-opening="isCropperOpen = true"
+								@cropper-closing="isCropperOpen = false" />
+						</div>
+
+						<div class="sm:col-span-2">
+							<label class="block text-sm font-medium text-gray-600 dark:text-gray-400">Description
+								(Optional)</label>
+							<div class="relative">
+								<Globe class="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+								<textarea v-model="formData.description" placeholder="Description" rows="3"
+									class="mt-1 block w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg 
+									focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-vertical"></textarea>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Graft Sizes -->
+				<div>
+					<div class="flex items-center gap-2 mb-2">
+						<PencilRuler class="w-5 h-5 text-green-500" />
+						<h3 class="text-md font-semibold text-gray-900 dark:text-gray-100">Graft Sizes (Optional)</h3>
+					</div>
+					<div class="space-y-3">
+						<div v-for="(graftSize, index) in formData.graftSizes" :key="graftSize.id || index"
+							:class="index > 0 ? 'mt-3 pt-3 border-t border-gray-200 dark:border-gray-700' : ''">
+							<div class="flex items-center justify-between mb-2">
+								<span class="text-sm font-medium text-gray-700 dark:text-gray-300">Size {{ index + 1
+									}}</span>
+								<button v-if="index > 0" type="button" @click="removeGraftSize(index)"
+									class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300">
+									<Trash2 class="w-4 h-4" />
+								</button>
+							</div>
+							<div class="grid grid-cols-1 sm:grid-cols-5 gap-4">
+								<div>
+									<label class="block text-sm font-medium text-gray-600 dark:text-gray-400">Item
+										No</label>
+									<div class="relative">
+										<Barcode class="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+										<input v-model="graftSize.item_no" type="text" placeholder="ABC-0000"
+											class="mt-1 block w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+									</div>
+								</div>
+
+								<div>
+									<label class="block text-sm font-medium text-gray-600 dark:text-gray-400">Size</label>
+									<div class="relative">
+										<RulerDimensionLine class="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+										<input v-model="graftSize.size" type="text" placeholder="2cm x 2cm" class="mt-1 block w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg 
+											focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+									</div>
+								</div>
+								<div>
+									<label class="block text-sm font-medium text-gray-600 dark:text-gray-400">Area
+										(cm²)</label>
+									<div class="relative">
+										<Diameter class="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+										<input v-model.number="graftSize.area" type="number" placeholder="0" class="mt-1 block w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg 
+											focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+									</div>
+								</div>
+								<div>
+									<label class="block text-sm font-medium text-gray-600 dark:text-gray-400">Price</label>
+									<div class="relative">
+										<DollarSign class="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+										<input v-model.number="graftSize.price" type="number" step="0.01" placeholder="0.00"
+											class="mt-1 block w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg 
+											focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+									</div>
+								</div>
+								<div>
+									<label class="block text-sm font-medium text-gray-600 dark:text-gray-400">Stock</label>
+									<div class="relative">
+										<Package class="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+										<input v-model.number="graftSize.stock" type="number" min="0" placeholder="0" class="mt-1 block w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg 
+											focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+									</div>
+								</div>
+							</div>
+						</div>
+						<button type="button" @click="addGraftSize"
+							class="flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors w-full sm:w-auto">
+							<Plus class="w-4 h-4 mr-2" />
+							Add Size
+						</button>
+					</div>
+				</div>
+			</form>
+			<template #actions>
+				<div class="flex justify-end w-full p-5 gap-3">
+					<button type="button" @click="closeForm" class="px-5 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl 
+					text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 
+					transition-all duration-200">
+						Cancel
+					</button>
+
+					<button type="submit" @click="handleSubmitForm" class="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white 
+					rounded-xl hover:from-blue-700 hover:to-indigo-700 
+					transition-all duration-200 shadow-md hover:shadow-lg">
+						{{ showEditForm ? 'Update Brand' : 'Create Brand' }}
+					</button>
+				</div>
+			</template>
+		</BaseModal>
 
 		<!-- Show Brand Details -->
 		<BrandDetailsModal v-model="showBrandDetailsModal" :brand="viewBrand" />
@@ -177,9 +351,14 @@ import Pagination from '@/components/ui/Pagination.vue'
 import ContentLoader from '@/components/ui/ContentLoader.vue'
 import BaseEmptyState from '@/components/common/BaseEmptyState.vue'
 import BrandCard from '@/components/brands/BrandCard.vue'
-import BrandFormModal from '@/components/brands/modals/BrandFormModal.vue'
+import BaseModal from '@/components/common/BaseModal.vue'
+import ImageUploadCrop from '@/components/common/ImageUploadCrop.vue'
 import BrandDetailsModal from '@/components/brands/modals/BrandDetailsModal.vue'
-import { Package, PackagePlus, ChevronDown, Funnel, Search, SlidersHorizontal, X } from 'lucide-vue-next'
+import {
+	Package, PackagePlus, ChevronDown, Funnel, Search, SlidersHorizontal, X,
+	CircleCheck, Factory, Hash, Globe, PencilRuler, Plus, Trash2, Barcode,
+	RulerDimensionLine, Diameter, DollarSign
+} from 'lucide-vue-next'
 import api from '@/services/api'
 import axios from 'axios'
 import { formatCurrency, formatNumber } from '@/utils/currency'
@@ -476,58 +655,7 @@ function escapeHtml(value: string) {
 	}[character] || character))
 }
 
-// Handle form modal submit from BrandFormModal component
-async function handleFormModalSubmit(data: { formData: any; logoFile: File | null; removeLogoFlag: boolean }) {
-	try {
-		const form = new FormData()
 
-		form.append('brandName', data.formData.brandName)
-		form.append('brandStatus', data.formData.brandStatus.toString())
-		form.append('manufacturerId', (data.formData.manufacturerId ?? '').toString())
-		form.append('mue', data.formData.mue ? data.formData.mue.toString() : '')
-		form.append('description', data.formData.description || '')
-
-		// === LOGO HANDLING ===
-		if (data.logoFile) {
-			form.append('logo', data.logoFile)
-		} else if (data.removeLogoFlag) {
-			form.append('remove_logo', '1')
-		}
-
-		// Graft sizes as JSON
-		form.append('graftSizes', JSON.stringify(data.formData.graftSizes))
-
-		if (showCreateForm.value) {
-			await api.post('/management/brands', form, {
-				headers: {
-					Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
-					'Content-Type': 'multipart/form-data'
-				}
-			})
-			toast.success(`${getBrandLabel(data.formData.brandName)} was created successfully.`)
-		} else if (showEditForm.value && selectedBrand.value) {
-			await api.post(`/management/brands/${selectedBrand.value.id}`, form, {
-				headers: {
-					Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
-					'Content-Type': 'multipart/form-data'
-				}
-			})
-			toast.success(`${getBrandLabel(data.formData.brandName)} details were updated successfully.`)
-		}
-
-		closeForm()
-		getAllBrands(1)
-
-	} catch (error: any) {
-		console.error(error.response?.data || error)
-		showBrandRequestError(error)
-	}
-}
-
-// Handle form modal cancel from BrandFormModal component
-function handleFormModalCancel() {
-	closeForm()
-}
 
 // Legacy submit handler for backwards compatibility
 async function handleSubmitForm() {
@@ -717,6 +845,8 @@ function closeForm() {
 		graftSizes: [{ size: '', area: null, price: null, stock: 0, item_no: '' }]
 	}
 	selectedLogoFile.value = null
+	removeLogoFlag.value = false
+	isCropperOpen.value = false
 }
 
 // search & filter
@@ -738,6 +868,7 @@ const filteredBrands = computed(() => {
 // Logo file handling (managed by ImageUploadCrop component)
 const selectedLogoFile = ref<File | null>(null)
 const removeLogoFlag = ref(false)
+const isCropperOpen = ref(false)
 
 // modal binding
 const showFormModal = computed({

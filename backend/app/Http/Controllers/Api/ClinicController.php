@@ -574,15 +574,17 @@ class ClinicController extends Controller
         }
 
         $validated = $request->validate([
-            'name' => 'nullable|string|max:255',
-            'email' => 'nullable|email|unique:woundmed_users,email,' . $clinicId . ',clinic_id',
-            'contactPerson' => 'nullable|string',
-            'publicId' => 'nullable|string|max:20',
-            // 'isActive' => 'boolean',
-            'phone' => 'nullable|string|max:20',
-            'address' => 'nullable|string|max:20',
-            'assigned_clinicians_id' => 'nullable|array',
-            'assigned_clinicians_id.*' => 'integer|exists:woundmed_users,id',
+            'name'                    => 'nullable|string|max:255',
+            'email'                   => 'nullable|email|unique:woundmed_users,email,' . $clinicId . ',clinic_id',
+            'contactPerson'           => 'nullable|string',
+            'publicId'                => 'nullable|string|max:20',
+            // 'isActive'             => 'boolean',
+            'phone'                   => 'nullable|string|max:20',
+            'address'                 => 'nullable|string|max:20',
+            'assigned_clinicians_id'  => 'nullable|array',
+            'assigned_clinicians_id.*'=> 'integer|exists:woundmed_users,id',
+            'logo'                    => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'remove_logo'             => 'nullable|in:1',
         ]);
 
         // Prevent cross-tenant clinician hijacking by Clinic Admins:
@@ -602,15 +604,21 @@ class ClinicController extends Controller
 
         $clinic = Clinic::findOrFail($clinicId);
 
-        $logoPath = $clinic->logo;
-
+        // ── LOGO ─────────────────────────────────────────────────────────────
         if ($request->hasFile('logo')) {
+            // New logo uploaded → replace old one
             if ($clinic->logo && Storage::disk('public')->exists($clinic->logo)) {
                 Storage::disk('public')->delete($clinic->logo);
             }
-
-            $logoPath = $request->file('logo')->store('clinics/logos', 'public');
+            $clinic->logo = $request->file('logo')->store('clinics/logos', 'public');
+        } elseif ($request->boolean('remove_logo')) {
+            // User clicked "X" → explicitly remove logo
+            if ($clinic->logo && Storage::disk('public')->exists($clinic->logo)) {
+                Storage::disk('public')->delete($clinic->logo);
+            }
+            $clinic->logo = null;
         }
+        // If neither → keep current logo (no change)
 
         // Clinic Admin (role 2) cannot alter clinic facility operational status:
         $isActive = $currentUser->user_role === 2
@@ -618,14 +626,14 @@ class ClinicController extends Controller
             : (filter_var($request->input('isActive'), FILTER_VALIDATE_BOOLEAN) ? 1 : 0);
 
         $clinic->update([
-            'clinic_name' => $validated['name'] ?? $clinic->clinic_name,
-            'email' => $validated['email'] ?? $clinic->email,
+            'clinic_name'      => $validated['name'] ?? $clinic->clinic_name,
+            'email'            => $validated['email'] ?? $clinic->email,
             'clinic_public_id' => $validated['publicId'] ?? $clinic->clinic_public_id,
-            'contact_person' => $validated['contactPerson'] ?? $clinic->contact_person,
-            'phone' => $validated['phone'] ?? $clinic->phone,
-            'address' => $validated['address'] ?? $clinic->address,
-            'clinic_status' => $isActive,
-            'logo' => $logoPath,
+            'contact_person'   => $validated['contactPerson'] ?? $clinic->contact_person,
+            'phone'            => $validated['phone'] ?? $clinic->phone,
+            'address'          => $validated['address'] ?? $clinic->address,
+            'clinic_status'    => $isActive,
+            'logo'             => $clinic->logo,
         ]);
 
         if (!empty($validated['assigned_clinicians_id'])) {
@@ -772,7 +780,7 @@ class ClinicController extends Controller
             'isActive'      => $clinic->clinic_status,
             'createdAt'     => $clinic->created_at,
             'updatedAt'     => $clinic->updated_at,
-            'logo'          => $clinic->logo ?? null,
+            'logo'          => $clinic->logo ? asset('storage/' . $clinic->logo) : null,
         ];
     }
 

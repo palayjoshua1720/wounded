@@ -159,19 +159,10 @@
                 </h3>
                 <span :class="[
                   'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium w-fit transition-all duration-200',
-                  manufacturer.manufacturerStatus === 0
-                    ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
-                    : manufacturer.manufacturerStatus === 1
-                      ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
-                      : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'
+                  getStatusClasses(manufacturer.manufacturerStatus)
                 ]">
-                  {{
-                    manufacturer.manufacturerStatus === 0
-                      ? 'Active'
-                      : manufacturer.manufacturerStatus === 1
-                        ? 'Inactive'
-                        : 'Archived'
-                  }}
+                  <component :is="getStatusIcon(manufacturer.manufacturerStatus)" class="w-2.5 h-2.5 mr-1" />
+                  {{ getStatusLabel(manufacturer.manufacturerStatus) }}
                 </span>
               </div>
             </div>
@@ -395,7 +386,8 @@
     </template>
 
     <!-- Create/Edit Form Modal -->
-    <BaseModal v-model="showFormModal" :title="showCreateForm ? 'Add New Manufacturer' : 'Edit Manufacturer'">
+    <BaseModal v-model="showFormModal" :title="showCreateForm ? 'Add New Manufacturer' : 'Edit Manufacturer'"
+      :class="{ 'opacity-0 pointer-events-none': isCropperOpen }">
       <form @submit.prevent="handleSubmitForm" class="flex flex-col h-full">
         <div class="flex-1 overflow-y-auto space-y-6 px-6">
           <!-- Manufacturer Information -->
@@ -455,7 +447,8 @@
           <div>
             <ImageUploadCrop v-model="selectedLogoFile" v-model:model-preview-url="formData.logoUrl"
               v-model:model-remove-flag="removeLogoFlag" label="Manufacturer Logo" :show-label="true"
-              :is-optional="true" existing-label="Current logo:" />
+              :is-optional="true" existing-label="Current logo:"
+              @cropper-opening="isCropperOpen = true" @cropper-closing="isCropperOpen = false" />
           </div>
 
           <!-- Contact Information -->
@@ -622,20 +615,11 @@
                 {{ viewManufacturer.manufacturerName }}
               </p>
               <span :class="[
-                'inline-flex px-2 py-1 text-xs rounded-full w-fit',
-                viewManufacturer.manufacturerStatus === 0
-                  ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
-                  : viewManufacturer.manufacturerStatus === 1
-                    ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
-                    : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'
+                'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium w-fit transition-all duration-200',
+                getStatusClasses(viewManufacturer.manufacturerStatus)
               ]">
-                {{
-                  viewManufacturer.manufacturerStatus === 0
-                    ? 'Active'
-                    : viewManufacturer.manufacturerStatus === 1
-                      ? 'Inactive'
-                      : 'Archived'
-                }}
+                <component :is="getStatusIcon(viewManufacturer.manufacturerStatus)" class="w-2.5 h-2.5 mr-1" />
+                {{ getStatusLabel(viewManufacturer.manufacturerStatus) }}
               </span>
             </div>
           </div>
@@ -886,14 +870,12 @@
                   <div>
                     <h4 class="font-medium text-gray-900 dark:text-white">{{ brand.brandName }}</h4>
                   </div>
-                  <span class="px-2 py-1 text-xs font-medium rounded-full" :class="[
-                    brand.brandStatus === 0
-                      ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
-                      : brand.brandStatus === 1
-                        ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
-                        : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'
+                  <span :class="[
+                    'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium w-fit transition-all duration-200',
+                    getStatusClasses(brand.brandStatus)
                   ]">
-                    {{ brand.brandStatus === 0 ? 'Active' : brand.brandStatus === 1 ? 'Inactive' : 'Archived' }}
+                    <component :is="getStatusIcon(brand.brandStatus)" class="w-2.5 h-2.5 mr-1" />
+                    {{ getStatusLabel(brand.brandStatus) }}
                   </span>
                 </div>
               </div>
@@ -946,9 +928,11 @@ import UploadLoader from '@/components/ui/UploadLoader.vue'
 import { useAuthStore } from '@/stores/auth'
 import { confirmAction } from '@/services/alert'
 import { useAppToast } from '@/composables/ui/useAppToast'
+import { useProductStatus } from '@/composables/products/useProductStatus'
 
 const authStore = useAuthStore()
 const isStaff = computed(() => authStore.user?.user_role === 1)
+const { getStatusClasses, getStatusIcon, getStatusLabel } = useProductStatus()
 
 const toast = useAppToast()
 
@@ -1023,49 +1007,7 @@ const formData = ref({
 const selectedLogoFile = ref<File | null>(null)
 const logoObjectUrl = ref<string | null>(null)
 const removeLogoFlag = ref(false)
-const allowedLogoTypes = ['image/png', 'image/jpeg', 'image/jpg']
-
-// ── File handling – IVR / Order / Onboarding ────────────────────────────────
-const selectedIvrFile = ref<File | null>(null)
-const ivrPreviewUrl = ref<string | null>(null)
-const removeIvrFlag = ref(false)
-
-const selectedOrderFile = ref<File | null>(null)
-const orderPreviewUrl = ref<string | null>(null)
-const removeOrderFlag = ref(false)
-
-const selectedOnboardingFile = ref<File | null>(null)
-const onboardingPreviewUrl = ref<string | null>(null)
-const removeOnboardingFlag = ref(false)
-
-// ── Logo cropper state ───────────────────────────────────────────────────────
-const showLogoCropModal = ref(false)
-const logoImageSrc = ref<string | null>(null)
-const logoCanvas = ref<HTMLCanvasElement | null>(null)
-const logoSelectedImage = ref<HTMLImageElement | null>(null)
-const logoScale = ref(1)
-const logoOffsetX = ref(0)
-const logoOffsetY = ref(0)
-const logoIsPanning = ref(false)
-const logoLastPanPoint = ref({ x: 0, y: 0 })
-const logoLastTouchDistance = ref(0)
-let logoPendingFile: File | null = null
-
-const isLoadingFile = ref(false)
-const loadProgress = ref(0)
-
-const simulateLoading = () => {
-  isLoadingFile.value = true
-  loadProgress.value = 0
-  const interval = setInterval(() => {
-    if (loadProgress.value >= 100) {
-      clearInterval(interval)
-      isLoadingFile.value = false
-      return
-    }
-    loadProgress.value += 10
-  }, 80)
-}
+const isCropperOpen = ref(false)
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Computed
@@ -1464,43 +1406,18 @@ async function handleSubmitForm() {
   }
 }
 
-// ──────────────────────────────────────────────────────────────────────────────
-// Logo Handlers (the missing ones)
-// ──────────────────────────────────────────────────────────────────────────────
-function allowLogoDrop(event: DragEvent) {
-  event.preventDefault()
-}
+// ── File handling – IVR / Order / Onboarding ────────────────────────────────
+const selectedIvrFile = ref<File | null>(null)
+const ivrPreviewUrl = ref<string | null>(null)
+const removeIvrFlag = ref(false)
 
-async function handleLogoChange(event: Event) {
-  const input = event.target as HTMLInputElement
-  const file = input.files?.[0]
-  if (!file) return
+const selectedOrderFile = ref<File | null>(null)
+const orderPreviewUrl = ref<string | null>(null)
+const removeOrderFlag = ref(false)
 
-  const ok = await validateLogoFile(file)
-  if (!ok) return
-
-  openLogoCropper(file)
-  // Reset input value so same file can be selected again if needed
-  input.value = ''
-}
-
-async function handleLogoDrop(event: DragEvent) {
-  event.preventDefault()
-  const file = event.dataTransfer?.files?.[0]
-  if (!file) return
-
-  const ok = await validateLogoFile(file)
-  if (!ok) return
-
-  openLogoCropper(file)
-}
-
-function removeCurrentLogo() {
-  removeLogoFlag.value = true
-  selectedLogoFile.value = null
-  revokeLogoObjectUrl()
-  formData.value.logoUrl = ''
-}
+const selectedOnboardingFile = ref<File | null>(null)
+const onboardingPreviewUrl = ref<string | null>(null)
+const removeOnboardingFlag = ref(false)
 
 // ──────────────────────────────────────────────────────────────────────────────
 // File Helpers (revoke, remove, etc.)
@@ -1606,6 +1523,7 @@ function closeForm() {
   selectedLogoFile.value = null
   logoObjectUrl.value = null
   removeLogoFlag.value = false
+  isCropperOpen.value = false
   selectedIvrFile.value = null
   selectedOrderFile.value = null
   selectedOnboardingFile.value = null
@@ -1820,209 +1738,7 @@ function formatContactNumber(value: string) {
   return value.replace(/[^0-9\-\(\)\+\s]/g, '')
 }
 
-// ──────────────────────────────────────────────────────────────────────────────
-// Logo Cropper Methods
-// ──────────────────────────────────────────────────────────────────────────────
-async function validateLogoFile(file: File): Promise<boolean> {
-  return new Promise((resolve) => {
-    if (!file) return resolve(false)
-    if (!allowedLogoTypes.includes(file.type)) {
-      toast.error('Unsupported logo format. Use PNG or JPEG/JPG.')
-      return resolve(false)
-    }
-    resolve(true)
-  })
-}
 
-async function openLogoCropper(file: File) {
-  logoPendingFile = file
-  revokeLogoObjectUrl()
-  logoImageSrc.value = URL.createObjectURL(file)
-  logoScale.value = 1
-  logoOffsetX.value = 0
-  logoOffsetY.value = 0
-  showLogoCropModal.value = true
-  await nextTick()
-  if (!logoImageSrc.value) return
-
-  const img = new window.Image()
-  img.src = logoImageSrc.value
-  await new Promise((resolve, reject) => {
-    img.onload = resolve
-    img.onerror = reject
-  })
-  logoSelectedImage.value = img
-  drawLogoCanvas()
-}
-
-function drawLogoCanvas() {
-  if (!logoCanvas.value || !logoSelectedImage.value) return
-  const canvas = logoCanvas.value
-  const ctx = canvas.getContext('2d')
-  if (!ctx) return
-
-  const rect = canvas.getBoundingClientRect()
-  const size = Math.floor(Math.min(rect.width, rect.height))
-  canvas.width = size
-  canvas.height = size
-
-  ctx.clearRect(0, 0, size, size)
-  ctx.fillStyle = '#ffffff'
-  ctx.fillRect(0, 0, size, size)
-
-  const img = logoSelectedImage.value
-  const imgAspect = img.naturalWidth / img.naturalHeight
-  let drawWidth = size
-  let drawHeight = size / imgAspect
-  if (imgAspect < 1) {
-    drawHeight = size
-    drawWidth = size * imgAspect
-  }
-
-  drawWidth *= logoScale.value
-  drawHeight *= logoScale.value
-
-  const x = (size - drawWidth) / 2 + logoOffsetX.value
-  const y = (size - drawHeight) / 2 + logoOffsetY.value
-
-  ctx.save()
-  ctx.beginPath()
-  ctx.rect(0, 0, size, size)
-  ctx.clip()
-  ctx.drawImage(img, x, y, drawWidth, drawHeight)
-  ctx.restore()
-}
-
-function logoZoomIn() {
-  logoScale.value = Math.min(3, logoScale.value + 0.1)
-  drawLogoCanvas()
-}
-
-function logoZoomOut() {
-  logoScale.value = Math.max(0.5, logoScale.value - 0.1)
-  drawLogoCanvas()
-}
-
-function logoHandleZoom(event: WheelEvent) {
-  event.preventDefault()
-  const delta = event.deltaY > 0 ? -0.05 : 0.05
-  logoScale.value = Math.max(0.5, Math.min(3, logoScale.value + delta))
-  drawLogoCanvas()
-}
-
-function logoStartPan(event: MouseEvent) {
-  logoIsPanning.value = true
-  logoLastPanPoint.value = { x: event.clientX, y: event.clientY }
-}
-
-function logoHandlePan(event: MouseEvent) {
-  if (!logoIsPanning.value) return
-  const deltaX = event.clientX - logoLastPanPoint.value.x
-  const deltaY = event.clientY - logoLastPanPoint.value.y
-  logoOffsetX.value += deltaX
-  logoOffsetY.value += deltaY
-  logoLastPanPoint.value = { x: event.clientX, y: event.clientY }
-  drawLogoCanvas()
-}
-
-function logoEndPan() {
-  logoIsPanning.value = false
-}
-
-function getTouchDistance(touches: TouchList): number {
-  if (touches.length < 2) return 0
-  const t1 = touches[0], t2 = touches[1]
-  const dx = t1.clientX - t2.clientX
-  const dy = t1.clientY - t2.clientY
-  return Math.sqrt(dx * dx + dy * dy)
-}
-
-function logoStartTouchPan(event: TouchEvent) {
-  event.preventDefault()
-  if (event.touches.length === 1) {
-    logoIsPanning.value = true
-    const t = event.touches[0]
-    logoLastPanPoint.value = { x: t.clientX, y: t.clientY }
-  } else if (event.touches.length === 2) {
-    logoIsPanning.value = false
-    logoLastTouchDistance.value = getTouchDistance(event.touches)
-  }
-}
-
-function logoHandleTouchPan(event: TouchEvent) {
-  event.preventDefault()
-  if (event.touches.length === 1 && logoIsPanning.value) {
-    const t = event.touches[0]
-    const deltaX = t.clientX - logoLastPanPoint.value.x
-    const deltaY = t.clientY - logoLastPanPoint.value.y
-    logoOffsetX.value += deltaX
-    logoOffsetY.value += deltaY
-    logoLastPanPoint.value = { x: t.clientX, y: t.clientY }
-    drawLogoCanvas()
-  } else if (event.touches.length === 2) {
-    const dist = getTouchDistance(event.touches)
-    if (logoLastTouchDistance.value > 0) {
-      const delta = (dist - logoLastTouchDistance.value) * 0.01
-      logoScale.value = Math.max(0.5, Math.min(3, logoScale.value + delta))
-      drawLogoCanvas()
-    }
-    logoLastTouchDistance.value = dist
-  }
-}
-
-function logoEndTouchPan() {
-  logoIsPanning.value = false
-  logoLastTouchDistance.value = 0
-}
-
-function logoResetPosition() {
-  logoScale.value = 1
-  logoOffsetX.value = 0
-  logoOffsetY.value = 0
-  drawLogoCanvas()
-}
-
-function logoSelectNewImage() {
-  logoSelectedImage.value = null
-  logoImageSrc.value = null
-  logoPendingFile = null
-  const input = document.getElementById('logo-upload') as HTMLInputElement | null
-  if (input) input.click()
-}
-
-async function logoConfirmCrop() {
-  if (!logoCanvas.value || !logoSelectedImage.value || !logoPendingFile) return
-  simulateLoading()
-
-  const canvas = logoCanvas.value
-  canvas.toBlob((blob) => {
-    if (!blob) return
-    const croppedFile = new File([blob], logoPendingFile!.name, { type: 'image/png' })
-    selectedLogoFile.value = croppedFile
-    revokeLogoObjectUrl()
-    logoObjectUrl.value = URL.createObjectURL(croppedFile)
-    formData.value.logoUrl = logoObjectUrl.value
-    removeLogoFlag.value = false
-    showLogoCropModal.value = false
-
-    if (logoImageSrc.value && logoImageSrc.value.startsWith('blob:')) {
-      URL.revokeObjectURL(logoImageSrc.value)
-    }
-    logoImageSrc.value = null
-    logoSelectedImage.value = null
-    logoPendingFile = null
-  }, 'image/png', 0.95)
-}
-
-function logoCancelCrop() {
-  showLogoCropModal.value = false
-  if (logoImageSrc.value && logoImageSrc.value.startsWith('blob:')) {
-    URL.revokeObjectURL(logoImageSrc.value)
-  }
-  logoImageSrc.value = null
-  logoSelectedImage.value = null
-  logoPendingFile = null
-}
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Lifecycle

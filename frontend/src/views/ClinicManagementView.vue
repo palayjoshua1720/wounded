@@ -74,7 +74,8 @@
 							<div>
 								<p class="text-xl font-semibold text-gray-900 dark:text-white">{{ selectedUser.name }}</p>
 								<span v-if="userStatus[selectedUser.isActive]"
-									:class="['inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium', userStatus[selectedUser.isActive].classes]">
+									:class="['inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium w-fit transition-all duration-200', getStatusClasses(selectedUser.isActive)]">
+									<component :is="getStatusIcon(selectedUser.isActive)" class="w-2.5 h-2.5 mr-1" />
 									{{ userStatus[selectedUser.isActive].label }}
 								</span>
 							</div>
@@ -215,6 +216,7 @@
 
 		<!-- Create/Edit Clinic Form Modal -->
 		<BaseModal v-model="showFormModal" :title="showCreateForm ? 'Add New Clinic' : 'Edit Clinic'"
+			:class="{ 'opacity-0 pointer-events-none': isCropperOpen }"
 			@close-form="closeForm">
 			<form @submit.prevent="handleSubmitForm" class="space-y-6">
 
@@ -366,7 +368,8 @@
 				<!-- Logo Upload Section -->
 				<ImageUploadCrop v-model="selectedLogoFile" v-model:model-preview-url="formData.logo"
 					v-model:model-remove-flag="removeLogoFlag" label="Clinic Logo" :show-label="true" :is-optional="true"
-					accept="image/png,image/jpeg,image/jpg" accept-hint="JPEG, JPG, or PNG (max. 2MB)" />
+					accept="image/png,image/jpeg,image/jpg" accept-hint="JPEG, JPG, or PNG (max. 2MB)"
+					@cropper-opening="isCropperOpen = true" @cropper-closing="isCropperOpen = false" />
 			</form>
 			<template #actions>
 				<!-- Actions -->
@@ -401,6 +404,9 @@ import {
 import api from '@/services/api'
 import { confirmAction } from '@/services/alert'
 import { useAppToast } from '@/composables/ui/useAppToast'
+import { useProductStatus } from '@/composables/products/useProductStatus'
+
+const { getStatusClasses, getStatusIcon } = useProductStatus()
 
 interface User {
 	id: string
@@ -434,6 +440,7 @@ interface Clinic {
 
 const selectedLogoFile = ref<File | null>(null)
 const removeLogoFlag = ref(false)
+const isCropperOpen = ref(false)
 
 const showUsers = ref(false)
 const isOpen = ref(false);
@@ -459,9 +466,9 @@ const itemsPerPage = ref(9)
 const users = ref<User[]>([])
 const tableLoader = ref(false);
 const userStatus: Record<number, { label: string; classes: string }> = {
-	0: { label: 'Active', classes: 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' },
-	1: { label: 'Inactive', classes: 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400' },
-	2: { label: 'Archived', classes: 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400' },
+	0: { label: 'Active', classes: 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400 border border-green-200 dark:border-green-800' },
+	1: { label: 'Inactive', classes: 'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400 border border-red-200 dark:border-red-800' },
+	2: { label: 'Archived', classes: 'bg-orange-50 text-orange-700 dark:bg-orange-900/20 dark:text-orange-400 border border-orange-200 dark:border-orange-800' },
 }
 
 const searchTerm = ref('')
@@ -632,6 +639,7 @@ function closeForm() {
 	showEditForm.value = false
 	selectedUser.value = null
 	selectedLogoFile.value = null
+	isCropperOpen.value = false
 
 	formData.value = {
 		name: '',

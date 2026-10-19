@@ -21,64 +21,19 @@
 								<h3 class="font-semibold text-gray-900 dark:text-white">
 									{{ user.name }}
 								</h3>
-								<span
-									:class="[
-										'inline-flex px-2 py-1 text-xs rounded-full w-fit',
-										user.isActive === 1
-											? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
-											: user.isActive === 2
-												? 'bg-yellow-100 text-yellow-600 hover:text-yellow-900 dark:bg-yellow-900/20 dark:text-yellow-400 dark:hover:text-yellow-300'
-												: 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
-									]"
-								>
+								<span :class="[
+									'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium w-fit transition-all duration-200',
+									getStatusClasses(user.isActive)
+								]">
+									<component :is="getStatusIcon(user.isActive)" class="w-2.5 h-2.5 mr-1" />
 									{{ userStatus[user.isActive]?.label || 'Unknown' }}
 								</span>
 							</div>
 						</div>
 					</div>
-					<div class="flex items-center space-x-1">
-						<button @click="$emit('view-clinic', user)"
-							class="inline-flex items-center justify-center w-9 h-9 text-gray-400 dark:text-gray-500 hover:bg-blue-100 dark:hover:bg-blue-900/30 hover:text-blue-700 dark:hover:text-blue-400 rounded-lg transition-all duration-200"
-							title="View Details">
-							<Eye class="w-5 h-5" />
-						</button>
-						<button @click="$emit('edit-clinic', user)"
-							class="inline-flex items-center justify-center w-9 h-9 text-gray-400 dark:text-gray-500 hover:bg-amber-100 dark:hover:bg-amber-900/30 hover:text-amber-700 dark:hover:text-amber-400 rounded-lg transition-all duration-200"
-							title="Edit Clinic">
-							<SquarePen class="w-5 h-5" />
-						</button>
-						<template v-if="user.isActive === 0 || user.isActive === 1">
-							<button
-								@click="$emit('toggle-status', user.id)"
-								class="inline-flex items-center justify-center w-9 h-9 text-gray-400 dark:text-gray-500 rounded-lg transition-all duration-200"
-								:class="user.isActive === 0
-									? 'hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-700 dark:hover:text-red-400'
-									: 'hover:bg-green-100 dark:hover:bg-green-900/30 hover:text-green-700 dark:hover:text-green-400'"
-								:title="user.isActive == 0 ? 'Deactivate' : 'Activate'"
-							>
-								<component
-									:is="user.isActive == 0 ? CircleX : CircleCheck"
-									class="w-5 h-5"
-								/>
-							</button>
-						</template>
-						<button @click="$emit('delete-clinic', user.id)"
-							class="inline-flex items-center justify-center w-9 h-9 text-gray-400 dark:text-gray-500 hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-700 dark:hover:text-red-400 rounded-lg transition-all duration-200"
-							title="Delete Clinic">
-							<Trash2 class="w-5 h-5" />
-						</button>
-						<template v-if="user.isActive === 1 || user.isActive === 2">
-							<button
-								@click="user.isActive === 2 ? $emit('unarchive-clinic', user.id) : $emit('archive-clinic', user.id)"
-								class="inline-flex items-center justify-center w-9 h-9 text-gray-400 dark:text-gray-500 hover:bg-orange-100 dark:hover:bg-orange-900/30 hover:text-orange-700 dark:hover:text-orange-400 rounded-lg transition-all duration-200"
-								:title="user.isActive === 2 ? 'Unarchive Clinic' : 'Archive Clinic'"
-							>
-								<component
-									:is="user.isActive === 1 ? Archive : ArchiveRestore"
-									class="w-5 h-5"
-								/>
-							</button>
-						</template>
+					<!-- Quick Actions using ActionGroup component - visible only on sm+ screens -->
+					<div class="hidden sm:block shrink-0">
+						<ActionGroup :actions="getClinicActions(user)" />
 					</div>
 				</div>
 				<div class="space-y-2 text-sm text-gray-600 dark:text-gray-400">
@@ -112,6 +67,13 @@
 						<span>{{ user.contactPerson }}</span>
 					</div>
 				</div>
+
+				<!-- Mobile Card Actions - visible only on small screens -->
+				<div class="sm:hidden pt-3 mt-3 border-t border-gray-200 dark:border-gray-700 -mx-6 -mb-6 px-6 pb-6 rounded-b bg-gray-50 dark:bg-gray-700/30">
+					<div class="flex items-center justify-center gap-1.5 flex-wrap">
+						<ActionGroup :actions="getClinicActions(user)" />
+					</div>
+				</div>
 			</div>
 		</div>
 
@@ -134,6 +96,9 @@
 import { reactive } from 'vue'
 import ContentLoader from '@/components/ui/ContentLoader.vue'
 import Pagination from '@/components/ui/Pagination.vue'
+import ActionGroup from '@/components/ui/ActionGroup.vue'
+import type { ActionConfig } from '@/components/ui/ActionGroup.vue'
+import { useProductStatus } from '@/composables/products/useProductStatus'
 import {
 	Eye, SquarePen, CircleCheck, CircleX,
 	Trash2, Hospital, MapPin, Phone,
@@ -188,12 +153,71 @@ const emit = defineEmits<{
 
 const logoErrors = reactive<Set<string>>(new Set())
 
+const { getStatusClasses, getStatusIcon } = useProductStatus()
+
 function showLogo(user: User) {
 	return !!user.logo && !logoErrors.has(user.id)
 }
 
 function onLogoError(userId: string) {
 	logoErrors.add(userId)
+}
+
+function getClinicActions(user: User): ActionConfig[] {
+	const isActive = user.isActive === 0
+	const isInactive = user.isActive === 1
+	const isArchived = user.isActive === 2
+
+	const actions: ActionConfig[] = [
+		{
+			id: 'view',
+			icon: Eye,
+			title: 'View',
+			hoverColor: 'green',
+			onClick: () => emit('view-clinic', user),
+		},
+		{
+			id: 'edit',
+			icon: SquarePen,
+			title: 'Edit',
+			hoverColor: 'blue',
+			onClick: () => emit('edit-clinic', user),
+		},
+		{
+			id: 'toggle-status',
+			icon: isActive ? CircleX : CircleCheck,
+			title: isActive ? 'Deactivate' : 'Activate',
+			variant: isActive ? 'danger' : 'success',
+			visible: isActive || isInactive,
+			onClick: () => emit('toggle-status', user.id),
+		},
+		{
+			id: 'archive',
+			icon: Archive,
+			title: 'Archive',
+			hoverColor: 'orange',
+			visible: isActive || isInactive,
+			onClick: () => emit('archive-clinic', user.id),
+		},
+		{
+			id: 'unarchive',
+			icon: ArchiveRestore,
+			title: 'Unarchive',
+			hoverColor: 'green',
+			visible: isArchived,
+			onClick: () => emit('unarchive-clinic', user.id),
+		},
+		{
+			id: 'delete',
+			icon: Trash2,
+			title: 'Delete',
+			hoverColor: 'red',
+			visible: isArchived,
+			onClick: () => emit('delete-clinic', user.id),
+		},
+	]
+
+	return actions
 }
 
 function formatDate(dateStr: string) {

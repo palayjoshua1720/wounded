@@ -13,8 +13,11 @@ class Clinic extends Model
 
     /**
      * File fields that should be encrypted
+     * Note: 'logo' is intentionally excluded — clinic logos use plain public storage
+     * (same as Brand & Manufacturer). Re-enable below if logo encryption is needed
+     * and ensure the `logo_extension` column exists on `woundmed_clinics` first.
      */
-    protected array $encryptableFiles = ['logo'];
+    // protected array $encryptableFiles = ['logo'];
     protected $table      = 'woundmed_clinics';
     protected $primaryKey = 'clinic_id';
     public $timestamps    = true;

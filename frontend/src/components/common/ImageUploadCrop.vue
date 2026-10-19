@@ -93,35 +93,32 @@
                                     class="absolute inset-0 w-full h-full touch-none cursor-grab active:cursor-grabbing select-none transition-transform duration-150"
                                     :class="{ 'cursor-grabbing': isPanning }"></canvas>
 
-                                <!-- Rounded Square Crop Overlay with Circular Guide -->
+                                <!-- Rounded Square Crop Overlay -->
                                 <div class="absolute inset-0 pointer-events-none" v-if="cropShape !== 'rectangle'">
-                                    <div class="absolute inset-0 bg-black/30 backdrop-blur-[1px]"></div>
+                                    <div class="absolute inset-0 bg-black/35 backdrop-blur-[1px]"></div>
                                     <div
                                         class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4/5 h-4/5">
                                         <div
-                                            class="absolute inset-0 border-2 border-white/80 rounded-2xl shadow-[0_0_0_1px_rgba(255,255,255,0.3),0_0_20px_rgba(0,0,0,0.2)]">
+                                            class="absolute inset-0 border-2 border-white/90 rounded-2xl shadow-[0_0_0_1px_rgba(255,255,255,0.3),0_0_24px_rgba(0,0,0,0.3)]">
                                         </div>
                                         <div
-                                            class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[85%] h-[85%] border border-dashed border-white/40 rounded-full">
+                                            class="absolute -top-1 -left-1 w-3.5 h-3.5 border-t-2 border-l-2 border-white rounded-tl-lg">
                                         </div>
                                         <div
-                                            class="absolute -top-1 -left-1 w-3 h-3 border-t-2 border-l-2 border-white rounded-tl-lg">
+                                            class="absolute -top-1 -right-1 w-3.5 h-3.5 border-t-2 border-r-2 border-white rounded-tr-lg">
                                         </div>
                                         <div
-                                            class="absolute -top-1 -right-1 w-3 h-3 border-t-2 border-r-2 border-white rounded-tr-lg">
+                                            class="absolute -bottom-1 -left-1 w-3.5 h-3.5 border-b-2 border-l-2 border-white rounded-bl-lg">
                                         </div>
                                         <div
-                                            class="absolute -bottom-1 -left-1 w-3 h-3 border-b-2 border-l-2 border-white rounded-bl-lg">
-                                        </div>
-                                        <div
-                                            class="absolute -bottom-1 -right-1 w-3 h-3 border-b-2 border-r-2 border-white rounded-br-lg">
+                                            class="absolute -bottom-1 -right-1 w-3.5 h-3.5 border-b-2 border-r-2 border-white rounded-br-lg">
                                         </div>
                                     </div>
                                     <div class="absolute bottom-4 left-1/2 -translate-x-1/2">
                                         <div
-                                            class="flex items-center gap-2 px-3 py-1.5 bg-black/60 backdrop-blur-sm rounded-full">
+                                            class="flex items-center gap-2 px-3 py-1.5 bg-black/70 backdrop-blur-sm rounded-full">
                                             <FoldVertical class="w-3 h-3 text-white/80"></FoldVertical>
-                                            <span class="text-xs text-white/80 font-medium">Drag to move • Scroll to
+                                            <span class="text-xs text-white/90 font-medium">Drag to move • Scroll to
                                                 zoom</span>
                                         </div>
                                     </div>
@@ -202,12 +199,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, nextTick, onUnmounted } from 'vue'
+import { ref, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { Image, UploadCloud, X, RefreshCcw, Plus, Minus, Check, FoldVertical } from 'lucide-vue-next'
 import { useAppToast } from '@/composables/ui/useAppToast'
 
 // Props
-const props = defineProps<{
+const props = withDefaults(defineProps<{
     modelValue?: File | null
     modelPreviewUrl?: string | null
     modelRemoveFlag?: boolean
@@ -219,10 +216,14 @@ const props = defineProps<{
     acceptHint?: string
     modalTitle?: string
     modalInstructions?: string
-    cropShape?: 'circle' | 'rectangle'
+    cropShape?: 'rounded' | 'circle' | 'rectangle'
     minScale?: number
     maxScale?: number
-}>()
+    maxSizeMB?: number
+}>(), {
+    maxSizeMB: 2,
+    cropShape: 'rounded'
+})
 
 const emit = defineEmits<{
     (e: 'update:modelValue', file: File | null): void
@@ -275,6 +276,11 @@ function validateFile(file: File): boolean {
         toast.error('Unsupported image format. Use PNG or JPEG/JPG.')
         return false
     }
+    const maxBytes = (props.maxSizeMB || 2) * 1024 * 1024
+    if (file.size > maxBytes) {
+        toast.error(`File size exceeds ${props.maxSizeMB || 2}MB limit.`)
+        return false
+    }
     return true
 }
 
@@ -312,6 +318,7 @@ function drawCanvas() {
     const rect = canvas.getBoundingClientRect()
     // Use the smaller dimension to ensure square canvas
     const size = Math.floor(Math.min(rect.width, rect.height))
+    if (size <= 0) return
 
     canvas.width = size
     canvas.height = size
@@ -341,7 +348,7 @@ function drawCanvas() {
 
     ctx.save()
     if (props.cropShape !== 'rectangle') {
-        const r = Math.min(size, size) * 0.05
+        const r = Math.min(size, size) * 0.08
         ctx.beginPath()
         ctx.moveTo(r, 0)
         ctx.lineTo(size - r, 0)
@@ -484,8 +491,64 @@ async function confirmCrop() {
     if (!cropCanvas.value || !selectedImage.value || !pendingFile) return
 
     try {
+        const canvas = cropCanvas.value
+        const size = canvas.width
+        if (!size) throw new Error('Canvas not initialized')
+
+        // High resolution export to avoid blurriness on high-DPI displays
+        const exportSize = Math.max(size * 2, 640)
+        const exportCanvas = document.createElement('canvas')
+        exportCanvas.width = exportSize
+        exportCanvas.height = exportSize
+        const exportCtx = exportCanvas.getContext('2d')
+        if (!exportCtx) throw new Error('Failed to create export context')
+
+        exportCtx.clearRect(0, 0, exportSize, exportSize)
+        exportCtx.fillStyle = '#ffffff'
+        exportCtx.fillRect(0, 0, exportSize, exportSize)
+
+        const img = selectedImage.value
+        const imgAspect = img.naturalWidth / img.naturalHeight
+        const canvasAspect = 1
+
+        let drawWidth: number, drawHeight: number
+        if (imgAspect > canvasAspect) {
+            drawWidth = exportSize
+            drawHeight = exportSize / imgAspect
+        } else {
+            drawHeight = exportSize
+            drawWidth = exportSize * imgAspect
+        }
+
+        drawWidth *= scale.value
+        drawHeight *= scale.value
+
+        const ratio = exportSize / size
+        const x = (exportSize - drawWidth) / 2 + (offsetX.value * ratio)
+        const y = (exportSize - drawHeight) / 2 + (offsetY.value * ratio)
+
+        exportCtx.save()
+        if (props.cropShape !== 'rectangle') {
+            const r = exportSize * 0.08
+            exportCtx.beginPath()
+            exportCtx.moveTo(r, 0)
+            exportCtx.lineTo(exportSize - r, 0)
+            exportCtx.quadraticCurveTo(exportSize, 0, exportSize, r)
+            exportCtx.lineTo(exportSize, exportSize - r)
+            exportCtx.quadraticCurveTo(exportSize, exportSize, exportSize - r, exportSize)
+            exportCtx.lineTo(r, exportSize)
+            exportCtx.quadraticCurveTo(0, exportSize, 0, exportSize - r)
+            exportCtx.lineTo(0, r)
+            exportCtx.quadraticCurveTo(0, 0, r, 0)
+            exportCtx.closePath()
+            exportCtx.clip()
+        }
+
+        exportCtx.drawImage(img, x, y, drawWidth, drawHeight)
+        exportCtx.restore()
+
         const blob = await new Promise<Blob | null>((resolve) => {
-            cropCanvas.value!.toBlob(function (b) {
+            exportCanvas.toBlob(function (b) {
                 resolve(b)
             }, 'image/png', 0.95)
         })
@@ -548,20 +611,32 @@ function revokeObjectUrl() {
     objectUrl.value = null
 }
 
+function handleResize() {
+    if (showCropModal.value) {
+        drawCanvas()
+    }
+}
+
 // Watch for modal open/close to emit events for parent modal visibility
-watch(showCropModal, (val) => {
+watch(showCropModal, async (val) => {
     if (val) {
         // Cropper is opening - emit event to parent modal
         emit('cropper-opening')
-        nextTick(() => drawCanvas())
+        await nextTick()
+        requestAnimationFrame(() => drawCanvas())
     } else {
         // Cropper is closing - emit event to restore parent modal
         emit('cropper-closing')
     }
 })
 
-// Cleanup on unmount
+// Lifecycle
+onMounted(() => {
+    window.addEventListener('resize', handleResize)
+})
+
 onUnmounted(() => {
+    window.removeEventListener('resize', handleResize)
     revokeObjectUrl()
     if (imageSrc.value?.startsWith('blob:')) {
         URL.revokeObjectURL(imageSrc.value)
